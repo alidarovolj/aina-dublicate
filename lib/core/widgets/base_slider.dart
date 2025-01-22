@@ -1,6 +1,5 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/types/slides.dart';
 import 'package:url_launcher/url_launcher.dart';
 

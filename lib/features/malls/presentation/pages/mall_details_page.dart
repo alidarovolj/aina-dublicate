@@ -104,6 +104,9 @@ class MallDetailsPage extends ConsumerWidget {
                         SliverToBoxAdapter(
                           child: PromotionsBlock(
                             mallId: mallId.toString(),
+                            showTitle: true,
+                            showViewAll: true,
+                            showDivider: true,
                             onViewAllTap: () {},
                           ),
                         ),

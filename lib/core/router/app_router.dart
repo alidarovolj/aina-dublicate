@@ -1,4 +1,8 @@
+import 'package:aina_flutter/features/login/presentation/pages/login_page.dart';
 import 'package:aina_flutter/features/malls/presentation/pages/main_page.dart';
+import 'package:aina_flutter/features/profile/presentation/pages/profile_page.dart';
+import 'package:aina_flutter/features/promotions/presentation/pages/promotion_details_page.dart';
+import 'package:aina_flutter/features/stores/presentation/pages/store_details_page.dart';
 import 'package:go_router/go_router.dart';
 // import 'package:aina_flutter/core/services/storage_service.dart';
 import 'package:aina_flutter/features/home/presentation/pages/home_page.dart';
@@ -10,6 +14,7 @@ import 'package:aina_flutter/features/login/presentation/pages/set_info_page.dar
 // import 'package:aina_flutter/features/promotions/presentation/pages/promotion_details_page.dart';
 import 'package:aina_flutter/features/malls/presentation/pages/mall_details_page.dart';
 import 'package:aina_flutter/features/promotions/presentation/pages/promotions_page.dart';
+import 'package:aina_flutter/features/stores/presentation/pages/stores_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -38,6 +43,15 @@ class AppRouter {
       ),
       ShellRoute(
         builder: (context, state, child) {
+          // Set status bar style to light (white icons)
+          // SystemChrome.setSystemUIOverlayStyle(
+          //   const SystemUiOverlayStyle(
+          //     statusBarBrightness: Brightness.dark,
+          //     statusBarIconBrightness: Brightness.light,
+          //     statusBarColor: Colors.transparent,
+          //   ),
+          // );
+
           return MainTabBarScreen(
             currentRoute: state.uri.toString(),
             child: child,
@@ -58,6 +72,15 @@ class AppRouter {
                 },
                 routes: [
                   GoRoute(
+                    path: 'profile',
+                    name: 'mall_profile',
+                    builder: (context, state) {
+                      final mallId =
+                          int.parse(state.pathParameters['id'] ?? '0');
+                      return ProfilePage(mallId: mallId);
+                    },
+                  ),
+                  GoRoute(
                     path: 'promotions',
                     name: 'mall_promotions',
                     builder: (context, state) {
@@ -66,23 +89,74 @@ class AppRouter {
                       return PromotionsPage(mallId: mallId);
                     },
                   ),
+                  GoRoute(
+                    path: 'stores',
+                    name: 'mall_stores',
+                    builder: (context, state) {
+                      final mallId =
+                          int.parse(state.pathParameters['id'] ?? '0');
+                      return StoresPage(mallId: mallId);
+                    },
+                    routes: [
+                      GoRoute(
+                        path: 'categories',
+                        name: 'mall_shop_categories',
+                        builder: (context, state) {
+                          final mallId =
+                              int.parse(state.pathParameters['id'] ?? '0');
+                          return StoresPage(mallId: mallId);
+                        },
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ],
           ),
-          // GoRoute(
-          //   path: '/promotions/:id',
-          //   name: 'promotion_details',
-          //   builder: (context, state) {
-          //     final promotionId = int.parse(state.pathParameters['id'] ?? '0');
-          //     return PromotionDetailsPage(promotionId: promotionId);
-          //   },
-          // ),
+          GoRoute(
+            path: '/stores',
+            name: 'stores',
+            builder: (context, state) => const StoresPage(mallId: 0),
+          ),
         ],
       ),
       GoRoute(
         path: '/storybook',
         builder: (context, state) => const StorybookScreen(),
+      ),
+      GoRoute(
+        path: '/promotions/:id',
+        name: 'promotion_details',
+        builder: (context, state) {
+          final id = int.parse(state.pathParameters['id'] ?? '0');
+          return PromotionDetailsPage(id: id);
+        },
+      ),
+      GoRoute(
+        path: '/stores/:id',
+        name: 'store_details',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '0';
+          return StoreDetailsPage(id: id);
+        },
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const PhoneNumberInputScreen(),
+      ),
+      GoRoute(
+        path: '/code',
+        builder: (context, state) {
+          final phoneNumber = (state.extra as String?) ?? '';
+          return CodeInputScreen(phoneNumber: phoneNumber);
+        },
+      ),
+      GoRoute(
+        path: '/malls/:mallId/profile',
+        builder: (context, state) {
+          final mallId = int.parse(state.pathParameters['mallId']!);
+          return ProfilePage(mallId: mallId);
+        },
       ),
     ],
   );

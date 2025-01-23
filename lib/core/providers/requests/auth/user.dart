@@ -13,7 +13,7 @@ class RequestCodeService {
 
   Future<Response?> userProfile(String phoneNumber) async {
     try {
-      final response = await _dio.get('/auth/me');
+      final response = await _dio.get('/api/aina/profile');
       return response;
     } catch (e) {
       print('Ошибка при запросе кода: $e');
@@ -23,8 +23,8 @@ class RequestCodeService {
 
   Future<Response?> sendCodeRequest(String phoneNumber) async {
     try {
-      final response = await _dio.post(
-        '/login/send-message',
+      final response = await _dio.get(
+        '/auth/get-otp',
         queryParameters: {'phone': phoneNumber}, // Параметры запроса
       );
       return response;
@@ -58,10 +58,10 @@ class RequestCodeService {
       print('Отправка OTP запроса: телефон=$phoneNumber, код=$code');
 
       final response = await _dio.post(
-        '/login',
+        '/auth/signin/',
         data: {
           'phone': phoneNumber,
-          'code': code,
+          'otp': code,
         },
         options: Options(
           validateStatus: (status) => true,
@@ -71,6 +71,7 @@ class RequestCodeService {
           },
           receiveTimeout: const Duration(seconds: 15),
           sendTimeout: const Duration(seconds: 15),
+          followRedirects: true,
         ),
       );
 
@@ -94,3 +95,52 @@ class RequestCodeService {
     }
   }
 }
+
+class UserProfile {
+  final String numericPhone;
+  final String maskedPhone;
+  final String? email;
+  final String firstName;
+  final String lastName;
+  final String? patronymic;
+  final String? gender;
+  final String? licensePlate;
+  final String? avatarUrl;
+
+  UserProfile({
+    required this.numericPhone,
+    required this.maskedPhone,
+    required this.firstName,
+    required this.lastName,
+    this.email,
+    this.patronymic,
+    this.gender,
+    this.licensePlate,
+    this.avatarUrl,
+  });
+
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    final data = json['data'];
+    return UserProfile(
+      numericPhone: data['phone']['numeric'],
+      maskedPhone: data['phone']['masked'],
+      email: data['email'],
+      firstName: data['firstname'],
+      lastName: data['lastname'],
+      patronymic: data['patronymic'],
+      gender: data['gender'],
+      licensePlate: data['license_plate'],
+      avatarUrl: data['avatar']?['url'],
+    );
+  }
+}
+
+final userProvider = FutureProvider<UserProfile>((ref) async {
+  // TODO: Implement actual user fetch logic
+  return UserProfile(
+    numericPhone: '+7 700 111 11 11',
+    maskedPhone: '+7 700 111 11 11',
+    firstName: 'Анна',
+    lastName: 'Маринина',
+  );
+});

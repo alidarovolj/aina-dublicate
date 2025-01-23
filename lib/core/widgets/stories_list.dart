@@ -32,99 +32,101 @@ class _StoryListState extends ConsumerState<StoryList> {
   Widget build(BuildContext context) {
     final stories = ref.watch(storiesProvider);
 
-    // Debug prints
-    debugPrint('Stories state: $stories');
-    debugPrint('Stories value: ${stories.valueOrNull}');
-    debugPrint('Stories length: ${stories.valueOrNull?.length}');
+    return stories.when(
+      loading: () => const SizedBox.shrink(),
+      error: (error, stack) => const SizedBox.shrink(),
+      data: (storiesList) {
+        if (storiesList.isEmpty) {
+          return const SizedBox.shrink();
+        }
 
-    return Container(
-      height: 120,
-      padding: const EdgeInsets.symmetric(vertical: AppLength.xs),
-      decoration: const BoxDecoration(
-        color: AppColors.primary,
-      ),
-      child: stories.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Error: $error')),
-        data: (storiesList) => ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: storiesList.length,
-          itemBuilder: (context, index) {
-            final story = storiesList[index];
-            debugPrint('Story $index: ${story.name}, ${story.previewImage}');
-            return Container(
-              width: 80,
-              margin: const EdgeInsets.symmetric(horizontal: AppLength.tiny),
-              child: Column(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      markStoryAsRead(index);
-                      showGeneralDialog(
-                        context: context,
-                        barrierDismissible: true,
-                        barrierLabel: MaterialLocalizations.of(context)
-                            .modalBarrierDismissLabel,
-                        barrierColor: AppColors.primary.withOpacity(0.5),
-                        transitionDuration: const Duration(milliseconds: 300),
-                        pageBuilder: (context, animation, secondaryAnimation) {
-                          return StoryDetailsPage(
-                            stories: stories.valueOrNull
-                                    ?.map((story) => story)
-                                    .toList() ??
-                                [],
-                            initialIndex: index,
-                            onStoryRead: (readIndex) {
-                              markStoryAsRead(readIndex);
-                            },
-                          );
-                        },
-                      );
-                    },
-                    child: Container(
-                      width: 68,
-                      height: 68,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: story.read
-                              ? AppColors.textSecondary
-                              : AppColors.secondary,
-                          width: 2,
+        return Container(
+          height: 120,
+          padding: const EdgeInsets.symmetric(vertical: AppLength.xs),
+          decoration: const BoxDecoration(
+            color: AppColors.primary,
+          ),
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: storiesList.length,
+            itemBuilder: (context, index) {
+              final story = storiesList[index];
+              debugPrint('Story $index: ${story.name}, ${story.previewImage}');
+              return Container(
+                width: 80,
+                margin: const EdgeInsets.symmetric(horizontal: AppLength.tiny),
+                child: Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        markStoryAsRead(index);
+                        showGeneralDialog(
+                          context: context,
+                          barrierDismissible: true,
+                          barrierLabel: MaterialLocalizations.of(context)
+                              .modalBarrierDismissLabel,
+                          barrierColor: AppColors.primary.withOpacity(0.5),
+                          transitionDuration: const Duration(milliseconds: 300),
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) {
+                            return StoryDetailsPage(
+                              stories: stories.valueOrNull
+                                      ?.map((story) => story)
+                                      .toList() ??
+                                  [],
+                              initialIndex: index,
+                              onStoryRead: (readIndex) {
+                                markStoryAsRead(readIndex);
+                              },
+                            );
+                          },
+                        );
+                      },
+                      child: Container(
+                        width: 68,
+                        height: 68,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: story.read
+                                ? AppColors.textSecondary
+                                : AppColors.secondary,
+                            width: 2,
+                          ),
                         ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(2.0),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(100),
-                          child: Image.network(
-                            story.previewImage ?? '',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.error),
+                        child: Padding(
+                          padding: const EdgeInsets.all(2.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(100),
+                            child: Image.network(
+                              story.previewImage ?? '',
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.error),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    story.name ?? '',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.white,
+                    const SizedBox(height: 4),
+                    Text(
+                      story.name ?? '',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

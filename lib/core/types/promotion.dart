@@ -1,13 +1,15 @@
+import 'package:aina_flutter/core/types/button_config.dart';
+
 class Promotion {
   final int id;
   final String name;
   final String title;
   final String subtitle;
   final String body;
-  final String bottomBody;
+  final String? bottomBody;
   final PreviewImage previewImage;
   final String? link;
-  final String buildingType;
+  final String? buildingType;
   final bool isAuthRequired;
   final DateTime? startAt;
   final DateTime? endAt;
@@ -16,7 +18,8 @@ class Promotion {
   final String? minAmountOfReceipt;
   final int? maxCountOfCouponsPerReceipt;
   final int? amountOfCouponsForPromo;
-  final int order;
+  final int? order;
+  final ButtonConfig? button;
 
   Promotion({
     required this.id,
@@ -24,10 +27,10 @@ class Promotion {
     required this.title,
     required this.subtitle,
     required this.body,
-    required this.bottomBody,
+    this.bottomBody,
     required this.previewImage,
     this.link,
-    required this.buildingType,
+    this.buildingType,
     required this.isAuthRequired,
     this.startAt,
     this.endAt,
@@ -36,42 +39,44 @@ class Promotion {
     this.minAmountOfReceipt,
     this.maxCountOfCouponsPerReceipt,
     this.amountOfCouponsForPromo,
-    required this.order,
+    this.order,
+    this.button,
   });
 
   factory Promotion.fromJson(Map<String, dynamic> json) {
     return Promotion(
-      id: json['id'],
-      name: json['name'],
-      title: json['title'],
-      subtitle: json['subtitle'],
-      body: json['body'],
-      bottomBody: json['bottom_body'],
-      previewImage: PreviewImage.fromJson(json['preview_image']),
-      link: json['link'],
-      buildingType: json['building_type'] ?? '',
-      isAuthRequired: json['is_auth_required'] ?? false,
+      id: json['id'] as int,
+      name: json['name'] as String,
+      title: json['title'] as String,
+      subtitle: json['subtitle'] as String,
+      body: json['body'] as String,
+      bottomBody: json['bottom_body'] as String?,
+      previewImage:
+          PreviewImage.fromJson(json['preview_image'] as Map<String, dynamic>),
+      link: json['link'] as String?,
+      buildingType: json['building_type'] as String?,
+      isAuthRequired: json['is_auth_required'] as bool? ?? false,
       startAt: json['start_at'] != null
-          ? DateTime.parse(json['start_at']).toLocal()
+          ? DateTime.parse(json['start_at'] as String)
           : null,
       endAt: json['end_at'] != null
-          ? DateTime.parse(json['end_at']).toLocal()
+          ? DateTime.parse(json['end_at'] as String)
           : null,
-      isActive: json['is_active'] ?? false,
-      isQr: json['is_qr'] ?? false,
-      minAmountOfReceipt: json['min_amount_of_receipt']?.toString(),
-      maxCountOfCouponsPerReceipt: json['max_count_of_coupons_per_receipt'],
-      amountOfCouponsForPromo: json['amount_of_coupons_for_promo'],
-      order: json['order'] ?? 0,
+      isActive: json['is_active'] as bool? ?? true,
+      isQr: json['is_qr'] as bool? ?? false,
+      minAmountOfReceipt: json['min_amount_of_receipt'] as String?,
+      maxCountOfCouponsPerReceipt:
+          json['max_count_of_coupons_per_receipt'] as int?,
+      amountOfCouponsForPromo: json['amount_of_coupons_for_promo'] as int?,
+      order: json['order'] as int?,
+      button: json['button'] != null
+          ? ButtonConfig.fromJson(json['button'] as Map<String, dynamic>)
+          : null,
     );
   }
 
   String get formattedDateRange {
     if (startAt == null || endAt == null) return '';
-
-    // Add debug print to check the dates
-    print('Start date: $startAt');
-    print('End date: $endAt');
 
     return '${_formatDate(startAt!)} - ${_formatDate(endAt!)}';
   }

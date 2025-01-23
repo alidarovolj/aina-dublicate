@@ -7,21 +7,26 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'app.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // import 'package:aina_flutter/core/providers/auth/auth_state.dart';
+import 'package:flutter/services.dart';
 
 Future<void> main() async {
+  // Ensure Flutter bindings are initialized
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables and other initializations
   await dotenv.load();
-  // WidgetsFlutterBinding.ensureInitialized();
-
-  // // Initialize Firebase
-  // await initializeFirebase();
-
-  // // Request notification permissions
-  // await requestNotificationPermissions();
-
-  // // Set up notification listeners
-  // setupNotificationListeners();
-
   await initializeDateFormatting('ru', null);
+
+  // Set system UI overlay style
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarBrightness: Brightness.light,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.white,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
 
   // Check if user has seen onboarding
   // final hasSeenOnboarding = await StorageService.hasSeenOnboarding();

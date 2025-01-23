@@ -55,7 +55,7 @@ class _MallsState extends ConsumerState<Malls> {
                         Center(child: Text('Error: $error')),
                     data: (banners) => CarouselWithIndicator(
                       slideList: banners,
-                      showIndicators: false,
+                      showIndicators: true,
                       height: 125,
                     ),
                   ),

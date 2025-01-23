@@ -2,14 +2,16 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/api/api_client.dart';
 import 'package:aina_flutter/core/services/storage_service.dart';
+import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 
-final requestCodeProvider =
-    Provider<RequestCodeService>((ref) => RequestCodeService(ApiClient().dio));
+final requestCodeProvider = Provider<RequestCodeService>(
+    (ref) => RequestCodeService(ApiClient().dio, ref));
 
 class RequestCodeService {
   final Dio _dio;
+  final Ref ref;
 
-  RequestCodeService(Dio dio) : _dio = dio;
+  RequestCodeService(this._dio, this.ref);
 
   Future<String?> _getAuthHeader() async {
     final token = await StorageService.getToken();
@@ -58,20 +60,22 @@ class RequestCodeService {
 
   Future<Response?> sendOTP(String phoneNumber, String code) async {
     try {
-      final authHeader = await _getAuthHeader();
       final response = await _dio.post(
-        '/login',
+        '/auth/signin/',
         data: {
           'phone': phoneNumber,
-          'code': code,
+          'otp': code,
         },
-        options: authHeader != null
-            ? Options(headers: {'Authorization': authHeader})
-            : null,
       );
+
+      if (response.data is Map && response.data['access_token'] != null) {
+        final token = response.data['access_token'];
+        ref.read(authProvider.notifier).setToken(token);
+      }
+
       return response;
     } catch (e) {
-      print('Ошибка при запросе кода: $e');
+      print('Error during login: $e');
       return null;
     }
   }
@@ -80,7 +84,7 @@ class RequestCodeService {
     try {
       final authHeader = await _getAuthHeader();
       final response = await _dio.get(
-        '/auth/me',
+        '/api/aina/profile',
         options: authHeader != null
             ? Options(headers: {'Authorization': authHeader})
             : null,

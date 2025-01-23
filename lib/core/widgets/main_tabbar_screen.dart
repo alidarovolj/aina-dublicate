@@ -26,21 +26,30 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
     '/malls': 0,
     '/malls/*/promotions': 1,
     '/stores': 2,
-    '/profile': 3,
+    '/malls/*/stores': 2,
+    '/malls/*/profile': 3,
   };
 
   final Map<int, String> _tabIndexToRoutes = {
     0: '/malls',
     1: '/malls/*/promotions', // When clicking promotions tab, stay on current mall's promotions
     2: '/stores',
-    3: '/profile',
+    3: '/malls/*/profile',
   };
 
   String _normalizeRoute(String route) {
     // Convert routes like /malls/123/promotions to /malls/*/promotions
     final parts = route.split('/');
     if (parts.length >= 3 && parts[1] == 'malls' && parts.length > 3) {
-      return '/malls/*/promotions';
+      if (parts[3] == 'promotions') {
+        return '/malls/*/promotions';
+      }
+      if (parts[3] == 'stores') {
+        return '/malls/*/stores';
+      }
+      if (parts[3] == 'profile') {
+        return '/malls/*/profile';
+      }
     }
     return route;
   }
@@ -77,40 +86,88 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
   void _navigateToTab(int index) {
     final route = _tabIndexToRoutes[index];
     if (route != null && widget.currentRoute != route) {
-      // Special handling for promotions tab
-      if (index == 1) {
-        // Extract current mall ID if we're in a mall route
-        final parts = widget.currentRoute.split('/');
-        if (parts.length >= 3 && parts[1] == 'malls') {
-          final mallId = parts[2];
-          if (!widget.currentRoute.endsWith('/promotions')) {
-            context.go('/malls/$mallId/promotions');
+      // Schedule navigation for next frame
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Handle profile tab navigation with auth check
+        if (index == 3) {
+          final authState = ref.read(authProvider.notifier);
+          if (!authState.canAccessProfile) {
+            context.go('/login');
+            return;
           }
+          // Extract current mall ID if we're in a mall route
+          final parts = widget.currentRoute.split('/');
+          if (parts.length >= 3 && parts[1] == 'malls') {
+            final mallId = parts[2];
+            context.go('/malls/$mallId/profile');
+            return;
+          }
+          // If not in mall route, go to malls first
+          context.go('/malls');
           return;
         }
-        // If not in a mall route, go to malls first
-        context.go('/malls');
-        return;
-      }
 
-      // Special handling for malls tab when in promotions
-      if (index == 0 && widget.currentRoute.contains('/promotions')) {
-        final parts = widget.currentRoute.split('/');
-        if (parts.length >= 3) {
-          final mallId = parts[2];
-          context.go('/malls/$mallId');
+        // Special handling for stores tab
+        if (index == 2) {
+          // Extract current mall ID if we're in a mall route
+          final parts = widget.currentRoute.split('/');
+          if (parts.length >= 3 && parts[1] == 'malls') {
+            final mallId = parts[2];
+            if (!widget.currentRoute.endsWith('/stores')) {
+              context.go('/malls/$mallId/stores');
+            }
+            return;
+          }
+          // If not in a mall route, go to stores
+          context.go('/stores');
           return;
         }
-      }
 
-      if (index == 4) {
-        final authState = ref.read(authProvider);
-        if (!authState.isAuthenticated) {
-          context.go('/login');
+        // Special handling for malls tab when in stores
+        if (index == 0 && widget.currentRoute.contains('/stores')) {
+          final parts = widget.currentRoute.split('/');
+          if (parts.length >= 3) {
+            final mallId = parts[2];
+            context.go('/malls/$mallId');
+            return;
+          }
+        }
+
+        // Special handling for promotions tab
+        if (index == 1) {
+          // Extract current mall ID if we're in a mall route
+          final parts = widget.currentRoute.split('/');
+          if (parts.length >= 3 && parts[1] == 'malls') {
+            final mallId = parts[2];
+            if (!widget.currentRoute.endsWith('/promotions')) {
+              context.go('/malls/$mallId/promotions');
+            }
+            return;
+          }
+          // If not in a mall route, go to malls first
+          context.go('/malls');
           return;
         }
-      }
-      context.go(route);
+
+        // Special handling for malls tab when in promotions
+        if (index == 0 && widget.currentRoute.contains('/promotions')) {
+          final parts = widget.currentRoute.split('/');
+          if (parts.length >= 3) {
+            final mallId = parts[2];
+            context.go('/malls/$mallId');
+            return;
+          }
+        }
+
+        if (index == 4) {
+          final authState = ref.read(authProvider);
+          if (!authState.isAuthenticated) {
+            context.go('/login');
+            return;
+          }
+        }
+        context.go(route);
+      });
     }
   }
 

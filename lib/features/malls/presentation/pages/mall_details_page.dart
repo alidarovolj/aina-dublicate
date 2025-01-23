@@ -11,6 +11,7 @@ import 'package:aina_flutter/core/widgets/promotions_block.dart';
 import 'package:aina_flutter/core/widgets/categories_grid.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:aina_flutter/core/widgets/shop_categories_grid.dart';
+import 'package:go_router/go_router.dart';
 
 class MallDetailsPage extends ConsumerWidget {
   final int mallId;
@@ -25,7 +26,12 @@ class MallDetailsPage extends ConsumerWidget {
     final buildingsAsync = ref.watch(buildingsProvider);
 
     return buildingsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Scaffold(
+        body: Padding(
+          padding: EdgeInsets.symmetric(vertical: AppLength.xxl),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ),
       error: (error, stack) => Center(child: Text('Error: $error')),
       data: (buildings) {
         final mall = (buildings['mall'] ?? [])
@@ -38,7 +44,7 @@ class MallDetailsPage extends ConsumerWidget {
               child: Stack(
                 children: [
                   Container(
-                    color: AppColors.white,
+                    color: AppColors.appBg,
                     margin: const EdgeInsets.only(
                         top: 64), // Height of CustomHeader
                     child: CustomScrollView(
@@ -107,7 +113,12 @@ class MallDetailsPage extends ConsumerWidget {
                             showTitle: true,
                             showViewAll: true,
                             showDivider: true,
-                            onViewAllTap: () {},
+                            onViewAllTap: () {
+                              context.goNamed(
+                                'mall_promotions',
+                                pathParameters: {'id': mallId.toString()},
+                              );
+                            },
                           ),
                         ),
 
@@ -126,7 +137,7 @@ class MallDetailsPage extends ConsumerWidget {
                   ),
                   CustomHeader(
                     title: mall.name,
-                    onClose: () => Navigator.pop(context),
+                    type: HeaderType.close,
                   ),
                 ],
               ),

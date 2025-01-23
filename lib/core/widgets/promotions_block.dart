@@ -4,38 +4,53 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/requests/mall_promotions_provider.dart';
+import 'package:aina_flutter/core/providers/requests/promotions_provider.dart';
 import 'package:aina_flutter/core/types/card_type.dart';
 
 class PromotionsBlock extends ConsumerWidget {
-  final String mallId;
+  final String? mallId;
   final VoidCallback? onViewAllTap;
   final bool showTitle;
   final bool showViewAll;
   final bool showDivider;
   final PromotionCardType cardType;
   final bool showGradient;
+  final bool onlyQr;
+  final Widget Function(BuildContext)? emptyBuilder;
 
   const PromotionsBlock({
     super.key,
-    required this.mallId,
+    this.mallId,
     this.onViewAllTap,
     this.showTitle = true,
     this.showViewAll = true,
     this.showDivider = true,
     this.cardType = PromotionCardType.medium,
     this.showGradient = false,
+    this.onlyQr = false,
+    this.emptyBuilder,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final promotionsAsync = ref.watch(mallPromotionsProvider(mallId));
+    final promotionsAsync = mallId != null
+        ? ref.watch(mallPromotionsProvider(mallId!))
+        : onlyQr
+            ? ref.watch(qrPromotionsProvider)
+            : ref.watch(promotionsProvider);
 
     return promotionsAsync.when(
-      loading: () => const SizedBox.shrink(),
-      error: (error, stack) => const SizedBox.shrink(),
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: AppLength.xxl),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stack) {
+        print('Error in PromotionsBlock: $error');
+        return const SizedBox.shrink(); // Or show an error message/retry button
+      },
       data: (promotions) {
         if (promotions.isEmpty) {
-          return const SizedBox.shrink();
+          return emptyBuilder?.call(context) ?? const SizedBox.shrink();
         }
 
         return Column(
@@ -81,6 +96,8 @@ class PromotionsBlock extends ConsumerWidget {
               ),
             if (cardType == PromotionCardType.medium)
               _buildMediumCardList(context, promotions)
+            else if (cardType == PromotionCardType.small)
+              _buildSmallCardGrid(context, promotions)
             else
               _buildFullCardList(context, promotions),
             if (showDivider)
@@ -257,6 +274,48 @@ class PromotionsBlock extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSmallCardGrid(BuildContext context, List<dynamic> promotions) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    const horizontalPadding = AppLength.xs * 2; // Total horizontal padding
+    const itemSpacing = 12.0; // Spacing between items
+    final totalSpacing =
+        itemSpacing * (promotions.length - 1); // Total spacing between items
+    final availableWidth = screenWidth - horizontalPadding - totalSpacing;
+    final itemWidth = availableWidth / promotions.length;
+
+    return SizedBox(
+      height: 94,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppLength.xs),
+        itemCount: promotions.length,
+        itemBuilder: (context, index) {
+          final promotion = promotions[index];
+          return GestureDetector(
+            onTap: () {
+              context.pushNamed(
+                'promotion_details',
+                pathParameters: {'id': promotion.id.toString()},
+              );
+            },
+            child: Container(
+              width: itemWidth,
+              margin: EdgeInsets.only(
+                  right: index != promotions.length - 1 ? itemSpacing : 0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                image: DecorationImage(
+                  image: NetworkImage(promotion.previewImage.url),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

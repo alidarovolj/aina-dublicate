@@ -1,3 +1,5 @@
+import 'package:aina_flutter/core/widgets/upper_header.dart';
+import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
@@ -6,6 +8,8 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/providers/requests/auth/user.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'dart:async';
 
 class CodeInputScreen extends ConsumerStatefulWidget {
   final String phoneNumber;
@@ -22,9 +26,82 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
   final List<TextEditingController> controllers =
       List.generate(4, (index) => TextEditingController());
   bool isLoading = false;
+  Timer? _timer;
+  int _timeLeft = 59;
+  bool _canResend = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.isFromRegistration) {
+        sendInitialLoginRequest();
+      }
+      _startTimer();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    for (var controller in controllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _startTimer() {
+    setState(() {
+      _timeLeft = 59;
+      _canResend = false;
+    });
+
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_timeLeft > 0) {
+        setState(() {
+          _timeLeft--;
+        });
+      } else {
+        timer.cancel();
+        setState(() {
+          _canResend = true;
+        });
+      }
+    });
+  }
+
+  Future<void> _resendCode() async {
+    if (!_canResend) return;
+
+    await sendInitialLoginRequest();
+    _startTimer();
+  }
+
+  Future<void> sendInitialLoginRequest() async {
+    try {
+      final response = await ref.read(requestCodeProvider).sendCodeRequest(
+            '7${widget.phoneNumber.replaceAll(RegExp(r'[^\d]'), '')}',
+          );
+
+      if (!mounted) return;
+
+      if (response == null) {
+        _showError('Нет ответа от сервера');
+        return;
+      }
+
+      if (response.statusCode != 200) {
+        _showError('Ошибка при отправке кода: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _showError('Произошла ошибка при выполнении запроса');
+    }
+  }
 
   void checkCodeCompletion() async {
-    if (isLoading) return; // Prevent multiple simultaneous requests
+    if (isLoading) return;
 
     final code = controllers.map((controller) => controller.text).join();
     if (code.length == 4) {
@@ -34,7 +111,7 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
 
       try {
         final phoneFormatted =
-            '8${widget.phoneNumber.replaceAll(RegExp(r'[^\d]'), '')}';
+            '7${widget.phoneNumber.replaceAll(RegExp(r'[^\d]'), '')}';
 
         final response = await ref.read(requestCodeProvider).sendOTP(
               phoneFormatted,
@@ -77,11 +154,20 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
 
   Future<void> _handleSuccessfulResponse(dynamic data) async {
     final responseData = Map<String, dynamic>.from(data);
-    if (!responseData.containsKey('access_token')) {
+
+    // Проверяем успешность ответа
+    if (!responseData.containsKey('success') || !responseData['success']) {
+      throw Exception('Неуспешный ответ от сервера');
+    }
+
+    // Получаем данные из вложенного объекта data
+    final authData = Map<String, dynamic>.from(responseData['data']);
+
+    if (!authData.containsKey('access_token')) {
       throw Exception('Токен отсутствует в ответе');
     }
 
-    final token = responseData['access_token'] as String;
+    final token = authData['access_token'] as String;
     await StorageService.saveToken(token);
 
     final savedToken = await StorageService.getToken();
@@ -89,159 +175,164 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
       throw Exception('Токен не был сохранен корректно');
     }
 
-    await ref.read(authProvider.notifier).login(token);
+    await ref.read(authProvider.notifier).setToken(token);
     if (!mounted) return;
     context.go('/');
   }
 
   @override
   Widget build(BuildContext context) {
-    // Send initial login request
-    Future<void> sendInitialLoginRequest() async {
-      if (!widget.isFromRegistration) return; // Skip if not from registration
-
-      try {
-        final response = await ref.read(requestCodeProvider).sendCodeRequest(
-              '8${widget.phoneNumber.replaceAll(RegExp(r'[^\d]'), '')}',
-            );
-
-        if (response == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Нет ответа от сервера'),
-              backgroundColor: Colors.red,
-            ),
-          );
-          return;
-        }
-
-        if (response.statusCode != 200) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Ошибка при отправке кода: ${response.statusCode}'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      } catch (e) {
-        print('Ошибка при выполнении запроса: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Произошла ошибка при выполнении запроса'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-
-    // Call the function when the page builds
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      sendInitialLoginRequest();
-    });
-
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: AppColors.white,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(AppLength.body),
-        child: AutofillGroup(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      body: Container(
+        color: AppColors.primary,
+        child: SafeArea(
+          child: Stack(
             children: [
-              const Text('Введите код',
-                  style: TextStyle(
-                      fontSize: AppLength.xxxl, fontWeight: FontWeight.w600)),
-              const SizedBox(height: AppLength.tiny),
-              RichText(
-                text: TextSpan(
-                  children: [
-                    const TextSpan(
-                        text: 'Мы отправили код на номер ',
-                        style: TextStyle(
-                            fontSize: AppLength.body,
-                            color: Color.fromARGB(255, 99, 106, 107))),
-                    TextSpan(
-                        text: '+7 ${widget.phoneNumber}',
-                        style: const TextStyle(
-                            fontSize: AppLength.sm,
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppLength.body),
-              Row(
-                children: List.generate(4, (index) {
-                  return Container(
-                    width: 58,
-                    height: 54,
-                    margin: const EdgeInsets.only(right: AppLength.xs),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: AppLength.body, horizontal: AppLength.xs),
-                    decoration: BoxDecoration(
-                      color: AppColors.secondaryLight,
-                      borderRadius: BorderRadius.circular(8),
+              Container(
+                color: AppColors.white,
+                child: CustomScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  slivers: [
+                    const SliverToBoxAdapter(
+                      child: UpperHeader(),
                     ),
-                    child: TextField(
-                      controller: controllers[index],
-                      keyboardType: TextInputType.number,
-                      autofillHints:
-                          index == 0 ? const [AutofillHints.oneTimeCode] : null,
-                      inputFormatters: [
-                        LengthLimitingTextInputFormatter(1),
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontSize: AppLength.lg, fontWeight: FontWeight.bold),
-                      onChanged: (value) {
-                        if (index == 0 && value.length > 1) {
-                          final fullCode = value;
-                          for (var i = 0;
-                              i < controllers.length && i < fullCode.length;
-                              i++) {
-                            controllers[i].text = fullCode[i];
-                          }
-                          FocusScope.of(context).unfocus();
-                          checkCodeCompletion();
-                        } else if (value.isNotEmpty && index < 3) {
-                          FocusScope.of(context).nextFocus();
-                        } else if (value.isEmpty && index > 0) {
-                          FocusScope.of(context).previousFocus();
-                        }
-                        checkCodeCompletion();
-                      },
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        hintText: '•',
-                        hintStyle: TextStyle(
-                          fontSize: AppLength.lg,
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
+                    const SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: 96,
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppLength.body),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Введите код из SMS',
+                              style: GoogleFonts.lora(
+                                fontSize: AppLength.xl,
+                                color: AppColors.textDarkGrey,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            RichText(
+                              text: TextSpan(
+                                children: [
+                                  const TextSpan(
+                                    text:
+                                        'Мы отправили вам сообщение на номер ',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: AppColors.textDarkGrey,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '+7 ${widget.phoneNumber}',
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      color: AppColors.textDarkGrey,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const TextSpan(
+                                    text: ' c кодом для входа',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: AppColors.textDarkGrey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: AppLength.body),
+                            AutofillGroup(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: List.generate(4, (index) {
+                                  return Container(
+                                    width: 58,
+                                    height: 54,
+                                    margin: const EdgeInsets.only(right: 8),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        width: 1,
+                                        color: AppColors.lightGrey,
+                                      ),
+                                    ),
+                                    child: TextField(
+                                      controller: controllers[index],
+                                      keyboardType: TextInputType.number,
+                                      autofillHints: index == 0
+                                          ? const [AutofillHints.oneTimeCode]
+                                          : null,
+                                      inputFormatters: [
+                                        LengthLimitingTextInputFormatter(1),
+                                        FilteringTextInputFormatter.digitsOnly,
+                                      ],
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: AppLength.lg,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.textDarkGrey,
+                                      ),
+                                      onChanged: (value) {
+                                        if (index == 0 && value.length > 1) {
+                                          final fullCode = value;
+                                          for (var i = 0;
+                                              i < controllers.length &&
+                                                  i < fullCode.length;
+                                              i++) {
+                                            controllers[i].text = fullCode[i];
+                                          }
+                                          FocusScope.of(context).unfocus();
+                                          checkCodeCompletion();
+                                        } else if (value.isNotEmpty &&
+                                            index < 3) {
+                                          FocusScope.of(context).nextFocus();
+                                        } else if (value.isEmpty && index > 0) {
+                                          FocusScope.of(context)
+                                              .previousFocus();
+                                        }
+                                        checkCodeCompletion();
+                                      },
+                                      decoration: const InputDecoration(
+                                        border: InputBorder.none,
+                                        contentPadding: EdgeInsets.zero,
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ),
+                            const SizedBox(height: AppLength.xxxl),
+                            Center(
+                              child: GestureDetector(
+                                onTap: _resendCode,
+                                child: Text(
+                                  _canResend
+                                      ? 'Отправить код повторно'
+                                      : 'Отправить код повторно через 00:${_timeLeft.toString().padLeft(2, '0')}',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: _canResend
+                                        ? AppColors.secondary
+                                        : AppColors.secondary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  );
-                }).map((widget) => Flexible(child: widget)).toList(),
-              ),
-              const SizedBox(height: AppLength.xxxl),
-              const Text('Отправить новый код 1:30',
-                  style: TextStyle(
-                      fontSize: AppLength.body,
-                      color: Color.fromARGB(255, 99, 106, 107))),
-              const SizedBox(height: AppLength.xxxl),
-              GestureDetector(
-                onTap: () {
-                  // Handle registration
-                },
-                child: const Text(
-                  'Нет аккаунта? Зарегистрироваться',
-                  style: TextStyle(
-                      fontSize: AppLength.body,
-                      color: AppColors.primary,
-                      decoration: TextDecoration.underline),
+                  ],
                 ),
+              ),
+              const CustomHeader(
+                title: 'Подтверждение',
+                type: HeaderType.close,
               ),
             ],
           ),

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
-import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
 import 'package:aina_flutter/core/widgets/events_block.dart';
 
@@ -52,7 +51,7 @@ class _PromotionsPageState extends ConsumerState<PromotionsPage>
               child: Stack(
                 children: [
                   Container(
-                    color: AppColors.white,
+                    color: AppColors.appBg,
                     margin: const EdgeInsets.only(top: 64),
                     child: CustomScrollView(
                       physics: const ClampingScrollPhysics(),
@@ -118,6 +117,15 @@ class _PromotionsPageState extends ConsumerState<PromotionsPage>
                                 showDivider: false,
                                 cardType: PromotionCardType.full,
                                 showGradient: true,
+                                emptyBuilder: (context) => const Center(
+                                  child: Text(
+                                    'В данный момент нет активных акций',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: AppColors.textDarkGrey,
+                                    ),
+                                  ),
+                                ),
                               ),
                               EventsBlock(
                                 mallId: widget.mallId.toString(),
@@ -129,9 +137,9 @@ class _PromotionsPageState extends ConsumerState<PromotionsPage>
                       ],
                     ),
                   ),
-                  CustomHeader(
-                    title: mall.name,
-                    onClose: () => context.pop(),
+                  const CustomHeader(
+                    title: "Акции",
+                    type: HeaderType.close,
                   ),
                 ],
               ),

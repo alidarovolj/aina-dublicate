@@ -1,15 +1,16 @@
+import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/providers/requests/mall_events_provider.dart';
 
 class EventsBlock extends ConsumerWidget {
   final String mallId;
-  final VoidCallback onViewAllTap;
+  final VoidCallback? onViewAllTap;
 
   const EventsBlock({
     super.key,
     required this.mallId,
-    required this.onViewAllTap,
+    this.onViewAllTap,
   });
 
   @override
@@ -17,9 +18,27 @@ class EventsBlock extends ConsumerWidget {
     final eventsAsync = ref.watch(mallEventsProvider(mallId));
 
     return eventsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => const Center(
+        child: Text(
+          'В данный момент нет активных мероприятий',
+          style: TextStyle(
+            fontSize: 15,
+            color: AppColors.textDarkGrey,
+          ),
+        ),
+      ),
       data: (events) {
         if (events.isEmpty) {
-          return const Center(child: Text('Нет активных мероприятий'));
+          return const Center(
+            child: Text(
+              'В данный момент нет активных мероприятий',
+              style: TextStyle(
+                fontSize: 15,
+                color: AppColors.textDarkGrey,
+              ),
+            ),
+          );
         }
 
         return ListView.builder(
@@ -97,10 +116,6 @@ class EventsBlock extends ConsumerWidget {
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Text('Error: ${error.toString()}'),
-      ),
     );
   }
 }

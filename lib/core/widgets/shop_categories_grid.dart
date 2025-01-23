@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/requests/mall_shop_categories_provider.dart';
 
@@ -34,7 +35,10 @@ class ShopCategoriesGrid extends ConsumerWidget {
               ),
               TextButton(
                 onPressed: () {
-                  // TODO: Implement view all action
+                  context.goNamed(
+                    'mall_shop_categories',
+                    pathParameters: {'id': mallId},
+                  );
                 },
                 child: Row(
                   children: [
@@ -76,47 +80,56 @@ class ShopCategoriesGrid extends ConsumerWidget {
                 itemCount: sortedCategories.length,
                 itemBuilder: (context, index) {
                   final category = sortedCategories[index];
-                  return Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: category.image != null
-                              ? Image.network(
-                                  category.image!.url,
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  height: 168,
-                                )
-                              : Container(
-                                  height: 168,
-                                  color: Colors.grey[200],
-                                  child: const Icon(Icons.category),
-                                ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            top: 8,
-                            bottom: 4,
-                            left: 4,
-                            right: 4,
+                  return GestureDetector(
+                    onTap: () {
+                      context.goNamed(
+                        'mall_stores',
+                        pathParameters: {'id': mallId},
+                        queryParameters: {'category': category.id.toString()},
+                      );
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: category.image != null
+                                ? Image.network(
+                                    category.image!.url,
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: 168,
+                                  )
+                                : Container(
+                                    height: 168,
+                                    color: Colors.grey[200],
+                                    child: const Icon(Icons.category),
+                                  ),
                           ),
-                          child: Text(
-                            category.title.toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textDarkGrey,
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              top: 8,
+                              bottom: 4,
+                              left: 4,
+                              right: 4,
                             ),
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                            child: Text(
+                              category.title.toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textDarkGrey,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   );
                 },

@@ -1,118 +1,111 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:aina_flutter/core/utils/button_navigation_handler.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
+import 'package:aina_flutter/core/types/button_config.dart';
 
-enum ButtonType { small, normal, big } // Типы кнопок
+enum ButtonType { normal, filled, bordered }
 
-class CustomButton extends StatefulWidget {
-  final String label; // Текст на кнопке
-  final VoidCallback onPressed; // Действие при нажатии
-  final ButtonType type; // Тип кнопки
-  final bool isEnabled; // Определяет, включена ли кнопка
-  final bool isFullWidth; // Растягивать ли кнопку на всю ширину
-  final bool isLoading; // Add this line
+class CustomButton extends ConsumerWidget {
+  final ButtonConfig? button;
+  final String? label;
+  final VoidCallback? onPressed;
+  final Color? backgroundColor;
+  final double? width;
+  final double? height;
+  final bool isEnabled;
+  final ButtonType type;
+  final bool isFullWidth;
+  final Widget? icon;
+  final bool isLoading;
 
   const CustomButton({
     super.key,
-    required this.label,
-    required this.onPressed,
-    this.type = ButtonType.normal, // Тип по умолчанию
-    this.isEnabled = true, // Кнопка включена по умолчанию
-    this.isFullWidth = true, // По умолчанию на всю ширину
-    this.isLoading = false, // Add this line
+    this.button,
+    this.label,
+    this.onPressed,
+    this.backgroundColor,
+    this.width,
+    this.height,
+    this.isEnabled = true,
+    this.type = ButtonType.normal,
+    this.isFullWidth = false,
+    this.icon,
+    this.isLoading = false,
   });
 
   @override
-  _CustomButtonState createState() => _CustomButtonState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (button == null && label == null) return const SizedBox.shrink();
 
-class _CustomButtonState extends State<CustomButton> {
-  late TextStyle _textStyle;
-  late EdgeInsets _padding;
+    final buttonLabel = button?.label ?? label ?? '';
+    final buttonColor = button?.color ?? backgroundColor?.toString();
 
-  @override
-  void initState() {
-    super.initState();
-    _applyButtonStyle();
-  }
-
-  void _applyButtonStyle() {
-    switch (widget.type) {
-      case ButtonType.small:
-        _textStyle = const TextStyle(
-          fontSize: AppLength.xs,
-          fontWeight: FontWeight.bold,
-          color: AppColors.white,
-        );
-        _padding = const EdgeInsets.symmetric(
-            vertical: AppLength.tiny, horizontal: AppLength.xs);
-        break;
-      case ButtonType.normal:
-        _textStyle = const TextStyle(
-          fontSize: AppLength.sm,
-          fontWeight: FontWeight.w600,
-          color: AppColors.white,
-        );
-        _padding = const EdgeInsets.symmetric(
-            horizontal: AppLength.xs, vertical: AppLength.none);
-        break;
-      case ButtonType.big:
-        _textStyle = const TextStyle(
-          fontSize: AppLength.body,
-          fontWeight: FontWeight.w700,
-          color: AppColors.white,
-        );
-        _padding = const EdgeInsets.symmetric(
-            horizontal: AppLength.xs, vertical: AppLength.xs);
-        break;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-      decoration: BoxDecoration(
-        color: widget.isEnabled ? AppColors.primary : AppColors.buttonDisabled,
-        borderRadius: BorderRadius.circular(AppLength.xs),
-      ),
-      child: MaterialButton(
-        minWidth: widget.isFullWidth ? double.infinity : 0.0,
-        height: widget.type == ButtonType.small ? 24 : 40,
-        padding: _padding,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppLength.xs),
+    return SizedBox(
+      width: isFullWidth ? double.infinity : width,
+      height: height ?? 48,
+      child: ElevatedButton(
+        onPressed: (!isEnabled || isLoading)
+            ? null
+            : (onPressed ??
+                () {
+                  if (button != null) {
+                    ButtonNavigationHandler.handleNavigation(
+                        context, ref, button);
+                  }
+                }),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _getBackgroundColor(buttonColor),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: type == ButtonType.bordered
+                ? const BorderSide(color: AppColors.primary)
+                : BorderSide.none,
+          ),
         ),
-        onPressed: widget.isEnabled ? widget.onPressed : null,
-        color: Colors.transparent,
-        disabledColor: Colors.transparent,
-        elevation: 0,
-        hoverElevation: 0,
-        focusElevation: 0,
-        highlightElevation: 0,
-        child: widget.isLoading
-            ? SizedBox(
-                height: widget.type == ButtonType.small ? 12 : 16,
-                width: widget.type == ButtonType.small ? 12 : 16,
+        child: isLoading
+            ? const SizedBox(
+                width: 24,
+                height: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    widget.isEnabled
-                        ? AppColors.white
-                        : AppColors.textSecondary,
-                  ),
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
-            : AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 200),
-                style: _textStyle.copyWith(
-                  color: widget.isEnabled
-                      ? AppColors.white
-                      : AppColors.textSecondary,
-                ),
-                child: Text(widget.label),
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (icon != null) ...[
+                    icon!,
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    buttonLabel,
+                    style: TextStyle(
+                      color: _getTextColor(),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
       ),
     );
+  }
+
+  Color _getBackgroundColor(String? buttonColor) {
+    if (!isEnabled) return AppColors.grey2;
+    if (type == ButtonType.bordered) return Colors.white;
+    if (buttonColor != null && buttonColor.startsWith('#')) {
+      return Color(int.parse(buttonColor.replaceAll('#', '0xFF')));
+    }
+    return backgroundColor ?? AppColors.primary;
+  }
+
+  Color _getTextColor() {
+    if (!isEnabled) return AppColors.grey2;
+    if (type == ButtonType.bordered) return AppColors.primary;
+    return Colors.white;
   }
 }

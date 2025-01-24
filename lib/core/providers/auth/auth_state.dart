@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/providers/requests/auth/login.dart';
-import 'package:aina_flutter/core/services/storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const String _tokenKey = 'auth_token';

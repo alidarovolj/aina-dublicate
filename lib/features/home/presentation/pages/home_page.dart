@@ -33,6 +33,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final bannersAsync = ref.watch(bannersProvider);
     final promotionsAsync = ref.watch(promotionsProvider);
+    print('show token ${ref.read(authProvider).token}');
 
     return Scaffold(
       body: Container(
@@ -61,9 +62,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   ),
                 ),
-                // SliverToBoxAdapter(
-                //   child: Text('show token ${ref.read(authProvider).token}'),
-                // ),
                 const SliverToBoxAdapter(
                   child: BuildingsList(),
                 ),

@@ -176,7 +176,7 @@ class StoreListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final short_description = store['short_description'] as String?;
+    final shortDescription = store['short_description'] as String?;
 
     return Column(
       children: [
@@ -206,11 +206,11 @@ class StoreListItem extends StatelessWidget {
                     color: Colors.black,
                   ),
                 ),
-                if (short_description != null &&
-                    short_description.isNotEmpty) ...[
+                if (shortDescription != null &&
+                    shortDescription.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(
-                    short_description,
+                    shortDescription,
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[600],

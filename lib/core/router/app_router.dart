@@ -1,5 +1,7 @@
+import 'package:aina_flutter/features/about_app/presentation/pages/about_page.dart';
 import 'package:aina_flutter/features/login/presentation/pages/login_page.dart';
 import 'package:aina_flutter/features/malls/presentation/pages/main_page.dart';
+import 'package:aina_flutter/features/profile/presentation/pages/edit_data.dart';
 import 'package:aina_flutter/features/profile/presentation/pages/profile_page.dart';
 import 'package:aina_flutter/features/promotions/presentation/pages/promotion_details_page.dart';
 import 'package:aina_flutter/features/stores/presentation/pages/store_details_page.dart';
@@ -79,6 +81,17 @@ class AppRouter {
                           int.parse(state.pathParameters['id'] ?? '0');
                       return ProfilePage(mallId: mallId);
                     },
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        name: 'mall_edit',
+                        builder: (context, state) {
+                          final mallId =
+                              int.parse(state.pathParameters['id'] ?? '0');
+                          return EditDataPage(mallId: mallId);
+                        },
+                      ),
+                    ],
                   ),
                   GoRoute(
                     path: 'promotions',
@@ -139,6 +152,11 @@ class AppRouter {
           final id = state.pathParameters['id'] ?? '0';
           return StoreDetailsPage(id: id);
         },
+      ),
+      GoRoute(
+        path: '/about',
+        name: 'about',
+        builder: (context, state) => const AboutPage(),
       ),
       GoRoute(
         path: '/login',

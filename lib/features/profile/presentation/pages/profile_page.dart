@@ -4,6 +4,7 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/providers/requests/auth/user.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
+import 'package:go_router/go_router.dart';
 
 class ProfilePage extends ConsumerWidget {
   final int mallId;
@@ -27,103 +28,108 @@ class ProfilePage extends ConsumerWidget {
               Container(
                 color: AppColors.white,
                 margin: const EdgeInsets.only(top: 64),
-                child: ListView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Profile Info Section
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          if (userData.avatarUrl != null)
-                            CircleAvatar(
-                              radius: 30,
-                              backgroundImage:
-                                  NetworkImage(userData.avatarUrl!),
-                            )
-                          else
-                            CircleAvatar(
-                              radius: 30,
-                              backgroundColor: Colors.grey[300],
-                              child: const Icon(
-                                Icons.person,
-                                size: 40,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${userData.firstName} ${userData.lastName}',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w500,
+                    Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 30),
+                          child: Row(
+                            children: [
+                              if (userData.avatarUrl != null)
+                                Container(
+                                  width: 80,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[300],
+                                    borderRadius: BorderRadius.circular(4),
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  userData.maskedPhone,
-                                  style: const TextStyle(
-                                    fontSize: 14,
+                                  child: Image.network(
+                                    userData.avatarUrl!,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              else
+                                CircleAvatar(
+                                  radius: 30,
+                                  backgroundColor: Colors.grey[300],
+                                  child: const Icon(
+                                    Icons.person,
+                                    size: 40,
                                     color: Colors.grey,
                                   ),
                                 ),
-                              ],
-                            ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${userData.firstName} ${userData.lastName}',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      userData.maskedPhone,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
 
-                    // Menu Items
-                    _buildMenuItem(
-                      'Персональная информация',
-                      Icons.chevron_right,
-                      backgroundColor: Colors.grey[200],
-                      onTap: () {
-                        // TODO: Navigate to personal info
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    _buildMenuItem(
-                      'Язык',
-                      Icons.chevron_right,
-                      backgroundColor: Colors.grey[200],
-                      onTap: () {
-                        // TODO: Navigate to language settings
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    _buildMenuItem(
-                      'Связаться с нами',
-                      null, // No chevron for this item
-                      backgroundColor: Colors.grey[200],
-                      onTap: () {
-                        // TODO: Handle contact action
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    _buildMenuItem(
-                      'О приложении',
-                      Icons.chevron_right,
-                      backgroundColor: Colors.grey[200],
-                      onTap: () {
-                        // TODO: Navigate to about app
-                      },
+                        // Menu Items
+                        _buildMenuItem(
+                          'Персональная информация',
+                          Icons.chevron_right,
+                          backgroundColor: Colors.grey[200],
+                          onTap: () {
+                            context.pushNamed(
+                              'mall_edit',
+                              pathParameters: {'id': mallId.toString()},
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        // _buildMenuItem(
+                        //   'Связаться с нами',
+                        //   null, // No chevron for this item
+                        //   backgroundColor: Colors.grey[200],
+                        //   onTap: () {},
+                        // ),
+                        const SizedBox(height: 8),
+                        _buildMenuItem(
+                          'О приложении',
+                          Icons.chevron_right,
+                          backgroundColor: Colors.grey[200],
+                          onTap: () {
+                            context.pushNamed('about');
+                          },
+                        ),
+                      ],
                     ),
 
                     // Switch Account Section
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.only(
+                          bottom: 28, right: 12, left: 12),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: AppColors.bgLight,
+                          color: AppColors.white,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 16),
+                        padding: const EdgeInsets.all(0),
                         child: Row(
                           children: [
                             const Expanded(
@@ -172,7 +178,6 @@ class ProfilePage extends ConsumerWidget {
     IconData? trailingIcon, {
     Color? backgroundColor,
     required VoidCallback onTap,
-    bool showDivider = false,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),

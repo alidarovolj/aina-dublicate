@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "726308276702",
+    "project_id": "aina-b99fa",
+    "storage_bucket": "aina-b99fa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:726308276702:android:1655cd773314c75178754f",
+        "android_client_info": {
+          "package_name": "kz.aina.android1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBiGXucxkdHtzotBiLSixWkq6Wn9JJAaDE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

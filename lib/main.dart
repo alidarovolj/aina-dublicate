@@ -33,20 +33,6 @@ Future<void> main() async {
 
   runApp(
     const ProviderScope(
-      // child: Consumer(
-      //   builder: (context, ref, child) {
-      //     // Initialize auth state
-      //     ref.read(authProvider.notifier).initializeAuth();
-
-      //     // If user hasn't seen onboarding, redirect to it
-      //     if (!hasSeenOnboarding) {
-      //       Future.microtask(() => StorageService.setHasSeenOnboarding());
-      //       return const MyApp(initialRoute: '/onboarding');
-      //     }
-
-      //     return const MyApp(initialRoute: '/');
-      //   },
-      // ),
       child: MyApp(initialRoute: '/'),
     ),
   );

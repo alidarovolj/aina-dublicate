@@ -10,6 +10,7 @@ import 'package:aina_flutter/core/providers/requests/banners_provider.dart';
 import 'package:aina_flutter/core/widgets/buildings_list.dart';
 import 'package:aina_flutter/core/providers/requests/promotions_provider.dart';
 import 'package:aina_flutter/core/widgets/promotions_block.dart';
+import 'package:shimmer/shimmer.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -52,8 +53,21 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
                 SliverToBoxAdapter(
                   child: bannersAsync.when(
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
+                    loading: () => Shimmer.fromColors(
+                      baseColor: Colors.grey[100]!,
+                      highlightColor: Colors.grey[300]!,
+                      child: Container(
+                        height: 200,
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: AppLength.xs,
+                          vertical: AppLength.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
                     error: (error, stack) =>
                         Center(child: Text('Error: $error')),
                     data: (banners) => CarouselWithIndicator(
@@ -66,17 +80,15 @@ class _HomePageState extends ConsumerState<HomePage> {
                   child: BuildingsList(),
                 ),
                 const SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: AppLength.xxl,
-                  ),
+                  child: PromotionsBlock(
+                      showTitle: true,
+                      showViewAll: false,
+                      showDivider: false,
+                      cardType: PromotionCardType.small),
                 ),
                 const SliverToBoxAdapter(
-                  child: PromotionsBlock(
-                    showTitle: false,
-                    showViewAll: false,
-                    showDivider: false,
-                    cardType: PromotionCardType.small,
-                    onlyQr: true,
+                  child: SizedBox(
+                    height: AppLength.xxxl,
                   ),
                 ),
               ],

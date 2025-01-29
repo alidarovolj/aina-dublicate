@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/requests/mall_shop_categories_provider.dart';
+import 'package:shimmer/shimmer.dart';
 
 class ShopCategoriesGrid extends ConsumerWidget {
   final String mallId;
@@ -60,7 +61,7 @@ class ShopCategoriesGrid extends ConsumerWidget {
           ),
         ),
         categoriesAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => _buildSkeletonLoader(),
           error: (error, stack) => Center(child: Text('Error: $error')),
           data: (categories) {
             final sortedCategories = [...categories]
@@ -138,6 +139,48 @@ class ShopCategoriesGrid extends ConsumerWidget {
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildSkeletonLoader() {
+    return Padding(
+      padding: const EdgeInsets.all(AppLength.xs),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          mainAxisExtent: 212,
+        ),
+        itemCount: 4, // Show 4 skeleton items
+        itemBuilder: (context, index) {
+          return Shimmer.fromColors(
+            baseColor: Colors.grey[100]!,
+            highlightColor: Colors.grey[300]!,
+            child: Column(
+              children: [
+                Container(
+                  height: 168,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

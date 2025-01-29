@@ -1,28 +1,41 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/providers/requests/auth/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:aina_flutter/core/api/api_client.dart';
 
 const String _tokenKey = 'auth_token';
 
 class AuthState {
   final bool isAuthenticated;
+  final bool hasCompletedProfile;
   final String? token;
+  final String? refreshToken;
+  final String? phoneNumber;
   final Map<String, dynamic>? userData;
 
   AuthState({
-    required this.isAuthenticated,
+    this.isAuthenticated = false,
+    this.hasCompletedProfile = false,
     this.token,
+    this.refreshToken,
+    this.phoneNumber,
     this.userData,
   });
 
   AuthState copyWith({
     bool? isAuthenticated,
+    bool? hasCompletedProfile,
     String? token,
+    String? refreshToken,
+    String? phoneNumber,
     Map<String, dynamic>? userData,
   }) {
     return AuthState(
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
+      hasCompletedProfile: hasCompletedProfile ?? this.hasCompletedProfile,
       token: token ?? this.token,
+      refreshToken: refreshToken ?? this.refreshToken,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
       userData: userData ?? this.userData,
     );
   }
@@ -40,6 +53,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final token = prefs.getString(_tokenKey);
 
     if (token != null) {
+      ApiClient().token = token;
       state = state.copyWith(
         isAuthenticated: true,
         token: token,
@@ -65,6 +79,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> setToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
+    ApiClient().token = token;
     state = state.copyWith(
       isAuthenticated: true,
       token: token,
@@ -85,6 +100,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
+    ApiClient().token = null;
     state = AuthState(isAuthenticated: false);
   }
 }

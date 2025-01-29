@@ -7,10 +7,10 @@ class RequestMallPromotionsService {
 
   RequestMallPromotionsService(this._dio);
 
-  Future<Response?> mallPromotions(String mallId) async {
+  Future<Response?> mallPromotions(String buildingId) async {
     try {
       return await _dio.get('/api/aina/promotions', queryParameters: {
-        'building_id': mallId,
+        'building_id': buildingId,
       });
     } catch (e) {
       print('Error in mall promotions request: $e');

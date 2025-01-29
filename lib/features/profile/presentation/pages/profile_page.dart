@@ -17,6 +17,56 @@ class ProfilePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userAsync = ref.watch(authProvider);
+
+    // Show loading state while checking authentication
+    if (userAsync.token == null) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    // If not authenticated, redirect to malls
+    if (!userAsync.isAuthenticated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.go('/malls');
+      });
+      return const SizedBox.shrink();
+    }
+
+    // If no user data, show error state
+    if (userAsync.userData == null) {
+      return Scaffold(
+        body: Container(
+          color: AppColors.primary,
+          child: SafeArea(
+            child: Stack(
+              children: [
+                Container(
+                  color: AppColors.white,
+                  margin: const EdgeInsets.only(top: 64),
+                  child: const Center(
+                    child: Text(
+                      'Не удалось загрузить данные профиля',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ),
+                const CustomHeader(
+                  title: "Профиль ТРЦ",
+                  type: HeaderType.close,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     final userData = UserProfile.fromJson(userAsync.userData!);
 
     return Scaffold(
@@ -70,6 +120,7 @@ class ProfilePage extends ConsumerWidget {
                                     Text(
                                       '${userData.firstName} ${userData.lastName}',
                                       style: const TextStyle(
+                                        color: AppColors.primary,
                                         fontSize: 18,
                                         fontWeight: FontWeight.w500,
                                       ),
@@ -136,7 +187,7 @@ class ProfilePage extends ConsumerWidget {
                               child: Text(
                                 'Переключить на профиль Aina Coworking',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 15,
                                   color: Colors.black87,
                                 ),
                               ),

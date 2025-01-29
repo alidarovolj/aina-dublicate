@@ -5,6 +5,7 @@ import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
 import 'package:aina_flutter/core/types/building.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shimmer/shimmer.dart';
 
 class BuildingsList extends ConsumerWidget {
   const BuildingsList({super.key});
@@ -126,7 +127,7 @@ class BuildingsList extends ConsumerWidget {
     final buildingsAsync = ref.watch(buildingsProvider);
 
     return buildingsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => _buildSkeletonLoader(context),
       error: (error, stack) => Center(child: Text('Error: $error')),
       data: (buildings) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,6 +136,97 @@ class BuildingsList extends ConsumerWidget {
           _buildMallRow(buildings['mall'] ?? [], context),
         ],
       ),
+    );
+  }
+
+  Widget _buildSkeletonLoader(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Coworking skeleton
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppLength.xs,
+            vertical: AppLength.sm,
+          ),
+          child: Shimmer.fromColors(
+            baseColor: Colors.grey[100]!,
+            highlightColor: Colors.grey[300]!,
+            child: Container(
+              width: 120,
+              height: 24,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppLength.xs),
+          child: Row(
+            children: List.generate(2, (index) {
+              return Shimmer.fromColors(
+                baseColor: Colors.grey[100]!,
+                highlightColor: Colors.grey[300]!,
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.5 -
+                      (AppLength.xs + 7.5),
+                  height: 94,
+                  margin: EdgeInsets.only(right: index < 1 ? 15 : 0),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+
+        // Mall skeleton
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppLength.xs,
+            vertical: AppLength.sm,
+          ),
+          child: Shimmer.fromColors(
+            baseColor: Colors.grey[100]!,
+            highlightColor: Colors.grey[300]!,
+            child: Container(
+              width: 80,
+              height: 24,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppLength.xs),
+          child: Row(
+            children: List.generate(3, (index) {
+              return Shimmer.fromColors(
+                baseColor: Colors.grey[100]!,
+                highlightColor: Colors.grey[300]!,
+                child: Container(
+                  width: (MediaQuery.of(context).size.width -
+                          30 -
+                          (AppLength.xs * 2)) /
+                      3,
+                  height: 142,
+                  margin: EdgeInsets.only(right: index < 2 ? 15 : 0),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:aina_flutter/core/types/card_type.dart';
 import 'package:aina_flutter/core/types/slides.dart' as slides;
 import 'package:flutter/material.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
@@ -12,6 +13,7 @@ import 'package:aina_flutter/core/widgets/categories_grid.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:aina_flutter/core/widgets/shop_categories_grid.dart';
 import 'package:go_router/go_router.dart';
+import 'package:aina_flutter/core/widgets/mall_promotions_block.dart';
 
 class MallDetailsPage extends ConsumerWidget {
   final int mallId;
@@ -108,17 +110,19 @@ class MallDetailsPage extends ConsumerWidget {
 
                         // Promotions Section
                         SliverToBoxAdapter(
-                          child: PromotionsBlock(
+                          child: MallPromotionsBlock(
                             mallId: mallId.toString(),
                             showTitle: true,
                             showViewAll: true,
                             showDivider: true,
+                            cardType: PromotionCardType.medium,
                             onViewAllTap: () {
                               context.goNamed(
                                 'mall_promotions',
                                 pathParameters: {'id': mallId.toString()},
                               );
                             },
+                            emptyBuilder: (context) => const SizedBox.shrink(),
                           ),
                         ),
 

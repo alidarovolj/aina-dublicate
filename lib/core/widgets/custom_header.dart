@@ -7,16 +7,19 @@ import 'package:flutter_svg/flutter_svg.dart';
 enum HeaderType {
   pop,
   close,
+  none,
 }
 
 class CustomHeader extends StatelessWidget {
   final String title;
   final HeaderType type;
+  final bool isDark;
 
   const CustomHeader({
     super.key,
     required this.title,
     this.type = HeaderType.close,
+    this.isDark = false,
   });
 
   @override

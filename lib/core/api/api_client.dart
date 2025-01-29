@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:chucker_flutter/chucker_flutter.dart';
 
 class ApiClient {
   // Singleton pattern to ensure a single instance of Dio
@@ -7,6 +8,17 @@ class ApiClient {
   factory ApiClient() => _instance;
 
   late final Dio dio;
+  String? _token;
+
+  // Setter for the token
+  set token(String? value) {
+    _token = value;
+    if (value != null) {
+      dio.options.headers['Authorization'] = 'Bearer $value';
+    } else {
+      dio.options.headers.remove('Authorization');
+    }
+  }
 
   ApiClient._internal() {
     // Get the base URL from the environment file or use a default value
@@ -28,6 +40,9 @@ class ApiClient {
   }
 
   void _addInterceptors() {
+    // Add Chucker interceptor
+    dio.interceptors.add(ChuckerDioInterceptor());
+
     // Interceptor for logging requests, responses, and errors with dividers
     dio.interceptors.add(
       InterceptorsWrapper(

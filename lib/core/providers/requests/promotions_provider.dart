@@ -20,9 +20,14 @@ class PromotionsProvider extends StateNotifier<AsyncValue<List<Promotion>>> {
 
       print('API Response data: ${response.data['data']}');
 
-      final List<Promotion> promotions = (response.data['data'] as List)
+      final rawList = response.data['data'] as List;
+      print('Raw promotions count: ${rawList.length}');
+
+      final List<Promotion> promotions = rawList
           .map((json) {
             try {
+              print(
+                  'Processing promotion: ${json['name']} (ID: ${json['id']})');
               return Promotion.fromJson(json as Map<String, dynamic>);
             } catch (e) {
               print('Error parsing promotion: $e');
@@ -33,8 +38,11 @@ class PromotionsProvider extends StateNotifier<AsyncValue<List<Promotion>>> {
           .whereType<Promotion>() // Filter out null values
           .toList();
 
+      print('Successfully parsed promotions count: ${promotions.length}');
+      print(
+          'Final promotions list: ${promotions.map((p) => '${p.name} (ID: ${p.id})').join(', ')}');
+
       state = AsyncValue.data(promotions);
-      print('Promotions fetched successfully: ${promotions.length} items');
     } catch (error, stackTrace) {
       print('Error fetching promotions: $error');
       state = AsyncValue.error(error, stackTrace);
@@ -59,15 +67,22 @@ final promotionsProvider =
   (ref) => PromotionsProvider(ref.read(requestPromotionsProvider)),
 );
 
-final qrPromotionsProvider = Provider<AsyncValue<List<Promotion>>>((ref) {
+final sortedPromotionsProvider = Provider<AsyncValue<List<Promotion>>>((ref) {
   final promotionsAsync = ref.watch(promotionsProvider);
 
   return promotionsAsync.when(
     loading: () => const AsyncValue.loading(),
     error: (error, stack) => AsyncValue.error(error, stack),
     data: (promotions) {
-      final qrPromotions = promotions.where((p) => p.isQr == true).toList();
-      return AsyncValue.data(qrPromotions);
+      final sortedPromotions = List<Promotion>.from(promotions)
+        ..sort((a, b) {
+          // Handle cases where isQr might be null
+          final aIsQr = a.isQr ?? false;
+          final bIsQr = b.isQr ?? false;
+          if (aIsQr == bIsQr) return 0;
+          return aIsQr ? -1 : 1; // QR promotions come first
+        });
+      return AsyncValue.data(sortedPromotions);
     },
   );
 });

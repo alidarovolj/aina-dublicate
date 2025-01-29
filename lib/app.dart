@@ -25,7 +25,13 @@ class MyApp extends StatelessWidget {
         title: 'AINA',
         theme: appTheme.copyWith(
           scaffoldBackgroundColor: AppColors.backgroundLight,
-          textTheme: GoogleFonts.latoTextTheme(),
+          textTheme: GoogleFonts.latoTextTheme(
+            const TextTheme(
+              bodyMedium: TextStyle(
+                letterSpacing: 0,
+              ),
+            ),
+          ),
         ),
         routerConfig: AppRouter.router,
       ),

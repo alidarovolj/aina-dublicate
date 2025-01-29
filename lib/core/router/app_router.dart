@@ -5,6 +5,7 @@ import 'package:aina_flutter/features/profile/presentation/pages/edit_data.dart'
 import 'package:aina_flutter/features/profile/presentation/pages/profile_page.dart';
 import 'package:aina_flutter/features/promotions/presentation/pages/promotion_details_page.dart';
 import 'package:aina_flutter/features/stores/presentation/pages/store_details_page.dart';
+import 'package:aina_flutter/features/stores/presentation/pages/category_stores_page.dart';
 import 'package:go_router/go_router.dart';
 // import 'package:aina_flutter/core/services/storage_service.dart';
 import 'package:aina_flutter/features/home/presentation/pages/home_page.dart';
@@ -17,10 +18,13 @@ import 'package:aina_flutter/features/login/presentation/pages/set_info_page.dar
 import 'package:aina_flutter/features/malls/presentation/pages/mall_details_page.dart';
 import 'package:aina_flutter/features/promotions/presentation/pages/promotions_page.dart';
 import 'package:aina_flutter/features/stores/presentation/pages/stores_page.dart';
+import 'package:aina_flutter/features/promotions/presentation/pages/promotion_qr_page.dart';
+import 'package:chucker_flutter/chucker_flutter.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/',
+    observers: [ChuckerFlutter.navigatorObserver],
     routes: [
       GoRoute(
         path: '/',
@@ -69,26 +73,40 @@ class AppRouter {
                 path: ':id',
                 name: 'mall_details',
                 builder: (context, state) {
-                  final mallId = int.parse(state.pathParameters['id'] ?? '0');
-                  return MallDetailsPage(mallId: mallId);
+                  final mallId = state.pathParameters['id'];
+                  if (mallId == null) {
+                    return const Malls();
+                  }
+                  if (mallId.isEmpty) {
+                    return const Malls();
+                  }
+                  try {
+                    return MallDetailsPage(mallId: int.parse(mallId));
+                  } catch (e) {
+                    return const Malls();
+                  }
                 },
                 routes: [
                   GoRoute(
                     path: 'profile',
                     name: 'mall_profile',
                     builder: (context, state) {
-                      final mallId =
-                          int.parse(state.pathParameters['id'] ?? '0');
-                      return ProfilePage(mallId: mallId);
+                      final mallId = state.pathParameters['id'];
+                      if (mallId == null) {
+                        return const Malls();
+                      }
+                      return ProfilePage(mallId: int.parse(mallId));
                     },
                     routes: [
                       GoRoute(
                         path: 'edit',
                         name: 'mall_edit',
                         builder: (context, state) {
-                          final mallId =
-                              int.parse(state.pathParameters['id'] ?? '0');
-                          return EditDataPage(mallId: mallId);
+                          final mallId = state.pathParameters['id'];
+                          if (mallId == null) {
+                            return const Malls();
+                          }
+                          return EditDataPage(mallId: int.parse(mallId));
                         },
                       ),
                     ],
@@ -97,27 +115,55 @@ class AppRouter {
                     path: 'promotions',
                     name: 'mall_promotions',
                     builder: (context, state) {
-                      final mallId =
-                          int.parse(state.pathParameters['id'] ?? '0');
-                      return PromotionsPage(mallId: mallId);
+                      final mallId = state.pathParameters['id'];
+                      if (mallId == null || mallId.isEmpty) {
+                        return const Malls();
+                      }
+                      try {
+                        return PromotionsPage(mallId: int.parse(mallId));
+                      } catch (e) {
+                        return const Malls();
+                      }
                     },
+                    routes: [
+                      GoRoute(
+                        path: ':promotionId/qr',
+                        name: 'promotion_qr',
+                        builder: (context, state) {
+                          final mallId = state.pathParameters['id'];
+                          final promotionId =
+                              state.pathParameters['promotionId'];
+                          if (mallId == null || promotionId == null) {
+                            return const Malls();
+                          }
+                          return PromotionQrPage(
+                            promotionId: int.parse(promotionId),
+                            mallId: mallId,
+                          );
+                        },
+                      ),
+                    ],
                   ),
                   GoRoute(
                     path: 'stores',
                     name: 'mall_stores',
                     builder: (context, state) {
-                      final mallId =
-                          int.parse(state.pathParameters['id'] ?? '0');
-                      return StoresPage(mallId: mallId);
+                      final mallId = state.pathParameters['id'];
+                      if (mallId == null) {
+                        return const Malls();
+                      }
+                      return StoresPage(mallId: int.parse(mallId));
                     },
                     routes: [
                       GoRoute(
                         path: 'categories',
                         name: 'mall_shop_categories',
                         builder: (context, state) {
-                          final mallId =
-                              int.parse(state.pathParameters['id'] ?? '0');
-                          return StoresPage(mallId: mallId);
+                          final mallId = state.pathParameters['id'];
+                          if (mallId == null) {
+                            return const Malls();
+                          }
+                          return StoresPage(mallId: int.parse(mallId));
                         },
                       ),
                     ],
@@ -171,9 +217,24 @@ class AppRouter {
       ),
       GoRoute(
         path: '/malls/:mallId/profile',
+        name: 'mall_profile_root',
         builder: (context, state) {
           final mallId = int.parse(state.pathParameters['mallId']!);
           return ProfilePage(mallId: mallId);
+        },
+      ),
+      GoRoute(
+        path: '/malls/:mallId/stores/category/:categoryId',
+        name: 'category_stores',
+        builder: (context, state) {
+          final mallId = state.pathParameters['mallId'] ?? '0';
+          final categoryId = state.pathParameters['categoryId'] ?? '';
+          final title = state.uri.queryParameters['title'] ?? 'Магазины';
+          return CategoryStoresPage(
+            buildingId: mallId,
+            categoryId: categoryId,
+            title: title,
+          );
         },
       ),
     ],

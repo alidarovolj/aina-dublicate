@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/requests/stores/stores_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shimmer/shimmer.dart';
 
 class StoresList extends ConsumerStatefulWidget {
   final String mallId;
@@ -156,12 +157,99 @@ class _StoresListState extends ConsumerState<StoresList> {
           ),
         );
       },
-      loading: () => const SliverToBoxAdapter(
-        child: Center(child: CircularProgressIndicator()),
+      loading: () => SliverToBoxAdapter(
+        child: _buildSkeletonLoader(),
       ),
       error: (error, stack) => SliverToBoxAdapter(
         child: Center(child: Text('Error: $error')),
       ),
+    );
+  }
+
+  Widget _buildSkeletonLoader() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // First letter group
+          _buildSkeletonLetterGroup(),
+          const SizedBox(height: 24),
+          // Second letter group
+          _buildSkeletonLetterGroup(),
+          const SizedBox(height: 24),
+          // Third letter group
+          _buildSkeletonLetterGroup(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkeletonLetterGroup() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Letter header
+        Shimmer.fromColors(
+          baseColor: Colors.grey[100]!,
+          highlightColor: Colors.grey[300]!,
+          child: Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Store items
+        ...List.generate(3, (index) => _buildSkeletonStoreItem()),
+      ],
+    );
+  }
+
+  Widget _buildSkeletonStoreItem() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Shimmer.fromColors(
+                baseColor: Colors.grey[100]!,
+                highlightColor: Colors.grey[300]!,
+                child: Container(
+                  width: double.infinity,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Shimmer.fromColors(
+                baseColor: Colors.grey[100]!,
+                highlightColor: Colors.grey[300]!,
+                child: Container(
+                  width: 150,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.only(left: 16),
+          child: Divider(height: 1),
+        ),
+      ],
     );
   }
 }

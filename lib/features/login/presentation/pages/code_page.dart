@@ -177,7 +177,10 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
 
     await ref.read(authProvider.notifier).setToken(token);
     if (!mounted) return;
-    context.go('/');
+
+    // Get mallId from the current route or use a default value
+    final mallId = GoRouterState.of(context).pathParameters['mallId'] ?? '2';
+    context.go('/malls/$mallId/profile');
   }
 
   @override
@@ -247,7 +250,7 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
                             const SizedBox(height: AppLength.body),
                             AutofillGroup(
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: List.generate(4, (index) {
                                   return Container(
                                     width: 58,

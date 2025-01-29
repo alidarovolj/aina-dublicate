@@ -6,6 +6,7 @@ import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/providers/requests/stores/store_details_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
+import 'package:shimmer/shimmer.dart';
 
 class StoreDetailsPage extends ConsumerWidget {
   final String? id;
@@ -34,8 +35,7 @@ class StoreDetailsPage extends ConsumerWidget {
                 color: AppColors.white,
                 margin: const EdgeInsets.only(top: 64),
                 child: storeAsync.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                  loading: () => _buildSkeletonLoader(),
                   error: (error, stack) => Center(child: Text('Error: $error')),
                   data: (storeData) => CustomScrollView(
                     slivers: [
@@ -206,6 +206,120 @@ class StoreDetailsPage extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSkeletonLoader() {
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Shimmer.fromColors(
+                baseColor: Colors.grey[100]!,
+                highlightColor: Colors.grey[300]!,
+                child: Container(
+                  width: double.infinity,
+                  height: 212,
+                  color: Colors.grey[300],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSkeletonInfoRow(),
+                    const SizedBox(height: 16),
+                    _buildSkeletonInfoRow(),
+                    const SizedBox(height: 24),
+                    // Description skeleton
+                    ...List.generate(
+                        4,
+                        (index) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Shimmer.fromColors(
+                                baseColor: Colors.grey[100]!,
+                                highlightColor: Colors.grey[300]!,
+                                child: Container(
+                                  height: 16,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[300],
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                              ),
+                            )),
+                    const SizedBox(height: 24),
+                    // Buttons skeleton
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey[100]!,
+                      highlightColor: Colors.grey[300]!,
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey[100]!,
+                      highlightColor: Colors.grey[300]!,
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSkeletonInfoRow() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Shimmer.fromColors(
+            baseColor: Colors.grey[100]!,
+            highlightColor: Colors.grey[300]!,
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Shimmer.fromColors(
+              baseColor: Colors.grey[100]!,
+              highlightColor: Colors.grey[300]!,
+              child: Container(
+                height: 16,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

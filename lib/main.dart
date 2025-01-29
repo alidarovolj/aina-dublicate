@@ -8,10 +8,14 @@ import 'app.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:flutter/services.dart';
+import 'package:chucker_flutter/chucker_flutter.dart';
 
 Future<void> main() async {
   // Ensure Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Chucker
+  ChuckerFlutter.showOnRelease = true;
 
   // Load environment variables and other initializations
   await dotenv.load();
@@ -20,11 +24,11 @@ Future<void> main() async {
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarBrightness: Brightness.light,
-      statusBarIconBrightness: Brightness.dark,
-      statusBarColor: Colors.transparent,
-      systemNavigationBarColor: Colors.white,
-      systemNavigationBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light, // Adjust for your theme
+      statusBarIconBrightness: Brightness.dark, // Icon color
+      statusBarColor: Colors.white, // Makes it transparent
+      systemNavigationBarColor: Colors.white, // Nav bar background
+      systemNavigationBarIconBrightness: Brightness.dark, // Nav bar icons
     ),
   );
 

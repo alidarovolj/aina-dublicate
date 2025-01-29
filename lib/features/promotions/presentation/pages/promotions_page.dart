@@ -58,7 +58,7 @@ class _PromotionsPageState extends ConsumerState<PromotionsPage>
                       slivers: [
                         SliverToBoxAdapter(
                           child: Padding(
-                            padding: const EdgeInsets.all(16.0),
+                            padding: const EdgeInsets.all(12.0),
                             child: Container(
                               height: 48,
                               decoration: BoxDecoration(
@@ -88,7 +88,6 @@ class _PromotionsPageState extends ConsumerState<PromotionsPage>
                                   fontSize: 15,
                                   fontWeight: FontWeight.normal,
                                 ),
-                                padding: const EdgeInsets.all(4),
                                 tabAlignment: TabAlignment.fill,
                                 indicatorSize: TabBarIndicatorSize.tab,
                                 tabs: const [

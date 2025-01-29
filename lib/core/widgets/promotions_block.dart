@@ -6,6 +6,7 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/requests/mall_promotions_provider.dart';
 import 'package:aina_flutter/core/providers/requests/promotions_provider.dart';
 import 'package:aina_flutter/core/types/card_type.dart';
+import 'package:shimmer/shimmer.dart';
 
 class PromotionsBlock extends ConsumerWidget {
   final String? mallId;
@@ -15,7 +16,6 @@ class PromotionsBlock extends ConsumerWidget {
   final bool showDivider;
   final PromotionCardType cardType;
   final bool showGradient;
-  final bool onlyQr;
   final Widget Function(BuildContext)? emptyBuilder;
 
   const PromotionsBlock({
@@ -27,7 +27,6 @@ class PromotionsBlock extends ConsumerWidget {
     this.showDivider = true,
     this.cardType = PromotionCardType.medium,
     this.showGradient = false,
-    this.onlyQr = false,
     this.emptyBuilder,
   });
 
@@ -35,20 +34,18 @@ class PromotionsBlock extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final promotionsAsync = mallId != null
         ? ref.watch(mallPromotionsProvider(mallId!))
-        : onlyQr
-            ? ref.watch(qrPromotionsProvider)
-            : ref.watch(promotionsProvider);
+        : ref.watch(promotionsProvider);
+
+    print('PromotionsBlock mallId: $mallId');
 
     return promotionsAsync.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: AppLength.xxl),
-        child: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () => _buildSkeletonLoader(cardType),
       error: (error, stack) {
         print('Error in PromotionsBlock: $error');
-        return const SizedBox.shrink(); // Or show an error message/retry button
+        return const SizedBox.shrink();
       },
       data: (promotions) {
+        print('Received promotions: ${promotions.length}');
         if (promotions.isEmpty) {
           return emptyBuilder?.call(context) ?? const SizedBox.shrink();
         }
@@ -317,5 +314,128 @@ class PromotionsBlock extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  Widget _buildSkeletonLoader(PromotionCardType type) {
+    if (type == PromotionCardType.medium) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (showTitle || showViewAll)
+            Padding(
+              padding: const EdgeInsets.all(AppLength.xs),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (showTitle)
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey[100]!,
+                      highlightColor: Colors.grey[300]!,
+                      child: Container(
+                        width: 80,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          SizedBox(
+            height: 201,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: AppLength.xs),
+              itemCount: 3,
+              itemBuilder: (context, index) {
+                return Shimmer.fromColors(
+                  baseColor: Colors.grey[100]!,
+                  highlightColor: Colors.grey[300]!,
+                  child: Container(
+                    width: 220,
+                    margin: const EdgeInsets.only(right: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          height: 124,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          height: 16,
+                          width: 180,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          height: 14,
+                          width: 120,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    } else if (type == PromotionCardType.small) {
+      return SizedBox(
+        height: 94,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: AppLength.xs),
+          itemCount: 3,
+          itemBuilder: (context, index) {
+            return Shimmer.fromColors(
+              baseColor: Colors.grey[100]!,
+              highlightColor: Colors.grey[300]!,
+              child: Container(
+                width: 100,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    } else {
+      return Column(
+        children: List.generate(2, (index) {
+          return Shimmer.fromColors(
+            baseColor: Colors.grey[100]!,
+            highlightColor: Colors.grey[300]!,
+            child: Container(
+              height: 200,
+              margin: const EdgeInsets.symmetric(
+                horizontal: AppLength.xs,
+                vertical: 8,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          );
+        }),
+      );
+    }
   }
 }

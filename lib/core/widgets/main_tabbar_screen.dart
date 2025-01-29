@@ -123,14 +123,16 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
           return;
         }
 
-        // Special handling for malls tab when in stores
-        if (index == 0 && widget.currentRoute.contains('/stores')) {
+        // Special handling for malls tab when in stores or profile
+        if (index == 0) {
           final parts = widget.currentRoute.split('/');
-          if (parts.length >= 3) {
+          if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
             context.go('/malls/$mallId');
             return;
           }
+          context.go('/malls');
+          return;
         }
 
         // Special handling for promotions tab
@@ -147,16 +149,6 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
           // If not in a mall route, go to malls first
           context.go('/malls');
           return;
-        }
-
-        // Special handling for malls tab when in promotions
-        if (index == 0 && widget.currentRoute.contains('/promotions')) {
-          final parts = widget.currentRoute.split('/');
-          if (parts.length >= 3) {
-            final mallId = parts[2];
-            context.go('/malls/$mallId');
-            return;
-          }
         }
 
         if (index == 4) {

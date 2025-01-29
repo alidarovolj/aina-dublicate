@@ -1,52 +1,76 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:aina_flutter/core/api/api_client.dart';
 import 'package:aina_flutter/core/types/promotion.dart';
-import 'package:aina_flutter/core/providers/requests/promotions/mall_list.dart';
 
-class MallPromotionsProvider
-    extends StateNotifier<AsyncValue<List<Promotion>>> {
-  MallPromotionsProvider(this._service, this.mallId)
-      : super(const AsyncValue.loading()) {
-    fetchMallPromotions();
-  }
-
-  final RequestMallPromotionsService _service;
-  final String mallId;
-
-  Future<void> fetchMallPromotions() async {
+final mallPromotionsProvider = FutureProvider.family<List<Promotion>, String>(
+  (ref, mallId) async {
     try {
-      state = const AsyncValue.loading();
-      final response = await _service.mallPromotions(mallId);
+      print('=================== MALL PROMOTIONS PROVIDER ===================');
+      print('Fetching promotions for mall ID: $mallId');
+      final response = await ApiClient().dio.get(
+          '/api/aina/buildings/$mallId/posts',
+          queryParameters: {'is_qr': false});
 
-      if (response == null || !response.data['success']) {
-        throw Exception('Failed to fetch mall promotions');
+      print('API Response raw: ${response.data}');
+      print('API Response success: ${response.data['success']}');
+      print('API Response data exists: ${response.data['data'] != null}');
+
+      if (response.data['success'] == true && response.data['data'] != null) {
+        final data = response.data['data'];
+        print('API Response data: $data');
+
+        final List<dynamic> promotions = data['promotions'] ?? [];
+        print('Raw promotions list: $promotions');
+
+        print('Found ${promotions.length} promotions in response');
+        for (var json in promotions) {
+          print('Raw promotion data:');
+          print('- ID: ${json['id']}');
+          print('- Title: ${json['title']}');
+          print('- Preview Image: ${json['preview_image']}');
+          print('- Start Date: ${json['start_at']}');
+          print('- End Date: ${json['end_at']}');
+          print('- Is QR: ${json['is_qr']}');
+        }
+
+        final List<Promotion> parsedPromotions = [];
+        for (var json in promotions) {
+          try {
+            print(
+                'Processing promotion: ${json['title']} (Is QR: ${json['is_qr']})');
+            final promotion = Promotion.fromJson(json);
+            parsedPromotions.add(promotion);
+            print('Successfully added promotion: ${promotion.title}');
+            print('- Preview Image URL: ${promotion.previewImage?.url}');
+            print('- Date Range: ${promotion.formattedDateRange}');
+            print('- Is QR: ${promotion.isQr}');
+          } catch (e, stack) {
+            print('Error parsing promotion: $e');
+            print('Stack trace: $stack');
+            print('Problematic JSON: $json');
+          }
+        }
+
+        print('Successfully parsed ${parsedPromotions.length} promotions');
+        print('Final promotions list:');
+        for (var promo in parsedPromotions) {
+          print('- ${promo.title} (Is QR: ${promo.isQr})');
+        }
+        print(
+            '=================== END MALL PROMOTIONS PROVIDER ===================');
+        return parsedPromotions;
       }
 
-      print('Mall promotions API Response data: ${response.data['data']}');
-
-      final List<Promotion> promotions = (response.data['data'] as List)
-          .map((json) {
-            try {
-              return Promotion.fromJson(json as Map<String, dynamic>);
-            } catch (e) {
-              print('Error parsing mall promotion: $e');
-              print('Problematic JSON: $json');
-              return null;
-            }
-          })
-          .whereType<Promotion>() // Filter out null values
-          .toList();
-
-      state = AsyncValue.data(promotions);
-      print('Mall promotions fetched successfully: ${promotions.length} items');
-    } catch (error, stackTrace) {
-      print('Error fetching mall promotions: $error');
-      state = AsyncValue.error(error, stackTrace);
+      print('No promotions found in response');
+      print(
+          '=================== END MALL PROMOTIONS PROVIDER ===================');
+      return [];
+    } catch (e, stack) {
+      print('Error fetching promotions: $e');
+      print('Stack trace: $stack');
+      print(
+          '=================== END MALL PROMOTIONS PROVIDER WITH ERROR ===================');
+      return [];
     }
-  }
-}
-
-final mallPromotionsProvider = StateNotifierProvider.family<
-    MallPromotionsProvider, AsyncValue<List<Promotion>>, String>(
-  (ref, mallId) =>
-      MallPromotionsProvider(ref.read(requestMallPromotionsProvider), mallId),
+  },
 );

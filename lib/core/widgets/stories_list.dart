@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/providers/requests/stories_provider.dart';
+import 'package:shimmer/shimmer.dart';
 
 class StoryList extends ConsumerStatefulWidget {
   const StoryList({super.key});
@@ -33,7 +34,7 @@ class _StoryListState extends ConsumerState<StoryList> {
     final stories = ref.watch(storiesProvider);
 
     return stories.when(
-      loading: () => const SizedBox.shrink(),
+      loading: () => _buildSkeletonLoader(),
       error: (error, stack) => const SizedBox.shrink(),
       data: (storiesList) {
         if (storiesList.isEmpty) {
@@ -41,92 +42,159 @@ class _StoryListState extends ConsumerState<StoryList> {
         }
 
         return Container(
+          color: AppColors.primary,
+          child: SafeArea(
+            child: Container(
+              height: 120,
+              padding: const EdgeInsets.symmetric(
+                  vertical: AppLength.xs, horizontal: AppLength.xs),
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+              ),
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: storiesList.length,
+                itemBuilder: (context, index) {
+                  final story = storiesList[index];
+                  debugPrint(
+                      'Story $index: ${story.name}, ${story.previewImage}');
+                  return Container(
+                    width: 80,
+                    margin: const EdgeInsets.only(right: AppLength.four),
+                    child: Column(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            markStoryAsRead(index);
+                            showGeneralDialog(
+                              context: context,
+                              barrierDismissible: true,
+                              barrierLabel: MaterialLocalizations.of(context)
+                                  .modalBarrierDismissLabel,
+                              barrierColor: AppColors.primary.withOpacity(0.5),
+                              transitionDuration:
+                                  const Duration(milliseconds: 300),
+                              pageBuilder:
+                                  (context, animation, secondaryAnimation) {
+                                return StoryDetailsPage(
+                                  stories: stories.valueOrNull
+                                          ?.map((story) => story)
+                                          .toList() ??
+                                      [],
+                                  initialIndex: index,
+                                  onStoryRead: (readIndex) {
+                                    markStoryAsRead(readIndex);
+                                  },
+                                );
+                              },
+                            );
+                          },
+                          child: Container(
+                            width: 68,
+                            height: 68,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: story.read
+                                    ? AppColors.primary
+                                    : AppColors.secondary,
+                                width: 2,
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(2.0),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(100),
+                                child: Image.network(
+                                  story.previewImage ?? '',
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(Icons.error),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          story.name ?? '',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.white,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSkeletonLoader() {
+    return Container(
+      color: AppColors.primary,
+      child: SafeArea(
+        child: Container(
           height: 120,
-          padding: const EdgeInsets.symmetric(vertical: AppLength.xs),
+          padding: const EdgeInsets.symmetric(
+              vertical: AppLength.xs, horizontal: AppLength.xs),
           decoration: const BoxDecoration(
             color: AppColors.primary,
           ),
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: storiesList.length,
+            itemCount: 5,
             itemBuilder: (context, index) {
-              final story = storiesList[index];
-              debugPrint('Story $index: ${story.name}, ${story.previewImage}');
               return Container(
                 width: 80,
-                margin: const EdgeInsets.symmetric(horizontal: AppLength.tiny),
+                margin: const EdgeInsets.only(right: AppLength.four),
                 child: Column(
                   children: [
-                    GestureDetector(
-                      onTap: () {
-                        markStoryAsRead(index);
-                        showGeneralDialog(
-                          context: context,
-                          barrierDismissible: true,
-                          barrierLabel: MaterialLocalizations.of(context)
-                              .modalBarrierDismissLabel,
-                          barrierColor: AppColors.primary.withOpacity(0.5),
-                          transitionDuration: const Duration(milliseconds: 300),
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) {
-                            return StoryDetailsPage(
-                              stories: stories.valueOrNull
-                                      ?.map((story) => story)
-                                      .toList() ??
-                                  [],
-                              initialIndex: index,
-                              onStoryRead: (readIndex) {
-                                markStoryAsRead(readIndex);
-                              },
-                            );
-                          },
-                        );
-                      },
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey[100]!,
+                      highlightColor: Colors.grey[300]!,
                       child: Container(
                         width: 68,
                         height: 68,
                         decoration: BoxDecoration(
+                          color: Colors.grey[300],
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: story.read
-                                ? AppColors.textSecondary
-                                : AppColors.secondary,
+                            color: Colors.grey[700]!,
                             width: 2,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(2.0),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(100),
-                            child: Image.network(
-                              story.previewImage ?? '',
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.error),
-                            ),
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      story.name ?? '',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.white,
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey[100]!,
+                      highlightColor: Colors.grey[300]!,
+                      child: Container(
+                        height: 12,
+                        width: 60,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               );
             },
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
@@ -187,6 +255,7 @@ class _StoryDetailsPageState extends State<StoryDetailsPage>
 
   void handleNextStory() {
     if (currentInnerStoryIndex < currentStories.length - 1) {
+      // Move to next inner story
       setState(() {
         currentInnerStoryIndex++;
       });
@@ -196,14 +265,50 @@ class _StoryDetailsPageState extends State<StoryDetailsPage>
       );
       _progressController.reset();
       _progressController.forward();
+    } else if (currentStoryIndex < widget.stories.length - 1) {
+      // Move to next story set
+      setState(() {
+        currentStoryIndex++;
+        currentInnerStoryIndex = 0;
+        currentStories = widget.stories[currentStoryIndex].stories ?? [];
+      });
+      _markCurrentStoryAsRead();
+      _progressController.reset();
+      _progressController.forward();
     } else {
+      // Close modal when all stories are viewed
       Navigator.of(context).pop();
+    }
+  }
+
+  void handlePreviousStory() {
+    if (currentInnerStoryIndex > 0) {
+      // Move to previous inner story
+      setState(() {
+        currentInnerStoryIndex--;
+      });
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      _progressController.reset();
+      _progressController.forward();
+    } else if (currentStoryIndex > 0) {
+      // Move to previous story set
+      setState(() {
+        currentStoryIndex--;
+        currentStories = widget.stories[currentStoryIndex].stories ?? [];
+        currentInnerStoryIndex = currentStories.length - 1;
+      });
+      _progressController.reset();
+      _progressController.forward();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final paddingTop = MediaQuery.of(context).padding.top;
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -224,11 +329,16 @@ class _StoryDetailsPageState extends State<StoryDetailsPage>
               return GestureDetector(
                 onTapDown: (details) {
                   _progressController.stop();
+                  // Determine tap position
+                  if (details.globalPosition.dx < screenWidth / 2) {
+                    handlePreviousStory();
+                  } else {
+                    handleNextStory();
+                  }
                 },
                 onTapUp: (details) {
                   _progressController.forward();
                 },
-                onTap: handleNextStory,
                 child: Image.network(
                   story.previewImage ?? '',
                   fit: BoxFit.cover,
@@ -242,26 +352,58 @@ class _StoryDetailsPageState extends State<StoryDetailsPage>
             top: paddingTop + 8,
             left: 16,
             right: 16,
-            child: Row(
-              children: List.generate(
-                currentStories.length,
-                (index) => Expanded(
-                  child: Container(
-                    height: 2,
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
-                    child: LinearProgressIndicator(
-                      value: index < currentInnerStoryIndex
-                          ? 1.0
-                          : (index == currentInnerStoryIndex
-                              ? _progressController.value
-                              : 0.0),
-                      backgroundColor: Colors.grey.withOpacity(0.5),
-                      valueColor:
-                          const AlwaysStoppedAnimation<Color>(Colors.white),
+            child: Column(
+              children: [
+                Row(
+                  children: List.generate(
+                    currentStories.length,
+                    (index) => Expanded(
+                      child: Container(
+                        height: 2,
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        child: LinearProgressIndicator(
+                          value: index < currentInnerStoryIndex
+                              ? 1.0
+                              : (index == currentInnerStoryIndex
+                                  ? _progressController.value
+                                  : 0.0),
+                          backgroundColor: Colors.grey.withOpacity(0.5),
+                          valueColor:
+                              const AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: DecorationImage(
+                          image: NetworkImage(
+                            widget.stories[currentStoryIndex].previewImage ??
+                                '',
+                          ),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      widget.stories[currentStoryIndex].name ?? '',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
           Positioned(

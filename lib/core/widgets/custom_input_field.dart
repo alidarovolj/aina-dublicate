@@ -35,6 +35,9 @@ class CustomInputField extends StatelessWidget {
         TextField(
           controller: controller,
           focusNode: focusNode,
+          style: const TextStyle(
+            color: AppColors.textDarkGrey,
+          ),
           decoration: InputDecoration(
             hintText: placeholder ?? hintText,
             border: OutlineInputBorder(

@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -24,6 +26,18 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Для сканирования QR кодов необходим доступ к камере</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Приложению требуется доступ к геолокации для отображения вашего местоположения на карте</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Приложению требуется доступ к геолокации для отображения вашего местоположения на карте</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Мы используем ваш микрофон для записи звука</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Мы используем вашу фотогалерею для выбора изображений</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -31,26 +45,7 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-	<key>NSPhotoLibraryUsageDescription</key>
-    <string>Мы используем вашу фотогалерею для выбора изображений</string>
-    <key>NSCameraUsageDescription</key>
-    <string>Мы используем вашу камеру для съемки фотографий</string>
-    <key>NSMicrophoneUsageDescription</key>
-    <string>Мы используем ваш микрофон для записи звука</string>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
@@ -58,10 +53,6 @@
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Приложению требуется доступ к геолокации для отображения вашего местоположения на карте</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Приложению требуется доступ к геолокации для отображения вашего местоположения на карте</string>
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
 </dict>

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/api/api_client.dart'; // Импорт ApiClient
+import 'package:aina_flutter/core/services/storage_service.dart';
 
 // Провайдер для отправки запроса
 final requestCodeProvider =
@@ -9,15 +10,42 @@ final requestCodeProvider =
 class RequestCodeService {
   final Dio _dio;
 
-  RequestCodeService(Dio dio) : _dio = dio;
+  RequestCodeService(this._dio);
 
-  Future<Response?> userProfile(String phoneNumber) async {
+  Future<Response?> userProfile() async {
     try {
-      final response = await _dio.get('/api/aina/profile');
+      final token = await StorageService.getToken();
+      if (token == null) {
+        throw Exception('No auth token found');
+      }
+
+      final response = await _dio.get(
+        '/api/aina/profile',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
+
+      if (response.statusCode != 200) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          error: 'Failed to fetch profile: ${response.statusCode}',
+        );
+      }
+
       return response;
+    } on DioException catch (e) {
+      print('DioError fetching profile: ${e.message}');
+      print('Response: ${e.response?.data}');
+      rethrow;
     } catch (e) {
-      print('Ошибка при запросе кода: $e');
-      return null;
+      print('Error fetching profile: $e');
+      rethrow;
     }
   }
 

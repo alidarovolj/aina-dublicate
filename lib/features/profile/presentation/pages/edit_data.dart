@@ -6,6 +6,9 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/providers/requests/auth/profile.dart';
+import 'package:aina_flutter/core/widgets/base_modal.dart';
+import 'package:aina_flutter/core/widgets/custom_button.dart';
+import 'package:go_router/go_router.dart';
 
 final selectedGenderProvider = StateProvider<String>((ref) => 'Не указывать');
 
@@ -97,8 +100,20 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
   @override
   Widget build(BuildContext context) {
     final userAsync = ref.watch(authProvider);
-    final userData = UserProfile.fromJson(userAsync.userData!);
 
+    // If userData is null, redirect to malls page
+    if (userAsync.userData == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.go('/malls');
+      });
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    final userData = UserProfile.fromJson(userAsync.userData!);
     String selectedGender = ref.read(selectedGenderProvider);
 
     return Scaffold(
@@ -276,27 +291,6 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                     ),
 
                     const SizedBox(height: 8),
-                    // Language selection
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.lightGrey,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: ListTile(
-                        title: const Text(
-                          'Выберите язык контента',
-                          style: TextStyle(fontSize: 14),
-                        ),
-                        trailing: const Text(
-                          'Русский',
-                          style: TextStyle(fontSize: 14),
-                        ),
-                        onTap: () {
-                          // Handle language selection
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 8),
 
                     // Logout button
                     Container(
@@ -309,8 +303,59 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                           'Выйти из аккаунта',
                           style: TextStyle(fontSize: 14),
                         ),
-                        onTap: () {
-                          // Handle logout
+                        onTap: () async {
+                          final authState = ref.read(authProvider);
+                          if (authState.userData == null) {
+                            context.go('/');
+                            return;
+                          }
+
+                          final userData =
+                              UserProfile.fromJson(authState.userData!);
+                          final phone = userData.maskedPhone;
+
+                          // Show confirmation modal
+                          await BaseModal.show(
+                            context,
+                            message: 'Выйти из аккаунта\n$phone ?',
+                            buttons: [
+                              const ModalButton(
+                                label: 'Отмена',
+                                type: ButtonType.normal,
+                                textColor: AppColors.primary,
+                                backgroundColor: AppColors.lightGrey,
+                              ),
+                              ModalButton(
+                                label: 'Выйти из аккаунта',
+                                type: ButtonType.normal,
+                                textColor: Colors.red,
+                                backgroundColor: Colors.white,
+                                onPressed: () async {
+                                  Navigator.of(context).pop();
+
+                                  // Perform logout
+                                  await ref
+                                      .read(authProvider.notifier)
+                                      .logout();
+
+                                  if (!context.mounted) return;
+
+                                  // Show success modal
+                                  await BaseModal.show(
+                                    context,
+                                    message: 'Вы вышли из аккаунта',
+                                    buttons: [
+                                      ModalButton(
+                                        label: 'Закрыть',
+                                        type: ButtonType.normal,
+                                        onPressed: () {},
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ],
+                          );
                         },
                       ),
                     ),
@@ -352,7 +397,7 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
           const SizedBox(width: 10),
           Text(
             value,
-            style: const TextStyle(fontSize: 16),
+            style: const TextStyle(fontSize: 16, color: AppColors.textDarkGrey),
           ),
         ],
       ),

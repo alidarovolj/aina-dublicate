@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/requests/mall_shop_categories_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shimmer/shimmer.dart';
 
 class StoreCategoriesList extends ConsumerStatefulWidget {
   final String mallId;
@@ -61,7 +62,7 @@ class _StoreCategoriesListState extends ConsumerState<StoreCategoriesList> {
       child: SizedBox(
         height: 80, // Reduced height since we only need 1 line of text
         child: categoriesAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => _buildSkeletonLoader(),
           error: (error, stack) => Center(child: Text('Error: $error')),
           data: (categories) {
             final sortedCategories = [...categories]
@@ -78,13 +79,24 @@ class _StoreCategoriesListState extends ConsumerState<StoreCategoriesList> {
                 return GestureDetector(
                   onTap: () {
                     setState(() {
-                      // Toggle selection
                       if (isSelected) {
                         selectedCategoryId = null;
                         widget.onCategorySelected(null);
                       } else {
                         selectedCategoryId = category.id.toString();
                         widget.onCategorySelected(category.id.toString());
+
+                        // Navigate to category stores page
+                        context.pushNamed(
+                          'category_stores',
+                          pathParameters: {
+                            'mallId': widget.mallId,
+                            'categoryId': category.id.toString(),
+                          },
+                          queryParameters: {
+                            'title': category.title,
+                          },
+                        );
                       }
                     });
                   },
@@ -146,6 +158,49 @@ class _StoreCategoriesListState extends ConsumerState<StoreCategoriesList> {
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildSkeletonLoader() {
+    return ListView.builder(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: AppLength.xs),
+      itemCount: 6, // Show 6 skeleton items
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(right: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Shimmer.fromColors(
+                baseColor: Colors.grey[100]!,
+                highlightColor: Colors.grey[300]!,
+                child: Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 5),
+              Shimmer.fromColors(
+                baseColor: Colors.grey[100]!,
+                highlightColor: Colors.grey[300]!,
+                child: Container(
+                  width: 58,
+                  height: 11,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

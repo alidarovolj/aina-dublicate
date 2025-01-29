@@ -7,6 +7,9 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/requests/promotion_details_provider.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
+import 'package:aina_flutter/core/widgets/auth_warning_modal.dart';
+import 'package:aina_flutter/core/providers/auth/auth_state.dart';
+import 'package:go_router/go_router.dart';
 
 class PromotionDetailsPage extends ConsumerWidget {
   final int id;
@@ -58,6 +61,7 @@ class PromotionDetailsPage extends ConsumerWidget {
                                 style: GoogleFonts.lora(
                                   fontSize: 24,
                                   fontWeight: FontWeight.w500,
+                                  color: AppColors.textDarkGrey,
                                 ),
                               ),
                               const SizedBox(height: AppLength.sm),
@@ -87,14 +91,38 @@ class PromotionDetailsPage extends ConsumerWidget {
                                     lineHeight: const LineHeight(1.5),
                                     margin: Margins.zero,
                                     padding: HtmlPaddings.zero,
+                                    color: AppColors.textDarkGrey,
                                   ),
                                 },
                               ),
                               const SizedBox(height: AppLength.sm),
-                              const CustomButton(
+                              CustomButton(
                                 label: 'Сканировать QR код',
                                 isFullWidth: true,
                                 backgroundColor: AppColors.primary,
+                                onPressed: () {
+                                  final authState = ref.read(authProvider);
+                                  final mallId = GoRouterState.of(context)
+                                      .pathParameters['mallId'];
+                                  if (!authState.isAuthenticated) {
+                                    AuthWarningModal.show(
+                                      context,
+                                      promotionId: id.toString(),
+                                      mallId: mallId,
+                                    );
+                                  } else if (!authState.hasCompletedProfile) {
+                                    AuthWarningModal.show(
+                                      context,
+                                      isProfileIncomplete: true,
+                                      promotionId: id.toString(),
+                                      mallId: mallId,
+                                    );
+                                  } else {
+                                    context.push(
+                                      '/malls/$mallId/promotions/${promotion.id}/qr',
+                                    );
+                                  }
+                                },
                               ),
                               const SizedBox(height: AppLength.sm),
                               Html(
@@ -105,6 +133,7 @@ class PromotionDetailsPage extends ConsumerWidget {
                                     lineHeight: const LineHeight(1.5),
                                     margin: Margins.zero,
                                     padding: HtmlPaddings.zero,
+                                    color: AppColors.textDarkGrey,
                                   ),
                                 },
                               ),

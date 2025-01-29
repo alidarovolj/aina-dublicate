@@ -1,90 +1,5 @@
 import 'package:aina_flutter/core/types/button_config.dart';
-
-class Promotion {
-  final int id;
-  final String name;
-  final String title;
-  final String subtitle;
-  final String body;
-  final String? bottomBody;
-  final PreviewImage previewImage;
-  final String? link;
-  final String? buildingType;
-  final bool isAuthRequired;
-  final DateTime? startAt;
-  final DateTime? endAt;
-  final bool isActive;
-  final bool isQr;
-  final String? minAmountOfReceipt;
-  final int? maxCountOfCouponsPerReceipt;
-  final int? amountOfCouponsForPromo;
-  final int? order;
-  final ButtonConfig? button;
-
-  Promotion({
-    required this.id,
-    required this.name,
-    required this.title,
-    required this.subtitle,
-    required this.body,
-    this.bottomBody,
-    required this.previewImage,
-    this.link,
-    this.buildingType,
-    required this.isAuthRequired,
-    this.startAt,
-    this.endAt,
-    required this.isActive,
-    required this.isQr,
-    this.minAmountOfReceipt,
-    this.maxCountOfCouponsPerReceipt,
-    this.amountOfCouponsForPromo,
-    this.order,
-    this.button,
-  });
-
-  factory Promotion.fromJson(Map<String, dynamic> json) {
-    return Promotion(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      title: json['title'] as String,
-      subtitle: json['subtitle'] as String,
-      body: json['body'] as String,
-      bottomBody: json['bottom_body'] as String?,
-      previewImage:
-          PreviewImage.fromJson(json['preview_image'] as Map<String, dynamic>),
-      link: json['link'] as String?,
-      buildingType: json['building_type'] as String?,
-      isAuthRequired: json['is_auth_required'] as bool? ?? false,
-      startAt: json['start_at'] != null
-          ? DateTime.parse(json['start_at'] as String)
-          : null,
-      endAt: json['end_at'] != null
-          ? DateTime.parse(json['end_at'] as String)
-          : null,
-      isActive: json['is_active'] as bool? ?? true,
-      isQr: json['is_qr'] as bool? ?? false,
-      minAmountOfReceipt: json['min_amount_of_receipt'] as String?,
-      maxCountOfCouponsPerReceipt:
-          json['max_count_of_coupons_per_receipt'] as int?,
-      amountOfCouponsForPromo: json['amount_of_coupons_for_promo'] as int?,
-      order: json['order'] as int?,
-      button: json['button'] != null
-          ? ButtonConfig.fromJson(json['button'] as Map<String, dynamic>)
-          : null,
-    );
-  }
-
-  String get formattedDateRange {
-    if (startAt == null || endAt == null) return '';
-
-    return '${_formatDate(startAt!)} - ${_formatDate(endAt!)}';
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year.toString().substring(2)}';
-  }
-}
+import 'package:intl/intl.dart';
 
 class PreviewImage {
   final int id;
@@ -104,13 +19,159 @@ class PreviewImage {
   });
 
   factory PreviewImage.fromJson(Map<String, dynamic> json) {
+    print('Parsing PreviewImage: $json');
     return PreviewImage(
       id: json['id'],
       uuid: json['uuid'],
       url: json['url'],
-      urlOriginal: json['urlOriginal'],
-      orderColumn: json['order_column'],
+      urlOriginal: json['urlOriginal'] ?? json['blob'],
+      orderColumn: json['order_column'] ?? 1,
       collectionName: json['collection_name'],
     );
+  }
+}
+
+class Promotion {
+  final int id;
+  final String name;
+  final String title;
+  final String subtitle;
+  final String body;
+  final String? bottomBody;
+  final PreviewImage previewImage;
+  final List<PreviewImage> images;
+  final bool isAuthRequired;
+  final DateTime? startAt;
+  final DateTime? endAt;
+  final bool isActive;
+  final bool isQr;
+  final String? minAmountOfReceipt;
+  final int? maxCountOfCouponsPerReceipt;
+  final int? amountOfCouponsForPromo;
+  final int? order;
+  final ButtonConfig? button;
+
+  Promotion({
+    required this.id,
+    required this.name,
+    required this.title,
+    required this.subtitle,
+    required this.body,
+    this.bottomBody,
+    required this.previewImage,
+    required this.images,
+    required this.isAuthRequired,
+    this.startAt,
+    this.endAt,
+    required this.isActive,
+    required this.isQr,
+    this.minAmountOfReceipt,
+    this.maxCountOfCouponsPerReceipt,
+    this.amountOfCouponsForPromo,
+    this.order,
+    this.button,
+  });
+
+  factory Promotion.fromJson(Map<String, dynamic> json) {
+    try {
+      print('Parsing promotion JSON: $json');
+
+      // Обработка preview_image
+      PreviewImage? previewImage;
+      if (json['preview_image'] != null) {
+        previewImage = PreviewImage.fromJson(
+            json['preview_image'] as Map<String, dynamic>);
+      } else if (json['media'] != null && (json['media'] as List).isNotEmpty) {
+        previewImage = PreviewImage.fromJson(
+            (json['media'] as List).first as Map<String, dynamic>);
+      }
+
+      // Обработка images
+      List<PreviewImage> images = [];
+      if (json['images'] != null) {
+        final imagesList = json['images'] as List;
+        for (var imageJson in imagesList) {
+          try {
+            images
+                .add(PreviewImage.fromJson(imageJson as Map<String, dynamic>));
+          } catch (e) {
+            print('Error parsing image: $e');
+          }
+        }
+      }
+
+      // Обработка дат
+      DateTime? startAt;
+      try {
+        startAt = json['start_at'] != null
+            ? DateTime.parse(json['start_at'] as String)
+            : null;
+      } catch (e) {
+        print('Error parsing start_at: $e');
+      }
+
+      DateTime? endAt;
+      try {
+        endAt = json['end_at'] != null
+            ? DateTime.parse(json['end_at'] as String)
+            : null;
+      } catch (e) {
+        print('Error parsing end_at: $e');
+      }
+
+      return Promotion(
+        id: json['id'] as int,
+        name: json['name'] as String? ?? '',
+        title: json['title'] as String? ?? '',
+        subtitle: json['subtitle'] as String? ?? '',
+        body: json['body'] as String? ?? '',
+        bottomBody: json['bottom_body'] as String?,
+        previewImage: previewImage ??
+            PreviewImage(
+              id: 0,
+              uuid: '',
+              url: '',
+              urlOriginal: '',
+              orderColumn: 1,
+              collectionName: '',
+            ),
+        images: images,
+        isAuthRequired: json['is_auth_required'] as bool? ?? false,
+        startAt: startAt,
+        endAt: endAt,
+        isActive: json['is_active'] as bool? ?? true,
+        isQr: json['is_qr'] as bool? ?? false,
+        minAmountOfReceipt: json['min_amount_of_receipt']?.toString(),
+        maxCountOfCouponsPerReceipt:
+            json['max_count_of_coupons_per_receipt'] as int?,
+        amountOfCouponsForPromo: json['amount_of_coupons_for_promo'] as int?,
+        order: json['order'] as int?,
+        button: json['button'] != null
+            ? ButtonConfig.fromJson(json['button'] as Map<String, dynamic>)
+            : null,
+      );
+    } catch (e, stack) {
+      print('Error parsing promotion: $e');
+      print('Stack trace: $stack');
+      rethrow;
+    }
+  }
+
+  String get formattedDateRange {
+    if (startAt == null && endAt == null) {
+      return 'Бессрочно';
+    }
+
+    final dateFormat = DateFormat('dd.MM.yyyy');
+    final startStr = startAt != null ? dateFormat.format(startAt!) : '';
+    final endStr = endAt != null ? dateFormat.format(endAt!) : '';
+
+    if (startAt != null && endAt != null) {
+      return '$startStr - $endStr';
+    } else if (startAt != null) {
+      return 'С $startStr';
+    } else {
+      return 'До $endStr';
+    }
   }
 }

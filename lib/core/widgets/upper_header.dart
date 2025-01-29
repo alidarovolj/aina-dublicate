@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
+import 'package:aina_flutter/core/widgets/language_switcher.dart';
 
 class UpperHeader extends StatelessWidget {
   const UpperHeader({super.key});
@@ -21,6 +22,10 @@ class UpperHeader extends StatelessWidget {
                   height: 17,
                   fit: BoxFit.contain,
                 ),
+              ),
+              Container(
+                padding: const EdgeInsets.only(right: AppLength.xl),
+                child: const LanguageSwitcher(),
               ),
             ],
           ),

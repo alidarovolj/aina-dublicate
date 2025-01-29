@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'core/router/app_router.dart';
 import 'core/styles/theme.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
@@ -17,6 +19,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'AINA',
+      localizationsDelegates: context.localizationDelegates +
+          [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+      supportedLocales: context.supportedLocales,
+      locale: context.locale,
       theme: appTheme.copyWith(
         scaffoldBackgroundColor: AppColors.backgroundLight,
         textTheme: GoogleFonts.latoTextTheme(

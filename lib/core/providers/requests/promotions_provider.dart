@@ -1,64 +1,39 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/types/promotion.dart';
 import 'package:aina_flutter/core/providers/requests/promotions/list.dart';
+import 'package:flutter/material.dart';
 
 class PromotionsProvider extends StateNotifier<AsyncValue<List<Promotion>>> {
-  PromotionsProvider(this._listService) : super(const AsyncValue.loading()) {
-    fetchPromotions();
-  }
+  PromotionsProvider(this._listService) : super(const AsyncValue.loading());
 
   final RequestPromotionsService _listService;
 
-  Future<void> fetchPromotions() async {
+  Future<void> fetchPromotions(BuildContext context) async {
     try {
-      // // print('Fetching promotions...');
-      final response = await _listService.promotions();
+      state = const AsyncValue.loading();
+      final response = await _listService.promotions(context);
 
-      if (response == null || !response.data['success']) {
-        throw Exception('Failed to fetch promotions');
+      if (!response.data['success']) {
+        throw Exception(
+            'Failed to fetch promotions: ${response.data['message']}');
       }
 
-      // // print('API Response data: ${response.data['data']}');
-
       final rawList = response.data['data'] as List;
-      // // print('Raw promotions count: ${rawList.length}');
-
       final List<Promotion> promotions = rawList
-          .map((json) {
-            try {
-              // // print(
-              //     'Processing promotion: ${json['name']} (ID: ${json['id']})');
-              return Promotion.fromJson(json as Map<String, dynamic>);
-            } catch (e) {
-              // // print('Error parsing promotion: $e');
-              // // print('Problematic JSON: $json');
-              return null;
-            }
-          })
-          .whereType<Promotion>() // Filter out null values
+          .map((json) => Promotion.fromJson(json as Map<String, dynamic>))
+          .where((promotion) => _isValidPromotionData(promotion))
           .toList();
-
-      // // print('Successfully parsed promotions count: ${promotions.length}');
-      // // print(
-      //     'Final promotions list: ${promotions.map((p) => '${p.name} (ID: ${p.id})').join(', ')}');
 
       state = AsyncValue.data(promotions);
     } catch (error, stackTrace) {
-      // // print('Error fetching promotions: $error');
       state = AsyncValue.error(error, stackTrace);
     }
   }
 
-  bool _isValidPromotionData(dynamic json) {
-    try {
-      // Add validation for required fields
-      return json['id'] != null &&
-          json['name'] != null &&
-          json['order'] != null; // Add other required fields
-    } catch (e) {
-      // // print('Invalid promotion data: $json');
-      return false;
-    }
+  bool _isValidPromotionData(Promotion promotion) {
+    return promotion.id != null &&
+        promotion.name != null &&
+        promotion.order != null;
   }
 }
 
@@ -76,11 +51,10 @@ final sortedPromotionsProvider = Provider<AsyncValue<List<Promotion>>>((ref) {
     data: (promotions) {
       final sortedPromotions = List<Promotion>.from(promotions)
         ..sort((a, b) {
-          // Handle cases where isQr might be null
           final aIsQr = a.isQr ?? false;
           final bIsQr = b.isQr ?? false;
           if (aIsQr == bIsQr) return 0;
-          return aIsQr ? -1 : 1; // QR promotions come first
+          return aIsQr ? -1 : 1;
         });
       return AsyncValue.data(sortedPromotions);
     },

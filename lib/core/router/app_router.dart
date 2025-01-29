@@ -21,6 +21,11 @@ import 'package:aina_flutter/features/promotions/presentation/pages/promotions_p
 import 'package:aina_flutter/features/stores/presentation/pages/stores_page.dart';
 import 'package:aina_flutter/features/promotions/presentation/pages/promotion_qr_page.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/coworking_page.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/coworking_details_page.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/coworking_bookings_page.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/coworking_profile_page.dart';
+import 'package:aina_flutter/core/widgets/coworking_tabbar_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -32,33 +37,9 @@ class AppRouter {
         name: 'home',
         builder: (context, state) => const HomePage(),
       ),
-      GoRoute(
-        path: '/code',
-        name: 'auth-code',
-        builder: (context, state) {
-          final phoneNumber = (state.extra as String?) ?? '';
-          return CodeInputScreen(phoneNumber: phoneNumber);
-        },
-      ),
-      GoRoute(
-        path: '/info',
-        name: 'set-info',
-        builder: (context, state) {
-          final phoneNumber = (state.extra as String?) ?? '';
-          return SetInfoPage(phoneNumber: phoneNumber);
-        },
-      ),
+      // Main mall routes
       ShellRoute(
         builder: (context, state, child) {
-          // Set status bar style to light (white icons)
-          // SystemChrome.setSystemUIOverlayStyle(
-          //   const SystemUiOverlayStyle(
-          //     statusBarBrightness: Brightness.dark,
-          //     statusBarIconBrightness: Brightness.light,
-          //     statusBarColor: Colors.transparent,
-          //   ),
-          // );
-
           return MainTabBarScreen(
             currentRoute: state.uri.toString(),
             child: child,
@@ -188,6 +169,51 @@ class AppRouter {
             path: '/stores',
             name: 'stores',
             builder: (context, state) => const StoresPage(mallId: 0),
+          ),
+        ],
+      ),
+      // Coworking routes
+      ShellRoute(
+        builder: (context, state, child) {
+          return CoworkingTabBarScreen(
+            currentRoute: state.uri.toString(),
+            child: child,
+          );
+        },
+        routes: [
+          GoRoute(
+            path: '/coworking',
+            name: 'coworking',
+            builder: (context, state) => const CoworkingPage(),
+          ),
+          GoRoute(
+            path: '/coworking/:id',
+            name: 'coworking_details',
+            builder: (context, state) {
+              final id = state.pathParameters['id'];
+              if (id == null) return const CoworkingPage();
+              return CoworkingDetailsPage(id: int.parse(id));
+            },
+            routes: [
+              GoRoute(
+                path: 'bookings',
+                name: 'coworking_bookings',
+                builder: (context, state) {
+                  final id = state.pathParameters['id'];
+                  if (id == null) return const CoworkingPage();
+                  return CoworkingBookingsPage(coworkingId: int.parse(id));
+                },
+              ),
+              GoRoute(
+                path: 'profile',
+                name: 'coworking_profile',
+                builder: (context, state) {
+                  final id = state.pathParameters['id'];
+                  if (id == null) return const CoworkingPage();
+                  return CoworkingProfilePage(coworkingId: int.parse(id));
+                },
+              ),
+            ],
           ),
         ],
       ),

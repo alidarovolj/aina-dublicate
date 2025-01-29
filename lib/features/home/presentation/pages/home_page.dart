@@ -1,5 +1,5 @@
-import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/types/card_type.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
@@ -23,6 +23,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(promotionsProvider.notifier).fetchPromotions(context);
+    });
   }
 
   @override
@@ -81,12 +84,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
                 const SliverToBoxAdapter(
                   child: PromotionsBlock(
-                      showTitle: true,
-                      showViewAll: false,
-                      showDivider: false,
-                      cardType: PromotionCardType.small,
-                      maxElements: 2,
-                      sortByQr: true),
+                    showTitle: true,
+                    showViewAll: false,
+                    showDivider: false,
+                    cardType: PromotionCardType.small,
+                    maxElements: 2,
+                    sortByQr: true,
+                  ),
                 ),
                 const SliverToBoxAdapter(
                   child: SizedBox(

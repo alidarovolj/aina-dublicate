@@ -42,6 +42,9 @@ dependencies:
   flutter_html: ^3.0.0-beta.2
   package_info_plus: ^8.1.3
   shimmer: ^3.0.0
+  flutter_localizations:
+    sdk: flutter
+  easy_localization: ^3.0.5
 
 dev_dependencies:
   flutter_test:
@@ -51,6 +54,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/translations/
     - .env
     - lib/core/assets/icons/
     - lib/core/assets/icons/doctors/

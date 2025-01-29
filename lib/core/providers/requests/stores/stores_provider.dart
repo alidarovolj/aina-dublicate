@@ -29,7 +29,7 @@ class RequestStoresService {
         queryParameters: queryParams,
       );
     } catch (e) {
-      print('Error in stores request: $e');
+      // print('Error in stores request: $e');
       return null;
     }
   }
@@ -81,8 +81,8 @@ class StoresNotifier
         final lastPage = meta['last_page'] as int;
         _hasMorePages = currentPage < lastPage;
 
-        print(
-            'Page $currentPage of $lastPage loaded (${newStores.length} items)');
+        // print(
+        //     'Page $currentPage of $lastPage loaded (${newStores.length} items)');
       } else {
         _hasMorePages = false;
       }
@@ -91,7 +91,7 @@ class StoresNotifier
           AsyncValue.data(newStores); // Always set new data for initial load
       _currentPage++;
     } catch (e, stack) {
-      print('Error loading stores: $e');
+      // print('Error loading stores: $e');
       state = AsyncValue.error(e, stack);
     }
   }
@@ -122,8 +122,8 @@ class StoresNotifier
         final lastPage = meta['last_page'] as int;
         _hasMorePages = currentPage < lastPage;
 
-        print(
-            'Page $currentPage of $lastPage loaded (${newStores.length} items)');
+        // print(
+        //     'Page $currentPage of $lastPage loaded (${newStores.length} items)');
       } else {
         _hasMorePages = false;
       }
@@ -138,7 +138,7 @@ class StoresNotifier
 
       _currentPage++;
     } catch (error, stack) {
-      print('Error loading stores: $error');
+      // print('Error loading stores: $error');
       if (_currentPage == 1) {
         state = AsyncValue.error(error, stack);
       }

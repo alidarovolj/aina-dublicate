@@ -11,7 +11,7 @@ class RequestBuildingsService {
     try {
       return await _dio.get('/api/aina/buildings');
     } catch (e) {
-      print('Error in buildings request: $e');
+      // print('Error in buildings request: $e');
       return null;
     }
   }

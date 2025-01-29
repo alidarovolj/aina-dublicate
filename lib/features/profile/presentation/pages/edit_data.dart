@@ -32,18 +32,21 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
   late TextEditingController licensePlateController;
   late Map<String, FocusNode> focusNodes;
 
+  // Validation state
+  bool isFirstNameValid = true;
+  bool isLastNameValid = true;
+  bool isLicensePlateValid = true;
+
   @override
   void initState() {
     super.initState();
-    final userData = UserProfile.fromJson(ref.read(authProvider).userData!);
 
-    firstNameController = TextEditingController(text: userData.firstName);
-    lastNameController = TextEditingController(text: userData.lastName);
-    patronymicController =
-        TextEditingController(text: userData.patronymic ?? '');
-    emailController = TextEditingController(text: userData.email ?? '');
-    licensePlateController =
-        TextEditingController(text: userData.licensePlate ?? '');
+    // Initialize with empty values first
+    firstNameController = TextEditingController();
+    lastNameController = TextEditingController();
+    patronymicController = TextEditingController();
+    emailController = TextEditingController();
+    licensePlateController = TextEditingController();
 
     focusNodes = {
       'firstName': FocusNode(),
@@ -57,19 +60,56 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
       node.addListener(_onFocusChange);
     }
 
-    ref.read(selectedGenderProvider.notifier).state =
-        getInitialGender(userData.gender);
+    // Load initial data
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialData();
+    });
+  }
+
+  void _loadInitialData() async {
+    try {
+      final userData = await ref.read(userProvider.future);
+
+      if (mounted) {
+        firstNameController.text = userData.firstName;
+        lastNameController.text = userData.lastName;
+        patronymicController.text = userData.patronymic ?? '';
+        emailController.text = userData.email ?? '';
+        licensePlateController.text = userData.licensePlate ?? '';
+
+        ref.read(selectedGenderProvider.notifier).state =
+            getInitialGender(userData.gender);
+      }
+    } catch (e) {
+      // print('Error loading initial data: $e');
+    }
+  }
+
+  bool validateFields() {
+    setState(() {
+      isFirstNameValid = firstNameController.text.trim().isNotEmpty;
+      isLastNameValid = lastNameController.text.trim().isNotEmpty;
+      isLicensePlateValid = licensePlateController.text.trim().length >= 5;
+    });
+
+    return isFirstNameValid && isLastNameValid && isLicensePlateValid;
   }
 
   void _onFocusChange() {
     final hasFocus = focusNodes.values.any((node) => node.hasFocus);
     if (!hasFocus) {
-      _updateProfile();
+      if (validateFields()) {
+        _updateProfile();
+      }
     }
   }
 
-  void _updateProfile() {
-    ref.read(profileProvider).updateProfile(
+  void _updateProfile() async {
+    if (!validateFields()) {
+      return;
+    }
+
+    final success = await ref.read(profileProvider).updateProfile(
           firstName: firstNameController.text,
           lastName: lastNameController.text,
           patronymic: patronymicController.text,
@@ -77,10 +117,12 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
           licensePlate: licensePlateController.text,
           gender: getApiGender(ref.read(selectedGenderProvider)),
         );
-  }
 
-  void _onInputChange() {
-    _updateProfile();
+    if (success && mounted) {
+      // Invalidate and refresh the userProvider to fetch new data
+      ref.invalidate(userProvider);
+      await ref.read(userProvider.future);
+    }
   }
 
   @override
@@ -99,274 +141,288 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
 
   @override
   Widget build(BuildContext context) {
-    final userAsync = ref.watch(authProvider);
+    final userAsync = ref.watch(userProvider);
 
-    // If userData is null, redirect to malls page
-    if (userAsync.userData == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go('/malls');
-      });
-      return const Scaffold(
+    return userAsync.when(
+      loading: () => const Scaffold(
         body: Center(
           child: CircularProgressIndicator(),
         ),
-      );
-    }
-
-    final userData = UserProfile.fromJson(userAsync.userData!);
-    String selectedGender = ref.read(selectedGenderProvider);
-
-    return Scaffold(
-      body: Container(
-        color: AppColors.primary,
-        child: SafeArea(
-          child: Stack(
-            children: [
-              Container(
-                color: AppColors.white,
-                margin: const EdgeInsets.only(top: 64),
-                child: ListView(
-                  padding: const EdgeInsets.all(12),
-                  children: [
-                    // Avatar and phone section
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: userData.avatarUrl != null
-                                ? null
-                                : AppColors.secondary,
-                            borderRadius: BorderRadius.circular(8),
-                            image: userData.avatarUrl != null
-                                ? DecorationImage(
-                                    image: NetworkImage(userData.avatarUrl!),
-                                    fit: BoxFit.cover,
+      ),
+      error: (error, stack) => Scaffold(
+        body: Center(
+          child: Text('Error: $error'),
+        ),
+      ),
+      data: (userData) => Scaffold(
+        body: Container(
+          color: AppColors.primary,
+          child: SafeArea(
+            child: Stack(
+              children: [
+                Container(
+                  color: AppColors.white,
+                  margin: const EdgeInsets.only(top: 64),
+                  child: ListView(
+                    padding: const EdgeInsets.all(12),
+                    children: [
+                      // Avatar and phone section
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: userData.avatarUrl != null
+                                  ? null
+                                  : AppColors.secondary,
+                              borderRadius: BorderRadius.circular(8),
+                              image: userData.avatarUrl != null
+                                  ? DecorationImage(
+                                      image: NetworkImage(userData.avatarUrl!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                            ),
+                            child: userData.avatarUrl == null
+                                ? const Center(
+                                    child: Icon(
+                                      Icons.person_add,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
                                   )
                                 : null,
                           ),
-                          child: userData.avatarUrl == null
-                              ? const Center(
-                                  child: Icon(
-                                    Icons.person_add,
-                                    color: Colors.white,
-                                    size: 24,
-                                  ),
-                                )
-                              : null,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        const Text(
-                          'Телефон: ',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: AppColors.textDarkGrey,
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          const Text(
+                            'Телефон: ',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppColors.textDarkGrey,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          userData.maskedPhone,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: AppColors.primary,
+                          const SizedBox(width: 12),
+                          Text(
+                            userData.maskedPhone,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: AppColors.primary,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Основное',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: AppColors.textDarkGrey,
+                        ],
                       ),
-                    ),
-
-                    CustomInputField(
-                      controller: firstNameController,
-                      placeholder: 'Имя*',
-                      isRequired: true,
-                      focusNode: focusNodes['firstName'],
-                      onChanged: (value) {
-                        _onInputChange();
-                      },
-                    ),
-
-                    CustomInputField(
-                      controller: lastNameController,
-                      placeholder: 'Фамилия*',
-                      isRequired: true,
-                      focusNode: focusNodes['lastName'],
-                      onChanged: (value) {
-                        _onInputChange();
-                      },
-                    ),
-                    CustomInputField(
-                      controller: patronymicController,
-                      placeholder: 'Отчество',
-                      focusNode: focusNodes['patronymic'],
-                      onChanged: (value) {
-                        _onInputChange();
-                      },
-                    ),
-                    CustomInputField(
-                      controller: emailController,
-                      placeholder: 'E-mail',
-                      focusNode: focusNodes['email'],
-                      onChanged: (value) {
-                        _onInputChange();
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-                    CustomInputField(
-                      controller: licensePlateController,
-                      placeholder: 'Госномер авто (для оплаты паркинга)',
-                      focusNode: focusNodes['licensePlate'],
-                      onChanged: (value) {
-                        _onInputChange();
-                      },
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      '*Изменить госномер можно не чаще 1 раза в сутки',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textDarkGrey,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Gender selection
-                    const Text(
-                      'Пол',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: AppColors.textDarkGrey,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          width: 100,
-                          child: _buildGenderOption('Жен.', selectedGender,
-                              (value) {
-                            ref.read(selectedGenderProvider.notifier).state =
-                                value;
-                          }),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Основное',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppColors.textDarkGrey,
                         ),
-                        SizedBox(
-                          width: 100,
-                          child: _buildGenderOption('Муж.', selectedGender,
-                              (value) {
-                            ref.read(selectedGenderProvider.notifier).state =
-                                value;
-                          }),
-                        ),
-                        Expanded(
-                          child: _buildGenderOption(
-                              'Не указывать', selectedGender, (value) {
-                            ref.read(selectedGenderProvider.notifier).state =
-                                value;
-                          }),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    const Text(
-                      'Настройки',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: AppColors.textDarkGrey,
                       ),
-                    ),
 
-                    const SizedBox(height: 8),
-
-                    // Logout button
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.lightGrey,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: ListTile(
-                        title: const Text(
-                          'Выйти из аккаунта',
-                          style: TextStyle(fontSize: 14),
-                        ),
-                        onTap: () async {
-                          final authState = ref.read(authProvider);
-                          if (authState.userData == null) {
-                            context.go('/');
-                            return;
-                          }
-
-                          final userData =
-                              UserProfile.fromJson(authState.userData!);
-                          final phone = userData.maskedPhone;
-
-                          // Show confirmation modal
-                          await BaseModal.show(
-                            context,
-                            message: 'Выйти из аккаунта\n$phone ?',
-                            buttons: [
-                              const ModalButton(
-                                label: 'Отмена',
-                                type: ButtonType.normal,
-                                textColor: AppColors.primary,
-                                backgroundColor: AppColors.lightGrey,
-                              ),
-                              ModalButton(
-                                label: 'Выйти из аккаунта',
-                                type: ButtonType.normal,
-                                textColor: Colors.red,
-                                backgroundColor: Colors.white,
-                                onPressed: () async {
-                                  Navigator.of(context).pop();
-
-                                  // Perform logout
-                                  await ref
-                                      .read(authProvider.notifier)
-                                      .logout();
-
-                                  if (!context.mounted) return;
-
-                                  // Show success modal
-                                  await BaseModal.show(
-                                    context,
-                                    message: 'Вы вышли из аккаунта',
-                                    buttons: [
-                                      ModalButton(
-                                        label: 'Закрыть',
-                                        type: ButtonType.normal,
-                                        onPressed: () {},
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
-                            ],
-                          );
+                      CustomInputField(
+                        controller: firstNameController,
+                        placeholder: 'Имя*',
+                        isRequired: true,
+                        focusNode: focusNodes['firstName'],
+                        hasError: !isFirstNameValid,
+                        errorText:
+                            !isFirstNameValid ? 'Обязательное поле' : null,
+                        onChanged: (value) {
+                          setState(() {
+                            isFirstNameValid = value.trim().isNotEmpty;
+                          });
                         },
                       ),
-                    ),
-                  ],
+
+                      CustomInputField(
+                        controller: lastNameController,
+                        placeholder: 'Фамилия*',
+                        isRequired: true,
+                        focusNode: focusNodes['lastName'],
+                        hasError: !isLastNameValid,
+                        errorText:
+                            !isLastNameValid ? 'Обязательное поле' : null,
+                        onChanged: (value) {
+                          setState(() {
+                            isLastNameValid = value.trim().isNotEmpty;
+                          });
+                        },
+                      ),
+                      CustomInputField(
+                        controller: patronymicController,
+                        placeholder: 'Отчество',
+                        focusNode: focusNodes['patronymic'],
+                      ),
+                      CustomInputField(
+                        controller: emailController,
+                        placeholder: 'E-mail',
+                        focusNode: focusNodes['email'],
+                      ),
+
+                      const SizedBox(height: 20),
+                      CustomInputField(
+                        controller: licensePlateController,
+                        placeholder: 'Госномер авто (для оплаты паркинга)*',
+                        focusNode: focusNodes['licensePlate'],
+                        isRequired: true,
+                        hasError: !isLicensePlateValid,
+                        errorText: !isLicensePlateValid
+                            ? licensePlateController.text.trim().isEmpty
+                                ? 'Обязательное поле'
+                                : 'Минимум 5 символов'
+                            : null,
+                        onChanged: (value) {
+                          setState(() {
+                            isLicensePlateValid = value.trim().length >= 5;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        '*Изменить госномер можно не чаще 1 раза в сутки',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textDarkGrey,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Gender selection
+                      const Text(
+                        'Пол',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppColors.textDarkGrey,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: 100,
+                            child: _buildGenderOption(
+                                'Жен.', ref.read(selectedGenderProvider),
+                                (value) {
+                              ref.read(selectedGenderProvider.notifier).state =
+                                  value;
+                            }),
+                          ),
+                          SizedBox(
+                            width: 100,
+                            child: _buildGenderOption(
+                                'Муж.', ref.read(selectedGenderProvider),
+                                (value) {
+                              ref.read(selectedGenderProvider.notifier).state =
+                                  value;
+                            }),
+                          ),
+                          Expanded(
+                            child: _buildGenderOption('Не указывать',
+                                ref.read(selectedGenderProvider), (value) {
+                              ref.read(selectedGenderProvider.notifier).state =
+                                  value;
+                            }),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      const Text(
+                        'Настройки',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppColors.textDarkGrey,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // Logout button
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.lightGrey,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ListTile(
+                          title: const Text(
+                            'Выйти из аккаунта',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                          onTap: () async {
+                            final authState = ref.read(authProvider);
+                            if (authState.userData == null) {
+                              context.go('/');
+                              return;
+                            }
+
+                            final userData =
+                                UserProfile.fromJson(authState.userData!);
+                            final phone = userData.maskedPhone;
+
+                            // Show confirmation modal
+                            await BaseModal.show(
+                              context,
+                              message: 'Выйти из аккаунта\n$phone ?',
+                              buttons: [
+                                const ModalButton(
+                                  label: 'Отмена',
+                                  type: ButtonType.normal,
+                                  textColor: AppColors.primary,
+                                  backgroundColor: AppColors.lightGrey,
+                                ),
+                                ModalButton(
+                                  label: 'Выйти из аккаунта',
+                                  type: ButtonType.normal,
+                                  textColor: Colors.red,
+                                  backgroundColor: Colors.white,
+                                  onPressed: () async {
+                                    Navigator.of(context).pop();
+
+                                    // Perform logout
+                                    await ref
+                                        .read(authProvider.notifier)
+                                        .logout();
+
+                                    if (!context.mounted) return;
+
+                                    context.go('/');
+
+                                    // Show success modal
+                                    // await BaseModal.show(
+                                    //   context,
+                                    //   message: 'Вы вышли из аккаунта',
+                                    //   buttons: [
+                                    //     ModalButton(
+                                    //       label: 'Закрыть',
+                                    //       type: ButtonType.normal,
+                                    //       onPressed: () {},
+                                    //     ),
+                                    //   ],
+                                    // );
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const CustomHeader(
-                title: "Персональная информация",
-                type: HeaderType.pop,
-              ),
-            ],
+                const CustomHeader(
+                  title: "Персональная информация",
+                  type: HeaderType.pop,
+                ),
+              ],
+            ),
           ),
         ),
       ),

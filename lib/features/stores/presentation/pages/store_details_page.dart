@@ -156,8 +156,8 @@ class StoreDetailsPage extends ConsumerWidget {
                                           color: Colors.white,
                                         ),
                                         onPressed: () {
-                                          print(
-                                              'Opening Instagram: ${storeData['instagram_link']}');
+                                          // print(
+                                          //     'Opening Instagram: ${storeData['instagram_link']}');
                                         },
                                       ),
                                     ),
@@ -179,8 +179,8 @@ class StoreDetailsPage extends ConsumerWidget {
                                           color: Colors.black,
                                         ),
                                         onPressed: () {
-                                          print(
-                                              'Opening website: ${storeData['website_link']}');
+                                          // print(
+                                          // 'Opening website: ${storeData['website_link']}');
                                         },
                                       ),
                                     ),

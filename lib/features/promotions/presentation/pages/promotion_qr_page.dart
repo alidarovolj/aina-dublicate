@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:aina_flutter/core/providers/requests/promotions/register_receipt.dart';
 import 'package:dio/dio.dart';
@@ -135,7 +135,7 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
         );
       }
     } catch (e) {
-      debugPrint('Error processing QR code: $e');
+      // print('Error processing QR code: $e');
       if (!mounted) return;
 
       String errorMessage = 'Произошла ошибка при обработке QR-кода';

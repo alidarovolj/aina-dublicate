@@ -20,7 +20,7 @@ class RequestStoreCategoriesService {
         queryParameters: queryParams,
       );
     } catch (e) {
-      print('Error in store categories request: $e');
+      // print('Error in store categories request: $e');
       return null;
     }
   }
@@ -37,7 +37,7 @@ final storeCategoriesProvider =
     final response = await service.categories(mallId);
     if (response == null) return [];
 
-    print('Shop categories response: ${response.data}');
+    // print('Shop categories response: ${response.data}');
 
     final List<dynamic> data = response.data['data'] as List<dynamic>;
     return data.map((json) => StoreCategory.fromJson(json)).toList();

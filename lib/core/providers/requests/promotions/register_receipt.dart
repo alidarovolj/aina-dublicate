@@ -18,7 +18,7 @@ class RegisterReceiptService {
       );
       return response;
     } catch (e) {
-      print('Error in register receipt request: $e');
+      // print('Error in register receipt request: $e');
       rethrow; // Re-throw the error to handle it in the QR page
     }
   }

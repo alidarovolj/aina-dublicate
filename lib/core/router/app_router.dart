@@ -3,6 +3,7 @@ import 'package:aina_flutter/features/login/presentation/pages/login_page.dart';
 import 'package:aina_flutter/features/malls/presentation/pages/main_page.dart';
 import 'package:aina_flutter/features/profile/presentation/pages/edit_data.dart';
 import 'package:aina_flutter/features/profile/presentation/pages/profile_page.dart';
+import 'package:aina_flutter/features/profile/presentation/pages/tickets_page.dart';
 import 'package:aina_flutter/features/promotions/presentation/pages/promotion_details_page.dart';
 import 'package:aina_flutter/features/stores/presentation/pages/store_details_page.dart';
 import 'package:aina_flutter/features/stores/presentation/pages/category_stores_page.dart';
@@ -107,6 +108,17 @@ class AppRouter {
                             return const Malls();
                           }
                           return EditDataPage(mallId: int.parse(mallId));
+                        },
+                      ),
+                      GoRoute(
+                        path: 'tickets',
+                        name: 'tickets',
+                        builder: (context, state) {
+                          final mallId = state.pathParameters['id'];
+                          if (mallId == null) {
+                            return const Malls();
+                          }
+                          return TicketsPage(mallId: int.parse(mallId));
                         },
                       ),
                     ],

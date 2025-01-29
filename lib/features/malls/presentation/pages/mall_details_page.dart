@@ -1,6 +1,7 @@
 import 'package:aina_flutter/core/types/card_type.dart';
 import 'package:aina_flutter/core/types/slides.dart' as slides;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
@@ -13,7 +14,6 @@ import 'package:aina_flutter/core/widgets/categories_grid.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:aina_flutter/core/widgets/shop_categories_grid.dart';
 import 'package:go_router/go_router.dart';
-import 'package:aina_flutter/core/widgets/mall_promotions_block.dart';
 
 class MallDetailsPage extends ConsumerWidget {
   final int mallId;
@@ -40,111 +40,112 @@ class MallDetailsPage extends ConsumerWidget {
             .firstWhere((building) => building.id == mallId);
 
         return Scaffold(
-          body: Container(
-            color: AppColors.primary,
-            child: SafeArea(
-              child: Stack(
-                children: [
-                  Container(
-                    color: AppColors.appBg,
-                    margin: const EdgeInsets.only(
-                        top: 64), // Height of CustomHeader
-                    child: CustomScrollView(
-                      physics: const ClampingScrollPhysics(),
-                      slivers: [
-                        SliverToBoxAdapter(
-                          child: DescriptionBlock(
-                            text: mall.description ?? '',
-                          ),
+          backgroundColor: AppColors.primary,
+          body: SafeArea(
+            child: Stack(
+              children: [
+                Container(
+                  color: AppColors.appBg,
+                  margin:
+                      const EdgeInsets.only(top: 64), // Height of CustomHeader
+                  child: CustomScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: DescriptionBlock(
+                          text: mall.description ?? '',
                         ),
-                        SliverToBoxAdapter(
-                          child: CarouselWithIndicator(
-                            slideList: (mall.images)
-                                .map((image) => slides.Slide(
+                      ),
+                      SliverToBoxAdapter(
+                        child: CarouselWithIndicator(
+                          slideList: (mall.images)
+                              .map((image) => slides.Slide(
+                                    id: image.id,
+                                    name: mall.name,
+                                    previewImage: slides.PreviewImage(
                                       id: image.id,
-                                      name: mall.name,
-                                      previewImage: slides.PreviewImage(
-                                        id: image.id,
-                                        uuid: image.uuid,
-                                        url: image.url,
-                                        urlOriginal: image.urlOriginal,
-                                        orderColumn: image.orderColumn,
-                                        collectionName: image.collectionName,
-                                      ),
-                                      order: image.orderColumn,
-                                    ))
-                                .toList(),
-                            showIndicators: true,
-                            showGradient: true,
-                            height: 200,
-                          ),
+                                      uuid: image.uuid,
+                                      url: image.url,
+                                      urlOriginal: image.urlOriginal,
+                                      orderColumn: image.orderColumn,
+                                      collectionName: image.collectionName,
+                                    ),
+                                    order: image.orderColumn,
+                                  ))
+                              .toList(),
+                          showIndicators: true,
+                          showGradient: true,
+                          height: 200,
                         ),
-                        const SliverToBoxAdapter(
-                          child: SizedBox(
-                            height: 20,
-                          ),
+                      ),
+                      const SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: 20,
                         ),
-                        // Mall Info
-                        SliverToBoxAdapter(
-                          child: MallInfoBlock(
-                            workingHours: mall.workingHours ?? '10:00 - 22:00',
-                            address: mall.address ?? '',
-                            onCallTap: () async {
-                              final phoneNumber = mall.phone;
-                              final uri = Uri.parse('tel:$phoneNumber');
-                              if (await canLaunchUrl(uri)) {
-                                await launchUrl(uri);
-                              }
-                            },
-                            onMapTap: () async {
-                              final lat = mall.latitude;
-                              final lng = mall.longitude;
-                              final uri = Uri.parse(
-                                  'https://www.google.com/maps/search/?api=1&query=$lat,$lng');
-                              if (await canLaunchUrl(uri)) {
-                                await launchUrl(uri);
-                              }
-                            },
-                          ),
-                        ),
+                      ),
+                      // Mall Info
+                      SliverToBoxAdapter(
+                        child: MallInfoBlock(
+                          workingHours: mall.workingHours ?? '10:00 - 22:00',
+                          address: mall.address ?? '',
+                          onCallTap: () async {
+                            final phoneNumber = mall.phone;
+                            final uri = Uri.parse('tel:$phoneNumber');
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri);
+                            }
+                          },
+                          onMapTap: () async {
+                            final lat = mall.latitude;
+                            final lng = mall.longitude;
+                            // 2GIS KZ route URL
+                            final uri = Uri.parse(
+                                'https://2gis.kz/almaty/routeSearch/to/$lng,$lat');
 
-                        // Promotions Section
-                        SliverToBoxAdapter(
-                          child: MallPromotionsBlock(
-                            mallId: mallId.toString(),
-                            showTitle: true,
-                            showViewAll: true,
-                            showDivider: true,
-                            cardType: PromotionCardType.medium,
-                            onViewAllTap: () {
-                              context.goNamed(
-                                'mall_promotions',
-                                pathParameters: {'id': mallId.toString()},
-                              );
-                            },
-                            emptyBuilder: (context) => const SizedBox.shrink(),
-                          ),
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri,
+                                  mode: LaunchMode.externalApplication);
+                            }
+                          },
                         ),
+                      ),
 
-                        // Categories Section
-                        SliverToBoxAdapter(
-                          child: Column(
-                            children: [
-                              CategoriesGrid(mallId: mallId.toString()),
-                              const SizedBox(height: 16),
-                              ShopCategoriesGrid(mallId: mallId.toString()),
-                            ],
-                          ),
+                      // Promotions Section
+                      SliverToBoxAdapter(
+                        child: PromotionsBlock(
+                          mallId: mallId.toString(),
+                          showTitle: true,
+                          showViewAll: true,
+                          showDivider: true,
+                          cardType: PromotionCardType.medium,
+                          onViewAllTap: () {
+                            context.goNamed(
+                              'mall_promotions',
+                              pathParameters: {'id': mallId.toString()},
+                            );
+                          },
+                          emptyBuilder: (context) => const SizedBox.shrink(),
                         ),
-                      ],
-                    ),
+                      ),
+
+                      // Categories Section
+                      SliverToBoxAdapter(
+                        child: Column(
+                          children: [
+                            CategoriesGrid(mallId: mallId.toString()),
+                            const SizedBox(height: 16),
+                            ShopCategoriesGrid(mallId: mallId.toString()),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  CustomHeader(
-                    title: mall.name,
-                    type: HeaderType.close,
-                  ),
-                ],
-              ),
+                ),
+                CustomHeader(
+                  title: mall.name,
+                  type: HeaderType.close,
+                ),
+              ],
             ),
           ),
         );

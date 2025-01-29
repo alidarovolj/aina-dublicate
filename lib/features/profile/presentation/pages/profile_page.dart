@@ -4,7 +4,9 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/providers/requests/auth/user.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
+import 'package:aina_flutter/core/providers/requests/settings_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfilePage extends ConsumerWidget {
   final int mallId;
@@ -16,10 +18,13 @@ class ProfilePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userAsync = ref.watch(authProvider);
+    final authState = ref.watch(authProvider);
+    final userAsync = ref.watch(userProvider);
+    final ticketsAsync = ref.watch(userTicketsProvider);
+    final settingsAsync = ref.watch(settingsProvider);
 
     // Show loading state while checking authentication
-    if (userAsync.token == null) {
+    if (authState.token == null) {
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(),
@@ -28,16 +33,20 @@ class ProfilePage extends ConsumerWidget {
     }
 
     // If not authenticated, redirect to malls
-    if (!userAsync.isAuthenticated) {
+    if (!authState.isAuthenticated) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.go('/malls');
       });
       return const SizedBox.shrink();
     }
 
-    // If no user data, show error state
-    if (userAsync.userData == null) {
-      return Scaffold(
+    return userAsync.when(
+      loading: () => const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
+      error: (error, stack) => Scaffold(
         body: Container(
           color: AppColors.primary,
           child: SafeArea(
@@ -64,160 +73,200 @@ class ProfilePage extends ConsumerWidget {
             ),
           ),
         ),
-      );
-    }
-
-    final userData = UserProfile.fromJson(userAsync.userData!);
-
-    return Scaffold(
-      body: Container(
-        color: AppColors.primary,
-        child: SafeArea(
-          child: Stack(
-            children: [
-              Container(
-                color: AppColors.white,
-                margin: const EdgeInsets.only(top: 64),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Profile Info Section
-                    Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          margin: const EdgeInsets.only(bottom: 30),
-                          child: Row(
-                            children: [
-                              if (userData.avatarUrl != null)
-                                Container(
-                                  width: 80,
-                                  height: 80,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[300],
-                                    borderRadius: BorderRadius.circular(4),
+      ),
+      data: (userData) => Scaffold(
+        body: Container(
+          color: AppColors.primary,
+          child: SafeArea(
+            child: Stack(
+              children: [
+                Container(
+                  color: AppColors.white,
+                  margin: const EdgeInsets.only(top: 64),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Profile Info Section
+                      Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            margin: const EdgeInsets.only(bottom: 30),
+                            child: Row(
+                              children: [
+                                if (userData.avatarUrl != null)
+                                  Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[300],
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Image.network(
+                                      userData.avatarUrl!,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                else
+                                  CircleAvatar(
+                                    radius: 30,
+                                    backgroundColor: Colors.grey[300],
+                                    child: const Icon(
+                                      Icons.person,
+                                      size: 40,
+                                      color: Colors.grey,
+                                    ),
                                   ),
-                                  child: Image.network(
-                                    userData.avatarUrl!,
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              else
-                                CircleAvatar(
-                                  radius: 30,
-                                  backgroundColor: Colors.grey[300],
-                                  child: const Icon(
-                                    Icons.person,
-                                    size: 40,
-                                    color: Colors.grey,
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${userData.firstName} ${userData.lastName}',
+                                        style: const TextStyle(
+                                          color: AppColors.primary,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        userData.maskedPhone,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                              ],
+                            ),
+                          ),
+
+                          // Menu Items
+                          _buildMenuItem(
+                            'Персональная информация',
+                            Icons.chevron_right,
+                            backgroundColor: Colors.grey[200],
+                            onTap: () {
+                              context.pushNamed(
+                                'mall_edit',
+                                pathParameters: {'id': mallId.toString()},
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Show tickets menu item if tickets are available
+                          ticketsAsync.when(
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, __) => const SizedBox.shrink(),
+                            data: (tickets) {
+                              if (tickets.isNotEmpty) {
+                                return Column(
                                   children: [
-                                    Text(
-                                      '${userData.firstName} ${userData.lastName}',
-                                      style: const TextStyle(
-                                        color: AppColors.primary,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                    _buildMenuItem(
+                                      'Купоны',
+                                      Icons.chevron_right,
+                                      backgroundColor: Colors.grey[200],
+                                      onTap: () {
+                                        context.pushNamed(
+                                          'tickets',
+                                          pathParameters: {
+                                            'id': mallId.toString()
+                                          },
+                                        );
+                                      },
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      userData.maskedPhone,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
+                                    const SizedBox(height: 8),
                                   ],
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
+
+                          _buildMenuItem(
+                            'Связаться с нами',
+                            Icons.chevron_right,
+                            backgroundColor: Colors.grey[200],
+                            onTap: () {
+                              settingsAsync.whenData((settings) async {
+                                final whatsappUrl =
+                                    Uri.parse(settings.whatsappLinkAinaMall);
+                                if (await canLaunchUrl(whatsappUrl)) {
+                                  await launchUrl(
+                                    whatsappUrl,
+                                    mode: LaunchMode.externalApplication,
+                                  );
+                                }
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 8),
+
+                          _buildMenuItem(
+                            'О приложении',
+                            Icons.chevron_right,
+                            backgroundColor: Colors.grey[200],
+                            onTap: () {
+                              context.pushNamed('about');
+                            },
+                          ),
+                        ],
+                      ),
+
+                      // Switch Account Section
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            bottom: 28, right: 12, left: 12),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.all(0),
+                          child: Row(
+                            children: [
+                              const Expanded(
+                                child: Text(
+                                  'Переключить на профиль Aina Coworking',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                height: 24,
+                                width: 44,
+                                child: Switch.adaptive(
+                                  value: false,
+                                  onChanged: (value) {
+                                    // TODO: Implement profile switch
+                                  },
+                                  activeColor: AppColors.white,
+                                  activeTrackColor: AppColors.primary,
+                                  inactiveThumbColor: AppColors.white,
+                                  inactiveTrackColor: AppColors.grey2,
                                 ),
                               ),
                             ],
                           ),
                         ),
-
-                        // Menu Items
-                        _buildMenuItem(
-                          'Персональная информация',
-                          Icons.chevron_right,
-                          backgroundColor: Colors.grey[200],
-                          onTap: () {
-                            context.pushNamed(
-                              'mall_edit',
-                              pathParameters: {'id': mallId.toString()},
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 8),
-                        // _buildMenuItem(
-                        //   'Связаться с нами',
-                        //   null, // No chevron for this item
-                        //   backgroundColor: Colors.grey[200],
-                        //   onTap: () {},
-                        // ),
-                        const SizedBox(height: 8),
-                        _buildMenuItem(
-                          'О приложении',
-                          Icons.chevron_right,
-                          backgroundColor: Colors.grey[200],
-                          onTap: () {
-                            context.pushNamed('about');
-                          },
-                        ),
-                      ],
-                    ),
-
-                    // Switch Account Section
-                    Padding(
-                      padding: const EdgeInsets.only(
-                          bottom: 28, right: 12, left: 12),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.all(0),
-                        child: Row(
-                          children: [
-                            const Expanded(
-                              child: Text(
-                                'Переключить на профиль Aina Coworking',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 24,
-                              width: 44,
-                              child: Switch.adaptive(
-                                value: false,
-                                onChanged: (value) {
-                                  // TODO: Implement profile switch
-                                },
-                                activeColor: AppColors.white,
-                                activeTrackColor: AppColors.primary,
-                                inactiveThumbColor: AppColors.white,
-                                inactiveTrackColor: AppColors.grey2,
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const CustomHeader(
-                title: "Профиль ТРЦ",
-                type: HeaderType.close,
-              ),
-            ],
+                const CustomHeader(
+                  title: "Профиль ТРЦ",
+                  type: HeaderType.close,
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -13,7 +13,7 @@ class MallCategoriesProvider extends StateNotifier<AsyncValue<List<Category>>> {
 
   Future<void> fetchMallCategories() async {
     try {
-      print('Fetching mall categories...');
+      // print('Fetching mall categories...');
       final response = await _listService.mallCategories(mallId);
 
       if (response == null || !response.data['success']) {
@@ -24,9 +24,9 @@ class MallCategoriesProvider extends StateNotifier<AsyncValue<List<Category>>> {
           .map((json) => Category.fromJson(json))
           .toList();
       state = AsyncValue.data(categories);
-      print('Mall categories fetched successfully.');
+      // print('Mall categories fetched successfully.');
     } catch (error, stackTrace) {
-      print('Error fetching mall categories: $error');
+      // print('Error fetching mall categories: $error');
       state = AsyncValue.error(error, stackTrace);
     }
   }

@@ -28,14 +28,14 @@ class ButtonConfig {
 
 class ButtonInternal {
   final String model;
-  final int id;
+  final int? id;
   final String? buildingType;
   final bool isAuthRequired;
   final bool? isQr;
 
   ButtonInternal({
     required this.model,
-    required this.id,
+    this.id,
     this.buildingType,
     required this.isAuthRequired,
     this.isQr,
@@ -44,7 +44,7 @@ class ButtonInternal {
   factory ButtonInternal.fromJson(Map<String, dynamic> json) {
     return ButtonInternal(
       model: json['model'] as String,
-      id: json['id'] as int,
+      id: json['id'] as int?,
       buildingType: json['building_type'] as String?,
       isAuthRequired: json['is_auth_required'] as bool? ?? false,
       isQr: json['is_qr'] as bool?,

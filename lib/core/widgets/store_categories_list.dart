@@ -46,8 +46,8 @@ class _StoreCategoriesListState extends ConsumerState<StoreCategoriesList> {
 
     // Check if mallId changed
     if (oldWidget.mallId != widget.mallId) {
-      print(
-          'Mall ID changed from ${oldWidget.mallId} to ${widget.mallId}. Reloading categories...');
+      // print(
+      // 'Mall ID changed from ${oldWidget.mallId} to ${widget.mallId}. Reloading categories...');
       // Invalidate the categories provider to force a refresh
       ref.invalidate(mallShopCategoriesProvider(widget.mallId));
     }

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/api/api_client.dart';
 import 'package:aina_flutter/core/services/storage_service.dart';
+import 'package:flutter/foundation.dart';
 
 final requestCodeProvider =
     Provider<RequestCodeService>((ref) => RequestCodeService(ApiClient().dio));
@@ -25,9 +26,10 @@ class RequestCodeService {
             ? Options(headers: {'Authorization': authHeader})
             : null,
       );
+      // print('Stories API response: ${response.data}');
       return response;
     } catch (e) {
-      print('Error fetching user profile: $e');
+      // print('Error fetching stories: $e');
       return null;
     }
   }

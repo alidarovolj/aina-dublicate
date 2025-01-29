@@ -2,6 +2,7 @@ import 'package:aina_flutter/core/types/button_config.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 // Import your auth provider
 
 class ButtonNavigationHandler {
@@ -13,9 +14,12 @@ class ButtonNavigationHandler {
     if (button == null) return;
 
     if (button.isInternal == false) {
-      if (button.link != null) {
-        // Handle external link - you might want to use url_launcher package
-        // await launchUrl(Uri.parse(button.link));
+      final link = button.link;
+      if (link != null) {
+        final uri = Uri.parse(link);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
       }
       return;
     }

@@ -7,7 +7,7 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/requests/promotion_details_provider.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
-import 'package:aina_flutter/core/widgets/auth_warning_modal.dart';
+import 'package:aina_flutter/features/scanner/widgets/auth_warning_modal.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:go_router/go_router.dart';
 
@@ -102,8 +102,8 @@ class PromotionDetailsPage extends ConsumerWidget {
                                 backgroundColor: AppColors.primary,
                                 onPressed: () {
                                   final authState = ref.read(authProvider);
-                                  final mallId = GoRouterState.of(context)
-                                      .pathParameters['mallId'];
+                                  final mallId =
+                                      promotion.building?.id.toString();
                                   if (!authState.isAuthenticated) {
                                     AuthWarningModal.show(
                                       context,

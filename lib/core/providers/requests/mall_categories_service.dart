@@ -32,7 +32,7 @@ class RequestMallCategoriesService {
       }
       return null;
     } catch (e) {
-      print('Error fetching mall categories: $e');
+      // print('Error fetching mall categories: $e');
       return null;
     }
   }

@@ -14,7 +14,7 @@ class RequestMallCategoriesService {
         'type': 'ORGANIZATION_MAIN_CATEGORIES',
       });
     } catch (e) {
-      print('Error in mall categories request: $e');
+      // print('Error in mall categories request: $e');
       return null;
     }
   }

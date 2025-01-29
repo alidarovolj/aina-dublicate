@@ -11,7 +11,7 @@ class RequestCodeService {
     try {
       return await _dio.get('/api/aina/banners');
     } catch (e) {
-      print('Error in banners request: $e');
+      // print('Error in banners request: $e');
       return null;
     }
   }

@@ -1,11 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:aina_flutter/core/providers/auth/auth_state.dart';
+import 'package:aina_flutter/core/api/api_client.dart';
 
 final profileProvider = Provider((ref) => ProfileProvider(ref));
 
 class ProfileProvider {
   final Ref ref;
+  final _apiClient = ApiClient();
 
   ProfileProvider(this.ref);
 
@@ -18,9 +19,6 @@ class ProfileProvider {
     required String gender,
   }) async {
     try {
-      final userData = ref.read(authProvider).userData!;
-      final dio = Dio();
-
       final formData = FormData.fromMap({
         'firstname': firstName,
         'lastname': lastName,
@@ -30,14 +28,12 @@ class ProfileProvider {
         'gender': gender,
       });
 
-      final response = await dio.post(
-        'https://devsuperapi.aina-fashion.kz/api/aina/profile',
+      final response = await _apiClient.dio.post(
+        '/api/aina/profile',
         data: formData,
         options: Options(
           headers: {
-            'accept': 'application/json',
             'accept-language': 'ru',
-            'authorization': 'Bearer ${userData['token']}',
             'language': 'ru',
           },
         ),

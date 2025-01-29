@@ -69,7 +69,7 @@ class _CategoryStoresPageState extends ConsumerState<CategoryStoresPage> {
                         )
                       : ListView.builder(
                           controller: _scrollController,
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(12),
                           itemCount: stores.length,
                           itemBuilder: (context, index) {
                             final store = stores[index];
@@ -125,7 +125,7 @@ class _CategoryStoresPageState extends ConsumerState<CategoryStoresPage> {
 
   Widget _buildSkeletonLoader() {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       itemCount: 5, // Show 5 skeleton items
       itemBuilder: (context, index) {
         return Padding(

@@ -11,7 +11,7 @@ class RequestPromotionsService {
     try {
       return await _dio.get('/api/aina/promotions');
     } catch (e) {
-      print('Error in promotions request: $e');
+      // print('Error in promotions request: $e');
       return null;
     }
   }

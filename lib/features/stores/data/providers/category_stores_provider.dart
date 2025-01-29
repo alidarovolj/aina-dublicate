@@ -26,7 +26,7 @@ class CategoryStoresService {
       );
       return response;
     } catch (e) {
-      print('Error in category stores request: $e');
+      // print('Error in category stores request: $e');
       return null;
     }
   }

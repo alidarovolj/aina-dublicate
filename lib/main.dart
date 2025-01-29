@@ -24,11 +24,11 @@ Future<void> main() async {
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarBrightness: Brightness.light, // Adjust for your theme
-      statusBarIconBrightness: Brightness.dark, // Icon color
-      statusBarColor: Colors.white, // Makes it transparent
-      systemNavigationBarColor: Colors.white, // Nav bar background
-      systemNavigationBarIconBrightness: Brightness.dark, // Nav bar icons
+      statusBarBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.light,
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.white,
+      systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
 

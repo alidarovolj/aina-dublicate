@@ -17,11 +17,11 @@ class RequestMallEventsService {
       return response;
     } catch (e) {
       if (e is DioException) {
-        print('Error in mall events request: ${e.type}');
-        print('Error message: ${e.message}');
-        print('Error response: ${e.response?.data}');
+        // print('Error in mall events request: ${e.type}');
+        // print('Error message: ${e.message}');
+        // print('Error response: ${e.response?.data}');
       } else {
-        print('Unexpected error in mall events request: $e');
+        // print('Unexpected error in mall events request: $e');
       }
       return Response(
           requestOptions: RequestOptions(path: '/api/aina/events'),

@@ -17,6 +17,8 @@ class PromotionsBlock extends ConsumerWidget {
   final PromotionCardType cardType;
   final bool showGradient;
   final Widget Function(BuildContext)? emptyBuilder;
+  final int? maxElements;
+  final bool sortByQr;
 
   const PromotionsBlock({
     super.key,
@@ -28,7 +30,19 @@ class PromotionsBlock extends ConsumerWidget {
     this.cardType = PromotionCardType.medium,
     this.showGradient = false,
     this.emptyBuilder,
+    this.maxElements,
+    this.sortByQr = false,
   });
+
+  List<dynamic> _sortPromotions(List<dynamic> promotions) {
+    if (!sortByQr) return promotions;
+
+    return List<dynamic>.from(promotions)
+      ..sort((a, b) {
+        if (a.isQr == b.isQr) return 0;
+        return a.isQr ? -1 : 1;
+      });
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -36,19 +50,21 @@ class PromotionsBlock extends ConsumerWidget {
         ? ref.watch(mallPromotionsProvider(mallId!))
         : ref.watch(promotionsProvider);
 
-    print('PromotionsBlock mallId: $mallId');
+    // print('PromotionsBlock mallId: $mallId');
 
     return promotionsAsync.when(
       loading: () => _buildSkeletonLoader(cardType),
       error: (error, stack) {
-        print('Error in PromotionsBlock: $error');
+        // print('Error in PromotionsBlock: $error');
         return const SizedBox.shrink();
       },
       data: (promotions) {
-        print('Received promotions: ${promotions.length}');
+        // print('Received promotions: ${promotions.length}');
         if (promotions.isEmpty) {
           return emptyBuilder?.call(context) ?? const SizedBox.shrink();
         }
+
+        final sortedPromotions = _sortPromotions(promotions);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,11 +108,11 @@ class PromotionsBlock extends ConsumerWidget {
                 ),
               ),
             if (cardType == PromotionCardType.medium)
-              _buildMediumCardList(context, promotions)
+              _buildMediumCardList(context, sortedPromotions)
             else if (cardType == PromotionCardType.small)
-              _buildSmallCardGrid(context, promotions)
+              _buildSmallCardGrid(context, sortedPromotions)
             else
-              _buildFullCardList(context, promotions),
+              _buildFullCardList(context, sortedPromotions),
             if (showDivider)
               const Padding(
                 padding: EdgeInsets.symmetric(
@@ -143,14 +159,18 @@ class PromotionsBlock extends ConsumerWidget {
   }
 
   Widget _buildMediumCardList(BuildContext context, List<dynamic> promotions) {
+    final limitedPromotions = maxElements != null
+        ? promotions.take(maxElements!).toList()
+        : promotions;
+
     return SizedBox(
       height: 201,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppLength.xs),
-        itemCount: promotions.length,
+        itemCount: limitedPromotions.length,
         itemBuilder: (context, index) {
-          final promotion = promotions[index];
+          final promotion = limitedPromotions[index];
           return GestureDetector(
             onTap: () {
               context.pushNamed(
@@ -194,13 +214,17 @@ class PromotionsBlock extends ConsumerWidget {
   }
 
   Widget _buildFullCardList(BuildContext context, List<dynamic> promotions) {
+    final limitedPromotions = maxElements != null
+        ? promotions.take(maxElements!).toList()
+        : promotions;
+
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: AppLength.xs),
-      itemCount: promotions.length,
+      itemCount: limitedPromotions.length,
       itemBuilder: (context, index) {
-        final promotion = promotions[index];
+        final promotion = limitedPromotions[index];
         return GestureDetector(
           onTap: () {
             context.pushNamed(
@@ -275,22 +299,25 @@ class PromotionsBlock extends ConsumerWidget {
   }
 
   Widget _buildSmallCardGrid(BuildContext context, List<dynamic> promotions) {
+    final limitedPromotions = maxElements != null
+        ? promotions.take(maxElements!).toList()
+        : promotions;
+
     final screenWidth = MediaQuery.of(context).size.width;
-    const horizontalPadding = AppLength.xs * 2; // Total horizontal padding
-    const itemSpacing = 12.0; // Spacing between items
-    final totalSpacing =
-        itemSpacing * (promotions.length - 1); // Total spacing between items
+    const horizontalPadding = AppLength.xs * 2;
+    const itemSpacing = 12.0;
+    final totalSpacing = itemSpacing * (limitedPromotions.length - 1);
     final availableWidth = screenWidth - horizontalPadding - totalSpacing;
-    final itemWidth = availableWidth / promotions.length;
+    final itemWidth = availableWidth / limitedPromotions.length;
 
     return SizedBox(
       height: 94,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppLength.xs),
-        itemCount: promotions.length,
+        itemCount: limitedPromotions.length,
         itemBuilder: (context, index) {
-          final promotion = promotions[index];
+          final promotion = limitedPromotions[index];
           return GestureDetector(
             onTap: () {
               context.pushNamed(
@@ -301,7 +328,8 @@ class PromotionsBlock extends ConsumerWidget {
             child: Container(
               width: itemWidth,
               margin: EdgeInsets.only(
-                  right: index != promotions.length - 1 ? itemSpacing : 0),
+                  right:
+                      index != limitedPromotions.length - 1 ? itemSpacing : 0),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(4),
                 image: DecorationImage(

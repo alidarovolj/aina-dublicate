@@ -15,26 +15,31 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
-      ),
-      child: MaterialApp.router(
-        title: 'AINA',
-        theme: appTheme.copyWith(
-          scaffoldBackgroundColor: AppColors.backgroundLight,
-          textTheme: GoogleFonts.latoTextTheme(
-            const TextTheme(
-              bodyMedium: TextStyle(
-                letterSpacing: 0,
-              ),
+    return MaterialApp.router(
+      title: 'AINA',
+      theme: appTheme.copyWith(
+        scaffoldBackgroundColor: AppColors.backgroundLight,
+        textTheme: GoogleFonts.latoTextTheme(
+          const TextTheme(
+            bodyMedium: TextStyle(
+              letterSpacing: 0,
             ),
           ),
         ),
-        routerConfig: AppRouter.router,
+        appBarTheme: const AppBarTheme(
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.light,
+            statusBarBrightness: Brightness.dark,
+          ),
+        ),
       ),
+      builder: (context, child) {
+        return SafeArea(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
+      routerConfig: AppRouter.router,
     );
   }
 }

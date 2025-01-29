@@ -11,21 +11,21 @@ class StoriesProvider extends StateNotifier<AsyncValue<List<Story>>> {
 
   Future<void> fetchStories() async {
     try {
-      print('Fetching stories...');
+      // print('Fetching stories...');
       final response = await _listService.stories();
 
       if (response == null) {
         throw Exception('Failed to fetch stories');
       }
 
-      print('Response: ${response.data}');
+      // print('Response: ${response.data}');
       final List<Story> stories = (response.data['data'] as List)
           .map((json) => Story.fromJson(json as Map<String, dynamic>))
           .toList();
       state = AsyncValue.data(stories);
-      print('Stories fetched successfully.');
+      // print('Stories fetched successfully.');
     } catch (error, stackTrace) {
-      print('Error fetching stories: $error');
+      // print('Error fetching stories: $error');
       state = AsyncValue.error(error, stackTrace);
     }
   }

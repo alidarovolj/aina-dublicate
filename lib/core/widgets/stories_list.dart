@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/providers/requests/stories_provider.dart';
+import 'package:aina_flutter/core/providers/requests/stories/detail.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:aina_flutter/core/widgets/custom_button.dart'
+    show CustomButton, ButtonType;
+import 'package:aina_flutter/core/utils/button_navigation_handler.dart';
 
 class StoryList extends ConsumerStatefulWidget {
   const StoryList({super.key});
@@ -24,7 +28,7 @@ class _StoryListState extends ConsumerState<StoryList> {
     if (stories != null) {
       setState(() {
         stories[index].read = true;
-        debugPrint("Story ${index + 1} marked as read");
+        // print("Story ${index + 1} marked as read");
       });
     }
   }
@@ -56,8 +60,8 @@ class _StoryListState extends ConsumerState<StoryList> {
                 itemCount: storiesList.length,
                 itemBuilder: (context, index) {
                   final story = storiesList[index];
-                  debugPrint(
-                      'Story $index: ${story.name}, ${story.previewImage}');
+                  // print(
+                  // 'Story $index: ${story.name}, ${story.previewImage}');
                   return Container(
                     width: 80,
                     margin: const EdgeInsets.only(right: AppLength.four),
@@ -199,7 +203,7 @@ class _StoryListState extends ConsumerState<StoryList> {
   }
 }
 
-class StoryDetailsPage extends StatefulWidget {
+class StoryDetailsPage extends ConsumerStatefulWidget {
   final List<Story> stories;
   final int initialIndex;
   final Function(int) onStoryRead;
@@ -212,10 +216,10 @@ class StoryDetailsPage extends StatefulWidget {
   });
 
   @override
-  _StoryDetailsPageState createState() => _StoryDetailsPageState();
+  ConsumerState<StoryDetailsPage> createState() => _StoryDetailsPageState();
 }
 
-class _StoryDetailsPageState extends State<StoryDetailsPage>
+class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
     with SingleTickerProviderStateMixin {
   late int currentStoryIndex;
   late int currentInnerStoryIndex = 0;
@@ -232,11 +236,7 @@ class _StoryDetailsPageState extends State<StoryDetailsPage>
     _progressController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 5),
-    )
-      ..addListener(() {
-        setState(() {});
-      })
-      ..addStatusListener((status) {
+    )..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
           handleNextStory();
         }
@@ -244,18 +244,30 @@ class _StoryDetailsPageState extends State<StoryDetailsPage>
 
     _markCurrentStoryAsRead();
     _progressController.forward();
+
+    // Initialize story details
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchStoryDetails();
+    });
+  }
+
+  void _fetchStoryDetails() {
+    final currentStory = currentStories[currentInnerStoryIndex];
+    if (currentStory.id != null) {
+      // Invalidate the previous state and fetch new details
+      ref.invalidate(storyDetailProvider(currentStory.id!));
+    }
   }
 
   void _markCurrentStoryAsRead() {
     if (!widget.stories[currentStoryIndex].read) {
-      debugPrint("Story ${currentStoryIndex + 1} marked as read");
       widget.onStoryRead(currentStoryIndex);
     }
   }
 
   void handleNextStory() {
     if (currentInnerStoryIndex < currentStories.length - 1) {
-      // Move to next inner story
+      print('Moving to next inner story: ${currentInnerStoryIndex + 1}');
       setState(() {
         currentInnerStoryIndex++;
       });
@@ -263,27 +275,29 @@ class _StoryDetailsPageState extends State<StoryDetailsPage>
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
+      _fetchStoryDetails();
       _progressController.reset();
       _progressController.forward();
     } else if (currentStoryIndex < widget.stories.length - 1) {
-      // Move to next story set
+      print('Moving to next story set: ${currentStoryIndex + 1}');
       setState(() {
         currentStoryIndex++;
         currentInnerStoryIndex = 0;
         currentStories = widget.stories[currentStoryIndex].stories ?? [];
       });
+      _pageController.jumpToPage(0);
+      _fetchStoryDetails();
       _markCurrentStoryAsRead();
       _progressController.reset();
       _progressController.forward();
     } else {
-      // Close modal when all stories are viewed
       Navigator.of(context).pop();
     }
   }
 
   void handlePreviousStory() {
     if (currentInnerStoryIndex > 0) {
-      // Move to previous inner story
+      print('Moving to previous inner story: ${currentInnerStoryIndex - 1}');
       setState(() {
         currentInnerStoryIndex--;
       });
@@ -291,15 +305,18 @@ class _StoryDetailsPageState extends State<StoryDetailsPage>
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
+      _fetchStoryDetails();
       _progressController.reset();
       _progressController.forward();
     } else if (currentStoryIndex > 0) {
-      // Move to previous story set
+      print('Moving to previous story set: ${currentStoryIndex - 1}');
       setState(() {
         currentStoryIndex--;
         currentStories = widget.stories[currentStoryIndex].stories ?? [];
         currentInnerStoryIndex = currentStories.length - 1;
       });
+      _pageController.jumpToPage(currentStories.length - 1);
+      _fetchStoryDetails();
       _progressController.reset();
       _progressController.forward();
     }
@@ -309,6 +326,34 @@ class _StoryDetailsPageState extends State<StoryDetailsPage>
   Widget build(BuildContext context) {
     final paddingTop = MediaQuery.of(context).padding.top;
     final screenWidth = MediaQuery.of(context).size.width;
+    final currentStory = currentStories[currentInnerStoryIndex];
+
+    print(
+        'Current story index: $currentStoryIndex, Inner story index: $currentInnerStoryIndex');
+    print('Current story ID: ${currentStory.id}, Name: ${currentStory.name}');
+
+    // Watch the story details
+    final storyDetails = ref.watch(
+      storyDetailProvider(currentStory.id ?? -1),
+    );
+
+    final button = storyDetails.when(
+      data: (data) {
+        print('Story details response for ID ${currentStory.id}:');
+        print('  Name: ${data?.name}');
+        print('  Button: ${data?.button?.label}');
+        print('  Link: ${data?.button?.link}');
+        return data?.button;
+      },
+      loading: () {
+        print('Loading story details for ID ${currentStory.id}...');
+        return null;
+      },
+      error: (error, stack) {
+        print('Error loading story details for ID ${currentStory.id}: $error');
+        return null;
+      },
+    );
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -321,6 +366,7 @@ class _StoryDetailsPageState extends State<StoryDetailsPage>
               setState(() {
                 currentInnerStoryIndex = index;
               });
+              _fetchStoryDetails();
               _progressController.reset();
               _progressController.forward();
             },
@@ -329,7 +375,6 @@ class _StoryDetailsPageState extends State<StoryDetailsPage>
               return GestureDetector(
                 onTapDown: (details) {
                   _progressController.stop();
-                  // Determine tap position
                   if (details.globalPosition.dx < screenWidth / 2) {
                     handlePreviousStory();
                   } else {
@@ -361,15 +406,20 @@ class _StoryDetailsPageState extends State<StoryDetailsPage>
                       child: Container(
                         height: 2,
                         margin: const EdgeInsets.symmetric(horizontal: 2),
-                        child: LinearProgressIndicator(
-                          value: index < currentInnerStoryIndex
-                              ? 1.0
-                              : (index == currentInnerStoryIndex
-                                  ? _progressController.value
-                                  : 0.0),
-                          backgroundColor: Colors.grey.withOpacity(0.5),
-                          valueColor:
-                              const AlwaysStoppedAnimation<Color>(Colors.white),
+                        child: ValueListenableBuilder<double>(
+                          valueListenable: _progressController,
+                          builder: (context, value, child) {
+                            return LinearProgressIndicator(
+                              value: index < currentInnerStoryIndex
+                                  ? 1.0
+                                  : (index == currentInnerStoryIndex
+                                      ? value
+                                      : 0.0),
+                              backgroundColor: Colors.grey.withOpacity(0.5),
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                  Colors.white),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -414,6 +464,28 @@ class _StoryDetailsPageState extends State<StoryDetailsPage>
               onPressed: () => Navigator.of(context).pop(),
             ),
           ),
+          if (button != null)
+            Positioned(
+              bottom: MediaQuery.of(context).padding.bottom + 20,
+              left: 16,
+              right: 16,
+              child: Container(
+                child: CustomButton(
+                  button: button,
+                  type: ButtonType.bordered,
+                  isFullWidth: true,
+                  backgroundColor: Colors.white,
+                  textColor: Colors.black,
+                  onPressed: () {
+                    print(
+                        'Button clicked! Label: ${button.label}, Link: ${button.link}');
+                    Navigator.of(context).pop(); // Close story first
+                    ButtonNavigationHandler.handleNavigation(
+                        context, ref, button);
+                  },
+                ),
+              ),
+            ),
         ],
       ),
     );

@@ -11,7 +11,7 @@ class RequestStoreDetailsService {
     try {
       return await _dio.get('/api/aina/organizations/$id');
     } catch (e) {
-      print('Error in store details request: $e');
+      // print('Error in store details request: $e');
       return null;
     }
   }
@@ -28,7 +28,7 @@ final storeDetailsProvider =
     final response = await service.getStore(id);
     if (response == null) return {};
 
-    print('Store details response: ${response.data}');
+    // print('Store details response: ${response.data}');
     return response.data['data'] as Map<String, dynamic>;
   },
 );

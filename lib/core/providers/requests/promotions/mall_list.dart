@@ -13,7 +13,7 @@ class RequestMallPromotionsService {
         'building_id': buildingId,
       });
     } catch (e) {
-      print('Error in mall promotions request: $e');
+      // print('Error in mall promotions request: $e');
       return null;
     }
   }

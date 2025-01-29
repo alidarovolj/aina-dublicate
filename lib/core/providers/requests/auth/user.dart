@@ -40,11 +40,11 @@ class RequestCodeService {
 
       return response;
     } on DioException catch (e) {
-      print('DioError fetching profile: ${e.message}');
-      print('Response: ${e.response?.data}');
+      // print('DioError fetching profile: ${e.message}');
+      // print('Response: ${e.response?.data}');
       rethrow;
     } catch (e) {
-      print('Error fetching profile: $e');
+      // print('Error fetching profile: $e');
       rethrow;
     }
   }
@@ -57,7 +57,7 @@ class RequestCodeService {
       );
       return response;
     } catch (e) {
-      print('Ошибка при запросе кода: $e');
+      // print('Ошибка при запросе кода: $e');
       return null;
     }
   }
@@ -76,14 +76,14 @@ class RequestCodeService {
       );
       return response;
     } catch (e) {
-      print('Ошибка при запросе кода: $e');
+      // print('Ошибка при запросе кода: $e');
       return null;
     }
   }
 
   Future<Response?> sendOTP(String phoneNumber, String code) async {
     try {
-      print('Отправка OTP запроса: телефон=$phoneNumber, код=$code');
+      // print('Отправка OTP запроса: телефон=$phoneNumber, код=$code');
 
       final response = await _dio.post(
         '/auth/signin/',
@@ -103,23 +103,56 @@ class RequestCodeService {
         ),
       );
 
-      print('Ответ от сервера (полный): ${response.toString()}');
-      print('Данные ответа: ${response.data}');
-      print('Тип данных ответа: ${response.data.runtimeType}');
+      // print('Ответ от сервера (полный): ${response.toString()}');
+      // print('Данные ответа: ${response.data}');
+      // print('Тип данных ответа: ${response.data.runtimeType}');
       if (response.data is Map) {
-        print('Токен в ответе: ${response.data['access_token']}');
+        // print('Токен в ответе: ${response.data['access_token']}');
       }
-      print('Статус код: ${response.statusCode}');
+      // print('Статус код: ${response.statusCode}');
 
       return response;
     } on DioException catch (e) {
-      print('DioError при отправке OTP: ${e.message}');
-      print('Тип ошибки: ${e.type}');
-      print('Ответ: ${e.response}');
+      // print('DioError при отправке OTP: ${e.message}');
+      // print('Тип ошибки: ${e.type}');
+      // print('Ответ: ${e.response}');
       return e.response;
     } catch (e) {
-      print('Общая ошибка при отправке OTP: $e');
+      // print('Общая ошибка при отправке OTP: $e');
       return null;
+    }
+  }
+
+  Future<Response?> userTickets() async {
+    try {
+      final token = await StorageService.getToken();
+      if (token == null) {
+        throw Exception('No auth token found');
+      }
+
+      final response = await _dio.get(
+        '/api/aina/my-tickets',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
+
+      if (response.statusCode != 200) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          error: 'Failed to fetch tickets: ${response.statusCode}',
+        );
+      }
+
+      return response;
+    } catch (e) {
+      // print('Error fetching tickets: $e');
+      rethrow;
     }
   }
 }
@@ -164,11 +197,71 @@ class UserProfile {
 }
 
 final userProvider = FutureProvider<UserProfile>((ref) async {
-  // TODO: Implement actual user fetch logic
-  return UserProfile(
-    numericPhone: '+7 700 111 11 11',
-    maskedPhone: '+7 700 111 11 11',
-    firstName: 'Анна',
-    lastName: 'Маринина',
-  );
+  final requestService = ref.read(requestCodeProvider);
+  final response = await requestService.userProfile();
+
+  if (response == null || response.statusCode != 200) {
+    throw Exception('Failed to fetch user profile');
+  }
+
+  return UserProfile.fromJson(response.data);
+});
+
+class Ticket {
+  final int id;
+  final String promotionName;
+  final String? promotionImage;
+  final DateTime createdAt;
+  final int ticketNo;
+  final String? receiptNo;
+  final String? organization;
+  final double? amount;
+  final DateTime? purchaseDate;
+
+  Ticket({
+    required this.id,
+    required this.promotionName,
+    this.promotionImage,
+    required this.createdAt,
+    required this.ticketNo,
+    this.receiptNo,
+    this.organization,
+    this.amount,
+    this.purchaseDate,
+  });
+
+  factory Ticket.fromJson(Map<String, dynamic> json) {
+    return Ticket(
+      id: json['id'],
+      promotionName: json['promotion']['title'],
+      promotionImage: json['promotion']['preview_image']?['url'],
+      createdAt: DateTime.parse(json['created_at']),
+      ticketNo: json['ticket_no'],
+      receiptNo: json['receipt_no'],
+      organization: json['organization']?['name'],
+      amount: json['amount'] != null
+          ? double.parse(json['amount'].toString())
+          : null,
+      purchaseDate: json['purchase_date'] != null
+          ? DateTime.parse(json['purchase_date'])
+          : null,
+    );
+  }
+}
+
+final userTicketsProvider = FutureProvider<List<Ticket>>((ref) async {
+  final requestService = ref.read(requestCodeProvider);
+  try {
+    final response = await requestService.userTickets();
+
+    if (response == null || response.statusCode != 200) {
+      return [];
+    }
+
+    final data = response.data['data'] as List;
+    return data.map((ticket) => Ticket.fromJson(ticket)).toList();
+  } catch (e) {
+    // print('Error fetching tickets: $e');
+    return [];
+  }
 });

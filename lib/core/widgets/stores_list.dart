@@ -34,8 +34,8 @@ class _StoresListState extends ConsumerState<StoresList> {
     if (oldWidget.mallId != widget.mallId ||
         oldWidget.categoryId != widget.categoryId ||
         oldWidget.searchQuery != widget.searchQuery) {
-      print(
-          'Mall ID, Category ID or Search Query changed. Reloading stores...');
+      // print(
+      // 'Mall ID, Category ID or Search Query changed. Reloading stores...');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(storesProvider(widget.mallId).notifier).loadInitialStores(
               categoryId: widget.categoryId,

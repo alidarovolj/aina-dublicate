@@ -44,9 +44,10 @@ class StorybookScreen extends StatelessWidget {
               return Center(
                 child: CustomButton(
                   label: label,
-                  onPressed:
-                      enabled ? () => debugPrint('Button pressed') : () {},
-                  type: ButtonType.normal,
+                  // onPressed: enabled
+                  //     ? () => // print('Button pressed')
+                  //         // type
+                  //         : ButtonType.normal,
                   isFullWidth: true,
                 ),
               );

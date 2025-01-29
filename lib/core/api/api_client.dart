@@ -47,36 +47,36 @@ class ApiClient {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          _logDivider();
-          print("➡️ Запрос");
-          print("Метод: ${options.method}");
-          print("URL: ${options.uri}");
-          if (options.headers.isNotEmpty) {
-            print("Заголовки: ${options.headers}");
-          }
-          if (options.data != null) {
-            print("Данные: ${options.data}");
-          }
-          _logDivider();
+          // _logDivider();
+          // // print("➡️ Запрос");
+          // // print("Метод: ${options.method}");
+          // // print("URL: ${options.uri}");
+          // if (options.headers.isNotEmpty) {
+          //   // print("Заголовки: ${options.headers}");
+          // }
+          // if (options.data != null) {
+          //   // print("Данные: ${options.data}");
+          // }
+          // _logDivider();
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          _logDivider();
-          print("✅ Ответ");
-          print("Статус: ${response.statusCode}");
-          print("Данные: ${response.data}");
-          _logDivider();
+          // _logDivider();
+          // // print("✅ Ответ");
+          // // print("Статус: ${response.statusCode}");
+          // // print("Данные: ${response.data}");
+          // _logDivider();
           return handler.next(response);
         },
         onError: (DioException e, handler) {
-          _logDivider();
-          print("❌ Ошибка");
-          print("Статус: ${e.response?.statusCode ?? 'Нет ответа'}");
-          print("Сообщение: ${e.message}");
-          if (e.response?.data != null) {
-            print("Данные ошибки: ${e.response?.data}");
-          }
-          _logDivider();
+          // _logDivider();
+          // // print("❌ Ошибка");
+          // // print("Статус: ${e.response?.statusCode ?? 'Нет ответа'}");
+          // // print("Сообщение: ${e.message}");
+          // if (e.response?.data != null) {
+          //   // print("Данные ошибки: ${e.response?.data}");
+          // }
+          // _logDivider();
           return handler.next(e);
         },
       ),
@@ -91,7 +91,7 @@ class ApiClient {
         responseBody: true,
         responseHeader: false,
         error: true,
-        logPrint: (log) => print(log), // Redirect logs to console
+        // logPrint: (log) => print(log),
       ),
     );
 
@@ -100,7 +100,7 @@ class ApiClient {
       InterceptorsWrapper(
         onRequest: (options, handler) {
           final curlCommand = _generateCurlCommand(options);
-          print('cURL: $curlCommand');
+          // // print('cURL: $curlCommand');
           return handler.next(options); // Proceed with the request
         },
       ),
@@ -116,7 +116,7 @@ class ApiClient {
     return "curl -X ${options.method} '${options.uri}' $headers $data";
   }
 
-  void _logDivider() {
-    print("------------------------------------");
-  }
+  // void _logDivider() {
+  //   // print("------------------------------------");
+  // }
 }

@@ -11,40 +11,40 @@ class PromotionsProvider extends StateNotifier<AsyncValue<List<Promotion>>> {
 
   Future<void> fetchPromotions() async {
     try {
-      print('Fetching promotions...');
+      // // print('Fetching promotions...');
       final response = await _listService.promotions();
 
       if (response == null || !response.data['success']) {
         throw Exception('Failed to fetch promotions');
       }
 
-      print('API Response data: ${response.data['data']}');
+      // // print('API Response data: ${response.data['data']}');
 
       final rawList = response.data['data'] as List;
-      print('Raw promotions count: ${rawList.length}');
+      // // print('Raw promotions count: ${rawList.length}');
 
       final List<Promotion> promotions = rawList
           .map((json) {
             try {
-              print(
-                  'Processing promotion: ${json['name']} (ID: ${json['id']})');
+              // // print(
+              //     'Processing promotion: ${json['name']} (ID: ${json['id']})');
               return Promotion.fromJson(json as Map<String, dynamic>);
             } catch (e) {
-              print('Error parsing promotion: $e');
-              print('Problematic JSON: $json');
+              // // print('Error parsing promotion: $e');
+              // // print('Problematic JSON: $json');
               return null;
             }
           })
           .whereType<Promotion>() // Filter out null values
           .toList();
 
-      print('Successfully parsed promotions count: ${promotions.length}');
-      print(
-          'Final promotions list: ${promotions.map((p) => '${p.name} (ID: ${p.id})').join(', ')}');
+      // // print('Successfully parsed promotions count: ${promotions.length}');
+      // // print(
+      //     'Final promotions list: ${promotions.map((p) => '${p.name} (ID: ${p.id})').join(', ')}');
 
       state = AsyncValue.data(promotions);
     } catch (error, stackTrace) {
-      print('Error fetching promotions: $error');
+      // // print('Error fetching promotions: $error');
       state = AsyncValue.error(error, stackTrace);
     }
   }
@@ -56,7 +56,7 @@ class PromotionsProvider extends StateNotifier<AsyncValue<List<Promotion>>> {
           json['name'] != null &&
           json['order'] != null; // Add other required fields
     } catch (e) {
-      print('Invalid promotion data: $json');
+      // // print('Invalid promotion data: $json');
       return false;
     }
   }

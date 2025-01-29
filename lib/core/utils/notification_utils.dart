@@ -11,24 +11,24 @@ void setupNotificationListeners() async {
     sound: true,
   );
 
-  print('User granted permission: ${settings.authorizationStatus}');
+  // print('User granted permission: ${settings.authorizationStatus}');
 
   // Get the device token after permissions are granted
   await getDeviceToken();
 
   // Listen for token refresh
   messaging.onTokenRefresh.listen((newToken) {
-    print("Token refreshed: $newToken");
+    // print("Token refreshed: $newToken");
   });
 
   // Handle foreground notifications
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    print('Foreground message: ${message.notification?.title}');
+    // print('Foreground message: ${message.notification?.title}');
   });
 
   // Handle notifications that open the app
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    print('Opened from notification: ${message.notification?.title}');
+    // print('Opened from notification: ${message.notification?.title}');
   });
 }
 
@@ -40,11 +40,11 @@ Future<void> getDeviceToken() async {
     // For iOS, explicitly request APNS token first
     if (Platform.isIOS) {
       String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-      print('APNS Token: $apnsToken');
+      // print('APNS Token: $apnsToken');
     }
 
-    print('FCM Token: $fcmToken');
+    // print('FCM Token: $fcmToken');
   } catch (e) {
-    print('Error getting device token: $e');
+    // print('Error getting device token: $e');
   }
 }

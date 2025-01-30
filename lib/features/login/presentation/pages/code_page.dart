@@ -183,7 +183,7 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
 
     // Get mallId from the current route or use a default value
     final mallId = GoRouterState.of(context).pathParameters['mallId'] ?? '2';
-    context.go('/malls/$mallId/profile');
+    context.go('/');
   }
 
   @override

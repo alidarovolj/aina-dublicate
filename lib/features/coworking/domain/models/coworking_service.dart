@@ -71,6 +71,7 @@ class CoworkingTariff {
   final bool isFixed;
   final ServiceImage? image;
   final String description;
+  final int? capacity;
 
   CoworkingTariff({
     required this.id,
@@ -84,6 +85,7 @@ class CoworkingTariff {
     required this.isFixed,
     this.image,
     required this.description,
+    this.capacity,
   });
 
   factory CoworkingTariff.fromJson(Map<String, dynamic> json) {
@@ -100,6 +102,7 @@ class CoworkingTariff {
       image:
           json['image'] != null ? ServiceImage.fromJson(json['image']) : null,
       description: json['description'] as String,
+      capacity: json['capacity'] as int?,
     );
   }
 }

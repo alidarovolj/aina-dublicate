@@ -6,9 +6,11 @@ import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:aina_flutter/features/coworking/domain/models/coworking_tariff_details.dart';
 import 'package:aina_flutter/features/coworking/providers/coworking_tariff_details_provider.dart';
+import 'package:aina_flutter/features/coworking/presentation/widgets/time_selection_modal.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class CoworkingCalendarPage extends ConsumerStatefulWidget {
   final int tariffId;
@@ -44,11 +46,16 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    // Generate only initial months, more will be generated on scroll
+
+    // Generate initial months for the first year
     months = List.generate(
-      12, // Start with just 12 months
+      12,
       (i) => DateTime(today.year, today.month + i, 1),
-    );
+    ).where((date) {
+      // Filter out months that are beyond yearsToShow
+      final maxDate = DateTime(today.year + yearsToShow, today.month, 1);
+      return !date.isAfter(maxDate);
+    }).toList();
 
     // Add scroll listener for loading more months
     _scrollController.addListener(_onScroll);
@@ -109,25 +116,34 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
         },
       );
 
-      if (response.data['success'] == true && response.data['data'] != null) {
+      print('Reserved dates response: ${response.data}');
+
+      if (response.data is Map<String, dynamic> &&
+          response.data['success'] == true &&
+          response.data['data'] != null) {
         final List<dynamic> ordersData = response.data['data'] as List<dynamic>;
         if (mounted) {
           setState(() {
-            reservedDates = ordersData.map((order) {
-              final startAt = order['start_at'] as String;
-              final endAt = order['end_at'] as String;
-              print('Reserved date: $startAt - $endAt');
-              return ReservedDateRange(
-                startAt: startAt,
-                endAt: endAt,
-              );
-            }).toList();
-            print('Reserved dates loaded: ${reservedDates.length}');
+            reservedDates = ordersData
+                .map((order) {
+                  if (order is Map<String, dynamic> &&
+                      order['start_at'] != null &&
+                      order['end_at'] != null) {
+                    return ReservedDateRange(
+                      startAt: order['start_at'].toString(),
+                      endAt: order['end_at'].toString(),
+                    );
+                  }
+                  return null;
+                })
+                .whereType<ReservedDateRange>()
+                .toList();
           });
         }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('Error loading reserved dates: $e');
+      print('Stack trace: $stackTrace');
       rethrow;
     }
   }
@@ -165,6 +181,12 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
 
     // Block past days
     if (date.isBefore(DateTime(today.year, today.month, today.day))) {
+      return false;
+    }
+
+    // Block dates beyond yearsToShow
+    final maxDate = DateTime(today.year + yearsToShow, today.month, today.day);
+    if (date.isAfter(maxDate)) {
       return false;
     }
 
@@ -224,6 +246,12 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
         return;
       }
 
+      // Для почасовой брони показываем модальное окно выбора времени
+      if (tariffDetails.timeUnit.toLowerCase() == 'hour') {
+        _showTimeSelectionModal(context, date, tariffDetails);
+        return;
+      }
+
       // Calculate end date based on duration and time unit
       final calculatedEndDate = _calculateEndDate(date, tariffDetails);
 
@@ -253,32 +281,38 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
 
   DateTime _calculateEndDate(
       DateTime startDate, CoworkingTariffDetails tariffDetails) {
+    final timeUnit = tariffDetails.timeUnit.toLowerCase();
     final duration = tariffDetails.duration ?? 1;
-    final timeUnit = tariffDetails.timeUnit?.toLowerCase() ?? 'day';
 
     switch (timeUnit) {
-      case 'day':
-        return startDate.add(Duration(days: duration - 1));
-      case 'month':
-        if (tariffDetails.title.toLowerCase().contains('flex')) {
-          // For flex tariffs, add exact number of days
-          return startDate.add(Duration(days: duration - 1));
-        } else {
-          // For regular month tariffs, go to the same day next month
-          final endDate = DateTime(
-            startDate.year,
-            startDate.month + duration,
-            startDate.day,
-          );
-          return endDate.subtract(const Duration(days: 1));
-        }
-      case 'year':
-        final endDate = DateTime(
-          startDate.year + duration,
+      case 'hour':
+        // Для почасовой брони оставляем тот же день
+        return DateTime(
+          startDate.year,
           startDate.month,
           startDate.day,
         );
-        return endDate.subtract(const Duration(days: 1));
+      case 'day':
+        return startDate.add(Duration(days: duration - 1));
+      case 'week':
+        return startDate.add(Duration(days: (duration * 7) - 1));
+      case 'month':
+        // Add months by calculating the target month and year
+        int targetMonth = startDate.month + duration;
+        int targetYear = startDate.year;
+        while (targetMonth > 12) {
+          targetMonth -= 12;
+          targetYear++;
+        }
+        return DateTime(targetYear, targetMonth, startDate.day);
+      case 'year':
+        // Для годовой подписки добавляем указанное количество лет
+        return DateTime(
+          startDate.year + duration,
+          startDate.month,
+          startDate.day,
+        ).subtract(
+            const Duration(days: 1)); // Вычитаем 1 день для включительной даты
       default:
         return startDate;
     }
@@ -328,11 +362,19 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
               ),
             ),
             Row(
-              children: const ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+              children: const [
+                'coworking.calendar.weekdays.mon',
+                'coworking.calendar.weekdays.tue',
+                'coworking.calendar.weekdays.wed',
+                'coworking.calendar.weekdays.thu',
+                'coworking.calendar.weekdays.fri',
+                'coworking.calendar.weekdays.sat',
+                'coworking.calendar.weekdays.sun'
+              ]
                   .map((day) => Expanded(
                         child: Center(
                           child: Text(
-                            day,
+                            day.tr(),
                             style: TextStyle(
                               color: Colors.grey,
                               fontSize: 12,
@@ -417,20 +459,16 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
   }
 
   void _loadMoreMonths() {
-    if (months.length >= yearsToShow * 12) return;
+    if (months.length >= yearsToShow * 12) return; // Limit to yearsToShow years
 
-    // Use addPostFrameCallback to schedule the setState after the build is complete
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        setState(() {
-          final lastMonth = months.last;
-          final newMonths = List.generate(
-            6, // Load 6 months at a time
-            (i) => DateTime(lastMonth.year, lastMonth.month + i + 1, 1),
-          );
-          months.addAll(newMonths);
-        });
-      }
+    final lastMonth = months.last;
+    final nextMonths = List.generate(
+      12,
+      (i) => DateTime(lastMonth.year, lastMonth.month + i + 1, 1),
+    );
+
+    setState(() {
+      months.addAll(nextMonths);
     });
   }
 
@@ -467,10 +505,10 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
   void _showReservedDateModal(BuildContext context) {
     BaseModal.show(
       context,
-      message: 'Выбранная дата уже забронирована',
+      message: 'coworking.calendar.reserved_date'.tr(),
       buttons: [
         ModalButton(
-          label: 'Вернуться назад',
+          label: 'coworking.calendar.go_back'.tr(),
           onPressed: () {},
           type: ButtonType.normal,
           backgroundColor: AppColors.lightGrey,
@@ -483,10 +521,10 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
   void _showReservedInfoModal(BuildContext context) {
     BaseModal.show(
       context,
-      message: 'Даты, выделенные рамкой, уже забронированы',
+      message: 'coworking.calendar.reserved_info'.tr(),
       buttons: [
         ModalButton(
-          label: 'Вернуться назад',
+          label: 'coworking.calendar.go_back'.tr(),
           onPressed: () {},
           type: ButtonType.normal,
           backgroundColor: AppColors.lightGrey,
@@ -499,16 +537,41 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
   void _showReserveOverlapModal(BuildContext context) {
     BaseModal.show(
       context,
-      message: 'Выбранный период пересекается с уже забронированными датами',
+      message: 'coworking.calendar.overlap_error'.tr(),
       buttons: [
         ModalButton(
-          label: 'Вернуться назад',
+          label: 'coworking.calendar.go_back'.tr(),
           onPressed: () {},
           type: ButtonType.normal,
           backgroundColor: AppColors.lightGrey,
           textColor: AppColors.textDarkGrey,
         ),
       ],
+    );
+  }
+
+  void _showTimeSelectionModal(BuildContext context, DateTime date,
+      CoworkingTariffDetails tariffDetails) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => TimeSelectionModal(
+        date: date,
+        tariffDetails: tariffDetails,
+        onTimeSelected: (startTime, endTime, total) {
+          setState(() {
+            selectedDate = date;
+            endDate = date; // Для почасовой брони конечная дата та же
+            formData['start_at'] = startTime;
+            formData['end_at'] = endTime;
+            this.total = total;
+          });
+        },
+      ),
     );
   }
 
@@ -573,13 +636,13 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'Выберите дату начала',
-                                style: TextStyle(
+                              Text(
+                                'coworking.calendar.select_date'.tr(),
+                                style: const TextStyle(
                                   fontSize: 16,
                                   color: AppColors.primary,
                                 ),
-                              ),
+                              ).tr(),
                               IconButton(
                                 onPressed: () =>
                                     _showReservedInfoModal(context),
@@ -590,7 +653,7 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
                         ),
                         Expanded(child: _buildCalendar()),
                         Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             boxShadow: [
@@ -603,25 +666,27 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
                           ),
                           child: Column(
                             children: [
-                              _buildInfoRow('Стоимость:',
+                              _buildInfoRow(
+                                  'coworking.calendar.cost'.tr() + ':',
                                   '${total ?? tariffDetails.price} ₸'),
                               const SizedBox(height: 8),
                               _buildInfoRow(
-                                'Дата начала:',
+                                'coworking.calendar.start_date'.tr() + ':',
                                 formData['start_at'].isNotEmpty
                                     ? formData['start_at']
-                                    : 'Не выбрано',
+                                    : 'coworking.calendar.not_selected'.tr(),
                               ),
                               const SizedBox(height: 8),
                               _buildInfoRow(
-                                'Дата окончания:',
+                                'coworking.calendar.end_date'.tr() + ':',
                                 formData['end_at'].isNotEmpty
                                     ? formData['end_at']
-                                    : 'Не выбрано',
+                                    : 'coworking.calendar.not_selected'.tr(),
                               ),
                               const SizedBox(height: 16),
                               CustomButton(
-                                label: 'Перейти к оплате',
+                                label: 'coworking.calendar.proceed_to_payment'
+                                    .tr(),
                                 onPressed: formData['start_at'].isNotEmpty &&
                                         formData['end_at'].isNotEmpty
                                     ? _handlePayment

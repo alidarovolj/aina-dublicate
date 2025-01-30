@@ -34,6 +34,39 @@ class _PhoneNumberInputScreenState
     });
   }
 
+  void _onSubmit(BuildContext context) async {
+    final phoneNumber = _phoneController.text.replaceAll(RegExp(r'\D'), '');
+    if (phoneNumber.length == 10) {
+      setState(() {
+        isLoading = true;
+      });
+
+      try {
+        await ref.read(requestCodeProvider).sendCodeRequest(
+              '7$phoneNumber',
+            );
+
+        if (mounted) {
+          context.go('/code', extra: _phoneController.text);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Ошибка при отправке кода'),
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -147,38 +180,7 @@ class _PhoneNumberInputScreenState
                               isLoading: isLoading,
                               onPressed: () async {
                                 if (isButtonEnabled) {
-                                  setState(() {
-                                    isLoading = true;
-                                  });
-
-                                  try {
-                                    await ref
-                                        .read(requestCodeProvider)
-                                        .sendCodeRequest(
-                                          '7${_phoneController.text.replaceAll(RegExp(r'[^\d]'), '')}',
-                                        );
-
-                                    if (mounted) {
-                                      context.push('/code',
-                                          extra: _phoneController.text);
-                                    }
-                                  } catch (e) {
-                                    if (mounted) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content:
-                                              Text('auth.code_send_error'.tr()),
-                                        ),
-                                      );
-                                    }
-                                  } finally {
-                                    if (mounted) {
-                                      setState(() {
-                                        isLoading = false;
-                                      });
-                                    }
-                                  }
+                                  _onSubmit(context);
                                 }
                               },
                               type: ButtonType.normal,

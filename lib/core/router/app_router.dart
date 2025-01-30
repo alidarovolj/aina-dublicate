@@ -27,7 +27,6 @@ import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_details_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_bookings_page.dart';
-import 'package:aina_flutter/features/coworking/presentation/pages/coworking_profile_page.dart';
 import 'package:aina_flutter/core/widgets/coworking_tabbar_screen.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_list_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_promotions_page.dart';
@@ -39,12 +38,26 @@ import 'package:aina_flutter/features/coworking/presentation/pages/coworking_ser
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_calendar_page.dart';
 import 'package:aina_flutter/features/conference/presentation/pages/conference_service_details_page.dart';
 import 'package:aina_flutter/features/conference/domain/models/conference_service.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/coworking_profile_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/',
     observers: [ChuckerFlutter.navigatorObserver],
     routes: [
+      // Auth routes (placed at the top level, outside of any ShellRoute)
+      GoRoute(
+        path: '/login',
+        name: 'login',
+        builder: (context, state) => const PhoneNumberInputScreen(),
+      ),
+      GoRoute(
+        path: '/code',
+        builder: (context, state) {
+          final phoneNumber = (state.extra as String?) ?? '';
+          return CodeInputScreen(phoneNumber: phoneNumber);
+        },
+      ),
       GoRoute(
         path: '/',
         name: 'home',
@@ -188,6 +201,12 @@ class AppRouter {
       // Coworking routes
       ShellRoute(
         builder: (context, state, child) {
+          print(
+              'Router: Building CoworkingTabBarScreen with route: ${state.uri}');
+          // Don't show the tab bar on the login page
+          if (state.uri.toString().startsWith('/login')) {
+            return child;
+          }
           return CoworkingTabBarScreen(
             currentRoute: state.uri.toString(),
             child: child,
@@ -298,73 +317,10 @@ class AppRouter {
                           error: (error, stack) =>
                               Center(child: Text('Error: $error')),
                           data: (tariffs) {
-                            if (service.title == 'Доступ в коворкинг') {
-                              return CoworkingServiceDetailsPage(
-                                service: service,
-                                tariffs: tariffs,
-                              );
-                            } else {
-                              return ConferenceServiceDetailsPage(
-                                service: ConferenceService(
-                                  id: service.id,
-                                  title: service.title,
-                                  description: service.description,
-                                  type: service.type,
-                                  image: service.image != null
-                                      ? ServiceImage(
-                                          id: service.image!.id,
-                                          uuid: service.image!.uuid,
-                                          url: service.image!.url,
-                                          urlOriginal:
-                                              service.image!.urlOriginal,
-                                          orderColumn:
-                                              service.image!.orderColumn,
-                                          collectionName:
-                                              service.image!.collectionName,
-                                        )
-                                      : null,
-                                  gallery: service.gallery
-                                      .map((img) => ServiceImage(
-                                            id: img.id,
-                                            uuid: img.uuid,
-                                            url: img.url,
-                                            urlOriginal: img.urlOriginal,
-                                            orderColumn: img.orderColumn,
-                                            collectionName: img.collectionName,
-                                          ))
-                                      .toList(),
-                                ),
-                                tariffs: tariffs
-                                    .map((t) => ConferenceTariff(
-                                          id: t.id,
-                                          type: t.type,
-                                          isActive: t.isActive,
-                                          categoryId: t.categoryId,
-                                          title: t.title,
-                                          subtitle: t.subtitle,
-                                          price: t.price,
-                                          timeUnit: t.timeUnit,
-                                          isFixed: t.isFixed,
-                                          image: t.image != null
-                                              ? ServiceImage(
-                                                  id: t.image!.id,
-                                                  uuid: t.image!.uuid,
-                                                  url: t.image!.url,
-                                                  urlOriginal:
-                                                      t.image!.urlOriginal,
-                                                  orderColumn:
-                                                      t.image!.orderColumn,
-                                                  collectionName:
-                                                      t.image!.collectionName,
-                                                )
-                                              : null,
-                                          description: t.description,
-                                          capacity:
-                                              20, // Default capacity for conference rooms
-                                        ))
-                                    .toList(),
-                              );
-                            }
+                            return CoworkingServiceDetailsPage(
+                              service: service,
+                              tariffs: tariffs,
+                            );
                           },
                         ),
                       );
@@ -380,10 +336,6 @@ class AppRouter {
                     final tariffId =
                         int.parse(state.pathParameters['tariffId']!);
                     final serviceType = state.uri.queryParameters['type'];
-
-                    if (serviceType == 'conference') {
-                      return const CoworkingListPage();
-                    }
 
                     return CoworkingCalendarPage(tariffId: tariffId);
                   } catch (e) {
@@ -419,17 +371,6 @@ class AppRouter {
         path: '/about',
         name: 'about',
         builder: (context, state) => const AboutPage(),
-      ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const PhoneNumberInputScreen(),
-      ),
-      GoRoute(
-        path: '/code',
-        builder: (context, state) {
-          final phoneNumber = (state.extra as String?) ?? '';
-          return CodeInputScreen(phoneNumber: phoneNumber);
-        },
       ),
       GoRoute(
         path: '/malls/:mallId/profile',

@@ -103,6 +103,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     ApiClient().token = null;
     state = AuthState(isAuthenticated: false);
   }
+
+  void updateUserData(Map<String, dynamic> userData) {
+    state = state.copyWith(userData: userData);
+  }
 }
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {

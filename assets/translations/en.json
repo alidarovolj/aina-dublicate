@@ -135,9 +135,45 @@
   "coworking": {
     "title": "Coworking",
     "error": "Error: {0}",
-    "no_coworkings": "There are no available coworking spaces at the moment",
+    "no_coworkings": "No coworking spaces available at the moment",
     "promotions_title": "Promotions {0}",
-    "no_active_promotions": "There are no active promotions at the moment"
+    "no_active_promotions": "No active promotions at the moment",
+    "calendar": {
+      "select_date": "Select start date",
+      "tariff_not_found": "Tariff not found",
+      "go_back": "Go back",
+      "cost": "Cost",
+      "start_date": "Start date",
+      "end_date": "End date",
+      "not_selected": "Not selected",
+      "proceed_to_payment": "Proceed to payment",
+      "reserved_date": "Selected date is already reserved",
+      "reserved_info": "Dates highlighted with a border are already reserved",
+      "overlap_error": "Selected period overlaps with already reserved dates",
+      "weekdays": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      }
+    },
+    "profile": {
+      "title": "Coworking Profile",
+      "personal_info": "Personal Information",
+      "contact_us": "Contact Us",
+      "about_app": "About App"
+    },
+    "tariffs": {
+      "title": "Tariffs",
+      "all_benefits": "all benefits",
+      "fixed_place": "Fixed place",
+      "unfixed_place": "Unfixed place",
+      "capacity": "up to {0} people",
+      "price_per_hour": "{0} ₸/hour"
+    }
   },
   "scanner": {
     "title": "AINA QR",
@@ -174,4 +210,4 @@
     "error": "Error: {0}",
     "no_services": "There are no available services at the moment"
   }
-} 
+}

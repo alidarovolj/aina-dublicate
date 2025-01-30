@@ -102,8 +102,10 @@ class _StoresListState extends ConsumerState<StoresList> {
     return storesAsync.when(
       data: (stores) {
         if (stores.isEmpty) {
-          return Center(
-            child: Text('stores.no_stores'.tr()),
+          return SliverFillRemaining(
+            child: Center(
+              child: Text('stores.no_stores'.tr()),
+            ),
           );
         }
         final groupedStores = _groupStoresByLetter(stores);
@@ -163,11 +165,15 @@ class _StoresListState extends ConsumerState<StoresList> {
           ),
         );
       },
-      loading: () => Center(
-        child: Text('stores.loading'.tr()),
+      loading: () => SliverFillRemaining(
+        child: Center(
+          child: Text('stores.loading'.tr()),
+        ),
       ),
-      error: (error, stack) => Center(
-        child: Text('stores.error'.tr(args: [error.toString()])),
+      error: (error, stack) => SliverFillRemaining(
+        child: Center(
+          child: Text('stores.error'.tr(args: [error.toString()])),
+        ),
       ),
     );
   }

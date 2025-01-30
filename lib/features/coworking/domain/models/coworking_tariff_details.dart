@@ -9,7 +9,7 @@ class CoworkingTariffDetails {
   final String subtitle;
   final int price;
   final String timeUnit;
-  final int duration;
+  final int? duration;
   final String? startDay;
   final String? startTimeAt;
   final String? endTimeAt;
@@ -20,6 +20,8 @@ class CoworkingTariffDetails {
   final CoworkingServiceImage? image;
   final List<CoworkingServiceImage> gallery;
   final List<ReservedDateRange> reservedDates;
+  final double? timeStep;
+  final int? minDuration;
 
   CoworkingTariffDetails({
     required this.id,
@@ -40,6 +42,8 @@ class CoworkingTariffDetails {
     this.image,
     required this.gallery,
     this.reservedDates = const [],
+    this.timeStep,
+    this.minDuration,
   });
 
   factory CoworkingTariffDetails.fromJson(Map<String, dynamic> json) {
@@ -51,7 +55,7 @@ class CoworkingTariffDetails {
       subtitle: json['subtitle'] as String,
       price: json['price'] as int,
       timeUnit: json['time_unit'] as String,
-      duration: json['duration'] as int,
+      duration: json['duration'] as int?,
       startDay: json['start_day'] as String?,
       startTimeAt: json['start_time_at'] as String?,
       endTimeAt: json['end_time_at'] as String?,
@@ -73,6 +77,8 @@ class CoworkingTariffDetails {
               .map((e) => ReservedDateRange.fromJson(e as Map<String, dynamic>))
               .toList()
           : [],
+      timeStep: (json['time_step'] as num?)?.toDouble(),
+      minDuration: json['min_duration'] as int?,
     );
   }
 }

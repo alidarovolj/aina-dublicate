@@ -44,16 +44,9 @@ class ServicesPage extends ConsumerWidget {
                       ),
                       child: InkWell(
                         onTap: () {
-                          if (service.title == 'Доступ в коворкинг') {
-                            context.push(
-                              '/coworking/$coworkingId/services/${service.id}',
-                            );
-                          } else {
-                            // For conference halls and other services
-                            context.push(
-                              '/coworking/$coworkingId/services/${service.id}',
-                            );
-                          }
+                          context.push(
+                            '/coworking/$coworkingId/services/${service.id}',
+                          );
                         },
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

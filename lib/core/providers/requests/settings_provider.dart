@@ -5,6 +5,7 @@ import 'package:aina_flutter/core/api/api_client.dart';
 class AppSettings {
   final String whatsappLinkAinaMall;
   final String whatsappLinkPromenade;
+  final String whatsappLinkAinaCoworking;
   final String url1;
   final String url2;
   final String url3;
@@ -14,6 +15,7 @@ class AppSettings {
   AppSettings({
     required this.whatsappLinkAinaMall,
     required this.whatsappLinkPromenade,
+    required this.whatsappLinkAinaCoworking,
     required this.url1,
     required this.url2,
     required this.url3,
@@ -33,6 +35,7 @@ class AppSettings {
     return AppSettings(
       whatsappLinkAinaMall: findValue('WHATSAPP_LINK_AINA_MALL'),
       whatsappLinkPromenade: findValue('WHATSAPP_LINK_PROMENADE'),
+      whatsappLinkAinaCoworking: findValue('WHATSAPP_LINK_AINA_COWORKING'),
       url1: findValue('URL_1'),
       url2: findValue('URL_2'),
       url3: findValue('URL_3'),

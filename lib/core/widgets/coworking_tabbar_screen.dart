@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'coworking_custom_tabbar.dart';
+import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 
 class CoworkingTabBarScreen extends ConsumerStatefulWidget {
   final String currentRoute;
@@ -96,34 +97,54 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
 
   void _navigateToTab(int index) {
     final route = _tabIndexToRoutes[index];
-    final coworkingId = _getCoworkingId();
+    if (route != null && widget.currentRoute != route) {
+      // Schedule navigation for next frame
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Если мы уже на странице логина или переходим на нее, ничего не делаем
+        if (widget.currentRoute.startsWith('/login')) {
+          return;
+        }
 
-    if (route != null && coworkingId != null) {
-      final actualRoute = route.replaceAll('*', coworkingId);
-      if (widget.currentRoute != actualRoute) {
+        // Проверяем авторизацию для защищенных вкладок
+        if (index == 2 || index == 3 || index == 4) {
+          // services, bookings, profile
+          final authState = ref.read(authProvider);
+          if (!authState.isAuthenticated) {
+            context.go('/login');
+            return;
+          }
+        }
+
+        final coworkingId = _getCoworkingId();
+        if (coworkingId == null) {
+          context.go('/coworking');
+          return;
+        }
+
+        // Навигация в зависимости от выбранной вкладки
         switch (index) {
-          case 0:
+          case 0: // main
             context.goNamed('coworking_details',
                 pathParameters: {'id': coworkingId});
             break;
-          case 1:
+          case 1: // promotions
             context.goNamed('coworking_promotions',
                 pathParameters: {'id': coworkingId});
             break;
-          case 2:
+          case 2: // services
             context.goNamed('coworking_services',
                 pathParameters: {'id': coworkingId});
             break;
-          case 3:
+          case 3: // bookings
             context.goNamed('coworking_bookings',
                 pathParameters: {'id': coworkingId});
             break;
-          case 4:
+          case 4: // profile
             context.goNamed('coworking_profile',
                 pathParameters: {'id': coworkingId});
             break;
         }
-      }
+      });
     }
   }
 

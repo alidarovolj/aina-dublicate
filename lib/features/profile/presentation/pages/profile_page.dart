@@ -219,46 +219,6 @@ class ProfilePage extends ConsumerWidget {
                           ),
                         ],
                       ),
-
-                      // Switch Account Section
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            bottom: 28, right: 12, left: 12),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.white,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: const EdgeInsets.all(0),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  'profile.switch_to_coworking'.tr(),
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                height: 24,
-                                width: 44,
-                                child: Switch.adaptive(
-                                  value: false,
-                                  onChanged: (value) {
-                                    // TODO: Implement profile switch
-                                  },
-                                  activeColor: AppColors.white,
-                                  activeTrackColor: AppColors.primary,
-                                  inactiveThumbColor: AppColors.white,
-                                  inactiveTrackColor: AppColors.grey2,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),

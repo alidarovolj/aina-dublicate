@@ -1,3 +1,4 @@
+import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/types/card_type.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:aina_flutter/core/widgets/buildings_list.dart';
 import 'package:aina_flutter/core/providers/requests/promotions_provider.dart';
 import 'package:aina_flutter/core/widgets/promotions_block.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:aina_flutter/core/api/api_client.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -25,7 +27,23 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(promotionsProvider.notifier).fetchPromotions(context);
+      _checkAuthAndFetchProfile();
     });
+  }
+
+  Future<void> _checkAuthAndFetchProfile() async {
+    final authState = ref.read(authProvider);
+    if (authState.isAuthenticated && authState.token != null) {
+      try {
+        final response = await ApiClient().dio.get('/api/promenade/profile');
+        if (response.data['success'] == true && response.data['data'] != null) {
+          // Update user data in auth state if needed
+          ref.read(authProvider.notifier).updateUserData(response.data['data']);
+        }
+      } catch (error) {
+        print('Error fetching profile: $error');
+      }
+    }
   }
 
   @override
@@ -37,7 +55,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final bannersAsync = ref.watch(bannersProvider);
     final promotionsAsync = ref.watch(promotionsProvider);
-    // print('show token ${ref.read(authProvider).token}');
+    print('show token ${ref.read(authProvider).token}');
 
     return Scaffold(
       body: Container(

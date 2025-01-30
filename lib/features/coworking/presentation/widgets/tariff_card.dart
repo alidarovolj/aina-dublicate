@@ -4,6 +4,9 @@ import 'package:aina_flutter/features/coworking/domain/models/coworking_service.
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:aina_flutter/features/coworking/presentation/widgets/conference_tariff_card.dart';
 
 class TariffCard extends StatelessWidget {
   final CoworkingTariff tariff;
@@ -127,6 +130,18 @@ class TariffCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (tariff.type == 'COWORKING') {
+      return _buildCoworkingTariffCard(context);
+    }
+    return ConferenceTariffCard(
+      tariff: tariff,
+      coworkingId: coworkingId,
+      onTap: onTap,
+      onDetailsTap: onDetailsTap,
+    );
+  }
+
+  Widget _buildCoworkingTariffCard(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),

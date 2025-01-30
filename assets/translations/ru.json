@@ -137,7 +137,43 @@
     "error": "Ошибка: {0}",
     "no_coworkings": "В данный момент нет доступных коворкингов",
     "promotions_title": "Акции {0}",
-    "no_active_promotions": "В данный момент нет акций"
+    "no_active_promotions": "В данный момент нет акций",
+    "calendar": {
+      "select_date": "Выберите дату начала",
+      "tariff_not_found": "Тариф не найден",
+      "go_back": "Вернуться назад",
+      "cost": "Стоимость",
+      "start_date": "Дата начала",
+      "end_date": "Дата окончания",
+      "not_selected": "Не выбрано",
+      "proceed_to_payment": "Перейти к оплате",
+      "reserved_date": "Выбранная дата уже забронирована",
+      "reserved_info": "Даты, выделенные рамкой, уже забронированы",
+      "overlap_error": "Выбранный период пересекается с уже забронированными датами",
+      "weekdays": {
+        "mon": "Пн",
+        "tue": "Вт",
+        "wed": "Ср",
+        "thu": "Чт",
+        "fri": "Пт",
+        "sat": "Сб",
+        "sun": "Вс"
+      }
+    },
+    "profile": {
+      "title": "Профиль коворкинга",
+      "personal_info": "Персональная информация",
+      "contact_us": "Связаться с нами",
+      "about_app": "О приложении"
+    },
+    "tariffs": {
+      "title": "Тарифы",
+      "all_benefits": "все преимущества",
+      "fixed_place": "Закрепленное место",
+      "unfixed_place": "Незакрепленное место",
+      "capacity": "до {0} человек",
+      "price_per_hour": "{0} ₸/час"
+    }
   },
   "scanner": {
     "title": "AINA QR",

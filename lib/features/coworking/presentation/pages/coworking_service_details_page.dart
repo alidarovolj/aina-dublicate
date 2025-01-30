@@ -85,7 +85,7 @@ class CoworkingServiceDetailsPage extends ConsumerWidget {
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Text(
-                        'Тарифы',
+                        'coworking.tariffs.title'.tr(),
                         style: GoogleFonts.lora(
                           fontSize: 22,
                           color: AppColors.primary,
@@ -96,12 +96,15 @@ class CoworkingServiceDetailsPage extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 12.0),
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount:
+                            tariffs.firstOrNull?.type == 'COWORKING' ? 2 : 1,
                         crossAxisSpacing: 8.0,
                         mainAxisSpacing: 8.0,
-                        childAspectRatio: 0.8,
+                        childAspectRatio:
+                            tariffs.firstOrNull?.type == 'COWORKING'
+                                ? 0.8
+                                : 2.2,
                       ),
                       itemCount: tariffs.length,
                       itemBuilder: (context, index) {
@@ -113,9 +116,12 @@ class CoworkingServiceDetailsPage extends ConsumerWidget {
                             context.pushNamed(
                               'coworking_calendar',
                               pathParameters: {
+                                'id': service.id.toString(),
                                 'tariffId': tariff.id.toString()
                               },
-                              queryParameters: {'type': 'coworking'},
+                              queryParameters: {
+                                'type': tariff.type.toLowerCase()
+                              },
                             );
                           },
                         );

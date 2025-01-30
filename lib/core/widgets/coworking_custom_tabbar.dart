@@ -62,7 +62,7 @@ class CoworkingCustomTabBar extends StatelessWidget {
               Tab(
                   icon: ColorFiltered(
                     colorFilter: ColorFilter.mode(
-                      tabController.index == 0
+                      tabController.index == 1
                           ? AppColors.white
                           : AppColors.textDarkGrey,
                       BlendMode.srcIn,
@@ -77,7 +77,7 @@ class CoworkingCustomTabBar extends StatelessWidget {
               Tab(
                   icon: ColorFiltered(
                     colorFilter: ColorFilter.mode(
-                      tabController.index == 0
+                      tabController.index == 2
                           ? AppColors.white
                           : AppColors.textDarkGrey,
                       BlendMode.srcIn,
@@ -92,7 +92,7 @@ class CoworkingCustomTabBar extends StatelessWidget {
               Tab(
                   icon: ColorFiltered(
                     colorFilter: ColorFilter.mode(
-                      tabController.index == 0
+                      tabController.index == 3
                           ? AppColors.white
                           : AppColors.textDarkGrey,
                       BlendMode.srcIn,
@@ -107,7 +107,7 @@ class CoworkingCustomTabBar extends StatelessWidget {
               Tab(
                   icon: ColorFiltered(
                     colorFilter: ColorFilter.mode(
-                      tabController.index == 0
+                      tabController.index == 4
                           ? AppColors.white
                           : AppColors.textDarkGrey,
                       BlendMode.srcIn,

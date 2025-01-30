@@ -1,21 +1,18 @@
-import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
-import 'package:aina_flutter/core/providers/requests/promotion_details_provider.dart';
+import 'package:aina_flutter/core/providers/requests/news_details_provider.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
-import 'package:aina_flutter/features/scanner/widgets/auth_warning_modal.dart';
-import 'package:aina_flutter/core/providers/auth/auth_state.dart';
-import 'package:go_router/go_router.dart';
+import 'package:aina_flutter/core/widgets/custom_button.dart';
+import 'package:aina_flutter/core/types/button_config.dart';
 import 'package:shimmer/shimmer.dart';
 
-class PromotionDetailsPage extends ConsumerWidget {
+class NewsDetailsPage extends ConsumerWidget {
   final int id;
 
-  const PromotionDetailsPage({
+  const NewsDetailsPage({
     super.key,
     required this.id,
   });
@@ -59,29 +56,6 @@ class PromotionDetailsPage extends ConsumerWidget {
                   Shimmer.fromColors(
                     baseColor: Colors.grey[200]!,
                     highlightColor: Colors.grey[300]!,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 16,
-                          height: 16,
-                          color: Colors.white,
-                        ),
-                        const SizedBox(width: AppLength.xs),
-                        Container(
-                          width: 120,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppLength.sm),
-                  Shimmer.fromColors(
-                    baseColor: Colors.grey[200]!,
-                    highlightColor: Colors.grey[300]!,
                     child: Column(
                       children: List.generate(
                           3,
@@ -94,19 +68,6 @@ class PromotionDetailsPage extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                               )),
-                    ),
-                  ),
-                  const SizedBox(height: AppLength.sm),
-                  Shimmer.fromColors(
-                    baseColor: Colors.grey[200]!,
-                    highlightColor: Colors.grey[300]!,
-                    child: Container(
-                      height: 48,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
                     ),
                   ),
                   const SizedBox(height: AppLength.sm),
@@ -138,7 +99,7 @@ class PromotionDetailsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final promotionAsync = ref.watch(promotionDetailsProvider(id.toString()));
+    final newsAsync = ref.watch(newsDetailsProvider(id.toString()));
 
     return Scaffold(
       body: Container(
@@ -146,10 +107,10 @@ class PromotionDetailsPage extends ConsumerWidget {
         child: SafeArea(
           child: Stack(
             children: [
-              promotionAsync.when(
+              newsAsync.when(
                 loading: () => _buildSkeleton(),
                 error: (error, stack) => Center(child: Text('Error: $error')),
-                data: (promotion) => Container(
+                data: (news) => Container(
                   color: AppColors.white,
                   margin: const EdgeInsets.only(top: 64),
                   child: CustomScrollView(
@@ -159,7 +120,7 @@ class PromotionDetailsPage extends ConsumerWidget {
                           height: 240,
                           width: double.infinity,
                           child: Image.network(
-                            promotion.previewImage.url,
+                            news.previewImage.url,
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -171,7 +132,7 @@ class PromotionDetailsPage extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                promotion.title,
+                                news.title,
                                 style: GoogleFonts.lora(
                                   fontSize: 24,
                                   fontWeight: FontWeight.w500,
@@ -179,26 +140,8 @@ class PromotionDetailsPage extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(height: AppLength.sm),
-                              Row(
-                                children: [
-                                  SvgPicture.asset(
-                                    'lib/core/assets/icons/calendar.svg',
-                                    width: 16,
-                                    height: 16,
-                                  ),
-                                  const SizedBox(width: AppLength.xs),
-                                  Text(
-                                    promotion.formattedDateRange,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      color: AppColors.textDarkGrey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: AppLength.sm),
                               Html(
-                                data: promotion.subtitle,
+                                data: news.subtitle,
                                 style: {
                                   "body": Style(
                                     fontSize: FontSize(15),
@@ -210,37 +153,8 @@ class PromotionDetailsPage extends ConsumerWidget {
                                 },
                               ),
                               const SizedBox(height: AppLength.sm),
-                              CustomButton(
-                                label: 'Сканировать QR код',
-                                isFullWidth: true,
-                                backgroundColor: AppColors.primary,
-                                onPressed: () {
-                                  final authState = ref.read(authProvider);
-                                  final mallId =
-                                      promotion.building?.id.toString();
-                                  if (!authState.isAuthenticated) {
-                                    AuthWarningModal.show(
-                                      context,
-                                      promotionId: id.toString(),
-                                      mallId: mallId,
-                                    );
-                                  } else if (!authState.hasCompletedProfile) {
-                                    AuthWarningModal.show(
-                                      context,
-                                      isProfileIncomplete: true,
-                                      promotionId: id.toString(),
-                                      mallId: mallId,
-                                    );
-                                  } else {
-                                    context.push(
-                                      '/malls/$mallId/promotions/${promotion.id}/qr',
-                                    );
-                                  }
-                                },
-                              ),
-                              const SizedBox(height: AppLength.sm),
                               Html(
-                                data: promotion.body,
+                                data: news.body,
                                 style: {
                                   "body": Style(
                                     fontSize: FontSize(15),
@@ -251,16 +165,25 @@ class PromotionDetailsPage extends ConsumerWidget {
                                   ),
                                 },
                               ),
-                              CustomButton(
-                                button: promotion.button,
-                                isFullWidth: true,
-                                backgroundColor: AppColors.primary,
-                              ),
-                              if (promotion.bottomBody != null &&
-                                  promotion.bottomBody!.isNotEmpty) ...[
+                              if (news.button != null) ...[
+                                const SizedBox(height: AppLength.sm),
+                                CustomButton(
+                                  button: news.button != null
+                                      ? ButtonConfig(
+                                          label: news.button!.label,
+                                          link: news.button!.link,
+                                          isInternal: news.button!.isInternal,
+                                        )
+                                      : null,
+                                  isFullWidth: true,
+                                  backgroundColor: AppColors.primary,
+                                ),
+                              ],
+                              if (news.bottomBody != null &&
+                                  news.bottomBody!.isNotEmpty) ...[
                                 const SizedBox(height: AppLength.sm),
                                 Html(
-                                  data: promotion.bottomBody!,
+                                  data: news.bottomBody!,
                                   style: {
                                     "body": Style(
                                       fontSize: FontSize(13),
@@ -281,7 +204,7 @@ class PromotionDetailsPage extends ConsumerWidget {
                 ),
               ),
               const CustomHeader(
-                title: 'Акция',
+                title: 'Новость',
                 type: HeaderType.pop,
               ),
             ],

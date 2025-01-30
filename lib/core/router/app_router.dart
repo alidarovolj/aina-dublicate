@@ -7,6 +7,8 @@ import 'package:aina_flutter/features/profile/presentation/pages/tickets_page.da
 import 'package:aina_flutter/features/promotions/presentation/pages/promotion_details_page.dart';
 import 'package:aina_flutter/features/stores/presentation/pages/store_details_page.dart';
 import 'package:aina_flutter/features/stores/presentation/pages/category_stores_page.dart';
+import 'package:aina_flutter/features/news/presentation/pages/news_details_page.dart';
+import 'package:aina_flutter/features/news/presentation/pages/news_list_page.dart';
 import 'package:go_router/go_router.dart';
 // import 'package:aina_flutter/core/services/storage_service.dart';
 import 'package:aina_flutter/features/home/presentation/pages/home_page.dart';
@@ -26,6 +28,9 @@ import 'package:aina_flutter/features/coworking/presentation/pages/coworking_det
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_bookings_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_profile_page.dart';
 import 'package:aina_flutter/core/widgets/coworking_tabbar_screen.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/coworking_list_page.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/coworking_promotions_page.dart';
+import 'package:aina_flutter/features/services/presentation/pages/services_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -183,24 +188,47 @@ class AppRouter {
         routes: [
           GoRoute(
             path: '/coworking',
-            name: 'coworking',
-            builder: (context, state) => const CoworkingPage(),
+            name: 'coworking_list',
+            builder: (context, state) => const CoworkingListPage(),
           ),
           GoRoute(
             path: '/coworking/:id',
             name: 'coworking_details',
             builder: (context, state) {
               final id = state.pathParameters['id'];
-              if (id == null) return const CoworkingPage();
-              return CoworkingDetailsPage(id: int.parse(id));
+              if (id == null || int.tryParse(id) == null) {
+                return const CoworkingListPage();
+              }
+              return CoworkingPage(coworkingId: int.parse(id));
             },
             routes: [
+              GoRoute(
+                path: 'services',
+                name: 'coworking_services',
+                builder: (context, state) {
+                  final id = state.pathParameters['id'];
+                  print('Router: Building services page with id: $id');
+                  print('Router: All path parameters: ${state.pathParameters}');
+
+                  // Validate the ID
+                  if (id == null || int.tryParse(id) == null) {
+                    print('Router: Invalid ID, redirecting to coworking list');
+                    return const CoworkingListPage();
+                  }
+
+                  final parsedId = int.parse(id);
+                  print('Router: Valid ID found: $parsedId');
+                  return ServicesPage(coworkingId: parsedId);
+                },
+              ),
               GoRoute(
                 path: 'bookings',
                 name: 'coworking_bookings',
                 builder: (context, state) {
                   final id = state.pathParameters['id'];
-                  if (id == null) return const CoworkingPage();
+                  if (id == null || int.tryParse(id) == null) {
+                    return const CoworkingListPage();
+                  }
                   return CoworkingBookingsPage(coworkingId: int.parse(id));
                 },
               ),
@@ -209,8 +237,32 @@ class AppRouter {
                 name: 'coworking_profile',
                 builder: (context, state) {
                   final id = state.pathParameters['id'];
-                  if (id == null) return const CoworkingPage();
+                  if (id == null || int.tryParse(id) == null) {
+                    return const CoworkingListPage();
+                  }
                   return CoworkingProfilePage(coworkingId: int.parse(id));
+                },
+              ),
+              GoRoute(
+                path: 'news',
+                name: 'coworking_news',
+                builder: (context, state) {
+                  final id = state.pathParameters['id'];
+                  if (id == null || int.tryParse(id) == null) {
+                    return const CoworkingListPage();
+                  }
+                  return NewsListPage(buildingId: id);
+                },
+              ),
+              GoRoute(
+                path: 'promotions',
+                name: 'coworking_promotions',
+                builder: (context, state) {
+                  final id = state.pathParameters['id'];
+                  if (id == null || int.tryParse(id) == null) {
+                    return const CoworkingListPage();
+                  }
+                  return CoworkingPromotionsPage(coworkingId: int.parse(id));
                 },
               ),
             ],
@@ -273,6 +325,14 @@ class AppRouter {
             categoryId: categoryId,
             title: title,
           );
+        },
+      ),
+      GoRoute(
+        path: '/news/:id',
+        name: 'news_details',
+        builder: (context, state) {
+          final id = int.parse(state.pathParameters['id'] ?? '0');
+          return NewsDetailsPage(id: id);
         },
       ),
     ],

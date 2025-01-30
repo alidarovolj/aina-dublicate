@@ -4,13 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'coworking_custom_tabbar.dart';
 
 class CoworkingTabBarScreen extends ConsumerStatefulWidget {
-  final Widget child;
   final String currentRoute;
+  final Widget child;
 
   const CoworkingTabBarScreen({
     super.key,
-    required this.child,
     required this.currentRoute,
+    required this.child,
   });
 
   @override
@@ -24,31 +24,39 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
 
   final Map<String, int> _routesToTabIndex = {
     '/coworking': 0,
-    '/coworking/*/community': 1,
+    '/coworking/*/promotions': 1,
     '/coworking/*/services': 2,
-    '/coworking/*/bookings': 3,
+    '/coworking/*/news': 3,
     '/coworking/*/profile': 4,
   };
 
   final Map<int, String> _tabIndexToRoutes = {
     0: '/coworking',
-    1: '/coworking/*/community',
+    1: '/coworking/*/promotions',
     2: '/coworking/*/services',
-    3: '/coworking/*/bookings',
+    3: '/coworking/*/news',
     4: '/coworking/*/profile',
   };
+
+  String? _getCoworkingId() {
+    final pathSegments = Uri.parse(widget.currentRoute).pathSegments;
+    if (pathSegments.length >= 2 && pathSegments[0] == 'coworking') {
+      return pathSegments[1];
+    }
+    return null;
+  }
 
   String _normalizeRoute(String route) {
     final parts = route.split('/');
     if (parts.length >= 3 && parts[1] == 'coworking' && parts.length > 3) {
-      if (parts[3] == 'community') {
-        return '/coworking/*/community';
-      }
       if (parts[3] == 'services') {
         return '/coworking/*/services';
       }
-      if (parts[3] == 'bookings') {
-        return '/coworking/*/bookings';
+      if (parts[3] == 'promotions') {
+        return '/coworking/*/promotions';
+      }
+      if (parts[3] == 'news') {
+        return '/coworking/*/news';
       }
       if (parts[3] == 'profile') {
         return '/coworking/*/profile';
@@ -88,20 +96,48 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
 
   void _navigateToTab(int index) {
     final route = _tabIndexToRoutes[index];
-    if (route != null && widget.currentRoute != route) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go(route);
-      });
+    final coworkingId = _getCoworkingId();
+
+    if (route != null && coworkingId != null) {
+      final actualRoute = route.replaceAll('*', coworkingId);
+      if (widget.currentRoute != actualRoute) {
+        switch (index) {
+          case 0:
+            context.goNamed('coworking_details',
+                pathParameters: {'id': coworkingId});
+            break;
+          case 1:
+            context.goNamed('coworking_promotions',
+                pathParameters: {'id': coworkingId});
+            break;
+          case 2:
+            context.goNamed('coworking_services',
+                pathParameters: {'id': coworkingId});
+            break;
+          case 3:
+            context
+                .goNamed('coworking_news', pathParameters: {'id': coworkingId});
+            break;
+          case 4:
+            context.goNamed('coworking_profile',
+                pathParameters: {'id': coworkingId});
+            break;
+        }
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDetailsPage = _getCoworkingId() != null;
+
     return Scaffold(
       body: widget.child,
-      bottomNavigationBar: CoworkingCustomTabBar(
-        tabController: _tabController,
-      ),
+      bottomNavigationBar: isDetailsPage
+          ? CoworkingCustomTabBar(
+              tabController: _tabController,
+            )
+          : null,
     );
   }
 

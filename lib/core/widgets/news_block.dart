@@ -7,6 +7,7 @@ import 'package:aina_flutter/core/providers/requests/news_provider.dart';
 import 'package:aina_flutter/core/types/news_card_type.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:aina_flutter/core/types/news_params.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class NewsBlock extends ConsumerWidget {
   final VoidCallback? onViewAllTap;
@@ -64,7 +65,7 @@ class NewsBlock extends ConsumerWidget {
                   children: [
                     if (showTitle)
                       Text(
-                        'Новости',
+                        'news.title'.tr(),
                         style: GoogleFonts.lora(
                           fontSize: 22,
                           color: Colors.black,
@@ -77,7 +78,7 @@ class NewsBlock extends ConsumerWidget {
                         child: Row(
                           children: [
                             Text(
-                              'Все',
+                              'news.view_all'.tr(),
                               style: TextStyle(
                                 fontSize: 15,
                                 color: Colors.grey[600],

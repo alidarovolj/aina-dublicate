@@ -3,6 +3,7 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ReceiptSuccessModal {
   static Future<void> show(
@@ -13,13 +14,12 @@ class ReceiptSuccessModal {
   }) {
     return BaseModal.show(
       context,
-      title: 'Ваш чек зарегистрирован. Поздравляем!',
-      message:
-          'Номера купонов для участия в розыгрыше: ${tickets.join(", ")}\n\nНомер хранится в профиле, в разделе «Купоны».',
+      title: 'scanner.receipt_success_title'.tr(),
+      message: 'scanner.receipt_success_message'.tr(args: [tickets.join(", ")]),
       width: MediaQuery.of(context).size.width,
       buttons: [
         ModalButton(
-          label: 'Назад к акции',
+          label: 'scanner.back_to_promotions'.tr(),
           onPressed: () {
             context.go('/malls/$mallId/promotions');
           },
@@ -27,7 +27,7 @@ class ReceiptSuccessModal {
           backgroundColor: Colors.white,
         ),
         ModalButton(
-          label: 'В профиль',
+          label: 'scanner.to_profile'.tr(),
           type: ButtonType.light,
           onPressed: () {
             context.go('/malls/$mallId/profile');

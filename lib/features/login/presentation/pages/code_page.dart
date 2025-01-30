@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/providers/requests/auth/user.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:async';
 
 class CodeInputScreen extends ConsumerStatefulWidget {
@@ -87,16 +88,17 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
       if (!mounted) return;
 
       if (response == null) {
-        _showError('Нет ответа от сервера');
+        _showError('auth.server_no_response'.tr());
         return;
       }
 
       if (response.statusCode != 200) {
-        _showError('Ошибка при отправке кода: ${response.statusCode}');
+        _showError('auth.code_send_error_with_code'
+            .tr(args: [response.statusCode.toString()]));
       }
     } catch (e) {
       if (!mounted) return;
-      _showError('Произошла ошибка при выполнении запроса');
+      _showError('auth.request_error'.tr());
     }
   }
 
@@ -121,18 +123,19 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
         if (!mounted) return;
 
         if (response == null) {
-          _showError('Ошибка соединения с сервером');
+          _showError('auth.server_connection_error'.tr());
           return;
         }
 
         if (response.statusCode == 200 && response.data != null) {
           await _handleSuccessfulResponse(response.data);
         } else {
-          throw Exception('Неверный статус код: ${response.statusCode}');
+          throw Exception('auth.invalid_status_code'
+              .tr(args: [response.statusCode.toString()]));
         }
       } catch (e) {
         if (!mounted) return;
-        _showError('Ошибка авторизации: $e');
+        _showError('auth.error'.tr(args: [e.toString()]));
       } finally {
         if (mounted) {
           setState(() {
@@ -211,7 +214,7 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Введите код из SMS',
+                              'auth.enter_sms_code'.tr(),
                               style: GoogleFonts.lora(
                                 fontSize: AppLength.xl,
                                 color: AppColors.textDarkGrey,
@@ -221,10 +224,9 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
                             RichText(
                               text: TextSpan(
                                 children: [
-                                  const TextSpan(
-                                    text:
-                                        'Мы отправили вам сообщение на номер ',
-                                    style: TextStyle(
+                                  TextSpan(
+                                    text: 'auth.sms_sent_to'.tr(),
+                                    style: const TextStyle(
                                       fontSize: 15,
                                       color: AppColors.textDarkGrey,
                                     ),
@@ -237,9 +239,9 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                  const TextSpan(
-                                    text: ' c кодом для входа',
-                                    style: TextStyle(
+                                  TextSpan(
+                                    text: 'auth.with_login_code'.tr(),
+                                    style: const TextStyle(
                                       fontSize: 15,
                                       color: AppColors.textDarkGrey,
                                     ),
@@ -315,13 +317,13 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
                                 onTap: _resendCode,
                                 child: Text(
                                   _canResend
-                                      ? 'Отправить код повторно'
-                                      : 'Отправить код повторно через 00:${_timeLeft.toString().padLeft(2, '0')}',
+                                      ? 'auth.resend_code'.tr()
+                                      : 'auth.resend_code_timer'.tr(args: [
+                                          _timeLeft.toString().padLeft(2, '0')
+                                        ]),
                                   style: TextStyle(
                                     fontSize: 15,
-                                    color: _canResend
-                                        ? AppColors.secondary
-                                        : AppColors.secondary,
+                                    color: AppColors.secondary,
                                   ),
                                 ),
                               ),
@@ -333,8 +335,8 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
                   ],
                 ),
               ),
-              const CustomHeader(
-                title: 'Подтверждение',
+              CustomHeader(
+                title: 'auth.confirmation'.tr(),
                 type: HeaderType.close,
               ),
             ],

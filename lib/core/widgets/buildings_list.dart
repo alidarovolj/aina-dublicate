@@ -6,6 +6,7 @@ import 'package:aina_flutter/core/types/building.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class BuildingsList extends ConsumerWidget {
   const BuildingsList({super.key});
@@ -22,7 +23,7 @@ class BuildingsList extends ConsumerWidget {
             vertical: AppLength.sm,
           ),
           child: Text(
-            'ТРЦ',
+            'buildings.mall'.tr(),
             style: GoogleFonts.lora(
               fontSize: 22,
               color: Colors.black,
@@ -83,7 +84,7 @@ class BuildingsList extends ConsumerWidget {
             vertical: AppLength.sm,
           ),
           child: Text(
-            'Коворкинги',
+            'buildings.coworking'.tr(),
             style: GoogleFonts.lora(
               fontSize: 22,
               color: Colors.black,

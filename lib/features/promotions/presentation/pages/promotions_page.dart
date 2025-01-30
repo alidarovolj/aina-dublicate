@@ -6,6 +6,7 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
 import 'package:aina_flutter/core/widgets/events_block.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class PromotionsPage extends ConsumerStatefulWidget {
   final int mallId;
@@ -90,14 +91,14 @@ class _PromotionsPageState extends ConsumerState<PromotionsPage>
                                 ),
                                 tabAlignment: TabAlignment.fill,
                                 indicatorSize: TabBarIndicatorSize.tab,
-                                tabs: const [
+                                tabs: [
                                   SizedBox(
                                     width: double.infinity,
-                                    child: Tab(text: 'Акции'),
+                                    child: Tab(text: 'promotions.title'.tr()),
                                   ),
                                   SizedBox(
                                     width: double.infinity,
-                                    child: Tab(text: 'Мероприятия'),
+                                    child: Tab(text: 'events.title'.tr()),
                                   ),
                                 ],
                               ),
@@ -116,10 +117,10 @@ class _PromotionsPageState extends ConsumerState<PromotionsPage>
                                 showDivider: false,
                                 cardType: PromotionCardType.full,
                                 showGradient: true,
-                                emptyBuilder: (context) => const Center(
+                                emptyBuilder: (context) => Center(
                                   child: Text(
-                                    'В данный момент нет активных акций',
-                                    style: TextStyle(
+                                    'promotions.no_active_promotions'.tr(),
+                                    style: const TextStyle(
                                       fontSize: 15,
                                       color: AppColors.textDarkGrey,
                                     ),
@@ -136,8 +137,8 @@ class _PromotionsPageState extends ConsumerState<PromotionsPage>
                       ],
                     ),
                   ),
-                  const CustomHeader(
-                    title: "Акции",
+                  CustomHeader(
+                    title: 'promotions.title'.tr(),
                     type: HeaderType.close,
                   ),
                 ],
@@ -150,7 +151,8 @@ class _PromotionsPageState extends ConsumerState<PromotionsPage>
         body: Center(child: CircularProgressIndicator()),
       ),
       error: (error, stack) => Scaffold(
-        body: Center(child: Text('Error: $error')),
+        body: Center(
+            child: Text('promotions.error'.tr(args: [error.toString()]))),
       ),
     );
   }

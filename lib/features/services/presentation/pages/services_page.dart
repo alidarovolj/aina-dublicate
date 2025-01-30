@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/providers/requests/services_provider.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
+import 'package:go_router/go_router.dart';
 
 class ServicesPage extends ConsumerWidget {
   final int coworkingId;
@@ -16,9 +17,9 @@ class ServicesPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final servicesAsync = ref.watch(servicesProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.primary,
-      body: SafeArea(
+    return Container(
+      color: AppColors.primary,
+      child: SafeArea(
         child: Stack(
           children: [
             Container(
@@ -43,13 +44,16 @@ class ServicesPage extends ConsumerWidget {
                       ),
                       child: InkWell(
                         onTap: () {
-                          // Navigate to service details
-                          final serviceDetails = ref.read(
-                            serviceDetailsProvider(service.id.toString()),
-                          );
-                          serviceDetails.whenData((details) {
-                            // Handle navigation with details
-                          });
+                          if (service.title == 'Доступ в коворкинг') {
+                            context.push(
+                              '/coworking/$coworkingId/services/${service.id}',
+                            );
+                          } else {
+                            // For conference halls and other services
+                            context.push(
+                              '/coworking/$coworkingId/services/${service.id}',
+                            );
+                          }
                         },
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

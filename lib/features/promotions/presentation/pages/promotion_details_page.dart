@@ -11,6 +11,7 @@ import 'package:aina_flutter/features/scanner/widgets/auth_warning_modal.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class PromotionDetailsPage extends ConsumerWidget {
   final int id;
@@ -148,7 +149,9 @@ class PromotionDetailsPage extends ConsumerWidget {
             children: [
               promotionAsync.when(
                 loading: () => _buildSkeleton(),
-                error: (error, stack) => Center(child: Text('Error: $error')),
+                error: (error, stack) => Center(
+                  child: Text('promotions.error'.tr(args: [error.toString()])),
+                ),
                 data: (promotion) => Container(
                   color: AppColors.white,
                   margin: const EdgeInsets.only(top: 64),
@@ -211,7 +214,7 @@ class PromotionDetailsPage extends ConsumerWidget {
                               ),
                               const SizedBox(height: AppLength.sm),
                               CustomButton(
-                                label: 'Сканировать QR код',
+                                label: 'promotions.scan_qr'.tr(),
                                 isFullWidth: true,
                                 backgroundColor: AppColors.primary,
                                 onPressed: () {
@@ -280,8 +283,8 @@ class PromotionDetailsPage extends ConsumerWidget {
                   ),
                 ),
               ),
-              const CustomHeader(
-                title: 'Акция',
+              CustomHeader(
+                title: 'promotions.details_title'.tr(),
                 type: HeaderType.pop,
               ),
             ],

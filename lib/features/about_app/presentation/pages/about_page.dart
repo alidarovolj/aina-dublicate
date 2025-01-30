@@ -5,6 +5,7 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AboutPage extends ConsumerStatefulWidget {
   const AboutPage({super.key});
@@ -57,7 +58,8 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                             if (snapshot.hasData) {
                               return Center(
                                 child: Text(
-                                  'Версия ${snapshot.data!.version}',
+                                  'about.version'
+                                      .tr(args: [snapshot.data!.version]),
                                   style: const TextStyle(
                                     fontSize: AppLength.body,
                                     color: Colors.white,
@@ -68,10 +70,10 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                             return const SizedBox();
                           },
                         ),
-                        const Center(
+                        Center(
                           child: Text(
-                            'ТОО «MP Solutions»',
-                            style: TextStyle(
+                            'about.company'.tr(),
+                            style: const TextStyle(
                               fontSize: AppLength.body,
                               color: Colors.white,
                             ),
@@ -82,19 +84,19 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                     Column(
                       children: [
                         // Links
-                        _buildLink('Лицензионное соглашение', () {
+                        _buildLink('about.license_agreement'.tr(), () {
                           // Handle license agreement tap
                         }),
-                        _buildLink('Публичная оферта', () {
+                        _buildLink('about.public_offer'.tr(), () {
                           // Handle public offer tap
                         }),
-                        _buildLink('Политика конфиденциальности', () {
+                        _buildLink('about.privacy_policy'.tr(), () {
                           // Handle privacy policy tap
                         }),
                       ],
                     ),
                     CustomButton(
-                      label: 'Удалить профиль',
+                      label: 'about.delete_profile'.tr(),
                       isFullWidth: true,
                       type: ButtonType.bordered,
                       onPressed: () {

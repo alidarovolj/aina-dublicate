@@ -10,6 +10,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:flutter/services.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'core/widgets/restart_widget.dart';
 
 Future<void> main() async {
   // Ensure Flutter bindings are initialized
@@ -22,6 +24,13 @@ Future<void> main() async {
   // Load environment variables and other initializations
   await dotenv.load();
   await initializeDateFormatting('ru', null);
+
+  // Load saved locale
+  final prefs = await SharedPreferences.getInstance();
+  final savedLocale =
+      prefs.getString('selected_locale') ?? prefs.getString('locale');
+  final initialLocale =
+      savedLocale != null ? Locale(savedLocale) : const Locale('ru');
 
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
@@ -40,14 +49,17 @@ Future<void> main() async {
   runApp(
     EasyLocalization(
       supportedLocales: const [
-        Locale('en'),
         Locale('ru'),
         Locale('kk'),
+        Locale('en'),
       ],
       path: 'assets/translations',
       fallbackLocale: const Locale('ru'),
-      child: const ProviderScope(
-        child: MyApp(initialRoute: '/'),
+      startLocale: initialLocale,
+      child: RestartWidget(
+        child: const ProviderScope(
+          child: MyApp(initialRoute: '/'),
+        ),
       ),
     ),
   );

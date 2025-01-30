@@ -26,7 +26,7 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
     '/coworking': 0,
     '/coworking/*/promotions': 1,
     '/coworking/*/services': 2,
-    '/coworking/*/news': 3,
+    '/coworking/*/bookings': 3,
     '/coworking/*/profile': 4,
   };
 
@@ -34,7 +34,7 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
     0: '/coworking',
     1: '/coworking/*/promotions',
     2: '/coworking/*/services',
-    3: '/coworking/*/news',
+    3: '/coworking/*/bookings',
     4: '/coworking/*/profile',
   };
 
@@ -55,8 +55,8 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
       if (parts[3] == 'promotions') {
         return '/coworking/*/promotions';
       }
-      if (parts[3] == 'news') {
-        return '/coworking/*/news';
+      if (parts[3] == 'bookings') {
+        return '/coworking/*/bookings';
       }
       if (parts[3] == 'profile') {
         return '/coworking/*/profile';
@@ -115,8 +115,8 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
                 pathParameters: {'id': coworkingId});
             break;
           case 3:
-            context
-                .goNamed('coworking_news', pathParameters: {'id': coworkingId});
+            context.goNamed('coworking_bookings',
+                pathParameters: {'id': coworkingId});
             break;
           case 4:
             context.goNamed('coworking_profile',

@@ -7,6 +7,7 @@ import 'package:aina_flutter/core/providers/requests/mall_promotions_provider.da
 import 'package:aina_flutter/core/providers/requests/promotions_provider.dart';
 import 'package:aina_flutter/core/types/card_type.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class PromotionsBlock extends ConsumerWidget {
   final String? mallId;
@@ -61,7 +62,7 @@ class PromotionsBlock extends ConsumerWidget {
                   children: [
                     if (showTitle)
                       Text(
-                        'Акции',
+                        'promotions.title'.tr(),
                         style: GoogleFonts.lora(
                           fontSize: 22,
                           color: Colors.black,
@@ -74,7 +75,7 @@ class PromotionsBlock extends ConsumerWidget {
                         child: Row(
                           children: [
                             Text(
-                              'Все',
+                              'promotions.view_all'.tr(),
                               style: TextStyle(
                                 fontSize: 15,
                                 color: Colors.grey[600],
@@ -229,9 +230,9 @@ class PromotionsBlock extends ConsumerWidget {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: const Text(
-                      'Moskva',
-                      style: TextStyle(
+                    child: Text(
+                      'promotions.moskva'.tr(),
+                      style: const TextStyle(
                         fontSize: 14,
                         color: AppColors.primary,
                         fontWeight: FontWeight.w500,

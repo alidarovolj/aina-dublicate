@@ -4,6 +4,7 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/providers/requests/auth/user.dart';
 import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class TicketsPage extends ConsumerWidget {
   final int mallId;
@@ -31,12 +32,12 @@ class TicketsPage extends ConsumerWidget {
                     child: CircularProgressIndicator(),
                   ),
                   error: (error, stack) => Center(
-                    child: Text('Ошибка: $error'),
+                    child: Text('tickets.error'.tr(args: [error.toString()])),
                   ),
                   data: (tickets) {
                     if (tickets.isEmpty) {
-                      return const Center(
-                        child: Text('У вас пока нет купонов'),
+                      return Center(
+                        child: Text('tickets.no_tickets'.tr()),
                       );
                     }
 
@@ -73,7 +74,8 @@ class TicketsPage extends ConsumerWidget {
                               if (ticket.receiptNo != null) ...[
                                 const SizedBox(height: 8),
                                 Text(
-                                  'Чек №${ticket.receiptNo}',
+                                  'tickets.receipt_number'
+                                      .tr(args: [ticket.receiptNo!]),
                                   style: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.black87,
@@ -82,7 +84,9 @@ class TicketsPage extends ConsumerWidget {
                               ],
                               if (ticket.amount != null) ...[
                                 Text(
-                                  'Сумма чека: ${ticket.amount?.toStringAsFixed(0)} ₸',
+                                  'tickets.receipt_amount'.tr(args: [
+                                    ticket.amount!.toStringAsFixed(0)
+                                  ]),
                                   style: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.black87,
@@ -91,7 +95,8 @@ class TicketsPage extends ConsumerWidget {
                               ],
                               if (ticket.organization != null) ...[
                                 Text(
-                                  'Организация: ${ticket.organization}',
+                                  'tickets.organization'
+                                      .tr(args: [ticket.organization!]),
                                   style: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.black87,
@@ -100,7 +105,10 @@ class TicketsPage extends ConsumerWidget {
                               ],
                               if (ticket.purchaseDate != null) ...[
                                 Text(
-                                  'Дата покупки: ${DateFormat('dd.MM.yy').format(ticket.purchaseDate!)}',
+                                  'tickets.purchase_date'.tr(args: [
+                                    DateFormat('dd.MM.yy')
+                                        .format(ticket.purchaseDate!)
+                                  ]),
                                   style: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.black87,
@@ -108,7 +116,10 @@ class TicketsPage extends ConsumerWidget {
                                 ),
                               ],
                               Text(
-                                'Дата регистрации чека: ${DateFormat('dd.MM.yy').format(ticket.createdAt)}',
+                                'tickets.registration_date'.tr(args: [
+                                  DateFormat('dd.MM.yy')
+                                      .format(ticket.createdAt)
+                                ]),
                                 style: const TextStyle(
                                   fontSize: 14,
                                   color: Colors.black87,
@@ -122,8 +133,8 @@ class TicketsPage extends ConsumerWidget {
                   },
                 ),
               ),
-              const CustomHeader(
-                title: "Купоны",
+              CustomHeader(
+                title: 'tickets.title'.tr(),
                 type: HeaderType.pop,
               ),
             ],

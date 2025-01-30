@@ -2,6 +2,7 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/providers/requests/mall_events_provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class EventsBlock extends ConsumerWidget {
   final String mallId;
@@ -19,10 +20,10 @@ class EventsBlock extends ConsumerWidget {
 
     return eventsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => const Center(
+      error: (error, stack) => Center(
         child: Text(
-          'В данный момент нет активных мероприятий',
-          style: TextStyle(
+          'events.no_active_events'.tr(),
+          style: const TextStyle(
             fontSize: 15,
             color: AppColors.textDarkGrey,
           ),
@@ -30,10 +31,10 @@ class EventsBlock extends ConsumerWidget {
       ),
       data: (events) {
         if (events.isEmpty) {
-          return const Center(
+          return Center(
             child: Text(
-              'В данный момент нет активных мероприятий',
-              style: TextStyle(
+              'events.no_active_events'.tr(),
+              style: const TextStyle(
                 fontSize: 15,
                 color: AppColors.textDarkGrey,
               ),
@@ -101,7 +102,8 @@ class EventsBlock extends ConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Просмотры: ${event.views}',
+                          'events.views_count'
+                              .tr(args: [event.views.toString()]),
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 12,

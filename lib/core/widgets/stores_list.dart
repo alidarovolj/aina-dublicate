@@ -4,6 +4,7 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/requests/stores/stores_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class StoresList extends ConsumerStatefulWidget {
   final String mallId;
@@ -100,6 +101,11 @@ class _StoresListState extends ConsumerState<StoresList> {
 
     return storesAsync.when(
       data: (stores) {
+        if (stores.isEmpty) {
+          return Center(
+            child: Text('stores.no_stores'.tr()),
+          );
+        }
         final groupedStores = _groupStoresByLetter(stores);
         final letters = groupedStores.keys.toList();
 
@@ -157,11 +163,11 @@ class _StoresListState extends ConsumerState<StoresList> {
           ),
         );
       },
-      loading: () => SliverToBoxAdapter(
-        child: _buildSkeletonLoader(),
+      loading: () => Center(
+        child: Text('stores.loading'.tr()),
       ),
-      error: (error, stack) => SliverToBoxAdapter(
-        child: Center(child: Text('Error: $error')),
+      error: (error, stack) => Center(
+        child: Text('stores.error'.tr(args: [error.toString()])),
       ),
     );
   }

@@ -7,6 +7,7 @@ import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/providers/requests/settings_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ProfilePage extends ConsumerWidget {
   final int mallId;
@@ -55,18 +56,18 @@ class ProfilePage extends ConsumerWidget {
                 Container(
                   color: AppColors.white,
                   margin: const EdgeInsets.only(top: 64),
-                  child: const Center(
+                  child: Center(
                     child: Text(
-                      'Не удалось загрузить данные профиля',
-                      style: TextStyle(
+                      'profile.load_error'.tr(),
+                      style: const TextStyle(
                         fontSize: 16,
                         color: Colors.black87,
                       ),
                     ),
                   ),
                 ),
-                const CustomHeader(
-                  title: "Профиль ТРЦ",
+                CustomHeader(
+                  title: 'profile.mall_title'.tr(),
                   type: HeaderType.close,
                 ),
               ],
@@ -148,7 +149,7 @@ class ProfilePage extends ConsumerWidget {
 
                           // Menu Items
                           _buildMenuItem(
-                            'Персональная информация',
+                            'profile.personal_info'.tr(),
                             Icons.chevron_right,
                             backgroundColor: Colors.grey[200],
                             onTap: () {
@@ -169,7 +170,7 @@ class ProfilePage extends ConsumerWidget {
                                 return Column(
                                   children: [
                                     _buildMenuItem(
-                                      'Купоны',
+                                      'profile.coupons'.tr(),
                                       Icons.chevron_right,
                                       backgroundColor: Colors.grey[200],
                                       onTap: () {
@@ -190,7 +191,7 @@ class ProfilePage extends ConsumerWidget {
                           ),
 
                           _buildMenuItem(
-                            'Связаться с нами',
+                            'profile.contact_us'.tr(),
                             Icons.chevron_right,
                             backgroundColor: Colors.grey[200],
                             onTap: () {
@@ -209,7 +210,7 @@ class ProfilePage extends ConsumerWidget {
                           const SizedBox(height: 8),
 
                           _buildMenuItem(
-                            'О приложении',
+                            'profile.about_app'.tr(),
                             Icons.chevron_right,
                             backgroundColor: Colors.grey[200],
                             onTap: () {
@@ -231,10 +232,10 @@ class ProfilePage extends ConsumerWidget {
                           padding: const EdgeInsets.all(0),
                           child: Row(
                             children: [
-                              const Expanded(
+                              Expanded(
                                 child: Text(
-                                  'Переключить на профиль Aina Coworking',
-                                  style: TextStyle(
+                                  'profile.switch_to_coworking'.tr(),
+                                  style: const TextStyle(
                                     fontSize: 15,
                                     color: Colors.black87,
                                   ),
@@ -261,8 +262,8 @@ class ProfilePage extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const CustomHeader(
-                  title: "Профиль ТРЦ",
+                CustomHeader(
+                  title: 'profile.mall_title'.tr(),
                   type: HeaderType.close,
                 ),
               ],

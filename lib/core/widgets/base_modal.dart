@@ -50,7 +50,7 @@ class BaseModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.appBg,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),

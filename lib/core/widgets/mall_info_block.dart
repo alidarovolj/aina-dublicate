@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class MallInfoBlock extends StatelessWidget {
   final String workingHours;
@@ -82,7 +83,7 @@ class MallInfoBlock extends StatelessWidget {
                       width: 20,
                       height: 20,
                     ),
-                    label: 'Позвонить',
+                    label: 'mall_info.call'.tr(),
                     fontSize: 14,
                   ),
                 ),
@@ -99,7 +100,7 @@ class MallInfoBlock extends StatelessWidget {
                       width: 20,
                       height: 20,
                     ),
-                    label: 'На карте',
+                    label: 'mall_info.on_map'.tr(),
                     fontSize: 14,
                   ),
                 ),

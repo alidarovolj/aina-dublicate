@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class QrResponseModal extends StatelessWidget {
   final bool isSuccess;
@@ -42,7 +43,7 @@ class QrResponseModal extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              isSuccess ? 'Успешно' : 'Ошибка',
+              isSuccess ? 'scanner.success'.tr() : 'scanner.error'.tr(),
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
@@ -62,7 +63,7 @@ class QrResponseModal extends StatelessWidget {
             if (status != null) ...[
               const SizedBox(height: 8),
               Text(
-                'Статус: $status',
+                'scanner.status'.tr(args: [status!]),
                 style: const TextStyle(
                   fontSize: 16,
                   color: AppColors.textDarkGrey,
@@ -72,7 +73,7 @@ class QrResponseModal extends StatelessWidget {
             ],
             const SizedBox(height: 24),
             CustomButton(
-              label: 'Закрыть',
+              label: 'scanner.close'.tr(),
               onPressed: () => Navigator.of(context).pop(),
               isFullWidth: true,
             ),

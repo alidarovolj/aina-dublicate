@@ -1,12 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../widgets/restart_widget.dart';
 
-class LanguageSwitcher extends StatelessWidget {
+final localeChangeProvider = StateProvider<int>((ref) => 0);
+
+class LanguageSwitcher extends ConsumerWidget {
   const LanguageSwitcher({super.key});
 
+  Future<void> _changeLanguage(
+      BuildContext context, WidgetRef ref, String value) async {
+    // Save the selected locale to SharedPreferences first
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selected_locale', value);
+    await prefs.setString('locale', value);
+
+    // Set the locale in EasyLocalization and wait for it to be processed
+    await context.setLocale(Locale(value));
+
+    // Wait for the locale change to be processed
+    await Future.delayed(const Duration(milliseconds: 50));
+
+    // Force a complete app rebuild
+    if (context.mounted) {
+      // Update the state first
+      ref.read(localeChangeProvider.notifier).state++;
+
+      // Then restart the app
+      RestartWidget.restartApp(context);
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watch the locale change provider to rebuild on changes
+    ref.watch(localeChangeProvider);
+
     return PopupMenuButton<String>(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
@@ -96,8 +128,8 @@ class LanguageSwitcher extends StatelessWidget {
           ),
         ),
       ],
-      onSelected: (String value) {
-        context.setLocale(Locale(value));
+      onSelected: (String value) async {
+        await _changeLanguage(context, ref, value);
       },
     );
   }

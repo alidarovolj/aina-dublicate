@@ -6,6 +6,7 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class QrScannerModal extends ConsumerStatefulWidget {
   final int promotionId;
@@ -68,7 +69,7 @@ class _QrScannerModalState extends ConsumerState<QrScannerModal> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Сканировать QR',
+            'qr.scan_title'.tr(),
             style: GoogleFonts.lora(
               fontSize: 18,
               color: Colors.white,
@@ -101,7 +102,7 @@ class _QrScannerModalState extends ConsumerState<QrScannerModal> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Для сканирования чека пройдите регистрацию в приложении. Убедитесь в корректном заполнении имени и фамилии в профиле. Это обязательное условие участия в акции.',
+            'qr.auth_required'.tr(),
             style: GoogleFonts.lora(
               fontSize: 16,
               color: AppColors.textDarkGrey,
@@ -110,7 +111,7 @@ class _QrScannerModalState extends ConsumerState<QrScannerModal> {
           ),
           const SizedBox(height: 24),
           CustomButton(
-            label: 'Зарегистрироваться',
+            label: 'qr.register'.tr(),
             isFullWidth: true,
             onPressed: () {
               Navigator.of(context).pop();
@@ -129,7 +130,7 @@ class _QrScannerModalState extends ConsumerState<QrScannerModal> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Перед сканированием чека, пожалуйста, убедитесь в правильности имени и фамилии в профиле. Это обязательное условие участия в акции.',
+            'qr.profile_required'.tr(),
             style: GoogleFonts.lora(
               fontSize: 16,
               color: AppColors.textDarkGrey,
@@ -141,7 +142,7 @@ class _QrScannerModalState extends ConsumerState<QrScannerModal> {
             children: [
               Expanded(
                 child: CustomButton(
-                  label: 'В профиль',
+                  label: 'qr.to_profile'.tr(),
                   onPressed: () {
                     Navigator.of(context).pop();
                     context.push('/profile');
@@ -150,9 +151,9 @@ class _QrScannerModalState extends ConsumerState<QrScannerModal> {
                 ),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: CustomButton(
-                  label: 'Сканировать',
+                  label: 'qr.scan'.tr(),
                   isEnabled: false,
                 ),
               ),
@@ -200,7 +201,7 @@ class _QrScannerModalState extends ConsumerState<QrScannerModal> {
                 left: 0,
                 right: 0,
                 child: Text(
-                  'Наведите камеру на QR-код',
+                  'qr.scan_hint'.tr(),
                   style: GoogleFonts.lora(
                     fontSize: 16,
                     color: Colors.white,

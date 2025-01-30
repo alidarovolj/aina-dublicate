@@ -1,0 +1,674 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:aina_flutter/core/styles/constants.dart';
+import 'package:aina_flutter/core/widgets/custom_header.dart';
+import 'package:aina_flutter/core/widgets/custom_button.dart';
+import 'package:aina_flutter/core/widgets/base_modal.dart';
+import 'package:aina_flutter/features/coworking/domain/models/coworking_tariff_details.dart';
+import 'package:aina_flutter/features/coworking/providers/coworking_tariff_details_provider.dart';
+import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
+import 'package:dio/dio.dart';
+
+class CoworkingCalendarPage extends ConsumerStatefulWidget {
+  final int tariffId;
+
+  const CoworkingCalendarPage({
+    super.key,
+    required this.tariffId,
+  });
+
+  @override
+  ConsumerState<CoworkingCalendarPage> createState() =>
+      _CoworkingCalendarPageState();
+}
+
+class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
+  DateTime? selectedDate;
+  DateTime? endDate;
+  int? total;
+  final today = DateTime.now();
+  final yearsToShow = 3;
+  late final ScrollController _scrollController;
+  late List<DateTime> months;
+  List<ReservedDateRange> reservedDates = [];
+  bool isLoading = true;
+
+  // Form data
+  late Map<String, dynamic> formData = {
+    'start_at': '',
+    'end_at': '',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    // Generate only initial months, more will be generated on scroll
+    months = List.generate(
+      12, // Start with just 12 months
+      (i) => DateTime(today.year, today.month + i, 1),
+    );
+
+    // Add scroll listener for loading more months
+    _scrollController.addListener(_onScroll);
+
+    // Schedule initialization after the widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeData();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >
+        _scrollController.position.maxScrollExtent - 500) {
+      _loadMoreMonths();
+    }
+  }
+
+  Future<void> _initializeData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      // Load both tariff details and reserved dates
+      await Future.wait([
+        ref
+            .read(coworkingTariffDetailsProvider.notifier)
+            .fetchTariffDetails(widget.tariffId),
+        _loadReservedDates(),
+      ]);
+    } catch (e) {
+      print('Error initializing data: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadReservedDates() async {
+    try {
+      final dio = Dio();
+      final response = await dio.get(
+        'https://devsuperapi.aina-fashion.kz/api/promenade/orders',
+        queryParameters: {
+          'service_id': widget.tariffId,
+          'state_group': 'ACTIVE',
+          'per_page': 100,
+        },
+      );
+
+      if (response.data['success'] == true && response.data['data'] != null) {
+        final List<dynamic> ordersData = response.data['data'] as List<dynamic>;
+        if (mounted) {
+          setState(() {
+            reservedDates = ordersData.map((order) {
+              final startAt = order['start_at'] as String;
+              final endAt = order['end_at'] as String;
+              print('Reserved date: $startAt - $endAt');
+              return ReservedDateRange(
+                startAt: startAt,
+                endAt: endAt,
+              );
+            }).toList();
+            print('Reserved dates loaded: ${reservedDates.length}');
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading reserved dates: $e');
+      rethrow;
+    }
+  }
+
+  List<DateTime?> _daysInMonth(DateTime month) {
+    final firstDay = DateTime(month.year, month.month, 1);
+    final lastDay = DateTime(month.year, month.month + 1, 0);
+
+    // Calculate empty days at start (Monday = 1, Sunday = 7)
+    final firstWeekday = firstDay.weekday;
+    final daysBeforeMonth = firstWeekday - 1;
+
+    // Calculate days in month
+    final daysInMonth = lastDay.day;
+
+    // Calculate empty days at end
+    final lastWeekday = lastDay.weekday;
+    final daysAfterMonth = 7 - lastWeekday;
+
+    // Generate the full list of days
+    final days = List<DateTime?>.filled(
+        daysBeforeMonth + daysInMonth + daysAfterMonth, null);
+
+    // Fill in the actual days
+    for (var i = 0; i < daysInMonth; i++) {
+      days[daysBeforeMonth + i] = DateTime(month.year, month.month, i + 1);
+    }
+
+    return days;
+  }
+
+  bool _isAvailableDay(DateTime date) {
+    final tariffDetails = ref.read(coworkingTariffDetailsProvider).value;
+    if (tariffDetails == null) return false;
+
+    // Block past days
+    if (date.isBefore(DateTime(today.year, today.month, today.day))) {
+      return false;
+    }
+
+    try {
+      final timeUnit = (tariffDetails.timeUnit ?? 'day').toLowerCase();
+      final startDay = (tariffDetails.startDay ?? 'ANY_DAY').toUpperCase();
+
+      // If start_day is ANY_DAY, all future days are available
+      if (startDay == 'ANY_DAY') {
+        return true;
+      }
+
+      // For specific start days (like MONDAY for week tariffs)
+      final weekdayMap = {
+        'MONDAY': DateTime.monday,
+        'TUESDAY': DateTime.tuesday,
+        'WEDNESDAY': DateTime.wednesday,
+        'THURSDAY': DateTime.thursday,
+        'FRIDAY': DateTime.friday,
+        'SATURDAY': DateTime.saturday,
+        'SUNDAY': DateTime.sunday,
+      };
+
+      if (weekdayMap.containsKey(startDay)) {
+        return date.weekday == weekdayMap[startDay];
+      }
+
+      return true;
+    } catch (e) {
+      print('Error in _isAvailableDay: $e');
+      return false;
+    }
+  }
+
+  bool _isInRange(DateTime date) {
+    if (selectedDate == null || endDate == null) return false;
+
+    // Include both start and end dates in the range
+    final start =
+        DateTime(selectedDate!.year, selectedDate!.month, selectedDate!.day);
+    final end = DateTime(endDate!.year, endDate!.month, endDate!.day);
+    final current = DateTime(date.year, date.month, date.day);
+
+    return !current.isBefore(start) && !current.isAfter(end);
+  }
+
+  void _selectDate(DateTime date) {
+    if (!_isAvailableDay(date)) return;
+
+    final tariffDetails = ref.read(coworkingTariffDetailsProvider).value;
+    if (tariffDetails == null) return;
+
+    try {
+      // Check if date is reserved
+      if (_isDateReserved(date)) {
+        _showReservedDateModal(context);
+        return;
+      }
+
+      // Calculate end date based on duration and time unit
+      final calculatedEndDate = _calculateEndDate(date, tariffDetails);
+
+      // Check for overlap with reserved dates
+      if (_isRangeOverlappingReserved(date, calculatedEndDate)) {
+        _showReserveOverlapModal(context);
+        return;
+      }
+
+      setState(() {
+        selectedDate = date;
+        endDate = calculatedEndDate;
+        final startTimeAt = tariffDetails.startTimeAt ?? '00:00:00';
+        var endTimeAt = tariffDetails.endTimeAt ?? '23:59:59';
+
+        // Set the form values with proper time formatting
+        formData['start_at'] =
+            '${DateFormat('yyyy-MM-dd').format(date)} $startTimeAt';
+        formData['end_at'] =
+            '${DateFormat('yyyy-MM-dd').format(calculatedEndDate)} $endTimeAt';
+        total = tariffDetails.price;
+      });
+    } catch (e) {
+      print('Error in _selectDate: $e');
+    }
+  }
+
+  DateTime _calculateEndDate(
+      DateTime startDate, CoworkingTariffDetails tariffDetails) {
+    final duration = tariffDetails.duration ?? 1;
+    final timeUnit = tariffDetails.timeUnit?.toLowerCase() ?? 'day';
+
+    switch (timeUnit) {
+      case 'day':
+        return startDate.add(Duration(days: duration - 1));
+      case 'month':
+        if (tariffDetails.title.toLowerCase().contains('flex')) {
+          // For flex tariffs, add exact number of days
+          return startDate.add(Duration(days: duration - 1));
+        } else {
+          // For regular month tariffs, go to the same day next month
+          final endDate = DateTime(
+            startDate.year,
+            startDate.month + duration,
+            startDate.day,
+          );
+          return endDate.subtract(const Duration(days: 1));
+        }
+      case 'year':
+        final endDate = DateTime(
+          startDate.year + duration,
+          startDate.month,
+          startDate.day,
+        );
+        return endDate.subtract(const Duration(days: 1));
+      default:
+        return startDate;
+    }
+  }
+
+  bool _isDateReserved(DateTime date) {
+    final current = DateTime(date.year, date.month, date.day);
+
+    return reservedDates.any((range) {
+      final startDate = DateTime.parse(range.startAt).toLocal();
+      final endDate = DateTime.parse(range.endAt).toLocal();
+      final rangeStart =
+          DateTime(startDate.year, startDate.month, startDate.day);
+      final rangeEnd = DateTime(endDate.year, endDate.month, endDate.day);
+
+      return !current.isBefore(rangeStart) && !current.isAfter(rangeEnd);
+    });
+  }
+
+  bool _isRangeOverlappingReserved(DateTime start, DateTime end) {
+    return reservedDates.any((range) {
+      final reservedStart = DateTime.parse(range.startAt);
+      final reservedEnd = DateTime.parse(range.endAt);
+      return start.isBefore(reservedEnd) && end.isAfter(reservedStart);
+    });
+  }
+
+  Widget _buildCalendar() {
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      itemCount: months.length,
+      itemBuilder: (context, index) {
+        final month = months[index];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: Text(
+                DateFormat('MMMM yyyy', 'ru').format(month).toLowerCase(),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+            Row(
+              children: const ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+                  .map((day) => Expanded(
+                        child: Center(
+                          child: Text(
+                            day,
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ))
+                  .toList(),
+            ),
+            const SizedBox(height: 8),
+            _buildMonthGrid(month),
+            const SizedBox(height: 16),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildMonthGrid(DateTime month) {
+    final days = _daysInMonth(month);
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 7,
+        childAspectRatio: 1.2,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+      ),
+      itemCount: days.length,
+      itemBuilder: (context, index) {
+        final day = days[index];
+        if (day == null) return const SizedBox.shrink();
+
+        return _buildDayCell(day);
+      },
+    );
+  }
+
+  Widget _buildDayCell(DateTime day) {
+    final isAvailable = _isAvailableDay(day);
+    final isSelected = selectedDate?.year == day.year &&
+        selectedDate?.month == day.month &&
+        selectedDate?.day == day.day;
+    final isInRange = _isInRange(day);
+    final isReserved = _isDateReserved(day);
+
+    return GestureDetector(
+      onTap: isAvailable && !isReserved ? () => _selectDate(day) : null,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isSelected || isInRange ? Colors.black : Colors.transparent,
+          border: isReserved
+              ? Border.all(
+                  color: const Color(0xFFE6B012),
+                  width: 1,
+                )
+              : Border.all(
+                  color: Colors.transparent,
+                  width: 1,
+                ),
+          borderRadius: BorderRadius.circular(2),
+        ),
+        child: Center(
+          child: Text(
+            '${day.day}',
+            style: TextStyle(
+              fontSize: 13,
+              height: 1,
+              fontWeight: FontWeight.w400,
+              color: isSelected || isInRange
+                  ? Colors.white
+                  : !isAvailable
+                      ? Colors.grey.withOpacity(0.5)
+                      : Colors.black,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _loadMoreMonths() {
+    if (months.length >= yearsToShow * 12) return;
+
+    // Use addPostFrameCallback to schedule the setState after the build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() {
+          final lastMonth = months.last;
+          final newMonths = List.generate(
+            6, // Load 6 months at a time
+            (i) => DateTime(lastMonth.year, lastMonth.month + i + 1, 1),
+          );
+          months.addAll(newMonths);
+        });
+      }
+    });
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            color: AppColors.primary,
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatDateTime(DateTime? date, String? time) {
+    if (date == null) return 'Не выбрано';
+    final dateStr = DateFormat('dd.MM.yyyy').format(date);
+    final timeStr = time ?? '00:00:00';
+    return '$dateStr $timeStr';
+  }
+
+  void _showReservedDateModal(BuildContext context) {
+    BaseModal.show(
+      context,
+      message: 'Выбранная дата уже забронирована',
+      buttons: [
+        ModalButton(
+          label: 'Вернуться назад',
+          onPressed: () {},
+          type: ButtonType.normal,
+          backgroundColor: AppColors.lightGrey,
+          textColor: AppColors.textDarkGrey,
+        ),
+      ],
+    );
+  }
+
+  void _showReservedInfoModal(BuildContext context) {
+    BaseModal.show(
+      context,
+      message: 'Даты, выделенные рамкой, уже забронированы',
+      buttons: [
+        ModalButton(
+          label: 'Вернуться назад',
+          onPressed: () {},
+          type: ButtonType.normal,
+          backgroundColor: AppColors.lightGrey,
+          textColor: AppColors.textDarkGrey,
+        ),
+      ],
+    );
+  }
+
+  void _showReserveOverlapModal(BuildContext context) {
+    BaseModal.show(
+      context,
+      message: 'Выбранный период пересекается с уже забронированными датами',
+      buttons: [
+        ModalButton(
+          label: 'Вернуться назад',
+          onPressed: () {},
+          type: ButtonType.normal,
+          backgroundColor: AppColors.lightGrey,
+          textColor: AppColors.textDarkGrey,
+        ),
+      ],
+    );
+  }
+
+  void _handlePayment() async {
+    if (formData['start_at'].isEmpty || formData['end_at'].isEmpty) return;
+
+    try {
+      // TODO: Implement payment handling
+      // await services.setPayment(formData);
+      // context.go('/payment-success');
+    } catch (e) {
+      print('Error in payment: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tariffDetailsState = ref.watch(coworkingTariffDetailsProvider);
+
+    return Container(
+      color: AppColors.primary,
+      child: SafeArea(
+        child: Scaffold(
+          body: Stack(
+            children: [
+              if (isLoading)
+                const Center(child: CircularProgressIndicator())
+              else
+                tariffDetailsState.when(
+                  data: (tariffDetails) {
+                    if (tariffDetails == null) {
+                      print('Tariff details is null'); // Debug print
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Тариф не найден',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            CustomButton(
+                              label: 'Вернуться назад',
+                              onPressed: () => context.pop(),
+                              isFullWidth: false,
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    print(
+                        'Tariff details loaded: ${tariffDetails.title}'); // Debug print
+                    return Column(
+                      children: [
+                        const SizedBox(height: 64),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Выберите дату начала',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () =>
+                                    _showReservedInfoModal(context),
+                                icon: const Icon(Icons.info_outline),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(child: _buildCalendar()),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, -5),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              _buildInfoRow('Стоимость:',
+                                  '${total ?? tariffDetails.price} ₸'),
+                              const SizedBox(height: 8),
+                              _buildInfoRow(
+                                'Дата начала:',
+                                formData['start_at'].isNotEmpty
+                                    ? formData['start_at']
+                                    : 'Не выбрано',
+                              ),
+                              const SizedBox(height: 8),
+                              _buildInfoRow(
+                                'Дата окончания:',
+                                formData['end_at'].isNotEmpty
+                                    ? formData['end_at']
+                                    : 'Не выбрано',
+                              ),
+                              const SizedBox(height: 16),
+                              CustomButton(
+                                label: 'Перейти к оплате',
+                                onPressed: formData['start_at'].isNotEmpty &&
+                                        formData['end_at'].isNotEmpty
+                                    ? _handlePayment
+                                    : null,
+                                isFullWidth: true,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (error, stack) => Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Ошибка: $error',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        CustomButton(
+                          label: 'Вернуться назад',
+                          onPressed: () => context.pop(),
+                          isFullWidth: false,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              CustomHeader(
+                title: tariffDetailsState.whenOrNull(
+                      data: (tariffDetails) =>
+                          tariffDetails?.title ?? 'Выбор даты',
+                    ) ??
+                    'Выбор даты',
+                type: HeaderType.pop,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

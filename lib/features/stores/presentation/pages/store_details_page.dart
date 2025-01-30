@@ -7,6 +7,7 @@ import 'package:aina_flutter/core/providers/requests/stores/store_details_provid
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class StoreDetailsPage extends ConsumerWidget {
   final String? id;
@@ -36,7 +37,9 @@ class StoreDetailsPage extends ConsumerWidget {
                 margin: const EdgeInsets.only(top: 64),
                 child: storeAsync.when(
                   loading: () => _buildSkeletonLoader(),
-                  error: (error, stack) => Center(child: Text('Error: $error')),
+                  error: (error, stack) => Center(
+                    child: Text('stores.error'.tr(args: [error.toString()])),
+                  ),
                   data: (storeData) => CustomScrollView(
                     slivers: [
                       SliverToBoxAdapter(
@@ -103,6 +106,7 @@ class StoreDetailsPage extends ConsumerWidget {
                                     icon: Icons.access_time,
                                     text: storeData['working_hours'] ??
                                         '10:00-22:00',
+                                    label: 'stores.working_hours'.tr(),
                                   ),
                                   const SizedBox(height: 16),
                                   if (storeData['buildings']?.isNotEmpty ??
@@ -111,7 +115,8 @@ class StoreDetailsPage extends ConsumerWidget {
                                       icon: Icons.location_on,
                                       text: storeData['buildings'][0]
                                               ['address'] ??
-                                          'На карте',
+                                          'stores.on_map'.tr(),
+                                      label: 'stores.on_map'.tr(),
                                       onTap: () {
                                         // TODO: Open map with coordinates
                                         final lat = storeData['buildings'][0]
@@ -169,7 +174,7 @@ class StoreDetailsPage extends ConsumerWidget {
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 12),
                                       child: CustomButton(
-                                        label: 'Перейти на сайт',
+                                        label: 'stores.visit_website'.tr(),
                                         type: ButtonType.bordered,
                                         isFullWidth: true,
                                         icon: SvgPicture.asset(
@@ -329,11 +334,13 @@ class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String text;
   final VoidCallback? onTap;
+  final String label;
 
   const _InfoRow({
     required this.icon,
     required this.text,
     this.onTap,
+    required this.label,
   });
 
   @override

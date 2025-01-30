@@ -8,6 +8,7 @@ import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/types/button_config.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class NewsDetailsPage extends ConsumerWidget {
   final int id;
@@ -16,86 +17,6 @@ class NewsDetailsPage extends ConsumerWidget {
     super.key,
     required this.id,
   });
-
-  Widget _buildSkeleton() {
-    return Container(
-      color: AppColors.white,
-      margin: const EdgeInsets.only(top: 64),
-      child: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Shimmer.fromColors(
-              baseColor: Colors.grey[200]!,
-              highlightColor: Colors.grey[300]!,
-              child: Container(
-                height: 240,
-                width: double.infinity,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(AppLength.sm),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Shimmer.fromColors(
-                    baseColor: Colors.grey[200]!,
-                    highlightColor: Colors.grey[300]!,
-                    child: Container(
-                      height: 28,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppLength.sm),
-                  Shimmer.fromColors(
-                    baseColor: Colors.grey[200]!,
-                    highlightColor: Colors.grey[300]!,
-                    child: Column(
-                      children: List.generate(
-                          3,
-                          (index) => Container(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                height: 16,
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                              )),
-                    ),
-                  ),
-                  const SizedBox(height: AppLength.sm),
-                  Shimmer.fromColors(
-                    baseColor: Colors.grey[200]!,
-                    highlightColor: Colors.grey[300]!,
-                    child: Column(
-                      children: List.generate(
-                          5,
-                          (index) => Container(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                height: 16,
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                              )),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -109,7 +30,9 @@ class NewsDetailsPage extends ConsumerWidget {
             children: [
               newsAsync.when(
                 loading: () => _buildSkeleton(),
-                error: (error, stack) => Center(child: Text('Error: $error')),
+                error: (error, stack) => Center(
+                  child: Text('news.error'.tr(args: [error.toString()])),
+                ),
                 data: (news) => Container(
                   color: AppColors.white,
                   margin: const EdgeInsets.only(top: 64),
@@ -203,13 +126,93 @@ class NewsDetailsPage extends ConsumerWidget {
                   ),
                 ),
               ),
-              const CustomHeader(
-                title: 'Новость',
+              CustomHeader(
+                title: 'news.details_title'.tr(),
                 type: HeaderType.pop,
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSkeleton() {
+    return Container(
+      color: AppColors.white,
+      margin: const EdgeInsets.only(top: 64),
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Shimmer.fromColors(
+              baseColor: Colors.grey[200]!,
+              highlightColor: Colors.grey[300]!,
+              child: Container(
+                height: 240,
+                width: double.infinity,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(AppLength.sm),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[200]!,
+                    highlightColor: Colors.grey[300]!,
+                    child: Container(
+                      height: 28,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppLength.sm),
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[200]!,
+                    highlightColor: Colors.grey[300]!,
+                    child: Column(
+                      children: List.generate(
+                          3,
+                          (index) => Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                height: 16,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              )),
+                    ),
+                  ),
+                  const SizedBox(height: AppLength.sm),
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[200]!,
+                    highlightColor: Colors.grey[300]!,
+                    child: Column(
+                      children: List.generate(
+                          5,
+                          (index) => Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                height: 16,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              )),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

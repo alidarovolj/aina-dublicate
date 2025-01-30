@@ -7,6 +7,7 @@ import 'package:aina_flutter/core/widgets/category_card.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class CategoryStoresPage extends ConsumerStatefulWidget {
   final String buildingId;
@@ -64,8 +65,8 @@ class _CategoryStoresPageState extends ConsumerState<CategoryStoresPage> {
                 margin: const EdgeInsets.only(top: 64),
                 child: storesAsync.when(
                   data: (stores) => stores.isEmpty
-                      ? const Center(
-                          child: Text('Нет магазинов в данной категории'),
+                      ? Center(
+                          child: Text('stores.no_stores'.tr()),
                         )
                       : ListView.builder(
                           controller: _scrollController,
@@ -96,25 +97,23 @@ class _CategoryStoresPageState extends ConsumerState<CategoryStoresPage> {
                   ),
                 ),
               ),
-              buildingsAsync.when(
-                data: (buildings) {
-                  final mall = (buildings['mall'] ?? []).firstWhere(
-                    (building) => building.id.toString() == widget.buildingId,
-                    orElse: () => throw Exception('Mall not found'),
-                  );
-                  return CustomHeader(
-                    title: '${widget.title} в ${mall.name}',
-                    type: HeaderType.pop,
-                  );
-                },
-                loading: () => const CustomHeader(
-                  title: 'Загрузка...',
-                  type: HeaderType.pop,
-                ),
-                error: (_, __) => CustomHeader(
-                  title: widget.title,
-                  type: HeaderType.pop,
-                ),
+              CustomHeader(
+                title: 'stores.category_title'.tr(args: [
+                  widget.title,
+                  buildingsAsync.when(
+                    data: (buildings) {
+                      final malls = buildings['mall'] as List<dynamic>;
+                      final mall = malls.firstWhere(
+                        (m) => m['id'].toString() == widget.buildingId,
+                        orElse: () => malls.first,
+                      );
+                      return mall['name'] as String;
+                    },
+                    loading: () => '',
+                    error: (_, __) => '',
+                  )
+                ]),
+                type: HeaderType.pop,
               ),
             ],
           ),

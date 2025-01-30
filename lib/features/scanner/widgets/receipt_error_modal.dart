@@ -3,6 +3,7 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ReceiptErrorModal {
   static Future<void> show(
@@ -12,19 +13,19 @@ class ReceiptErrorModal {
   }) {
     return BaseModal.show(
       context,
-      title: 'Ошибка',
+      title: 'scanner.error'.tr(),
       message: message,
       buttons: [
         ModalButton(
-          label: 'Назад к акциям',
+          label: 'scanner.back_to_promotions'.tr(),
           onPressed: () {
             context.go('/malls/$mallId/promotions');
           },
           textColor: AppColors.secondary,
           backgroundColor: Colors.white,
         ),
-        const ModalButton(
-          label: 'Сканировать снова',
+        ModalButton(
+          label: 'scanner.scan_again'.tr(),
           type: ButtonType.light,
         ),
       ],

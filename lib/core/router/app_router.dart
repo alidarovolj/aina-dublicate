@@ -1,4 +1,5 @@
 import 'package:aina_flutter/features/about_app/presentation/pages/about_page.dart';
+import 'package:aina_flutter/features/conference/providers/conference_service_provider.dart';
 import 'package:aina_flutter/features/login/presentation/pages/login_page.dart';
 import 'package:aina_flutter/features/malls/presentation/pages/main_page.dart';
 import 'package:aina_flutter/features/profile/presentation/pages/edit_data.dart';
@@ -31,6 +32,13 @@ import 'package:aina_flutter/core/widgets/coworking_tabbar_screen.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_list_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_promotions_page.dart';
 import 'package:aina_flutter/features/services/presentation/pages/services_page.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
+import 'package:aina_flutter/features/coworking/providers/coworking_service_provider.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/coworking_service_details_page.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/coworking_calendar_page.dart';
+import 'package:aina_flutter/features/conference/presentation/pages/conference_service_details_page.dart';
+import 'package:aina_flutter/features/conference/domain/models/conference_service.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -265,6 +273,124 @@ class AppRouter {
                   return CoworkingPromotionsPage(coworkingId: int.parse(id));
                 },
               ),
+              GoRoute(
+                path: 'services/:serviceId',
+                builder: (context, state) {
+                  final serviceId =
+                      int.parse(state.pathParameters['serviceId']!);
+                  final coworkingId = int.parse(state.pathParameters['id']!);
+
+                  return Consumer(
+                    builder: (context, ref, _) {
+                      final serviceAsync =
+                          ref.watch(coworkingServiceProvider(serviceId));
+                      final tariffsAsync =
+                          ref.watch(coworkingTariffsProvider(serviceId));
+
+                      return serviceAsync.when(
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (error, stack) =>
+                            Center(child: Text('Error: $error')),
+                        data: (service) => tariffsAsync.when(
+                          loading: () =>
+                              const Center(child: CircularProgressIndicator()),
+                          error: (error, stack) =>
+                              Center(child: Text('Error: $error')),
+                          data: (tariffs) {
+                            if (service.title == 'Доступ в коворкинг') {
+                              return CoworkingServiceDetailsPage(
+                                service: service,
+                                tariffs: tariffs,
+                              );
+                            } else {
+                              return ConferenceServiceDetailsPage(
+                                service: ConferenceService(
+                                  id: service.id,
+                                  title: service.title,
+                                  description: service.description,
+                                  type: service.type,
+                                  image: service.image != null
+                                      ? ServiceImage(
+                                          id: service.image!.id,
+                                          uuid: service.image!.uuid,
+                                          url: service.image!.url,
+                                          urlOriginal:
+                                              service.image!.urlOriginal,
+                                          orderColumn:
+                                              service.image!.orderColumn,
+                                          collectionName:
+                                              service.image!.collectionName,
+                                        )
+                                      : null,
+                                  gallery: service.gallery
+                                      .map((img) => ServiceImage(
+                                            id: img.id,
+                                            uuid: img.uuid,
+                                            url: img.url,
+                                            urlOriginal: img.urlOriginal,
+                                            orderColumn: img.orderColumn,
+                                            collectionName: img.collectionName,
+                                          ))
+                                      .toList(),
+                                ),
+                                tariffs: tariffs
+                                    .map((t) => ConferenceTariff(
+                                          id: t.id,
+                                          type: t.type,
+                                          isActive: t.isActive,
+                                          categoryId: t.categoryId,
+                                          title: t.title,
+                                          subtitle: t.subtitle,
+                                          price: t.price,
+                                          timeUnit: t.timeUnit,
+                                          isFixed: t.isFixed,
+                                          image: t.image != null
+                                              ? ServiceImage(
+                                                  id: t.image!.id,
+                                                  uuid: t.image!.uuid,
+                                                  url: t.image!.url,
+                                                  urlOriginal:
+                                                      t.image!.urlOriginal,
+                                                  orderColumn:
+                                                      t.image!.orderColumn,
+                                                  collectionName:
+                                                      t.image!.collectionName,
+                                                )
+                                              : null,
+                                          description: t.description,
+                                          capacity:
+                                              20, // Default capacity for conference rooms
+                                        ))
+                                    .toList(),
+                              );
+                            }
+                          },
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+              GoRoute(
+                path: 'calendar/:tariffId',
+                name: 'coworking_calendar',
+                builder: (context, state) {
+                  try {
+                    final tariffId =
+                        int.parse(state.pathParameters['tariffId']!);
+                    final serviceType = state.uri.queryParameters['type'];
+
+                    if (serviceType == 'conference') {
+                      return const CoworkingListPage();
+                    }
+
+                    return CoworkingCalendarPage(tariffId: tariffId);
+                  } catch (e) {
+                    return const CoworkingListPage();
+                  }
+                },
+              ),
             ],
           ),
         ],
@@ -334,7 +460,7 @@ class AppRouter {
           final id = int.parse(state.pathParameters['id'] ?? '0');
           return NewsDetailsPage(id: id);
         },
-      ),
+      )
     ],
   );
 }

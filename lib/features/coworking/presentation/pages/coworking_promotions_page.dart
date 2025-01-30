@@ -5,6 +5,7 @@ import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/widgets/promotions_block.dart';
 import 'package:aina_flutter/core/types/card_type.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class CoworkingPromotionsPage extends ConsumerWidget {
   final int coworkingId;
@@ -22,7 +23,9 @@ class CoworkingPromotionsPage extends ConsumerWidget {
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
-      error: (error, stack) => Center(child: Text('Error: $error')),
+      error: (error, stack) => Center(
+        child: Text('coworking.error'.tr(args: [error.toString()])),
+      ),
       data: (buildings) {
         final coworking = (buildings['coworking'] ?? [])
             .firstWhere((building) => building.id == coworkingId);
@@ -42,10 +45,10 @@ class CoworkingPromotionsPage extends ConsumerWidget {
                     showViewAll: false,
                     showDivider: false,
                     cardType: PromotionCardType.full,
-                    emptyBuilder: (context) => const Center(
+                    emptyBuilder: (context) => Center(
                       child: Text(
-                        'В данный момент нет акций',
-                        style: TextStyle(
+                        'coworking.no_active_promotions'.tr(),
+                        style: const TextStyle(
                           fontSize: 15,
                           color: AppColors.textDarkGrey,
                         ),
@@ -54,7 +57,8 @@ class CoworkingPromotionsPage extends ConsumerWidget {
                   ),
                 ),
                 CustomHeader(
-                  title: 'Акции ${coworking.name}',
+                  title:
+                      'coworking.promotions_title'.tr(args: [coworking.name]),
                   type: HeaderType.pop,
                 ),
               ],

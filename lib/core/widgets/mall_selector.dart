@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
 import 'package:aina_flutter/core/types/building.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class MallSelector extends ConsumerWidget {
   final String? selectedMallId;
@@ -39,12 +40,12 @@ class MallSelector extends ConsumerWidget {
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               isExpanded: true,
-              hint: const Text('Выберите ТРЦ'),
+              hint: Text('mall_selector.select_mall'.tr()),
               value: selectedMallId,
               items: [
-                const DropdownMenuItem<String>(
+                DropdownMenuItem<String>(
                   value: null,
-                  child: Text('Все ТРЦ'),
+                  child: Text('mall_selector.all_malls'.tr()),
                 ),
                 ...malls.map((Building mall) {
                   return DropdownMenuItem<String>(
@@ -53,10 +54,7 @@ class MallSelector extends ConsumerWidget {
                   );
                 }),
               ],
-              onChanged: (String? newValue) {
-                // print('Attempting to select mall with ID: $newValue');
-                onChanged(newValue);
-              },
+              onChanged: onChanged,
               icon: const Icon(
                 Icons.arrow_drop_down,
                 color: Colors.black,
@@ -73,7 +71,7 @@ class MallSelector extends ConsumerWidget {
         child: CircularProgressIndicator(),
       ),
       error: (error, stack) => Center(
-        child: Text('Ошибка: $error'),
+        child: Text('mall_selector.error'.tr(args: [error.toString()])),
       ),
     );
   }

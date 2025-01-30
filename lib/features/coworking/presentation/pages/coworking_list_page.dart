@@ -4,6 +4,7 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class CoworkingListPage extends ConsumerWidget {
   const CoworkingListPage({super.key});
@@ -22,14 +23,16 @@ class CoworkingListPage extends ConsumerWidget {
               margin: const EdgeInsets.only(top: 64), // Height of CustomHeader
               child: buildingsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(child: Text('Error: $error')),
+                error: (error, stack) => Center(
+                  child: Text('coworking.error'.tr(args: [error.toString()])),
+                ),
                 data: (buildings) {
                   final coworkings = buildings['coworking'] ?? [];
                   if (coworkings.isEmpty) {
-                    return const Center(
+                    return Center(
                       child: Text(
-                        'В данный момент нет доступных коворкингов',
-                        style: TextStyle(
+                        'coworking.no_coworkings'.tr(),
+                        style: const TextStyle(
                           fontSize: 15,
                           color: AppColors.textDarkGrey,
                         ),
@@ -95,8 +98,8 @@ class CoworkingListPage extends ConsumerWidget {
                 },
               ),
             ),
-            const CustomHeader(
-              title: 'Коворкинги',
+            CustomHeader(
+              title: 'coworking.title'.tr(),
               type: HeaderType.pop,
             ),
           ],

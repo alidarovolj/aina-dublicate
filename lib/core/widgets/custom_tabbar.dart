@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class CustomTabBar extends StatelessWidget {
   final TabController tabController;
@@ -60,7 +61,7 @@ class CustomTabBar extends StatelessWidget {
                   height: 28,
                 ),
               ),
-              text: "Главная"),
+              text: 'main_tabs.home'.tr()),
           Tab(
               icon: ColorFiltered(
                 colorFilter: ColorFilter.mode(
@@ -75,7 +76,7 @@ class CustomTabBar extends StatelessWidget {
                   height: 28,
                 ),
               ),
-              text: "Акции"),
+              text: 'main_tabs.promotions'.tr()),
           Tab(
               icon: ColorFiltered(
                 colorFilter: ColorFilter.mode(
@@ -90,7 +91,7 @@ class CustomTabBar extends StatelessWidget {
                   height: 28,
                 ),
               ),
-              text: "Магазины"),
+              text: 'main_tabs.shops'.tr()),
           Tab(
               icon: ColorFiltered(
                 colorFilter: ColorFilter.mode(
@@ -105,7 +106,7 @@ class CustomTabBar extends StatelessWidget {
                   height: 28,
                 ),
               ),
-              text: "Профиль"),
+              text: 'main_tabs.profile'.tr()),
         ],
       ),
     );

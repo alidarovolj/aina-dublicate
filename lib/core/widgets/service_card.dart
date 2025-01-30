@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ServiceCard extends StatelessWidget {
   final String coworkingId;
@@ -40,7 +41,7 @@ class ServiceCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Услуги',
+                      'coworking_tabs.services'.tr(),
                       style: GoogleFonts.lora(
                           fontSize: 15, color: AppColors.primary),
                     ),

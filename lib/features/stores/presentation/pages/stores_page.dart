@@ -7,6 +7,7 @@ import 'package:aina_flutter/core/widgets/stores_list.dart';
 import 'package:aina_flutter/core/widgets/mall_selector.dart';
 import 'dart:async';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class StoresPage extends ConsumerStatefulWidget {
   final int mallId;
@@ -88,7 +89,7 @@ class _StoresPageState extends ConsumerState<StoresPage> {
                             child: TextField(
                               controller: _searchController,
                               decoration: InputDecoration(
-                                hintText: 'Введите название магазина',
+                                hintText: 'stores.search_placeholder'.tr(),
                                 prefixIcon: const Icon(Icons.search),
                                 filled: true,
                                 fillColor: AppColors.white,
@@ -146,7 +147,7 @@ class _StoresPageState extends ConsumerState<StoresPage> {
                 ),
               ),
               CustomHeader(
-                title: 'Магазины',
+                title: 'stores.title'.tr(),
                 type: isFromMall ? HeaderType.close : HeaderType.pop,
               ),
             ],

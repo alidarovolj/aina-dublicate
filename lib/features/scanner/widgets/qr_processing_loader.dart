@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class QrProcessingLoader extends StatelessWidget {
   const QrProcessingLoader({super.key});
@@ -14,17 +15,17 @@ class QrProcessingLoader extends StatelessWidget {
             Container(
               color: AppColors.white,
               margin: const EdgeInsets.only(top: 64),
-              child: const Center(
+              child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(
+                    const CircularProgressIndicator(
                       color: AppColors.secondary,
                     ),
-                    SizedBox(height: 24),
+                    const SizedBox(height: 24),
                     Text(
-                      'Ожидайте, идет проверка условий акции.',
-                      style: TextStyle(
+                      'scanner.processing'.tr(),
+                      style: const TextStyle(
                         fontSize: 16,
                         color: AppColors.secondary,
                       ),

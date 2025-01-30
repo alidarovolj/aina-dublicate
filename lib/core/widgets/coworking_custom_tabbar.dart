@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class CoworkingCustomTabBar extends StatelessWidget {
   final TabController tabController;
@@ -58,7 +59,7 @@ class CoworkingCustomTabBar extends StatelessWidget {
                       height: 28,
                     ),
                   ),
-                  text: "Promenade"),
+                  text: 'coworking_tabs.promenade'.tr()),
               Tab(
                   icon: ColorFiltered(
                     colorFilter: ColorFilter.mode(
@@ -73,7 +74,7 @@ class CoworkingCustomTabBar extends StatelessWidget {
                       height: 28,
                     ),
                   ),
-                  text: "Сообщество"),
+                  text: 'coworking_tabs.community'.tr()),
               Tab(
                   icon: ColorFiltered(
                     colorFilter: ColorFilter.mode(
@@ -88,7 +89,7 @@ class CoworkingCustomTabBar extends StatelessWidget {
                       height: 28,
                     ),
                   ),
-                  text: "Услуги"),
+                  text: 'coworking_tabs.services'.tr()),
               Tab(
                   icon: ColorFiltered(
                     colorFilter: ColorFilter.mode(
@@ -103,7 +104,7 @@ class CoworkingCustomTabBar extends StatelessWidget {
                       height: 28,
                     ),
                   ),
-                  text: "Брони"),
+                  text: 'coworking_tabs.bookings'.tr()),
               Tab(
                   icon: ColorFiltered(
                     colorFilter: ColorFilter.mode(
@@ -118,7 +119,7 @@ class CoworkingCustomTabBar extends StatelessWidget {
                       height: 28,
                     ),
                   ),
-                  text: "Профиль"),
+                  text: 'coworking_tabs.profile'.tr()),
             ],
           ),
         ],

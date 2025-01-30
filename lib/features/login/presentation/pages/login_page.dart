@@ -9,6 +9,7 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/requests/auth/user.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/gestures.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class PhoneNumberInputScreen extends ConsumerStatefulWidget {
   const PhoneNumberInputScreen({super.key});
@@ -61,16 +62,16 @@ class _PhoneNumberInputScreenState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Введите номер телефона',
+                              'auth.enter_phone'.tr(),
                               style: GoogleFonts.lora(
                                 fontSize: AppLength.xl,
                                 color: AppColors.textDarkGrey,
                               ),
                             ),
                             const SizedBox(height: 16),
-                            const Text(
-                              'Мы отправим вам SMS с 4-х значным кодом',
-                              style: TextStyle(
+                            Text(
+                              'auth.sms_code_info'.tr(),
+                              style: const TextStyle(
                                 fontSize: 15,
                                 color: AppColors.textDarkGrey,
                               ),
@@ -115,13 +116,14 @@ class _PhoneNumberInputScreenState
                                     child: TextField(
                                       controller: _phoneController,
                                       keyboardType: TextInputType.phone,
-                                      decoration: const InputDecoration(
-                                        hintText: 'Номер телефона',
-                                        hintStyle: TextStyle(
+                                      decoration: InputDecoration(
+                                        hintText: 'auth.phone_number'.tr(),
+                                        hintStyle: const TextStyle(
                                           color: AppColors.textSecondary,
                                         ),
                                         border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
                                           horizontal: 14,
                                           vertical: 4,
                                         ),
@@ -140,7 +142,7 @@ class _PhoneNumberInputScreenState
                             ),
                             const SizedBox(height: AppLength.xxxl),
                             CustomButton(
-                              label: 'Получить код',
+                              label: 'auth.get_code'.tr(),
                               isEnabled: isButtonEnabled,
                               isLoading: isLoading,
                               onPressed: () async {
@@ -164,9 +166,9 @@ class _PhoneNumberInputScreenState
                                     if (mounted) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
-                                        const SnackBar(
+                                        SnackBar(
                                           content:
-                                              Text('Ошибка при отправке кода'),
+                                              Text('auth.code_send_error'.tr()),
                                         ),
                                       );
                                     }
@@ -192,34 +194,31 @@ class _PhoneNumberInputScreenState
                                     color: AppColors.textDarkGrey,
                                   ),
                                   children: [
-                                    const TextSpan(
-                                      text:
-                                          'Нажимая на кнопку, вы принимаете условия ',
+                                    TextSpan(
+                                      text: 'auth.terms_prefix'.tr(),
                                     ),
                                     TextSpan(
-                                      text: 'пользовательского соглашения',
+                                      text: 'auth.terms_of_service'.tr(),
                                       style: const TextStyle(
                                         color: AppColors.textLinkColor,
                                         decoration: TextDecoration.underline,
                                       ),
                                       recognizer: TapGestureRecognizer()
                                         ..onTap = () {
-                                          // Add navigation to terms of service
                                           context.push('/terms');
                                         },
                                     ),
-                                    const TextSpan(
-                                      text: ' и ',
+                                    TextSpan(
+                                      text: 'auth.terms_and'.tr(),
                                     ),
                                     TextSpan(
-                                      text: 'политику конфиденциальности',
+                                      text: 'auth.privacy_policy'.tr(),
                                       style: const TextStyle(
                                         color: AppColors.textLinkColor,
                                         decoration: TextDecoration.underline,
                                       ),
                                       recognizer: TapGestureRecognizer()
                                         ..onTap = () {
-                                          // Add navigation to privacy policy
                                           context.push('/privacy');
                                         },
                                     ),
@@ -235,8 +234,8 @@ class _PhoneNumberInputScreenState
                   ],
                 ),
               ),
-              const CustomHeader(
-                title: 'Авторизация',
+              CustomHeader(
+                title: 'auth.title'.tr(),
                 type: HeaderType.close,
               ),
             ],

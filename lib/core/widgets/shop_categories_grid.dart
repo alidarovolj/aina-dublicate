@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/requests/mall_shop_categories_provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ShopCategoriesGrid extends ConsumerWidget {
   final String mallId;
@@ -27,7 +28,7 @@ class ShopCategoriesGrid extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Магазины',
+                'shops.title'.tr(),
                 style: GoogleFonts.lora(
                   fontSize: 22,
                   color: Colors.black,
@@ -44,7 +45,7 @@ class ShopCategoriesGrid extends ConsumerWidget {
                 child: Row(
                   children: [
                     Text(
-                      'Все',
+                      'shops.view_all'.tr(),
                       style: TextStyle(
                         fontSize: 15,
                         color: Colors.grey[600],
@@ -62,7 +63,9 @@ class ShopCategoriesGrid extends ConsumerWidget {
         ),
         categoriesAsync.when(
           loading: () => _buildSkeletonLoader(),
-          error: (error, stack) => Center(child: Text('Error: $error')),
+          error: (error, stack) => Center(
+            child: Text('shops.error'.tr(args: [error.toString()])),
+          ),
           data: (categories) {
             final sortedCategories = [...categories]
               ..sort((a, b) => a.order.compareTo(b.order));

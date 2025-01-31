@@ -27,6 +27,10 @@ class _CarouselWithIndicatorState extends State<CarouselWithIndicator> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.slideList.isEmpty) {
+      return const SizedBox.shrink(); // Return empty widget if list is empty
+    }
+
     return Column(
       children: [
         Stack(

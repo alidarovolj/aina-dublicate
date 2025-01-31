@@ -214,7 +214,7 @@ class Promotion {
             : null,
         building: building,
       );
-    } catch (e, stack) {
+    } catch (e) {
       // print('Error parsing promotion: $e');
       // print('Stack trace: $stack');
       rethrow;

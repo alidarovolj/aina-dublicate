@@ -39,7 +39,7 @@ class RequestCodeService {
       }
 
       return response;
-    } on DioException catch (e) {
+    } on DioException {
       // print('DioError fetching profile: ${e.message}');
       // print('Response: ${e.response?.data}');
       rethrow;

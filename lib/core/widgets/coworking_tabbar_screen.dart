@@ -25,7 +25,7 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
 
   final Map<String, int> _routesToTabIndex = {
     '/coworking': 0,
-    '/coworking/*/promotions': 1,
+    '/coworking/*/community': 1,
     '/coworking/*/services': 2,
     '/coworking/*/bookings': 3,
     '/coworking/*/profile': 4,
@@ -33,7 +33,7 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
 
   final Map<int, String> _tabIndexToRoutes = {
     0: '/coworking',
-    1: '/coworking/*/promotions',
+    1: '/coworking/*/community',
     2: '/coworking/*/services',
     3: '/coworking/*/bookings',
     4: '/coworking/*/profile',
@@ -50,6 +50,9 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
   String _normalizeRoute(String route) {
     final parts = route.split('/');
     if (parts.length >= 3 && parts[1] == 'coworking' && parts.length > 3) {
+      if (parts[3] == 'community') {
+        return '/coworking/*/community';
+      }
       if (parts[3] == 'services') {
         return '/coworking/*/services';
       }
@@ -98,16 +101,13 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
   void _navigateToTab(int index) {
     final route = _tabIndexToRoutes[index];
     if (route != null && widget.currentRoute != route) {
-      // Schedule navigation for next frame
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // Если мы уже на странице логина или переходим на нее, ничего не делаем
         if (widget.currentRoute.startsWith('/login')) {
           return;
         }
 
-        // Проверяем авторизацию для защищенных вкладок
-        if (index == 2 || index == 3 || index == 4) {
-          // services, bookings, profile
+        if (index == 4) {
+          // only profile tab requires auth
           final authState = ref.read(authProvider);
           if (!authState.isAuthenticated) {
             context.go('/login');
@@ -121,25 +121,24 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
           return;
         }
 
-        // Навигация в зависимости от выбранной вкладки
         switch (index) {
-          case 0: // main
+          case 0:
             context.goNamed('coworking_details',
                 pathParameters: {'id': coworkingId});
             break;
-          case 1: // promotions
-            context.goNamed('coworking_promotions',
+          case 1:
+            context.goNamed('coworking_community',
                 pathParameters: {'id': coworkingId});
             break;
-          case 2: // services
+          case 2:
             context.goNamed('coworking_services',
                 pathParameters: {'id': coworkingId});
             break;
-          case 3: // bookings
+          case 3:
             context.goNamed('coworking_bookings',
                 pathParameters: {'id': coworkingId});
             break;
-          case 4: // profile
+          case 4:
             context.goNamed('coworking_profile',
                 pathParameters: {'id': coworkingId});
             break;

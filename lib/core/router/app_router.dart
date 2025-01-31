@@ -1,5 +1,4 @@
 import 'package:aina_flutter/features/about_app/presentation/pages/about_page.dart';
-import 'package:aina_flutter/features/conference/providers/conference_service_provider.dart';
 import 'package:aina_flutter/features/login/presentation/pages/login_page.dart';
 import 'package:aina_flutter/features/malls/presentation/pages/main_page.dart';
 import 'package:aina_flutter/features/profile/presentation/pages/edit_data.dart';
@@ -17,7 +16,6 @@ import 'package:aina_flutter/features/storybook/presentation/pages/storybook.dar
 import 'package:aina_flutter/core/widgets/main_tabbar_screen.dart';
 // import 'package:aina_flutter/features/login/presentation/pages/login_page.dart';
 import 'package:aina_flutter/features/login/presentation/pages/code_page.dart';
-import 'package:aina_flutter/features/login/presentation/pages/set_info_page.dart';
 // import 'package:aina_flutter/features/promotions/presentation/pages/promotion_details_page.dart';
 import 'package:aina_flutter/features/malls/presentation/pages/mall_details_page.dart';
 import 'package:aina_flutter/features/promotions/presentation/pages/promotions_page.dart';
@@ -25,7 +23,6 @@ import 'package:aina_flutter/features/stores/presentation/pages/stores_page.dart
 import 'package:aina_flutter/features/promotions/presentation/pages/promotion_qr_page.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_page.dart';
-import 'package:aina_flutter/features/coworking/presentation/pages/coworking_details_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_bookings_page.dart';
 import 'package:aina_flutter/core/widgets/coworking_tabbar_screen.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_list_page.dart';
@@ -36,9 +33,9 @@ import 'package:flutter/material.dart';
 import 'package:aina_flutter/features/coworking/providers/coworking_service_provider.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_service_details_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_calendar_page.dart';
-import 'package:aina_flutter/features/conference/presentation/pages/conference_service_details_page.dart';
-import 'package:aina_flutter/features/conference/domain/models/conference_service.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_profile_page.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/coworking_community_page.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/coworking_biometric_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -230,6 +227,14 @@ class AppRouter {
             },
             routes: [
               GoRoute(
+                path: 'community',
+                name: 'coworking_community',
+                builder: (context, state) {
+                  final id = int.parse(state.pathParameters['id']!);
+                  return CoworkingCommunityPage(coworkingId: id);
+                },
+              ),
+              GoRoute(
                 path: 'services',
                 name: 'coworking_services',
                 builder: (context, state) {
@@ -269,6 +274,32 @@ class AppRouter {
                   }
                   return CoworkingProfilePage(coworkingId: int.parse(id));
                 },
+                routes: [
+                  GoRoute(
+                    path: 'biometric',
+                    name: 'biometric',
+                    builder: (context, state) {
+                      final id = state.pathParameters['id'];
+                      if (id == null || int.tryParse(id) == null) {
+                        return const CoworkingListPage();
+                      }
+                      return CoworkingBiometricPage(coworkingId: int.parse(id));
+                    },
+                    // routes: [
+                    //   GoRoute(
+                    //     path: 'camera',
+                    //     name: 'camera',
+                    //     builder: (context, state) {
+                    //       final id = state.pathParameters['id'];
+                    //       if (id == null || int.tryParse(id) == null) {
+                    //         return const CoworkingListPage();
+                    //       }
+                    //       return const CoworkingCameraPage();
+                    //     },
+                    //   ),
+                    // ],
+                  ),
+                ],
               ),
               GoRoute(
                 path: 'news',

@@ -18,7 +18,7 @@ class BaseModal extends StatelessWidget {
     required this.buttons,
     this.padding,
     this.crossAxisAlignment,
-    this.barrierDismissible = false,
+    this.barrierDismissible = true,
     this.width,
   });
 
@@ -29,7 +29,7 @@ class BaseModal extends StatelessWidget {
     required List<ModalButton> buttons,
     EdgeInsets? padding,
     CrossAxisAlignment? crossAxisAlignment,
-    bool barrierDismissible = false,
+    bool barrierDismissible = true,
     double? width,
   }) {
     return showDialog(

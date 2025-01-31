@@ -1,4 +1,3 @@
-import 'package:aina_flutter/features/coworking/domain/models/coworking_service.dart';
 import 'package:aina_flutter/features/coworking/domain/models/coworking_service_image.dart';
 
 class CoworkingTariffDetails {

@@ -27,13 +27,13 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Для сканирования QR кодов необходим доступ к камере</string>
+	<string>We need access to your camera for biometric verification</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>Приложению требуется доступ к геолокации для отображения вашего местоположения на карте</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Приложению требуется доступ к геолокации для отображения вашего местоположения на карте</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Мы используем ваш микрофон для записи звука</string>
+	<string>We need access to your microphone for biometric verification</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Мы используем вашу фотогалерею для выбора изображений</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

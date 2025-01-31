@@ -1,7 +1,8 @@
 import 'package:aina_flutter/core/types/card_type.dart';
+import 'package:aina_flutter/core/types/news_card_type.dart';
 import 'package:aina_flutter/core/types/slides.dart' as slides;
+import 'package:aina_flutter/core/widgets/news_block.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
@@ -125,6 +126,32 @@ class MallDetailsPage extends ConsumerWidget {
                             );
                           },
                           emptyBuilder: (context) => const SizedBox.shrink(),
+                        ),
+                      ),
+                      // News Section
+                      SliverToBoxAdapter(
+                        child: NewsBlock(
+                          showTitle: true,
+                          showViewAll: false,
+                          showDivider: true,
+                          showGradient: false,
+                          cardType: NewsCardType.medium,
+                          buildingId: mallId.toString(),
+                          onViewAllTap: () {
+                            context.pushNamed(
+                              'coworking_news',
+                              pathParameters: {'id': mallId.toString()},
+                            );
+                          },
+                          emptyBuilder: (context) => const Center(
+                            child: Text(
+                              'В данный момент нет новостей',
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: AppColors.textDarkGrey,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
 

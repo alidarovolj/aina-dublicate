@@ -31,9 +31,7 @@ class PromotionsProvider extends StateNotifier<AsyncValue<List<Promotion>>> {
   }
 
   bool _isValidPromotionData(Promotion promotion) {
-    return promotion.id != null &&
-        promotion.name != null &&
-        promotion.order != null;
+    return promotion.name != null && promotion.order != null;
   }
 }
 

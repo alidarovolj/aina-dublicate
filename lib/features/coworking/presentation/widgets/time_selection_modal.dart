@@ -15,12 +15,12 @@ class TimeSelectionModal extends StatefulWidget {
   final bool isConference;
 
   const TimeSelectionModal({
-    Key? key,
+    super.key,
     required this.date,
     required this.tariffDetails,
     this.onTimeSelected,
     this.isConference = false,
-  }) : super(key: key);
+  });
 
   @override
   State<TimeSelectionModal> createState() => _TimeSelectionModalState();
@@ -120,7 +120,7 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
 
   String _formatSelectedDateTime(String? fullDateTime) {
     if (fullDateTime == null) return 'Не выбрано';
-    final dateTime = DateTime.parse('${fullDateTime}:00');
+    final dateTime = DateTime.parse('$fullDateTime:00');
     return '${DateFormat('dd MMMM yyyy', 'ru').format(dateTime)} ${DateFormat('HH:mm').format(dateTime)}';
   }
 
@@ -393,7 +393,7 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    const Text(
                       'Стоимость:',
                       style: TextStyle(
                         color: AppColors.primary,
@@ -403,7 +403,7 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                       calculatedTotal != null
                           ? '$calculatedTotal ₸'
                           : 'Укажите время',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,
                       ),
@@ -414,7 +414,7 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    const Text(
                       'Дата начала:',
                       style: TextStyle(
                         color: AppColors.primary,
@@ -422,7 +422,7 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                     ),
                     Text(
                       _formatSelectedDateTime(selectedStartTime),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,
                       ),
@@ -433,7 +433,7 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    const Text(
                       'Дата окончания:',
                       style: TextStyle(
                         color: AppColors.primary,
@@ -441,7 +441,7 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                     ),
                     Text(
                       _formatSelectedDateTime(selectedEndTime),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,
                       ),

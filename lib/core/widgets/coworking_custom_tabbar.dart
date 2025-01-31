@@ -27,10 +27,6 @@ class CoworkingCustomTabBar extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Container(
-            height: 1,
-            color: const Color(0xFFEEEEEE),
-          ),
           TabBar(
             controller: tabController,
             labelColor: AppColors.white,

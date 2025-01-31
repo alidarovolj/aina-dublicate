@@ -161,6 +161,17 @@ class CoworkingProfilePage extends ConsumerWidget {
                           const SizedBox(height: 8),
 
                           _buildMenuItem(
+                            'coworking.profile.biometric'.tr(),
+                            Icons.chevron_right,
+                            backgroundColor: Colors.grey[200],
+                            onTap: () {
+                              context.go(
+                                  '/coworking/$coworkingId/profile/biometric');
+                            },
+                          ),
+                          const SizedBox(height: 8),
+
+                          _buildMenuItem(
                             'coworking.profile.contact_us'.tr(),
                             Icons.chevron_right,
                             backgroundColor: Colors.grey[200],

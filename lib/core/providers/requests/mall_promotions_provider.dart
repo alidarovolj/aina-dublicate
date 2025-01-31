@@ -44,7 +44,7 @@ final mallPromotionsProvider = FutureProvider.family<List<Promotion>, String>(
             // // print('- Preview Image URL: ${promotion.previewImage?.url}');
             // // print('- Date Range: ${promotion.formattedDateRange}');
             // // print('- Is QR: ${promotion.isQr}');
-          } catch (e, stack) {
+          } catch (e) {
             // // print('Error parsing promotion: $e');
             // // print('Stack trace: $stack');
             // // print('Problematic JSON: $json');
@@ -65,7 +65,7 @@ final mallPromotionsProvider = FutureProvider.family<List<Promotion>, String>(
       // // print(
       //     '=================== END MALL PROMOTIONS PROVIDER ===================');
       return [];
-    } catch (e, stack) {
+    } catch (e) {
       // // print('Error fetching promotions: $e');
       // // print('Stack trace: $stack');
       // // print(

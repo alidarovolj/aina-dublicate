@@ -56,8 +56,8 @@ Future<void> main() async {
       path: 'assets/translations',
       fallbackLocale: const Locale('ru'),
       startLocale: initialLocale,
-      child: RestartWidget(
-        child: const ProviderScope(
+      child: const RestartWidget(
+        child: ProviderScope(
           child: MyApp(initialRoute: '/'),
         ),
       ),

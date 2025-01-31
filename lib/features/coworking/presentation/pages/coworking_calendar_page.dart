@@ -375,7 +375,7 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
                         child: Center(
                           child: Text(
                             day.tr(),
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
@@ -667,18 +667,18 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
                           child: Column(
                             children: [
                               _buildInfoRow(
-                                  'coworking.calendar.cost'.tr() + ':',
+                                  '${'coworking.calendar.cost'.tr()}:',
                                   '${total ?? tariffDetails.price} ₸'),
                               const SizedBox(height: 8),
                               _buildInfoRow(
-                                'coworking.calendar.start_date'.tr() + ':',
+                                '${'coworking.calendar.start_date'.tr()}:',
                                 formData['start_at'].isNotEmpty
                                     ? formData['start_at']
                                     : 'coworking.calendar.not_selected'.tr(),
                               ),
                               const SizedBox(height: 8),
                               _buildInfoRow(
-                                'coworking.calendar.end_date'.tr() + ':',
+                                '${'coworking.calendar.end_date'.tr()}:',
                                 formData['end_at'].isNotEmpty
                                     ? formData['end_at']
                                     : 'coworking.calendar.not_selected'.tr(),

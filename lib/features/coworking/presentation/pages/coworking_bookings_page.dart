@@ -65,17 +65,50 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
   Widget _buildAuthorizedState() {
     return Column(
       children: [
-        Container(
-          color: Colors.white,
-          child: TabBar(
-            controller: _tabController,
-            labelColor: Colors.black,
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: Colors.black,
-            tabs: [
-              Tab(text: 'bookings.active'.tr()),
-              Tab(text: 'bookings.history'.tr()),
-            ],
+        Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicator: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.black,
+              labelStyle: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.normal,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.normal,
+              ),
+              tabAlignment: TabAlignment.fill,
+              indicatorSize: TabBarIndicatorSize.tab,
+              tabs: [
+                SizedBox(
+                  width: double.infinity,
+                  child: Tab(text: 'bookings.active'.tr()),
+                ),
+                SizedBox(
+                  width: double.infinity,
+                  child: Tab(text: 'bookings.history'.tr()),
+                ),
+              ],
+            ),
           ),
         ),
         Expanded(

@@ -48,6 +48,7 @@ dependencies:
   flutter_phoenix: ^1.1.1
   freezed_annotation: ^2.4.4
   json_annotation: ^4.9.0
+  camera: ^0.10.5+9
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +64,8 @@ flutter:
     - assets/translations/
     - .env
     - lib/core/assets/icons/
+    - lib/core/assets/icons/info/
+    - lib/core/assets/icons/white-socials/
     - lib/core/assets/icons/doctors/
     - lib/core/assets/icons/tabs/
     - lib/core/assets/icons/selector/
@@ -70,5 +73,6 @@ flutter:
     - lib/core/assets/icons/profile/
     - lib/core/assets/images/promos/
     - lib/core/assets/images/
+    - lib/core/assets/images/biometry/
     - lib/core/assets/images/logos/
     - lib/core/assets/icons/pin.png

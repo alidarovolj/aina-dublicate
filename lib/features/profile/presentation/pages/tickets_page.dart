@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/providers/requests/auth/user.dart';
-import 'package:intl/intl.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 class TicketsPage extends ConsumerWidget {

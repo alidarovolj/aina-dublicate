@@ -12,6 +12,26 @@
     "book_coworking": "Забронировать место в коворкинге",
     "book_conference": "Забронировать конференц-зал"
   },
+  "community": {
+    "title": "Сообщество",
+    "search": "Поиск по имени",
+    "empty": "Нет участников сообщества",
+    "error": "Ошибка при загрузке участников: {0}",
+    "copied": "Скопировано в буфер обмена",
+    "card": {
+      "phone_label": "Телефон",
+      "email_label": "Email",
+      "personal_info": "Персональная информация",
+      "work": "Работа",
+      "company_label": "Компания",
+      "employment": {
+        "contract": "Контракт",
+        "casual": "Временная",
+        "full_time": "Полная занятость",
+        "part_time": "Частичная занятость"
+      }
+    }
+  },
   "coworking_tabs": {
     "promenade": "Promenade",
     "community": "Сообщество",
@@ -102,7 +122,11 @@
     "request_error": "Произошла ошибка при выполнении запроса",
     "server_connection_error": "Ошибка соединения с сервером",
     "invalid_status_code": "Неверный статус код: {0}",
-    "error": "Ошибка авторизации: {0}"
+    "error": "Ошибка авторизации: {0}",
+    "service_auth_required": "Для заказа услуги пройдите регистрацию в приложении",
+    "service_biometric_required": "Для заказа услуги необходимо пройти биометрическую верификацию",
+    "register": "Зарегистрироваться",
+    "verify_biometric": "Пройти верификацию"
   },
   "about": {
     "title": "О приложении",
@@ -120,7 +144,11 @@
     "coupons": "Купоны",
     "contact_us": "Связаться с нами",
     "about_app": "О приложении",
-    "switch_to_coworking": "Переключить на профиль Aina Coworking"
+    "switch_to_coworking": "Переключить на профиль Aina Coworking",
+    "settings": {
+      "firstname_placeholder": "Имя",
+      "lastname_placeholder": "Фамилия"
+    }
   },
   "tickets": {
     "title": "Купоны",
@@ -138,6 +166,13 @@
     "no_coworkings": "В данный момент нет доступных коворкингов",
     "promotions_title": "Акции {0}",
     "no_active_promotions": "В данный момент нет акций",
+    "tariffs": {
+      "capacity": "до {0} человек",
+      "price_per_hour": "{0} ₸/час",
+      "fixed_place": "Закрепленное место",
+      "unfixed_place": "Незакрепленное место",
+      "all_benefits": "все преимущества"
+    },
     "calendar": {
       "select_date": "Выберите дату начала",
       "tariff_not_found": "Тариф не найден",
@@ -164,15 +199,8 @@
       "title": "Профиль коворкинга",
       "personal_info": "Персональная информация",
       "contact_us": "Связаться с нами",
-      "about_app": "О приложении"
-    },
-    "tariffs": {
-      "title": "Тарифы",
-      "all_benefits": "все преимущества",
-      "fixed_place": "Закрепленное место",
-      "unfixed_place": "Незакрепленное место",
-      "capacity": "до {0} человек",
-      "price_per_hour": "{0} ₸/час"
+      "about_app": "О приложении",
+      "biometric": "Биометрические данные"
     }
   },
   "scanner": {
@@ -209,5 +237,18 @@
     "title": "Услуги",
     "error": "Ошибка: {0}",
     "no_services": "В данный момент нет доступных услуг"
+  },
+  "biometry": {
+    "title": "Биометрические данные",
+    "description": "Пожалуйста, предоставьте биометрические данные для безопасного доступа в коворкинг",
+    "add_photo": "Добавить фото",
+    "added": "Фото добавлено",
+    "save": "Сохранить и проверить",
+    "waiting": "Обработка биометрических данных...",
+    "camera": {
+      "description": "Расположите лицо в центре овала и сделайте фото",
+      "permission_denied": "Для верификации необходим доступ к камере",
+      "initialization_error": "Ошибка инициализации камеры"
+    }
   }
 }

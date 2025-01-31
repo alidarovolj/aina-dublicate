@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/features/coworking/domain/models/coworking_service.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
@@ -7,8 +8,174 @@ import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:aina_flutter/features/coworking/presentation/widgets/conference_tariff_card.dart';
+import 'package:aina_flutter/core/providers/auth/auth_state.dart';
+import 'package:aina_flutter/core/widgets/base_modal.dart';
 
-class TariffCard extends StatelessWidget {
+mixin AuthCheckMixin {
+  Future<bool> checkAuthAndBiometric(
+      BuildContext context, WidgetRef ref) async {
+    final authState = ref.read(authProvider);
+    final isAuthorized = authState.isAuthenticated;
+
+    if (!isAuthorized) {
+      BaseModal.show(
+        context,
+        message: 'auth.service_auth_required'.tr(),
+        buttons: [
+          ModalButton(
+            label: 'auth.register'.tr(),
+            onPressed: () {
+              context.pop();
+              context.pushNamed('login');
+            },
+          ),
+        ],
+      );
+      return false;
+    }
+
+    final userData = authState.userData;
+    if (userData == null || userData['biometric_valid'] != true) {
+      BaseModal.show(
+        context,
+        message: 'auth.service_biometric_required'.tr(),
+        buttons: [
+          ModalButton(
+            label: 'auth.verify_biometric'.tr(),
+            onPressed: () {
+              context.pop();
+              context.pushNamed('biometric_verification');
+            },
+          ),
+        ],
+      );
+      return false;
+    }
+
+    return true;
+  }
+}
+
+class ConferenceTariffCard extends ConsumerWidget with AuthCheckMixin {
+  final CoworkingTariff tariff;
+  final int coworkingId;
+  final VoidCallback? onTap;
+  final VoidCallback? onDetailsTap;
+
+  const ConferenceTariffCard({
+    super.key,
+    required this.tariff,
+    required this.coworkingId,
+    this.onTap,
+    this.onDetailsTap,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      onTap: () async {
+        if (await checkAuthAndBiometric(context, ref)) {
+          onTap?.call();
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        child: Stack(
+          children: [
+            if (tariff.image?.url != null && tariff.image!.url.isNotEmpty)
+              Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  image: DecorationImage(
+                    image: NetworkImage(tariff.image!.url),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                foregroundDecoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.7),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Center(
+                  child: Icon(Icons.image_not_supported,
+                      color: Colors.grey, size: 48),
+                ),
+              ),
+            Positioned(
+              top: 16,
+              left: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'coworking.tariffs.capacity'
+                      .tr(args: [tariff.capacity.toString()]),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 16,
+              left: 16,
+              right: 16,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Text(
+                      tariff.title.toUpperCase(),
+                      style: GoogleFonts.lora(
+                        fontSize: 20,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    'coworking.tariffs.price_per_hour'
+                        .tr(args: [tariff.price.toString()]),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class TariffCard extends ConsumerWidget with AuthCheckMixin {
   final CoworkingTariff tariff;
   final VoidCallback? onTap;
   final VoidCallback? onDetailsTap;
@@ -22,7 +189,7 @@ class TariffCard extends StatelessWidget {
     this.onDetailsTap,
   });
 
-  void _showTariffDetails(BuildContext context) {
+  void _showTariffDetails(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -70,7 +237,12 @@ class TariffCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: InkWell(
-                        onTap: onTap,
+                        onTap: () async {
+                          if (await checkAuthAndBiometric(context, ref)) {
+                            context.pop();
+                            onTap?.call();
+                          }
+                        },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -96,7 +268,7 @@ class TariffCard extends StatelessWidget {
                     ),
                     Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.white,
                       ),
                       child: const Icon(
@@ -115,23 +287,25 @@ class TariffCard extends StatelessWidget {
     );
   }
 
-  void _navigateToCalendar(BuildContext context) {
-    context.pushNamed(
-      'coworking_calendar',
-      pathParameters: {
-        'id': coworkingId.toString(),
-        'tariffId': tariff.id.toString(),
-      },
-      queryParameters: {
-        'type': 'coworking',
-      },
-    );
+  void _navigateToCalendar(BuildContext context, WidgetRef ref) async {
+    if (await checkAuthAndBiometric(context, ref)) {
+      context.pushNamed(
+        'coworking_calendar',
+        pathParameters: {
+          'id': coworkingId.toString(),
+          'tariffId': tariff.id.toString(),
+        },
+        queryParameters: {
+          'type': 'coworking',
+        },
+      );
+    }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (tariff.type == 'COWORKING') {
-      return _buildCoworkingTariffCard(context);
+      return _buildCoworkingTariffCard(context, ref);
     }
     return ConferenceTariffCard(
       tariff: tariff,
@@ -141,7 +315,7 @@ class TariffCard extends StatelessWidget {
     );
   }
 
-  Widget _buildCoworkingTariffCard(BuildContext context) {
+  Widget _buildCoworkingTariffCard(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
@@ -162,7 +336,11 @@ class TariffCard extends StatelessWidget {
             ),
             // Content
             InkWell(
-              onTap: onTap,
+              onTap: () async {
+                if (await checkAuthAndBiometric(context, ref)) {
+                  onTap?.call();
+                }
+              },
               borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
@@ -187,8 +365,8 @@ class TariffCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       tariff.isFixed
-                          ? 'Закрепленное место'
-                          : 'Незакрепленное место',
+                          ? 'coworking.tariffs.fixed_place'.tr()
+                          : 'coworking.tariffs.unfixed_place'.tr(),
                       style: const TextStyle(
                         fontSize: 15,
                         color: AppColors.primary,
@@ -196,7 +374,7 @@ class TariffCard extends StatelessWidget {
                     ),
                     const Spacer(),
                     InkWell(
-                      onTap: () => _showTariffDetails(context),
+                      onTap: () => _showTariffDetails(context, ref),
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
@@ -210,9 +388,9 @@ class TariffCard extends StatelessWidget {
                           ),
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Text(
-                          'все преимущества',
-                          style: TextStyle(
+                        child: Text(
+                          'coworking.tariffs.all_benefits'.tr(),
+                          style: const TextStyle(
                             fontSize: 15,
                             color: AppColors.primary,
                           ),
@@ -225,7 +403,7 @@ class TariffCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: InkWell(
-                            onTap: () => _navigateToCalendar(context),
+                            onTap: () => _navigateToCalendar(context, ref),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
@@ -251,7 +429,7 @@ class TariffCard extends StatelessWidget {
                         ),
                         Container(
                           padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: Colors.white,
                           ),
                           child: const Icon(

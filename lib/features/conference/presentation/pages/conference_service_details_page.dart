@@ -8,7 +8,6 @@ import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:aina_flutter/core/types/slides.dart' as slides;
 import 'package:aina_flutter/features/conference/domain/models/conference_service.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
-import 'package:aina_flutter/core/api/api_client.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:google_fonts/google_fonts.dart';
 

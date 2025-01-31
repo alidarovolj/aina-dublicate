@@ -52,7 +52,7 @@ class _PhoneNumberInputScreenState
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('Ошибка при отправке кода'),
             ),
           );

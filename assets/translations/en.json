@@ -1,16 +1,36 @@
 {
   "buildings": {
-    "mall": "Shopping Mall",
+    "mall": "Mall",
     "coworking": "Coworking"
   },
   "bookings": {
     "active": "Active",
     "history": "History",
-    "auth_required": "Sign in to your account to see your bookings list",
-    "authorize": "Authorize",
+    "auth_required": "Sign in to see your bookings",
+    "authorize": "Sign In",
     "no_bookings": "You don't have any bookings yet, but that's easy to fix! Book something right now.",
     "book_coworking": "Book a coworking space",
     "book_conference": "Book a conference room"
+  },
+  "community": {
+    "title": "Community",
+    "search": "Search by name",
+    "empty": "No community members",
+    "error": "Error loading members: {0}",
+    "copied": "Copied to clipboard",
+    "card": {
+      "phone_label": "Phone",
+      "email_label": "Email",
+      "personal_info": "Personal Information",
+      "work": "Work",
+      "company_label": "Company",
+      "employment": {
+        "contract": "Contract",
+        "casual": "Casual",
+        "full_time": "Full Time",
+        "part_time": "Part Time"
+      }
+    }
   },
   "coworking_tabs": {
     "promenade": "Promenade",
@@ -102,7 +122,11 @@
     "request_error": "An error occurred while executing the request",
     "server_connection_error": "Server connection error",
     "invalid_status_code": "Invalid status code: {0}",
-    "error": "Authorization error: {0}"
+    "error": "Authorization error: {0}",
+    "service_auth_required": "Please register in the app to order the service",
+    "service_biometric_required": "Biometric verification is required to order the service",
+    "register": "Register",
+    "verify_biometric": "Verify Biometric"
   },
   "about": {
     "title": "About App",
@@ -120,7 +144,11 @@
     "coupons": "Coupons",
     "contact_us": "Contact Us",
     "about_app": "About App",
-    "switch_to_coworking": "Switch to Aina Coworking profile"
+    "switch_to_coworking": "Switch to Aina Coworking profile",
+    "settings": {
+      "firstname_placeholder": "First name",
+      "lastname_placeholder": "Last name"
+    }
   },
   "tickets": {
     "title": "Coupons",
@@ -138,6 +166,13 @@
     "no_coworkings": "No coworking spaces available at the moment",
     "promotions_title": "Promotions {0}",
     "no_active_promotions": "No active promotions at the moment",
+    "tariffs": {
+      "capacity": "up to {0} people",
+      "price_per_hour": "{0} ₸/hour",
+      "fixed_place": "Fixed place",
+      "unfixed_place": "Unfixed place",
+      "all_benefits": "all benefits"
+    },
     "calendar": {
       "select_date": "Select start date",
       "tariff_not_found": "Tariff not found",
@@ -164,15 +199,8 @@
       "title": "Coworking Profile",
       "personal_info": "Personal Information",
       "contact_us": "Contact Us",
-      "about_app": "About App"
-    },
-    "tariffs": {
-      "title": "Tariffs",
-      "all_benefits": "all benefits",
-      "fixed_place": "Fixed place",
-      "unfixed_place": "Unfixed place",
-      "capacity": "up to {0} people",
-      "price_per_hour": "{0} ₸/hour"
+      "about_app": "About App",
+      "biometric": "Biometric Data"
     }
   },
   "scanner": {
@@ -209,5 +237,22 @@
     "title": "Services",
     "error": "Error: {0}",
     "no_services": "There are no available services at the moment"
+  },
+  "biometry": {
+    "title": "Biometric Data",
+    "description": "Please provide biometric data for secure access to coworking",
+    "add_photo": "Add Photo",
+    "added": "Photo added",
+    "save": "Save and verify",
+    "waiting": "Processing biometric data...",
+    "camera": {
+      "description": "Position your face in the center of the oval and take a photo",
+      "permission_denied": "Camera access is required for verification",
+      "initialization_error": "Camera initialization error"
+    }
+  },
+  "camera": {
+    "permission_denied": "Camera permission is required for biometric verification",
+    "initialization_error": "Failed to initialize camera"
   }
 }

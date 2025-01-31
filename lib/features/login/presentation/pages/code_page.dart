@@ -321,7 +321,7 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
                                       : 'auth.resend_code_timer'.tr(args: [
                                           _timeLeft.toString().padLeft(2, '0')
                                         ]),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 15,
                                     color: AppColors.secondary,
                                   ),

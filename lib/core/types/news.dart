@@ -1,5 +1,4 @@
 import 'package:aina_flutter/core/types/button.dart';
-import 'package:aina_flutter/core/types/image.dart';
 import 'package:aina_flutter/core/types/building.dart';
 import 'package:intl/intl.dart';
 

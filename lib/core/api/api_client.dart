@@ -73,7 +73,7 @@ class ApiClient {
       onRequest: (options, handler) {
         // Only cache GET requests
         if (options.method == 'GET') {
-          final cacheKey = '${options.uri}_${_currentLocale}';
+          final cacheKey = '${options.uri}_$_currentLocale';
           final cachedResponse = _requestCache[cacheKey];
           if (cachedResponse != null) {
             print('Returning cached response for $cacheKey');
@@ -85,7 +85,7 @@ class ApiClient {
       onResponse: (response, handler) {
         // Cache the response if it's a GET request
         if (response.requestOptions.method == 'GET') {
-          final cacheKey = '${response.requestOptions.uri}_${_currentLocale}';
+          final cacheKey = '${response.requestOptions.uri}_$_currentLocale';
           _requestCache[cacheKey] = response;
           // Notify about new data
           _updateController.add(response.requestOptions.uri.toString());

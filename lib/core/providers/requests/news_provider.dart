@@ -10,12 +10,18 @@ final newsProvider =
 
 final _newsProvider =
     FutureProvider.family<NewsResponse, NewsParams>((ref, params) async {
+  final queryParams = <String, dynamic>{
+    'page': params.page,
+  };
+
+  if (params.buildingId != null) {
+    queryParams['building_id'] = params.buildingId;
+  }
+
   final response = await ApiClient().dio.get(
-    '/api/aina/news',
-    queryParameters: {
-      'page': params.page,
-    },
-  );
+        '/api/aina/news',
+        queryParameters: queryParams,
+      );
 
   print('News API response data type: ${response.data['data'].runtimeType}');
   print('News API response: ${response.data}');

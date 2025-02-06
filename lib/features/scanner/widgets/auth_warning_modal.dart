@@ -52,25 +52,13 @@ class AuthWarningModal {
                     return;
                   }
 
-                  // Get ProviderContainer
-                  final container = ProviderScope.containerOf(context);
-                  final userProfileAsync = container.read(userProvider);
-
-                  userProfileAsync.when(
-                    data: (userProfile) {
-                      if (userProfile.firstName.isEmpty ||
-                          userProfile.lastName.isEmpty) {
-                        showError(context,
-                            'Пожалуйста, заполните имя и фамилию в профиле');
-                        return;
-                      }
-                      context.go('/malls/$mallId/promotions/$promotionId/qr');
+                  context.goNamed(
+                    'promotion_qr',
+                    pathParameters: {
+                      'promotionId': promotionId,
                     },
-                    loading: () {
-                      showError(context, 'Загрузка данных профиля...');
-                    },
-                    error: (error, stack) {
-                      showError(context, 'Ошибка при загрузке данных профиля');
+                    queryParameters: {
+                      'mallId': mallId,
                     },
                   );
                 },

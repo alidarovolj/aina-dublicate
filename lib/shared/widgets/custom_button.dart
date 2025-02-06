@@ -111,7 +111,7 @@ class CustomButton extends ConsumerWidget {
       case ButtonSize.small:
         return const EdgeInsets.symmetric(horizontal: 12, vertical: 8);
       case ButtonSize.normal:
-        return const EdgeInsets.symmetric(horizontal: 16, vertical: 12);
+        return const EdgeInsets.symmetric(horizontal: 12, vertical: 12);
       case ButtonSize.big:
         return const EdgeInsets.symmetric(horizontal: 24, vertical: 16);
     }

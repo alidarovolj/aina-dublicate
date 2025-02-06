@@ -11,6 +11,17 @@ import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:aina_flutter/features/coworking/domain/models/order_request.dart';
+import 'package:aina_flutter/features/coworking/domain/services/order_service.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/order_details_page.dart';
+import 'package:aina_flutter/core/api/api_client.dart';
+import 'package:aina_flutter/core/providers/api_client_provider.dart';
+import 'package:shimmer/shimmer.dart';
+
+final orderServiceProvider = Provider<OrderService>((ref) {
+  final apiClient = ref.watch(apiClientProvider);
+  return OrderService(apiClient);
+});
 
 class CoworkingCalendarPage extends ConsumerStatefulWidget {
   final int tariffId;
@@ -42,10 +53,14 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
     'end_at': '',
   };
 
+  late final OrderService _orderService;
+
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    final apiClient = ref.read(apiClientProvider);
+    _orderService = OrderService(apiClient);
 
     // Generate initial months for the first year
     months = List.generate(
@@ -343,7 +358,7 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
   Widget _buildCalendar() {
     return ListView.builder(
       controller: _scrollController,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
       itemCount: months.length,
       itemBuilder: (context, index) {
         final month = months[index];
@@ -575,15 +590,48 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
     );
   }
 
-  void _handlePayment() async {
-    if (formData['start_at'].isEmpty || formData['end_at'].isEmpty) return;
+  Future<void> _handlePaymentPress() async {
+    if (selectedDate == null || endDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('coworking.calendar.select_date'.tr()),
+        ),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
 
     try {
-      // TODO: Implement payment handling
-      // await services.setPayment(formData);
-      // context.go('/payment-success');
+      final orderService = ref.read(orderServiceProvider);
+      final orderRequest = OrderRequest(
+        startAt: formData['start_at'],
+        endAt: formData['end_at'],
+        serviceId: widget.tariffId,
+      );
+
+      final order = await orderService.createOrder(orderRequest);
+
+      setState(() => isLoading = false);
+
+      if (!mounted) return;
+
+      context.pushNamed(
+        'order_details',
+        pathParameters: {
+          'id': order.id.toString(),
+        },
+      );
     } catch (e) {
-      print('Error in payment: $e');
+      print('Error creating order: $e');
+      setState(() => isLoading = false);
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('coworking.calendar.order_error'.tr()),
+        ),
+      );
     }
   }
 
@@ -598,7 +646,7 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
           body: Stack(
             children: [
               if (isLoading)
-                const Center(child: CircularProgressIndicator())
+                _buildSkeletonLoader()
               else
                 tariffDetailsState.when(
                   data: (tariffDetails) {
@@ -632,7 +680,7 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
                       children: [
                         const SizedBox(height: 64),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -687,11 +735,10 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
                               CustomButton(
                                 label: 'coworking.calendar.proceed_to_payment'
                                     .tr(),
-                                onPressed: formData['start_at'].isNotEmpty &&
-                                        formData['end_at'].isNotEmpty
-                                    ? _handlePayment
-                                    : null,
+                                onPressed:
+                                    isLoading ? null : _handlePaymentPress,
                                 isFullWidth: true,
+                                isLoading: isLoading,
                               ),
                             ],
                           ),
@@ -699,8 +746,7 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
                       ],
                     );
                   },
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                  loading: () => _buildSkeletonLoader(),
                   error: (error, stack) => Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -725,15 +771,260 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
               CustomHeader(
                 title: tariffDetailsState.whenOrNull(
                       data: (tariffDetails) =>
-                          tariffDetails?.title ?? 'Выбор даты',
+                          tariffDetails?.title ??
+                          'coworking.calendar.page_title'.tr(),
                     ) ??
-                    'Выбор даты',
+                    'coworking.calendar.page_title'.tr(),
                 type: HeaderType.pop,
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSkeletonLoader() {
+    return Column(
+      children: [
+        const SizedBox(height: 64),
+        // Calendar title and info button
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Shimmer.fromColors(
+                baseColor: Colors.grey[100]!,
+                highlightColor: Colors.grey[300]!,
+                child: Container(
+                  width: 150,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+              Shimmer.fromColors(
+                baseColor: Colors.grey[100]!,
+                highlightColor: Colors.grey[300]!,
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Calendar grid
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(12),
+            itemCount: 3, // Show 3 months
+            itemBuilder: (context, monthIndex) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Month title
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    child: Shimmer.fromColors(
+                      baseColor: Colors.grey[100]!,
+                      highlightColor: Colors.grey[300]!,
+                      child: Container(
+                        width: 120,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Weekday headers
+                  Row(
+                    children: List.generate(
+                      7,
+                      (index) => Expanded(
+                        child: Center(
+                          child: Shimmer.fromColors(
+                            baseColor: Colors.grey[100]!,
+                            highlightColor: Colors.grey[300]!,
+                            child: Container(
+                              width: 20,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Calendar days grid
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 7,
+                      childAspectRatio: 1.2,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                    ),
+                    itemCount: 42, // 6 weeks * 7 days
+                    itemBuilder: (context, index) {
+                      return Shimmer.fromColors(
+                        baseColor: Colors.grey[100]!,
+                        highlightColor: Colors.grey[300]!,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              );
+            },
+          ),
+        ),
+        // Bottom info panel
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Cost row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[100]!,
+                    highlightColor: Colors.grey[300]!,
+                    child: Container(
+                      width: 80,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[100]!,
+                    highlightColor: Colors.grey[300]!,
+                    child: Container(
+                      width: 100,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Start date row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[100]!,
+                    highlightColor: Colors.grey[300]!,
+                    child: Container(
+                      width: 120,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[100]!,
+                    highlightColor: Colors.grey[300]!,
+                    child: Container(
+                      width: 150,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // End date row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[100]!,
+                    highlightColor: Colors.grey[300]!,
+                    child: Container(
+                      width: 120,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[100]!,
+                    highlightColor: Colors.grey[300]!,
+                    child: Container(
+                      width: 150,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Payment button
+              Shimmer.fromColors(
+                baseColor: Colors.grey[100]!,
+                highlightColor: Colors.grey[300]!,
+                child: Container(
+                  width: double.infinity,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

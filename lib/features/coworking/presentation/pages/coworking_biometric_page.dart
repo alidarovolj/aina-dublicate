@@ -6,10 +6,12 @@ import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/widgets/custom_text_field.dart';
 import 'package:aina_flutter/features/coworking/providers/biometric_provider.dart';
-import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/widgets/error_dialog.dart';
 import 'package:aina_flutter/core/widgets/tariffs_modal.dart';
 import 'package:aina_flutter/features/coworking/presentation/widgets/biometric_camera_modal.dart';
+import 'package:dio/dio.dart';
+import 'package:aina_flutter/core/widgets/base_modal.dart';
+import 'package:shimmer/shimmer.dart';
 
 class CoworkingBiometricPage extends ConsumerStatefulWidget {
   final int coworkingId;
@@ -105,9 +107,51 @@ class _CoworkingBiometricPageState
   }
 
   Future<void> _openCamera() async {
-    final result = await BiometricCameraModal.show(context);
-    if (result == true) {
-      ref.read(biometricRefreshProvider.notifier).state++;
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final result = await BiometricCameraModal.show(context);
+
+      if (result == true && mounted) {
+        // Cancel any existing requests
+        final service = BiometricService();
+        service.cancelRequests();
+
+        // Wait for navigation to complete and UI to settle
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        // Trigger provider refresh
+        if (mounted) {
+          ref.invalidate(biometricDataProvider);
+
+          // Force an immediate fetch of new data
+          await ref.read(biometricDataProvider.future);
+
+          // Update text fields with fresh data
+          final freshData = await service.getBiometricInfo();
+          if (mounted) {
+            setState(() {
+              _firstnameController.text = freshData.firstname ?? '';
+              _lastnameController.text = freshData.lastname ?? '';
+            });
+          }
+        }
+      }
+    } catch (e) {
+      print("Error with camera: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -126,7 +170,27 @@ class _CoworkingBiometricPageState
         });
       }
     } catch (e) {
-      _showError(e.toString());
+      if (e is DioException && e.response?.statusCode == 500) {
+        final errorData = e.response?.data;
+        final errorMessage = errorData is Map
+            ? errorData['message'] ?? 'Unknown error'
+            : 'Unknown error';
+
+        if (mounted) {
+          BaseModal.show(
+            context,
+            message: errorMessage,
+            buttons: [
+              ModalButton(
+                label: 'common.ok'.tr(),
+                type: ButtonType.filled,
+              ),
+            ],
+          );
+        }
+      } else {
+        _showError(e.toString());
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -154,7 +218,9 @@ class _CoworkingBiometricPageState
                     child: Column(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(62),
+                          width: MediaQuery.of(context).size.width,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 62),
                           decoration: const BoxDecoration(
                             image: DecorationImage(
                               image: AssetImage(
@@ -163,13 +229,21 @@ class _CoworkingBiometricPageState
                               alignment: Alignment.bottomRight,
                             ),
                           ),
-                          child: Text(
-                            'biometry.description'.tr(),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.5,
+                                child: Text(
+                                  'biometry.description'.tr(),
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         Padding(
@@ -266,7 +340,7 @@ class _CoworkingBiometricPageState
                                     onPressed: _sendToValidate,
                                     label: 'biometry.save'.tr(),
                                     isFullWidth: true,
-                                    type: ButtonType.bordered,
+                                    type: ButtonType.filled,
                                   ),
                                 ),
                             ],
@@ -275,9 +349,7 @@ class _CoworkingBiometricPageState
                       ],
                     ),
                   ),
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  loading: () => _buildSkeletonLoader(),
                   error: (error, stack) => Center(
                     child: Text(error.toString()),
                   ),
@@ -295,13 +367,13 @@ class _CoworkingBiometricPageState
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const CircularProgressIndicator(
-                          color: Colors.white,
+                          color: AppColors.secondary,
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'biometry.waiting'.tr(),
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.secondary,
                             fontSize: 16,
                           ),
                         ),
@@ -321,6 +393,133 @@ class _CoworkingBiometricPageState
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSkeletonLoader() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // Banner section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 62),
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('lib/core/assets/images/biometry/card.png'),
+                fit: BoxFit.cover,
+                alignment: Alignment.bottomRight,
+              ),
+            ),
+            child: Shimmer.fromColors(
+              baseColor: Colors.white.withOpacity(0.3),
+              highlightColor: Colors.white.withOpacity(0.5),
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.5,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ),
+          // Form section
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Section title
+                Shimmer.fromColors(
+                  baseColor: Colors.grey[100]!,
+                  highlightColor: Colors.grey[300]!,
+                  child: Container(
+                    width: 150,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // First name field
+                Shimmer.fromColors(
+                  baseColor: Colors.grey[100]!,
+                  highlightColor: Colors.grey[300]!,
+                  child: Container(
+                    width: double.infinity,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Last name field
+                Shimmer.fromColors(
+                  baseColor: Colors.grey[100]!,
+                  highlightColor: Colors.grey[300]!,
+                  child: Container(
+                    width: double.infinity,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Photo section title
+                Shimmer.fromColors(
+                  baseColor: Colors.grey[100]!,
+                  highlightColor: Colors.grey[300]!,
+                  child: Container(
+                    width: 120,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Photo placeholder or button
+                Center(
+                  child: Shimmer.fromColors(
+                    baseColor: Colors.grey[100]!,
+                    highlightColor: Colors.grey[300]!,
+                    child: Container(
+                      width: MediaQuery.of(context).size.width * 0.5,
+                      height: MediaQuery.of(context).size.width * 0.5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 40),
+                // Save button
+                Shimmer.fromColors(
+                  baseColor: Colors.grey[100]!,
+                  highlightColor: Colors.grey[300]!,
+                  child: Container(
+                    width: double.infinity,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

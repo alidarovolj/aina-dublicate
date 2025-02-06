@@ -6,28 +6,31 @@ import 'package:url_launcher/url_launcher.dart';
 // Import your auth provider
 
 class ButtonNavigationHandler {
-  static Future<void> handleNavigation(
+  static void handleNavigation(
     BuildContext context,
     WidgetRef ref,
-    ButtonConfig? button,
-  ) async {
-    if (button == null) return;
+    ButtonConfig? config,
+  ) {
+    if (config == null) return;
 
-    if (button.isInternal == false) {
-      final link = button.link;
-      if (link != null) {
-        final uri = Uri.parse(link);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        }
-      }
-      return;
+    if (config.isInternal == true && config.internal != null) {
+      _handleInternalNavigation(context, ref, config);
+    } else if (config.link != null) {
+      _handleExternalNavigation(config.link!);
     }
+  }
 
-    final internal = button.internal;
+  static Future<void> _handleInternalNavigation(
+    BuildContext context,
+    WidgetRef ref,
+    ButtonConfig config,
+  ) async {
+    final internal = config.internal;
     if (internal != null) {
       final model = internal.model;
       final id = internal.id;
+      if (id == null) return; // Skip navigation if id is null
+
       final isAuthRequired = internal.isAuthRequired;
 
       // Check auth if required
@@ -66,6 +69,13 @@ class ButtonNavigationHandler {
         // Redirect to profile/auth if needed
         context.pushNamed('profile');
       }
+    }
+  }
+
+  static Future<void> _handleExternalNavigation(String link) async {
+    final uri = Uri.parse(link);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 }

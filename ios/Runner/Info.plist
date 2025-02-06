@@ -27,7 +27,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>We need access to your camera for biometric verification</string>
+	<string>Camera access is required for document scanning</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>Приложению требуется доступ к геолокации для отображения вашего местоположения на карте</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
@@ -55,5 +55,25 @@
 	</array>
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>aina</string>
+			</array>
+			<key>CFBundleURLName</key>
+			<string>kz.aina-fashion</string>
+		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>homebank</string>
+	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

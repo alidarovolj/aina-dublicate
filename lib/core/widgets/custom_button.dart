@@ -8,6 +8,11 @@ enum ButtonType { normal, filled, bordered, light }
 
 enum ButtonSize { small, normal, big }
 
+enum CustomButtonStyle {
+  filled,
+  outlined,
+}
+
 class CustomButton extends ConsumerWidget {
   final ButtonConfig? button;
   final String? label;
@@ -22,6 +27,7 @@ class CustomButton extends ConsumerWidget {
   final Widget? icon;
   final bool isLoading;
   final Color? textColor;
+  final CustomButtonStyle style;
 
   const CustomButton({
     super.key,
@@ -38,6 +44,7 @@ class CustomButton extends ConsumerWidget {
     this.icon,
     this.isLoading = false,
     this.textColor,
+    this.style = CustomButtonStyle.filled,
   });
 
   @override
@@ -62,14 +69,20 @@ class CustomButton extends ConsumerWidget {
                 }),
         style: ElevatedButton.styleFrom(
           backgroundColor: _getBackgroundColor(buttonColor),
+          foregroundColor: _getTextColor(),
           padding: _getPadding(),
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(4),
-            side: type == ButtonType.bordered
-                ? const BorderSide(color: AppColors.primary)
+            side: type == ButtonType.bordered ||
+                    style == CustomButtonStyle.outlined
+                ? BorderSide(
+                    color: isEnabled ? AppColors.primary : Colors.grey[300]!,
+                  )
                 : BorderSide.none,
           ),
+          disabledBackgroundColor: Colors.grey[200],
+          disabledForegroundColor: Colors.grey[400],
         ),
         child: isLoading
             ? const SizedBox(
@@ -85,7 +98,12 @@ class CustomButton extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (icon != null) ...[
-                    icon!,
+                    IconTheme(
+                      data: IconThemeData(
+                        color: isEnabled ? _getTextColor() : Colors.grey[400],
+                      ),
+                      child: icon!,
+                    ),
                     const SizedBox(width: 8),
                   ],
                   Flexible(
@@ -111,7 +129,7 @@ class CustomButton extends ConsumerWidget {
       case ButtonSize.small:
         return const EdgeInsets.symmetric(horizontal: 12, vertical: 8);
       case ButtonSize.normal:
-        return const EdgeInsets.symmetric(horizontal: 16, vertical: 12);
+        return const EdgeInsets.symmetric(horizontal: 12, vertical: 12);
       case ButtonSize.big:
         return const EdgeInsets.symmetric(horizontal: 24, vertical: 16);
     }
@@ -141,7 +159,7 @@ class CustomButton extends ConsumerWidget {
   }
 
   Color _getBackgroundColor(String? buttonColor) {
-    if (!isEnabled) return AppColors.grey2;
+    if (!isEnabled) return Colors.grey[200]!;
     if (type == ButtonType.bordered) return Colors.white;
     if (buttonColor != null && buttonColor.startsWith('#')) {
       return Color(int.parse(buttonColor.replaceAll('#', '0xFF')));
@@ -151,7 +169,7 @@ class CustomButton extends ConsumerWidget {
   }
 
   Color _getTextColor() {
-    if (!isEnabled) return AppColors.grey2;
+    if (!isEnabled) return Colors.grey[400]!;
     if (type == ButtonType.bordered) return AppColors.primary;
     if (type == ButtonType.light) return AppColors.primary;
     return Colors.white;

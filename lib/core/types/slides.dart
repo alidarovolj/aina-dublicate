@@ -60,14 +60,14 @@ class Button {
   final String label;
   final String? color;
   final bool isInternal;
-  final String link;
+  final String? link;
   final ButtonInternal? internal;
 
   Button({
     required this.label,
     this.color,
     required this.isInternal,
-    required this.link,
+    this.link,
     this.internal,
   });
 
@@ -76,7 +76,7 @@ class Button {
       label: json['label'] as String,
       color: json['color'],
       isInternal: json['is_internal'] as bool,
-      link: json['link'] as String,
+      link: json['link'],
       internal: json['internal'] != null
           ? ButtonInternal.fromJson(json['internal'])
           : null,
@@ -86,23 +86,26 @@ class Button {
 
 class ButtonInternal {
   final String model;
-  final int id;
-  final String buildingType;
+  final int? id;
+  final String? buildingType;
   final bool isAuthRequired;
+  final bool? isQr;
 
   ButtonInternal({
     required this.model,
-    required this.id,
-    required this.buildingType,
+    this.id,
+    this.buildingType,
     required this.isAuthRequired,
+    this.isQr,
   });
 
   factory ButtonInternal.fromJson(Map<String, dynamic> json) {
     return ButtonInternal(
-      model: json['model'] as String,
-      id: json['id'] as int,
-      buildingType: json['building_type'] as String,
-      isAuthRequired: json['is_auth_required'] as bool,
+      model: json['model'] as String? ?? '',
+      id: json['id'] as int?,
+      buildingType: json['building_type'] as String?,
+      isAuthRequired: json['is_auth_required'] as bool? ?? false,
+      isQr: json['is_qr'] as bool?,
     );
   }
 }

@@ -279,7 +279,7 @@ class StoreListItem extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(
               vertical: 12,
-              horizontal: 16,
+              horizontal: 12,
             ),
             alignment: Alignment.centerLeft,
             child: Column(

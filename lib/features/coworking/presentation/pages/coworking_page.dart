@@ -14,6 +14,7 @@ import 'package:aina_flutter/core/types/news_card_type.dart';
 import 'package:aina_flutter/core/types/card_type.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shimmer/shimmer.dart';
 
 class CoworkingPage extends ConsumerWidget {
   final int coworkingId;
@@ -28,10 +29,18 @@ class CoworkingPage extends ConsumerWidget {
     final buildingsAsync = ref.watch(buildingsProvider);
 
     return buildingsAsync.when(
-      loading: () => const Scaffold(
-        body: Padding(
-          padding: EdgeInsets.symmetric(vertical: AppLength.xxl),
-          child: Center(child: CircularProgressIndicator()),
+      loading: () => Scaffold(
+        backgroundColor: AppColors.primary,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              _buildSkeletonLoader(),
+              const CustomHeader(
+                title: '',
+                type: HeaderType.close,
+              ),
+            ],
+          ),
         ),
       ),
       error: (error, stack) => Center(child: Text('Error: $error')),
@@ -168,6 +177,199 @@ class CoworkingPage extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSkeletonLoader() {
+    return Container(
+      color: AppColors.appBg,
+      margin: const EdgeInsets.only(top: 64), // Height of CustomHeader
+      child: CustomScrollView(
+        physics: const ClampingScrollPhysics(),
+        slivers: [
+          // Description skeleton
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(AppLength.xs),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: List.generate(
+                  3,
+                  (index) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Shimmer.fromColors(
+                      baseColor: Colors.grey[100]!,
+                      highlightColor: Colors.grey[300]!,
+                      child: Container(
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Image carousel skeleton
+          SliverToBoxAdapter(
+            child: Shimmer.fromColors(
+              baseColor: Colors.grey[100]!,
+              highlightColor: Colors.grey[300]!,
+              child: Container(
+                height: 200,
+                color: Colors.grey[300],
+              ),
+            ),
+          ),
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 20),
+          ),
+          // Mall info skeleton
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(AppLength.xs),
+              child: Column(
+                children: List.generate(
+                  3,
+                  (index) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Row(
+                      children: [
+                        Shimmer.fromColors(
+                          baseColor: Colors.grey[100]!,
+                          highlightColor: Colors.grey[300]!,
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Shimmer.fromColors(
+                            baseColor: Colors.grey[100]!,
+                            highlightColor: Colors.grey[300]!,
+                            child: Container(
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Services skeleton
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(AppLength.xs),
+              child: Shimmer.fromColors(
+                baseColor: Colors.grey[100]!,
+                highlightColor: Colors.grey[300]!,
+                child: Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Promotions skeleton
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(AppLength.xs),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[100]!,
+                    highlightColor: Colors.grey[300]!,
+                    child: Container(
+                      width: 120,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 200,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: 3,
+                      itemBuilder: (context, index) => Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: Shimmer.fromColors(
+                          baseColor: Colors.grey[100]!,
+                          highlightColor: Colors.grey[300]!,
+                          child: Container(
+                            width: 280,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // News skeleton
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(AppLength.xs),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[100]!,
+                    highlightColor: Colors.grey[300]!,
+                    child: Container(
+                      width: 120,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[100]!,
+                    highlightColor: Colors.grey[300]!,
+                    child: Container(
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

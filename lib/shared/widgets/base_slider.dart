@@ -37,8 +37,9 @@ class _CarouselWithIndicatorState extends State<CarouselWithIndicator> {
                 final slide = widget.slideList[index];
                 return GestureDetector(
                   onTap: () {
-                    if (slide.button?.link != null) {
-                      launchUrl(slide.button!.link);
+                    final link = slide.button?.link;
+                    if (link != null) {
+                      launchUrl(link);
                     }
                   },
                   child: Container(

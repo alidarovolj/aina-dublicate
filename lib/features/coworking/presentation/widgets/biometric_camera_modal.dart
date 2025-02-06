@@ -232,12 +232,32 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
       await service.uploadBiometricPhoto(File(image.path));
       print("Photo uploaded successfully");
 
-      // Make a GET request to update data
-      await service.getBiometricInfo();
-      ref.invalidate(biometricDataProvider);
+      // First refresh the data before popping
+      if (!_isDisposed) {
+        ref.read(biometricRefreshProvider.notifier).state++;
 
+        // Wait for the new data with retries
+        int retryCount = 0;
+        const maxRetries = 3;
+        const retryDelay = Duration(milliseconds: 500);
+
+        while (retryCount < maxRetries && !_isDisposed) {
+          try {
+            await service.getBiometricInfo();
+            break;
+          } catch (e) {
+            print("Retry ${retryCount + 1}/$maxRetries failed: $e");
+            retryCount++;
+            if (retryCount < maxRetries) {
+              await Future.delayed(retryDelay * retryCount);
+            }
+          }
+        }
+      }
+
+      // Then pop to return to previous screen
       if (mounted) {
-        context.pop(true);
+        Navigator.of(context).pop(true);
       }
     } catch (e) {
       print("Error during photo capture: $e");

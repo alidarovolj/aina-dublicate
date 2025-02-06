@@ -10,15 +10,18 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:aina_flutter/core/widgets/base_slider.dart';
 import 'package:aina_flutter/core/types/slides.dart' as slides;
 import 'package:aina_flutter/features/coworking/presentation/widgets/tariff_card.dart';
+import 'package:shimmer/shimmer.dart';
 
 class CoworkingServiceDetailsPage extends ConsumerWidget {
   final CoworkingService service;
   final List<CoworkingTariff> tariffs;
+  final int coworkingId;
 
   const CoworkingServiceDetailsPage({
     super.key,
     required this.service,
     required this.tariffs,
+    required this.coworkingId,
   });
 
   @override
@@ -110,12 +113,12 @@ class CoworkingServiceDetailsPage extends ConsumerWidget {
                         final tariff = tariffs[index];
                         return TariffCard(
                           tariff: tariff,
-                          coworkingId: service.id,
+                          coworkingId: coworkingId,
                           onDetailsTap: () {
                             context.pushNamed(
                               'coworking_calendar',
                               pathParameters: {
-                                'id': service.id.toString(),
+                                'id': coworkingId.toString(),
                                 'tariffId': tariff.id.toString()
                               },
                               queryParameters: {
@@ -133,6 +136,122 @@ class CoworkingServiceDetailsPage extends ConsumerWidget {
             ),
             CustomHeader(
               title: service.title,
+              type: HeaderType.pop,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget buildSkeletonLoader() {
+    return Container(
+      color: AppColors.primary,
+      child: SafeArea(
+        child: Stack(
+          children: [
+            Container(
+              color: Colors.white,
+              margin: const EdgeInsets.only(top: 64),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Image carousel skeleton
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey[100]!,
+                      highlightColor: Colors.grey[300]!,
+                      child: Container(
+                        height: 200,
+                        color: Colors.grey[300],
+                      ),
+                    ),
+                    // Description skeleton
+                    Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: List.generate(
+                          4,
+                          (index) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Shimmer.fromColors(
+                              baseColor: Colors.grey[100]!,
+                              highlightColor: Colors.grey[300]!,
+                              child: Container(
+                                width: double.infinity,
+                                height: 16,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: AppLength.none,
+                        horizontal: AppLength.xs,
+                      ),
+                      child: Divider(
+                        color: Colors.black12,
+                        thickness: 1,
+                      ),
+                    ),
+                    // Tariffs title skeleton
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Shimmer.fromColors(
+                        baseColor: Colors.grey[100]!,
+                        highlightColor: Colors.grey[300]!,
+                        child: Container(
+                          width: 150,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Tariffs grid skeleton
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 8.0,
+                          mainAxisSpacing: 8.0,
+                          childAspectRatio: 0.8,
+                        ),
+                        itemCount: 4, // Show 4 tariff skeletons
+                        itemBuilder: (context, index) {
+                          return Shimmer.fromColors(
+                            baseColor: Colors.grey[100]!,
+                            highlightColor: Colors.grey[300]!,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
+            ),
+            const CustomHeader(
+              title: '',
               type: HeaderType.pop,
             ),
           ],

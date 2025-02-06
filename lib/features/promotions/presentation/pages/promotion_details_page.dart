@@ -213,34 +213,54 @@ class PromotionDetailsPage extends ConsumerWidget {
                                 },
                               ),
                               const SizedBox(height: AppLength.sm),
-                              CustomButton(
-                                label: 'promotions.scan_qr'.tr(),
-                                isFullWidth: true,
-                                backgroundColor: AppColors.primary,
-                                onPressed: () {
-                                  final authState = ref.read(authProvider);
-                                  final mallId =
-                                      promotion.building?.id.toString();
-                                  if (!authState.isAuthenticated) {
-                                    AuthWarningModal.show(
-                                      context,
-                                      promotionId: id.toString(),
-                                      mallId: mallId,
-                                    );
-                                  } else if (!authState.hasCompletedProfile) {
-                                    AuthWarningModal.show(
-                                      context,
-                                      isProfileIncomplete: true,
-                                      promotionId: id.toString(),
-                                      mallId: mallId,
-                                    );
-                                  } else {
-                                    context.push(
-                                      '/malls/$mallId/promotions/${promotion.id}/qr',
-                                    );
-                                  }
-                                },
-                              ),
+                              if (promotion.type != 'DEFAULT')
+                                CustomButton(
+                                  label: 'promotions.scan_qr'.tr(),
+                                  isFullWidth: true,
+                                  backgroundColor: AppColors.primary,
+                                  onPressed: () {
+                                    final authState = ref.read(authProvider);
+                                    final mallId =
+                                        promotion.building?.id.toString();
+
+                                    if (mallId == null) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                'promotions.error.no_mall'
+                                                    .tr())),
+                                      );
+                                      return;
+                                    }
+
+                                    if (!authState.isAuthenticated) {
+                                      AuthWarningModal.show(
+                                        context,
+                                        promotionId: id.toString(),
+                                        mallId: mallId,
+                                      );
+                                    } else if (!authState.hasCompletedProfile) {
+                                      AuthWarningModal.show(
+                                        context,
+                                        isProfileIncomplete: true,
+                                        promotionId: id.toString(),
+                                        mallId: mallId,
+                                      );
+                                    } else {
+                                      context.goNamed(
+                                        'promotion_qr',
+                                        pathParameters: {
+                                          'promotionId':
+                                              promotion.id.toString(),
+                                        },
+                                        queryParameters: {
+                                          'mallId': mallId,
+                                        },
+                                      );
+                                    }
+                                  },
+                                ),
                               const SizedBox(height: AppLength.sm),
                               Html(
                                 data: promotion.body,

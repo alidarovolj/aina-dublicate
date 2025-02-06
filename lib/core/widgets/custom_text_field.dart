@@ -14,6 +14,11 @@ class CustomTextField extends StatelessWidget {
   final int? minLines;
   final TextCapitalization textCapitalization;
   final bool? isValid;
+  final IconData? prefixIcon;
+  final Color? prefixIconColor;
+  final IconData? suffixIcon;
+  final Color? suffixIconColor;
+  final Widget? prefixIconWidget;
 
   const CustomTextField({
     super.key,
@@ -29,6 +34,11 @@ class CustomTextField extends StatelessWidget {
     this.minLines,
     this.textCapitalization = TextCapitalization.none,
     this.isValid,
+    this.prefixIcon,
+    this.prefixIconColor,
+    this.suffixIcon,
+    this.suffixIconColor,
+    this.prefixIconWidget,
   });
 
   @override
@@ -42,21 +52,49 @@ class CustomTextField extends StatelessWidget {
       maxLines: maxLines,
       minLines: minLines,
       textCapitalization: textCapitalization,
-      style: const TextStyle(color: AppColors.primary),
+      style: TextStyle(
+        color: enabled ? AppColors.primary : Colors.grey[500],
+      ),
       decoration: InputDecoration(
         hintText: hintText,
         errorText: errorText,
+        hintStyle: TextStyle(
+          color: Colors.grey[400],
+          fontSize: 14,
+        ),
         suffixIcon: isValid == null
             ? suffix
             : Icon(
                 isValid! ? Icons.check_circle : Icons.error,
                 color: isValid! ? Colors.green : Colors.red,
               ),
+        prefixIcon: prefixIconWidget != null
+            ? SizedBox(
+                width: 40,
+                height: 40,
+                child: Center(
+                  child: IconTheme(
+                    data: IconThemeData(
+                      color: enabled ? null : Colors.grey[500],
+                    ),
+                    child: prefixIconWidget!,
+                  ),
+                ),
+              )
+            : (prefixIcon != null
+                ? Icon(
+                    prefixIcon,
+                    color: enabled
+                        ? prefixIconColor ?? Colors.grey[600]
+                        : Colors.grey[500],
+                    size: 20,
+                  )
+                : null),
         filled: true,
         fillColor: enabled ? Colors.white : Colors.white,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
+          horizontal: 12,
+          vertical: 10,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),

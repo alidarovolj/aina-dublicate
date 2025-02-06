@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 enum HeaderType {
   pop,
   close,
+  back,
   none,
 }
 

@@ -8,6 +8,7 @@ class CarouselWithIndicator extends StatefulWidget {
   final bool showIndicators;
   final bool showGradient;
   final double height;
+  final Function(Slide)? onSlideClick;
 
   const CarouselWithIndicator({
     super.key,
@@ -15,6 +16,7 @@ class CarouselWithIndicator extends StatefulWidget {
     this.showIndicators = true,
     this.showGradient = false,
     this.height = 125,
+    this.onSlideClick,
   });
 
   @override
@@ -41,8 +43,8 @@ class _CarouselWithIndicatorState extends State<CarouselWithIndicator> {
                 final slide = widget.slideList[index];
                 return GestureDetector(
                   onTap: () {
-                    if (slide.button?.link != null) {
-                      launchUrl(slide.button!.link);
+                    if (widget.onSlideClick != null) {
+                      widget.onSlideClick!(slide);
                     }
                   },
                   child: Container(

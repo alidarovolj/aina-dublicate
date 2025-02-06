@@ -8,6 +8,7 @@ import 'package:aina_flutter/core/providers/requests/settings_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shimmer/shimmer.dart';
 
 class CoworkingProfilePage extends ConsumerWidget {
   final int coworkingId;
@@ -25,9 +26,24 @@ class CoworkingProfilePage extends ConsumerWidget {
 
     // Show loading state while checking authentication
     if (authState.token == null) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
+      return Scaffold(
+        body: Container(
+          color: AppColors.primary,
+          child: SafeArea(
+            child: Stack(
+              children: [
+                Container(
+                  color: AppColors.white,
+                  margin: const EdgeInsets.only(top: 64),
+                  child: _buildSkeletonLoader(context),
+                ),
+                CustomHeader(
+                  title: 'coworking.profile.title'.tr(),
+                  type: HeaderType.close,
+                ),
+              ],
+            ),
+          ),
         ),
       );
     }
@@ -41,9 +57,24 @@ class CoworkingProfilePage extends ConsumerWidget {
     }
 
     return userAsync.when(
-      loading: () => const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
+      loading: () => Scaffold(
+        body: Container(
+          color: AppColors.primary,
+          child: SafeArea(
+            child: Stack(
+              children: [
+                Container(
+                  color: AppColors.white,
+                  margin: const EdgeInsets.only(top: 64),
+                  child: _buildSkeletonLoader(context),
+                ),
+                CustomHeader(
+                  title: 'coworking.profile.title'.tr(),
+                  type: HeaderType.close,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
       error: (error, stack) => Scaffold(
@@ -172,6 +203,28 @@ class CoworkingProfilePage extends ConsumerWidget {
                           const SizedBox(height: 8),
 
                           _buildMenuItem(
+                            'coworking.profile.community_card'.tr(),
+                            Icons.chevron_right,
+                            backgroundColor: Colors.grey[200],
+                            onTap: () {
+                              context.go(
+                                  '/coworking/$coworkingId/profile/community-card');
+                            },
+                          ),
+                          const SizedBox(height: 8),
+
+                          _buildMenuItem(
+                            'coworking.profile.limit_accounts'.tr(),
+                            Icons.chevron_right,
+                            backgroundColor: Colors.grey[200],
+                            onTap: () {
+                              context.go(
+                                  '/coworking/$coworkingId/profile/limit-accounts');
+                            },
+                          ),
+                          const SizedBox(height: 32),
+
+                          _buildMenuItem(
                             'coworking.profile.contact_us'.tr(),
                             Icons.chevron_right,
                             backgroundColor: Colors.grey[200],
@@ -212,6 +265,95 @@ class CoworkingProfilePage extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSkeletonLoader(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          children: [
+            // Profile Info Section Skeleton
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 30),
+              child: Row(
+                children: [
+                  // Avatar skeleton
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[100]!,
+                    highlightColor: Colors.grey[300]!,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Name skeleton
+                        Shimmer.fromColors(
+                          baseColor: Colors.grey[100]!,
+                          highlightColor: Colors.grey[300]!,
+                          child: Container(
+                            width: 200,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Phone number skeleton
+                        Shimmer.fromColors(
+                          baseColor: Colors.grey[100]!,
+                          highlightColor: Colors.grey[300]!,
+                          child: Container(
+                            width: 150,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Menu Items Skeleton
+            ...List.generate(
+              6, // Number of menu items
+              (index) => Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                child: Shimmer.fromColors(
+                  baseColor: Colors.grey[100]!,
+                  highlightColor: Colors.grey[300]!,
+                  child: Container(
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

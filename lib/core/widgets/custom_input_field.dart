@@ -65,7 +65,7 @@ class CustomInputField extends StatelessWidget {
             filled: true,
             fillColor: AppColors.white,
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             errorText: hasError ? errorText : null,
           ),
           onChanged: onChanged,

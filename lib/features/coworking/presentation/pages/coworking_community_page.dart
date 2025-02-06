@@ -6,6 +6,7 @@ import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/features/coworking/providers/community_cards_provider.dart';
 import 'package:aina_flutter/features/coworking/domain/models/community_card.dart';
 import 'package:aina_flutter/features/coworking/presentation/widgets/community_details_modal.dart';
+import 'package:shimmer/shimmer.dart';
 
 class CoworkingCommunityPage extends ConsumerStatefulWidget {
   final int coworkingId;
@@ -83,7 +84,7 @@ class _CoworkingCommunityPageState
                         ),
                         prefixIcon: const Icon(Icons.search),
                         contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
+                          horizontal: 12,
                           vertical: 12,
                         ),
                       ),
@@ -138,9 +139,7 @@ class _CoworkingCommunityPageState
                           },
                         );
                       },
-                      loading: () => const Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      loading: () => _buildSkeletonLoader(),
                       error: (error, stack) => Center(
                         child: Text(
                           'community.error'.tr(args: [error.toString()]),
@@ -162,6 +161,102 @@ class _CoworkingCommunityPageState
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSkeletonLoader() {
+    return ListView.builder(
+      itemCount: 3, // Show 3 letter groups
+      itemBuilder: (context, groupIndex) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Letter header skeleton
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Shimmer.fromColors(
+                baseColor: Colors.grey[100]!,
+                highlightColor: Colors.grey[300]!,
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+            ),
+            // User cards skeleton
+            ...List.generate(
+              4, // Show 4 users per letter group
+              (index) => Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Colors.grey[300]!,
+                      width: 1,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Avatar skeleton
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey[100]!,
+                      highlightColor: Colors.grey[300]!,
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Name skeleton
+                          Shimmer.fromColors(
+                            baseColor: Colors.grey[100]!,
+                            highlightColor: Colors.grey[300]!,
+                            child: Container(
+                              width: 150,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          // Position skeleton
+                          Shimmer.fromColors(
+                            baseColor: Colors.grey[100]!,
+                            highlightColor: Colors.grey[300]!,
+                            child: Container(
+                              width: 100,
+                              height: 14,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

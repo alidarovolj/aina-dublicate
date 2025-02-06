@@ -43,7 +43,7 @@ class EventsBlock extends ConsumerWidget {
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           itemCount: events.length,
           itemBuilder: (context, index) {
             final event = events[index];

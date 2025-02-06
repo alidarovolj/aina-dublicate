@@ -6,6 +6,21 @@ import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
+import 'package:aina_flutter/features/coworking/providers/orders_provider.dart';
+import 'package:aina_flutter/features/coworking/domain/models/order_response.dart';
+import 'package:aina_flutter/features/coworking/domain/services/order_service.dart';
+import 'package:aina_flutter/core/providers/api_client_provider.dart';
+import 'package:aina_flutter/core/router/route_observer.dart';
+import 'package:dio/dio.dart';
+import 'package:intl/intl.dart';
+import 'dart:async';
+import 'package:aina_flutter/features/coworking/presentation/widgets/booking_card.dart';
+import 'package:shimmer/shimmer.dart';
+
+final orderServiceProvider = Provider<OrderService>((ref) {
+  final apiClient = ref.watch(apiClientProvider);
+  return OrderService(apiClient);
+});
 
 class CoworkingBookingsPage extends ConsumerStatefulWidget {
   final int coworkingId;
@@ -21,18 +36,114 @@ class CoworkingBookingsPage extends ConsumerStatefulWidget {
 }
 
 class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, RouteAware {
   late TabController _tabController;
+  Timer? _refreshTimer;
+  bool _isRefreshing = false;
+  final _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(_handleTabChange);
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  void _handleFocusChange() {
+    if (_focusNode.hasFocus && !_isRefreshing) {
+      print('Page gained focus, refreshing orders');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _refreshOrders();
+      });
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+    _setupRefreshTimer();
+    // Use addPostFrameCallback to avoid updating state during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshOrders();
+    });
+  }
+
+  void _setupRefreshTimer() {
+    // Cancel existing timer if any
+    _refreshTimer?.cancel();
+
+    // Set up new periodic refresh
+    _refreshTimer = Timer.periodic(const Duration(seconds: 60), (_) {
+      if (mounted && !_isRefreshing) {
+        _refreshOrders();
+      }
+    });
+  }
+
+  @override
+  void didPush() {
+    super.didPush();
+    print('BookingsPage: didPush called');
+    if (!_isRefreshing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _refreshOrders();
+      });
+    }
+  }
+
+  @override
+  void didPopNext() {
+    super.didPopNext();
+    print('BookingsPage: didPopNext called');
+    // Reset timer and refresh data when returning to this page
+    _setupRefreshTimer();
+    if (!_isRefreshing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _refreshOrders();
+      });
+    }
+  }
+
+  void _handleTabChange() {
+    if (_tabController.indexIsChanging && !_isRefreshing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _refreshOrders();
+      });
+    }
+  }
+
+  Future<void> _refreshOrders() async {
+    if (!mounted || _isRefreshing) return;
+
+    try {
+      _isRefreshing = true;
+      print('Triggering orders refresh');
+
+      // Use addPostFrameCallback to avoid updating state during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(ordersRefreshProvider.notifier).state++;
+      });
+
+      // Wait a bit to ensure the refresh has started
+      await Future.delayed(const Duration(milliseconds: 100));
+    } catch (e) {
+      print("Error refreshing orders: $e");
+    } finally {
+      if (mounted) {
+        _isRefreshing = false;
+      }
+    }
   }
 
   @override
   void dispose() {
+    _refreshTimer?.cancel();
+    _tabController.removeListener(_handleTabChange);
+    routeObserver.unsubscribe(this);
     _tabController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -40,23 +151,26 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
-    return Container(
-      color: AppColors.primary,
-      child: SafeArea(
-        child: Stack(
-          children: [
-            Container(
-              color: Colors.white,
-              margin: const EdgeInsets.only(top: 64),
-              child: !authState.isAuthenticated
-                  ? _buildUnauthorizedState()
-                  : _buildAuthorizedState(),
-            ),
-            CustomHeader(
-              title: 'coworking_tabs.bookings'.tr(),
-              type: HeaderType.close,
-            ),
-          ],
+    return Focus(
+      focusNode: _focusNode,
+      child: Container(
+        color: AppColors.primary,
+        child: SafeArea(
+          child: Stack(
+            children: [
+              Container(
+                color: Colors.white,
+                margin: const EdgeInsets.only(top: 64),
+                child: !authState.isAuthenticated
+                    ? _buildUnauthorizedState()
+                    : _buildAuthorizedState(),
+              ),
+              CustomHeader(
+                title: 'coworking_tabs.bookings'.tr(),
+                type: HeaderType.close,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -130,7 +244,7 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
         Expanded(
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
               child: Text(
                 'bookings.auth_required'.tr(),
                 textAlign: TextAlign.center,
@@ -164,7 +278,7 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
         Expanded(
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
               child: Text(
                 'bookings.no_bookings'.tr(),
                 textAlign: TextAlign.center,
@@ -183,19 +297,25 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
             children: [
               CustomButton(
                 label: 'bookings.book_coworking'.tr(),
-                type: ButtonType.filled,
+                type: ButtonType.bordered,
                 isFullWidth: true,
                 onPressed: () {
-                  // Handle coworking booking
+                  context.pushNamed(
+                    'coworking_services',
+                    pathParameters: {'id': widget.coworkingId.toString()},
+                  );
                 },
               ),
               const SizedBox(height: 12),
               CustomButton(
                 label: 'bookings.book_conference'.tr(),
-                type: ButtonType.bordered,
+                type: ButtonType.filled,
                 isFullWidth: true,
                 onPressed: () {
-                  // Handle conference room booking
+                  context.pushNamed(
+                    'coworking_services',
+                    pathParameters: {'id': widget.coworkingId.toString()},
+                  );
                 },
               ),
             ],
@@ -207,83 +327,181 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
   }
 
   Widget _buildBookingsList(bool isActive) {
-    // This is a placeholder. Replace with actual booking data
-    final List<Map<String, dynamic>> bookings = [];
+    print('Building bookings list with isActive: $isActive');
+    final ordersAsync =
+        ref.watch(isActive ? activeOrdersProvider : inactiveOrdersProvider);
 
-    if (bookings.isEmpty) {
-      return _buildEmptyState();
-    }
+    return ordersAsync.when(
+      loading: () {
+        print('Orders loading state');
+        return _buildSkeletonLoader();
+      },
+      error: (error, stack) {
+        print('Orders error state: $error');
+        print('Error stack: $stack');
+        return Center(
+          child: Text('Error: $error'),
+        );
+      },
+      data: (orders) {
+        print('Orders data state. Orders length: ${orders.length}');
+        if (orders.isEmpty) {
+          print('No orders found, showing empty state');
+          return _buildEmptyState();
+        }
 
-    return ListView.builder(
-      itemCount: bookings.length,
-      itemBuilder: (context, index) {
-        final booking = bookings[index];
-        return _BookingCard(booking: booking);
+        print('Building list with ${orders.length} orders');
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          itemCount: orders.length,
+          itemBuilder: (context, index) {
+            final order = orders[index];
+            print('Building card for order ${order.id}');
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: BookingCard(
+                order: order,
+                onTimerExpired: (orderId) async {
+                  // Add a small delay to ensure UI is ready
+                  await Future.delayed(const Duration(milliseconds: 300));
+                  if (mounted) {
+                    _refreshOrders();
+                  }
+                },
+              ),
+            );
+          },
+        );
       },
     );
   }
-}
 
-class _BookingCard extends StatelessWidget {
-  final Map<String, dynamic> booking;
-
-  const _BookingCard({required this.booking});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              booking['title'] ?? '',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.access_time, size: 16),
-                const SizedBox(width: 4),
-                Text(booking['time'] ?? ''),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.calendar_today, size: 16),
-                const SizedBox(width: 4),
-                Text(booking['date'] ?? ''),
-              ],
-            ),
-            if (booking['status'] != null) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: booking['status'] == 'active'
-                      ? Colors.green[100]
-                      : Colors.grey[100],
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  booking['status'] ?? '',
-                  style: TextStyle(
-                    color: booking['status'] == 'active'
-                        ? Colors.green[700]
-                        : Colors.grey[700],
+  Widget _buildSkeletonLoader() {
+    return Column(
+      children: [
+        // Booking cards skeleton
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            itemCount: 5, // Show 5 skeleton cards
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Shimmer.fromColors(
+                  baseColor: Colors.grey[100]!,
+                  highlightColor: Colors.grey[300]!,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey[200]!),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Service title and status
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              width: 200,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                            Container(
+                              width: 80,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Date and time info
+                        Row(
+                          children: [
+                            Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              width: 150,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        // Price info
+                        Row(
+                          children: [
+                            Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              width: 100,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Action buttons
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Container(
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ],
+              );
+            },
+          ),
         ),
-      ),
+      ],
     );
   }
 }

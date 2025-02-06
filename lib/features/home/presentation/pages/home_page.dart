@@ -12,6 +12,8 @@ import 'package:aina_flutter/core/providers/requests/promotions_provider.dart';
 import 'package:aina_flutter/core/widgets/promotions_block.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:aina_flutter/core/api/api_client.dart';
+import 'package:aina_flutter/core/utils/button_navigation_handler.dart';
+import 'package:aina_flutter/core/types/button_config.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -90,10 +92,40 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                     error: (error, stack) =>
                         Center(child: Text('Error: $error')),
-                    data: (banners) => CarouselWithIndicator(
-                      slideList: banners,
-                      showIndicators: false,
-                    ),
+                    data: (banners) {
+                      print('Banners data received: ${banners.length} banners');
+                      return CarouselWithIndicator(
+                        slideList: banners,
+                        showIndicators: false,
+                        onSlideClick: (slide) {
+                          print('Slide clicked: ${slide.id}');
+                          if (slide.button == null) return;
+
+                          final button = slide.button!;
+                          ButtonNavigationHandler.handleNavigation(
+                            context,
+                            ref,
+                            ButtonConfig(
+                              label: button.label,
+                              color: button.color,
+                              isInternal: button.isInternal,
+                              link: button.link,
+                              internal: button.isInternal == true &&
+                                      button.internal != null
+                                  ? ButtonInternal(
+                                      model: button.internal!.model,
+                                      id: button.internal!.id ?? 0,
+                                      buildingType:
+                                          button.internal!.buildingType ?? '',
+                                      isAuthRequired:
+                                          button.internal!.isAuthRequired,
+                                    )
+                                  : null,
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
                 ),
                 const SliverToBoxAdapter(

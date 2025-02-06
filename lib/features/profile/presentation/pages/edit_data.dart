@@ -9,6 +9,7 @@ import 'package:aina_flutter/core/providers/requests/auth/profile.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 final selectedGenderProvider = StateProvider<String>((ref) => 'Не указывать');
 
@@ -200,9 +201,9 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                       const SizedBox(height: 24),
                       Row(
                         children: [
-                          const Text(
-                            'Телефон: ',
-                            style: TextStyle(
+                          Text(
+                            'profile.settings.edit.phone'.tr() + ': ',
+                            style: const TextStyle(
                               fontSize: 16,
                               color: AppColors.textDarkGrey,
                             ),
@@ -218,9 +219,9 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                         ],
                       ),
                       const SizedBox(height: 24),
-                      const Text(
-                        'Основное',
-                        style: TextStyle(
+                      Text(
+                        'profile.settings.edit.main_info'.tr(),
+                        style: const TextStyle(
                           fontSize: 16,
                           color: AppColors.textDarkGrey,
                         ),
@@ -228,12 +229,13 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
 
                       CustomInputField(
                         controller: firstNameController,
-                        placeholder: 'Имя*',
+                        placeholder: 'profile.settings.edit.firstname'.tr(),
                         isRequired: true,
                         focusNode: focusNodes['firstName'],
                         hasError: !isFirstNameValid,
-                        errorText:
-                            !isFirstNameValid ? 'Обязательное поле' : null,
+                        errorText: !isFirstNameValid
+                            ? 'profile.settings.edit.required_field'.tr()
+                            : null,
                         onChanged: (value) {
                           setState(() {
                             isFirstNameValid = value.trim().isNotEmpty;
@@ -243,12 +245,13 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
 
                       CustomInputField(
                         controller: lastNameController,
-                        placeholder: 'Фамилия*',
+                        placeholder: 'profile.settings.edit.lastname'.tr(),
                         isRequired: true,
                         focusNode: focusNodes['lastName'],
                         hasError: !isLastNameValid,
-                        errorText:
-                            !isLastNameValid ? 'Обязательное поле' : null,
+                        errorText: !isLastNameValid
+                            ? 'profile.settings.edit.required_field'.tr()
+                            : null,
                         onChanged: (value) {
                           setState(() {
                             isLastNameValid = value.trim().isNotEmpty;
@@ -257,26 +260,26 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                       ),
                       CustomInputField(
                         controller: patronymicController,
-                        placeholder: 'Отчество',
+                        placeholder: 'profile.settings.edit.patronymic'.tr(),
                         focusNode: focusNodes['patronymic'],
                       ),
                       CustomInputField(
                         controller: emailController,
-                        placeholder: 'E-mail',
+                        placeholder: 'profile.settings.edit.email'.tr(),
                         focusNode: focusNodes['email'],
                       ),
 
                       const SizedBox(height: 20),
                       CustomInputField(
                         controller: licensePlateController,
-                        placeholder: 'Госномер авто (для оплаты паркинга)*',
+                        placeholder: 'profile.settings.edit.car_number'.tr(),
                         focusNode: focusNodes['licensePlate'],
                         isRequired: true,
                         hasError: !isLicensePlateValid,
                         errorText: !isLicensePlateValid
                             ? licensePlateController.text.trim().isEmpty
-                                ? 'Обязательное поле'
-                                : 'Минимум 5 символов'
+                                ? 'profile.settings.edit.required_field'.tr()
+                                : 'profile.settings.edit.min_length'.tr()
                             : null,
                         onChanged: (value) {
                           setState(() {
@@ -285,9 +288,9 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                         },
                       ),
                       const SizedBox(height: 4),
-                      const Text(
-                        '*Изменить госномер можно не чаще 1 раза в сутки',
-                        style: TextStyle(
+                      Text(
+                        'profile.settings.edit.car_number_note'.tr(),
+                        style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.textDarkGrey,
                         ),
@@ -295,9 +298,9 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                       const SizedBox(height: 16),
 
                       // Gender selection
-                      const Text(
-                        'Пол',
-                        style: TextStyle(
+                      Text(
+                        'profile.settings.edit.gender.title'.tr(),
+                        style: const TextStyle(
                           fontSize: 16,
                           color: AppColors.textDarkGrey,
                         ),
@@ -309,8 +312,8 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                           SizedBox(
                             width: 100,
                             child: _buildGenderOption(
-                                'Жен.', ref.read(selectedGenderProvider),
-                                (value) {
+                                'profile.settings.edit.gender.female'.tr(),
+                                ref.read(selectedGenderProvider), (value) {
                               ref.read(selectedGenderProvider.notifier).state =
                                   value;
                             }),
@@ -318,14 +321,16 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                           SizedBox(
                             width: 100,
                             child: _buildGenderOption(
-                                'Муж.', ref.read(selectedGenderProvider),
-                                (value) {
+                                'profile.settings.edit.gender.male'.tr(),
+                                ref.read(selectedGenderProvider), (value) {
                               ref.read(selectedGenderProvider.notifier).state =
                                   value;
                             }),
                           ),
                           Expanded(
-                            child: _buildGenderOption('Не указывать',
+                            child: _buildGenderOption(
+                                'profile.settings.edit.gender.not_specified'
+                                    .tr(),
                                 ref.read(selectedGenderProvider), (value) {
                               ref.read(selectedGenderProvider.notifier).state =
                                   value;
@@ -335,9 +340,9 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                       ),
                       const SizedBox(height: 16),
 
-                      const Text(
-                        'Настройки',
-                        style: TextStyle(
+                      Text(
+                        'profile.settings.edit.settings'.tr(),
+                        style: const TextStyle(
                           fontSize: 16,
                           color: AppColors.textDarkGrey,
                         ),
@@ -352,9 +357,9 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: ListTile(
-                          title: const Text(
-                            'Выйти из аккаунта',
-                            style: TextStyle(fontSize: 14),
+                          title: Text(
+                            'profile.settings.edit.logout.button'.tr(),
+                            style: const TextStyle(fontSize: 14),
                           ),
                           onTap: () async {
                             final authState = ref.read(authProvider);
@@ -370,43 +375,31 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                             // Show confirmation modal
                             await BaseModal.show(
                               context,
-                              message: 'Выйти из аккаунта\n$phone ?',
+                              message:
+                                  'profile.settings.edit.logout.confirmation'
+                                      .tr()
+                                      .replaceAll('{}', phone),
                               buttons: [
-                                const ModalButton(
-                                  label: 'Отмена',
+                                ModalButton(
+                                  label: 'profile.settings.edit.logout.cancel'
+                                      .tr(),
                                   type: ButtonType.normal,
                                   textColor: AppColors.primary,
                                   backgroundColor: AppColors.lightGrey,
                                 ),
                                 ModalButton(
-                                  label: 'Выйти из аккаунта',
+                                  label: 'profile.settings.edit.logout.confirm'
+                                      .tr(),
                                   type: ButtonType.normal,
                                   textColor: Colors.red,
                                   backgroundColor: Colors.white,
                                   onPressed: () async {
                                     Navigator.of(context).pop();
-
-                                    // Perform logout
                                     await ref
                                         .read(authProvider.notifier)
                                         .logout();
-
                                     if (!context.mounted) return;
-
                                     context.go('/');
-
-                                    // Show success modal
-                                    // await BaseModal.show(
-                                    //   context,
-                                    //   message: 'Вы вышли из аккаунта',
-                                    //   buttons: [
-                                    //     ModalButton(
-                                    //       label: 'Закрыть',
-                                    //       type: ButtonType.normal,
-                                    //       onPressed: () {},
-                                    //     ),
-                                    //   ],
-                                    // );
                                   },
                                 ),
                               ],
@@ -417,8 +410,8 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                     ],
                   ),
                 ),
-                const CustomHeader(
-                  title: "Персональная информация",
+                CustomHeader(
+                  title: 'profile.settings.edit.title'.tr(),
                   type: HeaderType.pop,
                 ),
               ],
@@ -463,24 +456,22 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
   String getInitialGender(String? apiGender) {
     switch (apiGender?.toUpperCase()) {
       case 'FEMALE':
-        return 'Жен.';
+        return 'profile.settings.edit.gender.female'.tr();
       case 'MALE':
-        return 'Муж.';
+        return 'profile.settings.edit.gender.male'.tr();
       case 'NONE':
       default:
-        return 'Не указывать';
+        return 'profile.settings.edit.gender.not_specified'.tr();
     }
   }
 
   String getApiGender(String displayGender) {
-    switch (displayGender) {
-      case 'Жен.':
-        return 'FEMALE';
-      case 'Муж.':
-        return 'MALE';
-      case 'Не указывать':
-      default:
-        return 'NONE';
+    if (displayGender == 'profile.settings.edit.gender.female'.tr()) {
+      return 'FEMALE';
+    } else if (displayGender == 'profile.settings.edit.gender.male'.tr()) {
+      return 'MALE';
+    } else {
+      return 'NONE';
     }
   }
 }

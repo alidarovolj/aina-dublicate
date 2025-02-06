@@ -1,14 +1,15 @@
 {
   "buildings": {
     "mall": "Mall",
-    "coworking": "Coworking"
+    "coworking": "Coworking",
+    "mall_not_found": "Mall not found"
   },
   "bookings": {
     "active": "Active",
     "history": "History",
     "auth_required": "Sign in to see your bookings",
-    "authorize": "Sign In",
-    "no_bookings": "You don't have any bookings yet, but that's easy to fix! Book something right now.",
+    "authorize": "Authorize",
+    "no_bookings": "You don't have any bookings yet, but it's easy to fix! Book something right now.",
     "book_coworking": "Book a coworking space",
     "book_conference": "Book a conference room"
   },
@@ -16,19 +17,80 @@
     "title": "Community",
     "search": "Search by name",
     "empty": "No community members",
-    "error": "Error loading members: {0}",
+    "error": "Error loading members: {}",
     "copied": "Copied to clipboard",
     "card": {
       "phone_label": "Phone",
       "email_label": "Email",
-      "personal_info": "Personal Information",
-      "work": "Work",
+      "personal_info": "Personal information",
       "company_label": "Company",
       "employment": {
         "contract": "Contract",
         "casual": "Casual",
-        "full_time": "Full Time",
-        "part_time": "Part Time"
+        "full_time": "Full time",
+        "part_time": "Part time"
+      },
+      "title": "Community Card",
+      "status": {
+        "review": "Under Review",
+        "approved": {
+          "visible": "Approved and visible in community",
+          "not_visible": "Approved but hidden"
+        },
+        "unapproved": "Not approved"
+      },
+      "visibility": {
+        "title": "Visibility Settings",
+        "show_card": "Show my card in community",
+        "show_phone": "Show my phone number",
+        "apply": "Apply"
+      },
+      "main": {
+        "title": "Main Information",
+        "name": "Full Name",
+        "about": "About",
+        "employment": "Work",
+        "position": "Position",
+        "company": "Company"
+      },
+      "contacts": {
+        "title": "Contacts (optional)",
+        "telegram": "Telegram (username)",
+        "whatsapp": "WhatsApp",
+        "linkedin": "LinkedIn",
+        "email": "Email",
+        "phone": "Phone"
+      },
+      "work": {
+        "title": "Work",
+        "employment": {
+          "placeholder": "Employment",
+          "full_time": "Full Time",
+          "casual": "Casual",
+          "part_time": "Part Time",
+          "contract": "Contract"
+        }
+      },
+      "image": {
+        "add": "Add Image",
+        "title": "Image",
+        "placeholder": "Click to select image"
+      },
+      "button": {
+        "add": "Add Button",
+        "title": "Button",
+        "name": "Button Name",
+        "link": "Link"
+      },
+      "text": {
+        "add": "Add Text Block",
+        "title": "Text Block",
+        "header": "Header",
+        "content": "Content"
+      },
+      "submit": {
+        "note": "Review will take up to 24 hours. Please make sure all required fields are filled.",
+        "button": "Submit for Review"
       }
     }
   },
@@ -46,8 +108,9 @@
     "profile": "Profile"
   },
   "events": {
-    "no_active_events": "There are no active events at the moment",
-    "views_count": "Views: {count}"
+    "title": "Events",
+    "no_active_events": "No active events at the moment",
+    "views_count": "Views: {}"
   },
   "mall_info": {
     "call": "Call",
@@ -55,50 +118,51 @@
   },
   "promotions": {
     "title": "Promotions",
-    "view_all": "View all",
+    "view_all": "All",
     "details_title": "Promotion",
-    "error": "Error: {0}",
-    "no_active_promotions": "There are no active promotions at the moment",
+    "error": "Error: {}",
+    "error.no_mall": "Could not determine the mall",
+    "no_active_promotions": "No active promotions at the moment",
     "scan_qr": "Scan QR code",
-    "moskva": "Moskva"
+    "moskva": "Moscow"
   },
   "mall_selector": {
-    "select_mall": "Select Mall",
-    "all_malls": "All Malls",
+    "select_mall": "Select mall",
+    "all_malls": "All malls",
     "error": "Error: {error}"
   },
   "news": {
     "title": "News",
-    "view_all": "View all",
+    "view_all": "All",
     "details_title": "News",
-    "error": "Error: {0}"
+    "error": "Error: {}"
   },
   "qr": {
     "processing": "Please wait, checking promotion conditions.",
     "scan_title": "Scan QR",
-    "auth_required": "To scan a receipt, please register in the app. Make sure your name and surname are correctly filled in your profile. This is a mandatory condition for participating in the promotion.",
-    "profile_required": "Before scanning the receipt, please make sure your name and surname are correct in your profile. This is a mandatory condition for participating in the promotion.",
+    "auth_required": "To scan the receipt, please register in the app. Make sure your name and surname are filled in correctly in your profile. This is a mandatory condition for participation in the promotion.",
+    "profile_required": "Before scanning the receipt, please make sure your name and surname are correct in your profile. This is a mandatory condition for participation in the promotion.",
     "register": "Register",
-    "to_profile": "To Profile",
+    "to_profile": "To profile",
     "scan": "Scan",
-    "scan_hint": "Point camera at QR code",
+    "scan_hint": "Point the camera at the QR code",
     "success": "Success",
     "error": "Error",
-    "status": "Status: {status}",
+    "status": "Status: {}",
     "close": "Close"
   },
   "receipt": {
     "error": "Error",
-    "back_to_promotions": "Back to Promotions",
-    "scan_again": "Scan Again",
+    "back_to_promotions": "Back to promotions",
+    "scan_again": "Scan again",
     "success_title": "Your receipt has been registered. Congratulations!",
-    "success_message": "Coupon numbers for the draw: {0}\n\nThe number is stored in your profile, in the 'Coupons' section.",
-    "to_profile": "To Profile"
+    "success_message": "Coupon numbers for participation in the drawing: {}\n\nThe number is stored in your profile, in the 'Coupons' section.",
+    "to_profile": "To profile"
   },
   "shops": {
     "title": "Shops",
-    "view_all": "View all",
-    "error": "Error: {0}"
+    "view_all": "All",
+    "error": "Error: {}"
   },
   "auth": {
     "title": "Authorization",
@@ -108,83 +172,101 @@
     "phone_number": "Phone number",
     "get_code": "Get code",
     "code_send_error": "Error sending code",
-    "terms_prefix": "By clicking the button, you accept the ",
+    "terms_prefix": "By clicking the button, you accept the terms of ",
     "terms_of_service": "terms of service",
     "terms_and": " and ",
     "privacy_policy": "privacy policy",
     "enter_sms_code": "Enter SMS code",
-    "sms_sent_to": "We sent a message to ",
-    "with_login_code": " with a login code",
+    "sms_sent_to": "We sent you a message to ",
+    "with_login_code": " with login code",
     "resend_code": "Resend code",
-    "resend_code_timer": "Resend code in 00:{0}",
+    "resend_code_timer": "Resend code in 00:{}",
     "server_no_response": "No response from server",
-    "code_send_error_with_code": "Error sending code: {0}",
+    "code_send_error_with_code": "Error sending code: {}",
     "request_error": "An error occurred while executing the request",
     "server_connection_error": "Server connection error",
-    "invalid_status_code": "Invalid status code: {0}",
-    "error": "Authorization error: {0}",
-    "service_auth_required": "Please register in the app to order the service",
-    "service_biometric_required": "Biometric verification is required to order the service",
+    "invalid_status_code": "Invalid status code: {}",
+    "error": "Authorization error: {}",
+    "service_auth_required": "To order a service, please register in the app",
+    "service_biometric_required": "To order a service, you need to pass biometric verification",
     "register": "Register",
-    "verify_biometric": "Verify Biometric"
+    "verify_biometric": "Pass verification"
   },
   "about": {
-    "title": "About App",
-    "version": "Version {0}",
+    "title": "About",
+    "version": "Version {}",
     "company": "MP Solutions LLP",
-    "license_agreement": "License Agreement",
-    "public_offer": "Public Offer",
-    "privacy_policy": "Privacy Policy",
-    "delete_profile": "Delete Profile"
+    "license_agreement": "License agreement",
+    "public_offer": "Public offer",
+    "privacy_policy": "Privacy policy",
+    "delete_profile": "Delete profile"
   },
   "profile": {
-    "mall_title": "Mall Profile",
+    "mall_title": "Mall profile",
     "load_error": "Failed to load profile data",
-    "personal_info": "Personal Information",
+    "personal_info": "Personal information",
     "coupons": "Coupons",
-    "contact_us": "Contact Us",
-    "about_app": "About App",
+    "contact_us": "Contact us",
+    "about_app": "About app",
     "switch_to_coworking": "Switch to Aina Coworking profile",
     "settings": {
       "firstname_placeholder": "First name",
-      "lastname_placeholder": "Last name"
+      "lastname_placeholder": "Last name",
+      "edit": {
+        "title": "Personal Information",
+        "phone": "Phone",
+        "main_info": "Main",
+        "firstname": "First name*",
+        "lastname": "Last name*",
+        "patronymic": "Middle name",
+        "email": "E-mail",
+        "car_number": "Car plate number (for parking payment)*",
+        "car_number_note": "*Car plate number can be changed no more than once per day",
+        "required_field": "Required field",
+        "min_length": "Minimum 5 characters",
+        "gender": {
+          "title": "Gender",
+          "female": "Female",
+          "male": "Male",
+          "not_specified": "Not specified"
+        },
+        "settings": "Settings",
+        "logout": {
+          "button": "Log out",
+          "confirmation": "Log out from account\n{}?",
+          "cancel": "Cancel",
+          "confirm": "Log out"
+        }
+      }
     }
   },
   "tickets": {
     "title": "Coupons",
-    "error": "Error: {0}",
+    "error": "Error: {}",
     "no_tickets": "You don't have any coupons yet",
-    "receipt_number": "Receipt #{0}",
-    "receipt_amount": "Receipt amount: {0} ₸",
-    "organization": "Organization: {0}",
-    "purchase_date": "Purchase date: {0}",
-    "registration_date": "Receipt registration date: {0}"
+    "receipt_number": "Receipt #{}",
+    "receipt_amount": "Receipt amount: {} ₸",
+    "organization": "Organization: {}",
+    "purchase_date": "Purchase date: {}",
+    "registration_date": "Receipt registration date: {}"
   },
   "coworking": {
     "title": "Coworking",
-    "error": "Error: {0}",
-    "no_coworkings": "No coworking spaces available at the moment",
-    "promotions_title": "Promotions {0}",
-    "no_active_promotions": "No active promotions at the moment",
+    "error": "Error: {}",
+    "no_coworkings": "No available coworking spaces at the moment",
+    "promotions_title": "Promotions {}",
+    "no_active_promotions": "No promotions at the moment",
     "tariffs": {
-      "capacity": "up to {0} people",
-      "price_per_hour": "{0} ₸/hour",
+      "title": "Tariffs",
+      "capacity": "up to {} people",
+      "price_per_hour": "{} ₸/hour",
       "fixed_place": "Fixed place",
       "unfixed_place": "Unfixed place",
       "all_benefits": "all benefits"
     },
     "calendar": {
-      "select_date": "Select start date",
-      "tariff_not_found": "Tariff not found",
-      "go_back": "Go back",
-      "cost": "Cost",
-      "start_date": "Start date",
-      "end_date": "End date",
-      "not_selected": "Not selected",
-      "proceed_to_payment": "Proceed to payment",
-      "reserved_date": "Selected date is already reserved",
-      "reserved_info": "Dates highlighted with a border are already reserved",
-      "overlap_error": "Selected period overlaps with already reserved dates",
+      "select_date": "Select date",
+      "page_title": "Select date",
       "weekdays": {
         "mon": "Mon",
         "tue": "Tue",
@@ -193,55 +275,83 @@
         "fri": "Fri",
         "sat": "Sat",
         "sun": "Sun"
-      }
+      },
+      "cost": "Cost",
+      "start_date": "Start date",
+      "end_date": "End date",
+      "not_selected": "Not selected",
+      "proceed_to_payment": "Proceed to payment",
+      "reserved_date": "Selected date is already reserved",
+      "reserved_info": "Reserved dates are marked in yellow",
+      "overlap_error": "Selected period overlaps with existing reservation",
+      "go_back": "Go back"
     },
     "profile": {
-      "title": "Coworking Profile",
+      "title": "Profile",
       "personal_info": "Personal Information",
+      "biometric": "Biometric",
+      "community_card": "Community Card",
+      "limit_accounts": "Limit Accounts",
       "contact_us": "Contact Us",
-      "about_app": "About App",
-      "biometric": "Biometric Data"
+      "about_app": "About App"
+    },
+    "time_selection": {
+      "title": "Select time (min. {} h)",
+      "start": "Start",
+      "end": "End",
+      "not_selected": "Not selected",
+      "cost": "Cost:",
+      "specify_time": "Specify time",
+      "start_date": "Start date:",
+      "end_date": "End date:",
+      "confirm": "Confirm",
+      "min_duration_error": "Minimum booking duration: {} hours",
+      "error": {
+        "title": "Select time",
+        "intersection": "Selected time range is not available",
+        "back": "Select again"
+      }
     }
   },
   "scanner": {
     "title": "AINA QR",
     "processing": "Please wait...",
     "scan_title": "Scan QR",
-    "auth_required": "To scan a receipt, please register in the app. Make sure your name and surname are correctly filled in your profile. This is a mandatory condition for participating in the promotion.",
-    "profile_required": "Before scanning the receipt, please make sure your name and surname are correct in your profile. This is a mandatory condition for participating in the promotion.",
+    "auth_required": "To scan the receipt, please register in the app. Make sure your name and surname are filled in correctly in your profile. This is a mandatory condition for participation in the promotion.",
+    "profile_required": "Before scanning the receipt, please make sure your name and surname are correct in your profile. This is a mandatory condition for participation in the promotion.",
     "register": "Register",
-    "to_profile": "To Profile",
+    "to_profile": "To profile",
     "scan": "Scan",
-    "scan_hint": "Point camera at QR code",
+    "scan_hint": "Point the camera at the QR code",
     "success": "Success",
     "error": "Error",
-    "status": "Status: {0}",
+    "status": "Status: {}",
     "close": "Close",
-    "back_to_promotions": "Back to Promotions",
-    "scan_again": "Scan Again",
+    "back_to_promotions": "Back to promotions",
+    "scan_again": "Scan again",
     "receipt_success_title": "Your receipt has been registered. Congratulations!",
-    "receipt_success_message": "Coupon numbers for the draw: {0}\n\nThe number is stored in your profile, in the 'Coupons' section."
+    "receipt_success_message": "Coupon numbers for participation in the drawing: {}\n\nThe number is stored in your profile, in the 'Coupons' section."
   },
   "stores": {
-    "title": "Shops",
-    "error": "Error: {0}",
-    "search_placeholder": "Enter shop name",
-    "no_stores": "No shops in this category",
+    "title": "Stores",
+    "error": "Error: {}",
+    "search_placeholder": "Enter store name",
+    "no_stores": "No stores in this category",
     "loading": "Loading...",
-    "category_title": "{0} in {1}",
-    "working_hours": "Working Hours",
-    "on_map": "On Map",
-    "visit_website": "Visit Website"
+    "category_title": "{} in {}",
+    "working_hours": "Working hours",
+    "on_map": "On map",
+    "visit_website": "Visit website"
   },
   "services": {
     "title": "Services",
-    "error": "Error: {0}",
-    "no_services": "There are no available services at the moment"
+    "error": "Error: {}",
+    "no_services": "No available services at the moment"
   },
   "biometry": {
-    "title": "Biometric Data",
+    "title": "Biometric data",
     "description": "Please provide biometric data for secure access to coworking",
-    "add_photo": "Add Photo",
+    "add_photo": "Add photo",
     "added": "Photo added",
     "save": "Save and verify",
     "waiting": "Processing biometric data...",
@@ -254,5 +364,65 @@
   "camera": {
     "permission_denied": "Camera permission is required for biometric verification",
     "initialization_error": "Failed to initialize camera"
+  },
+  "orders": {
+    "detail": {
+      "title": "Order",
+      "profile": "Profile",
+      "service": "Service",
+      "name": "Name",
+      "start_date": "Start date",
+      "end_date": "End date",
+      "duration": "Duration",
+      "price_per_hour": "Price per hour",
+      "total_price": "Total price",
+      "payment_confirmation": "By paying for the service, you agree to the",
+      "rules": "terms of use",
+      "history": "History",
+      "history_title": "Order history",
+      "back_to_order": "Back to order",
+      "pay": "Pay",
+      "download_fiscal": "Download fiscal receipt",
+      "download_qr": "Download QR",
+      "wait_payment": "Waiting for payment..."
+    },
+    "status": {
+      "paid": "Paid",
+      "pending": "Pending payment",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded"
+    }
+  },
+  "common": {
+    "currency": "₸",
+    "close": "Close",
+    "ok": "Back to biometry"
+  },
+  "limits": {
+    "title": "Limit Accounts",
+    "status": "Valid until",
+    "meeting_room": "Meeting Room",
+    "print": "Print",
+    "hour": "h",
+    "pages": "pages",
+    "remaining": "Remaining",
+    "free": "Free",
+    "no_quotas": "You have no limit accounts",
+    "quotas": {
+      "title": "Quotas",
+      "active": "Active",
+      "history": "History",
+      "no_quotas": "No active quotas",
+      "duration": "Duration",
+      "price": "Price",
+      "total": "Total",
+      "discount": "Discount",
+      "status": {
+        "paid": "Paid",
+        "pending": "Pending",
+        "cancelled": "Cancelled",
+        "refunded": "Refunded"
+      }
+    }
   }
 }

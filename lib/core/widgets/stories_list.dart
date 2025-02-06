@@ -17,10 +17,31 @@ class StoryList extends ConsumerStatefulWidget {
   ConsumerState<StoryList> createState() => _StoryListState();
 }
 
-class _StoryListState extends ConsumerState<StoryList> {
+class _StoryListState extends ConsumerState<StoryList>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+  int? _selectedIndex;
+
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.8).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   void markStoryAsRead(int index) {
@@ -31,6 +52,39 @@ class _StoryListState extends ConsumerState<StoryList> {
         // print("Story ${index + 1} marked as read");
       });
     }
+  }
+
+  void _handleStoryTap(int index, List<Story> storiesList) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    _animationController.forward().then((_) {
+      markStoryAsRead(index);
+      showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel:
+            MaterialLocalizations.of(context).modalBarrierDismissLabel,
+        barrierColor: AppColors.primary.withOpacity(0.5),
+        transitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return StoryDetailsPage(
+            stories: storiesList,
+            initialIndex: index,
+            onStoryRead: (readIndex) {
+              markStoryAsRead(readIndex);
+            },
+          );
+        },
+      ).then((_) {
+        // Reset animation when story view is closed
+        setState(() {
+          _selectedIndex = null;
+        });
+        _animationController.reverse();
+      });
+    });
   }
 
   @override
@@ -68,52 +122,41 @@ class _StoryListState extends ConsumerState<StoryList> {
                     child: Column(
                       children: [
                         GestureDetector(
-                          onTap: () {
-                            markStoryAsRead(index);
-                            showGeneralDialog(
-                              context: context,
-                              barrierDismissible: true,
-                              barrierLabel: MaterialLocalizations.of(context)
-                                  .modalBarrierDismissLabel,
-                              barrierColor: AppColors.primary.withOpacity(0.5),
-                              transitionDuration:
-                                  const Duration(milliseconds: 300),
-                              pageBuilder:
-                                  (context, animation, secondaryAnimation) {
-                                return StoryDetailsPage(
-                                  stories: stories.valueOrNull
-                                          ?.map((story) => story)
-                                          .toList() ??
-                                      [],
-                                  initialIndex: index,
-                                  onStoryRead: (readIndex) {
-                                    markStoryAsRead(readIndex);
-                                  },
-                                );
-                              },
-                            );
-                          },
-                          child: Container(
-                            width: 68,
-                            height: 68,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: story.read
-                                    ? AppColors.primary
-                                    : AppColors.secondary,
-                                width: 2,
+                          onTap: () => _handleStoryTap(index, storiesList),
+                          child: AnimatedBuilder(
+                            animation: _animationController,
+                            builder: (context, child) {
+                              final scale = _selectedIndex == index
+                                  ? _scaleAnimation.value
+                                  : 1.0;
+                              return Transform.scale(
+                                scale: scale,
+                                child: child,
+                              );
+                            },
+                            child: Container(
+                              width: 68,
+                              height: 68,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: story.read
+                                      ? AppColors.primary
+                                      : AppColors.secondary,
+                                  width: 2,
+                                ),
                               ),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(2.0),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(100),
-                                child: Image.network(
-                                  story.previewImage ?? '',
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(Icons.error),
+                              child: Padding(
+                                padding: const EdgeInsets.all(2.0),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(100),
+                                  child: Image.network(
+                                    story.previewImage ?? '',
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            const Icon(Icons.error),
+                                  ),
                                 ),
                               ),
                             ),

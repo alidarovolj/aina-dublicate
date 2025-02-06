@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:aina_flutter/core/types/building.dart';
 
 class CategoryStoresPage extends ConsumerStatefulWidget {
   final String buildingId;
@@ -102,12 +103,34 @@ class _CategoryStoresPageState extends ConsumerState<CategoryStoresPage> {
                   widget.title,
                   buildingsAsync.when(
                     data: (buildings) {
-                      final malls = buildings['mall'] as List<dynamic>;
+                      final malls = buildings['mall'] ?? [];
                       final mall = malls.firstWhere(
-                        (m) => m['id'].toString() == widget.buildingId,
-                        orElse: () => malls.first,
+                        (m) => m.id.toString() == widget.buildingId,
+                        orElse: () => malls.isNotEmpty
+                            ? malls.first
+                            : Building(
+                                id: 0,
+                                name: '',
+                                type: '',
+                                phone: '',
+                                latitude: '',
+                                longitude: '',
+                                description: '',
+                                workingHours: '',
+                                address: '',
+                                createdAt: '',
+                                previewImage: PreviewImage(
+                                  id: 0,
+                                  uuid: '',
+                                  url: '',
+                                  urlOriginal: '',
+                                  orderColumn: 0,
+                                  collectionName: '',
+                                ),
+                                images: [],
+                              ),
                       );
-                      return mall['name'] as String;
+                      return mall.name;
                     },
                     loading: () => '',
                     error: (_, __) => '',

@@ -8,6 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class StoreDetailsPage extends ConsumerWidget {
   final String? id;
@@ -54,6 +55,21 @@ class StoreDetailsPage extends ConsumerWidget {
                                         width: double.infinity,
                                         height: 212,
                                         fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          return Container(
+                                            width: double.infinity,
+                                            height: 212,
+                                            color: AppColors.grey2,
+                                            child: const Center(
+                                              child: Icon(
+                                                Icons.store,
+                                                size: 48,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          );
+                                        },
                                       )
                                     : Container(
                                         width: double.infinity,
@@ -63,7 +79,7 @@ class StoreDetailsPage extends ConsumerWidget {
                                           child: Icon(
                                             Icons.store,
                                             size: 48,
-                                            color: AppColors.grey2,
+                                            color: Colors.white,
                                           ),
                                         ),
                                       ),
@@ -75,15 +91,16 @@ class StoreDetailsPage extends ConsumerWidget {
                                         end: Alignment.bottomCenter,
                                         colors: [
                                           Colors.transparent,
-                                          Colors.black.withOpacity(0.7),
+                                          Colors.black.withOpacity(0.5),
                                         ],
-                                        stops: const [0.5, 1.0],
+                                        stops: const [0.6, 1.0],
                                       ),
                                     ),
                                   ),
                                 ),
                                 Positioned(
                                   left: 16,
+                                  right: 16,
                                   bottom: 16,
                                   child: Text(
                                     storeData['short_description'] ?? '',
@@ -92,6 +109,8 @@ class StoreDetailsPage extends ConsumerWidget {
                                       fontSize: 16,
                                       fontWeight: FontWeight.w500,
                                     ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ],
@@ -118,11 +137,17 @@ class StoreDetailsPage extends ConsumerWidget {
                                           'stores.on_map'.tr(),
                                       label: 'stores.on_map'.tr(),
                                       onTap: () {
-                                        // TODO: Open map with coordinates
                                         final lat = storeData['buildings'][0]
                                             ['latitude'];
                                         final lng = storeData['buildings'][0]
                                             ['longitude'];
+                                        if (lat != null && lng != null) {
+                                          final uri = Uri.parse(
+                                              'https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+                                          launchUrl(uri,
+                                              mode: LaunchMode
+                                                  .externalApplication);
+                                        }
                                       },
                                     ),
                                   ],
@@ -158,11 +183,17 @@ class StoreDetailsPage extends ConsumerWidget {
                                           'lib/core/assets/icons/instagram.svg',
                                           width: 24,
                                           height: 24,
-                                          color: Colors.white,
+                                          colorFilter: const ColorFilter.mode(
+                                              Colors.white, BlendMode.srcIn),
                                         ),
-                                        onPressed: () {
-                                          // print(
-                                          //     'Opening Instagram: ${storeData['instagram_link']}');
+                                        onPressed: () async {
+                                          final uri = Uri.parse(
+                                              storeData['instagram_link']);
+                                          if (await canLaunchUrl(uri)) {
+                                            await launchUrl(uri,
+                                                mode: LaunchMode
+                                                    .externalApplication);
+                                          }
                                         },
                                       ),
                                     ),
@@ -181,11 +212,17 @@ class StoreDetailsPage extends ConsumerWidget {
                                           'lib/core/assets/icons/language.svg',
                                           width: 24,
                                           height: 24,
-                                          color: Colors.black,
+                                          colorFilter: const ColorFilter.mode(
+                                              Colors.black, BlendMode.srcIn),
                                         ),
-                                        onPressed: () {
-                                          // print(
-                                          // 'Opening website: ${storeData['website_link']}');
+                                        onPressed: () async {
+                                          final uri = Uri.parse(
+                                              storeData['website_link']);
+                                          if (await canLaunchUrl(uri)) {
+                                            await launchUrl(uri,
+                                                mode: LaunchMode
+                                                    .externalApplication);
+                                          }
                                         },
                                       ),
                                     ),
@@ -233,7 +270,7 @@ class StoreDetailsPage extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

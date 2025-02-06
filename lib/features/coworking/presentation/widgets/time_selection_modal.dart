@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
+import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:aina_flutter/features/coworking/domain/models/coworking_tariff_details.dart';
 import 'package:aina_flutter/features/conference/domain/services/conference_service.dart';
 import 'package:aina_flutter/features/conference/presentation/pages/order_details_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:aina_flutter/features/coworking/domain/services/order_service.dart';
+import 'package:aina_flutter/core/api/api_client.dart';
+import 'package:aina_flutter/features/coworking/domain/models/calendar_response.dart';
 
 class TimeSelectionModal extends StatefulWidget {
   final DateTime date;
@@ -32,10 +37,29 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
   bool selectingStartTime = true;
   Map<DateTime, List<String>> timeSlotsByDay = {};
   int? calculatedTotal;
+  List<TimeRange> busyTimeRanges = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final response = await OrderService(ApiClient()).getCalendar(
+        DateFormat('yyyy-MM-dd').format(widget.date),
+        widget.tariffDetails.id.toString(),
+      );
+      setState(() {
+        busyTimeRanges = response.data;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+      // Handle error
+    }
     _generateTimeSlots();
   }
 
@@ -61,12 +85,69 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
     }
   }
 
+  bool _isTimeSlotSelectable(DateTime date, String time) {
+    if (!_isTimeSlotAvailable(date, time)) {
+      return false;
+    }
+
+    final slotDateTime =
+        DateTime.parse('${DateFormat('yyyy-MM-dd').format(date)} $time:00');
+
+    // Если выбираем начальное время
+    if (selectingStartTime) {
+      // Проверяем, не попадает ли время в занятый промежуток
+      for (final range in busyTimeRanges) {
+        final rangeStart = DateTime.parse(range.startAt).toLocal();
+        final rangeEnd = DateTime.parse(range.endAt).toLocal();
+        if (slotDateTime.isAtSameMomentAs(rangeStart) ||
+            (slotDateTime.isAfter(rangeStart) &&
+                slotDateTime.isBefore(rangeEnd))) {
+          return false;
+        }
+      }
+      return true;
+    }
+    // Если выбираем конечное время
+    else if (selectedStartTime != null) {
+      final startDateTime = DateTime.parse(
+          '${DateFormat('yyyy-MM-dd').format(date)} ${selectedStartTime!.split(' ')[1]}:00');
+      final minDuration = widget.tariffDetails.minDuration ?? 2;
+      final difference = slotDateTime.difference(startDateTime).inHours;
+
+      // Проверяем минимальную длительность
+      if (difference < minDuration) {
+        return false;
+      }
+
+      // Проверяем пересечение с занятыми промежутками
+      for (final range in busyTimeRanges) {
+        final rangeStart = DateTime.parse(range.startAt).toLocal();
+        final rangeEnd = DateTime.parse(range.endAt).toLocal();
+
+        // Проверяем, не пересекается ли выбранный промежуток с занятым
+        if (startDateTime.isBefore(rangeStart) &&
+            slotDateTime.isAfter(rangeEnd)) {
+          continue; // Если наш интервал полностью охватывает занятый - это недопустимо
+        }
+
+        if (startDateTime.isAfter(rangeEnd) ||
+            slotDateTime.isBefore(rangeStart)) {
+          continue; // Если наш интервал полностью до или после занятого - это допустимо
+        }
+
+        return false; // В остальных случаях есть пересечение
+      }
+      return true;
+    }
+
+    return false;
+  }
+
   void _selectTime(String time, DateTime date) {
     if (selectingStartTime) {
-      // Если выбираем начальное время
-      final fullDateTime = '${DateFormat('yyyy-MM-dd').format(date)} $time';
+      final fullDateTime =
+          '${DateFormat('yyyy-MM-dd').format(date)} ${time.substring(0, 5)}';
       if (fullDateTime == selectedStartTime) {
-        // Если кликнули на то же время - сбрасываем выбор
         setState(() {
           selectedStartTime = null;
           selectedEndTime = null;
@@ -82,26 +163,61 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
         selectingStartTime = false;
       });
     } else {
-      // Если выбираем конечное время
-      final fullDateTime = '${DateFormat('yyyy-MM-dd').format(date)} $time';
+      final fullDateTime =
+          '${DateFormat('yyyy-MM-dd').format(date)} ${time.substring(0, 5)}';
       final start = DateTime.parse('$selectedStartTime:00');
       final end = DateTime.parse('$fullDateTime:00');
 
-      // Проверка минимальной длительности
       final minDuration = widget.tariffDetails.minDuration ?? 2;
       final difference = end.difference(start).inHours;
 
       if (difference < minDuration) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Минимальное время бронирования: $minDuration часа'),
-          ),
+        return;
+      }
+
+      // Проверяем пересечение с занятыми промежутками
+      bool hasIntersection = false;
+      for (final range in busyTimeRanges) {
+        final rangeStart = DateTime.parse(range.startAt).toLocal();
+        final rangeEnd = DateTime.parse(range.endAt).toLocal();
+
+        if (start.isBefore(rangeStart) && end.isAfter(rangeEnd)) {
+          hasIntersection = true;
+          break;
+        }
+
+        if (start.isAfter(rangeEnd) || end.isBefore(rangeStart)) {
+          continue;
+        }
+
+        hasIntersection = true;
+        break;
+      }
+
+      if (hasIntersection) {
+        setState(() {
+          selectedStartTime = null;
+          selectedEndTime = null;
+          calculatedTotal = null;
+          selectingStartTime = true;
+        });
+
+        BaseModal.show(
+          context,
+          title: 'coworking.time_selection.error.title'.tr(),
+          message: 'coworking.time_selection.error.intersection'.tr(),
+          buttons: [
+            ModalButton(
+              label: 'coworking.time_selection.error.back'.tr(),
+              onPressed: () {},
+              type: ButtonType.normal,
+            ),
+          ],
         );
         return;
       }
 
       if (fullDateTime == selectedEndTime) {
-        // Если кликнули на то же конечное время - возвращаемся к выбору начального времени
         setState(() {
           selectedEndTime = null;
           calculatedTotal = null;
@@ -115,13 +231,20 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
         calculatedTotal = widget.tariffDetails.price * difference;
         selectingStartTime = true;
       });
+
+      widget.onTimeSelected?.call(
+        selectedStartTime!,
+        selectedEndTime!,
+        calculatedTotal ?? 0,
+      );
     }
   }
 
   String _formatSelectedDateTime(String? fullDateTime) {
-    if (fullDateTime == null) return 'Не выбрано';
+    if (fullDateTime == null)
+      return 'coworking.time_selection.not_selected'.tr();
     final dateTime = DateTime.parse('$fullDateTime:00');
-    return '${DateFormat('dd MMMM yyyy', 'ru').format(dateTime)} ${DateFormat('HH:mm').format(dateTime)}';
+    return '${DateFormat('dd MMMM yyyy', context.locale.languageCode).format(dateTime)} ${DateFormat('HH:mm').format(dateTime)}';
   }
 
   bool _isTimeSlotAvailable(DateTime date, String time) {
@@ -160,14 +283,14 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
           },
           queryParameters: {
             'type': 'conference',
-            'startTime': '$selectedStartTime:00',
-            'endTime': '$selectedEndTime:00',
+            'startTime': selectedStartTime!,
+            'endTime': selectedEndTime!,
           },
         );
       } else {
         widget.onTimeSelected?.call(
-          '$selectedStartTime:00',
-          '$selectedEndTime:00',
+          selectedStartTime!,
+          selectedEndTime!,
           calculatedTotal ?? 0,
         );
         Navigator.pop(context);
@@ -193,7 +316,6 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Верхний блок с заголовком
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
@@ -211,7 +333,9 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
             child: Column(
               children: [
                 Text(
-                  'Выберите время (мин. ${widget.tariffDetails.minDuration ?? 2} ч.)',
+                  'coworking.time_selection.title'.tr(
+                    args: [(widget.tariffDetails.minDuration ?? 2).toString()],
+                  ),
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w500,
@@ -220,7 +344,6 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                // Time selection toggle
                 Row(
                   children: [
                     Expanded(
@@ -237,9 +360,9 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                         ),
                         child: Column(
                           children: [
-                            const Text(
-                              'Начало',
-                              style: TextStyle(
+                            Text(
+                              'coworking.time_selection.start'.tr(),
+                              style: const TextStyle(
                                 color: AppColors.darkGrey,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -247,7 +370,8 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                             Text(
                               selectedStartTime != null
                                   ? _formatSelectedDateTime(selectedStartTime)
-                                  : 'Не выбрано',
+                                  : 'coworking.time_selection.not_selected'
+                                      .tr(),
                               style: const TextStyle(
                                 color: AppColors.darkGrey,
                                 fontWeight: FontWeight.bold,
@@ -272,9 +396,9 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                         ),
                         child: Column(
                           children: [
-                            const Text(
-                              'Конец',
-                              style: TextStyle(
+                            Text(
+                              'coworking.time_selection.end'.tr(),
+                              style: const TextStyle(
                                 color: AppColors.darkGrey,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -282,7 +406,8 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                             Text(
                               selectedEndTime != null
                                   ? _formatSelectedDateTime(selectedEndTime)
-                                  : 'Не выбрано',
+                                  : 'coworking.time_selection.not_selected'
+                                      .tr(),
                               style: const TextStyle(
                                 color: AppColors.darkGrey,
                                 fontWeight: FontWeight.bold,
@@ -297,10 +422,9 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
               ],
             ),
           ),
-          // Time slots grid
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               itemCount: timeSlotsByDay.length,
               itemBuilder: (context, dayIndex) {
                 final date = timeSlotsByDay.keys.elementAt(dayIndex);
@@ -312,7 +436,8 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Text(
-                        DateFormat('dd MMMM', 'ru').format(date),
+                        DateFormat('dd MMMM', context.locale.languageCode)
+                            .format(date),
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -337,10 +462,10 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                             '${DateFormat('yyyy-MM-dd').format(date)} $time';
                         final isSelected = fullDateTime == selectedStartTime ||
                             fullDateTime == selectedEndTime;
-                        final isAvailable = _isTimeSlotAvailable(date, time);
+                        final isSelectable = _isTimeSlotSelectable(date, time);
 
                         return GestureDetector(
-                          onTap: isAvailable
+                          onTap: isSelectable
                               ? () => _selectTime(time, date)
                               : null,
                           child: Container(
@@ -348,7 +473,7 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? AppColors.primary
-                                  : isAvailable
+                                  : isSelectable
                                       ? Colors.grey[200]
                                       : Colors.grey[100],
                               borderRadius: BorderRadius.circular(4),
@@ -360,7 +485,7 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                                 fontSize: 22,
                                 color: isSelected
                                     ? Colors.white
-                                    : isAvailable
+                                    : isSelectable
                                         ? AppColors.primary
                                         : Colors.grey,
                               ),
@@ -374,7 +499,6 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
               },
             ),
           ),
-          // Bottom info section
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -393,16 +517,16 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Стоимость:',
-                      style: TextStyle(
+                    Text(
+                      'coworking.time_selection.cost'.tr(),
+                      style: const TextStyle(
                         color: AppColors.primary,
                       ),
                     ),
                     Text(
                       calculatedTotal != null
                           ? '$calculatedTotal ₸'
-                          : 'Укажите время',
+                          : 'coworking.time_selection.specify_time'.tr(),
                       style: const TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,
@@ -414,9 +538,9 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Дата начала:',
-                      style: TextStyle(
+                    Text(
+                      'coworking.time_selection.start_date'.tr(),
+                      style: const TextStyle(
                         color: AppColors.primary,
                       ),
                     ),
@@ -433,9 +557,9 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Дата окончания:',
-                      style: TextStyle(
+                    Text(
+                      'coworking.time_selection.end_date'.tr(),
+                      style: const TextStyle(
                         color: AppColors.primary,
                       ),
                     ),
@@ -449,12 +573,13 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                if (selectedStartTime != null && selectedEndTime != null)
-                  CustomButton(
-                    onPressed: _onConfirm,
-                    isFullWidth: true,
-                    label: 'Подтвердить',
-                  ),
+                CustomButton(
+                  onPressed: _onConfirm,
+                  isFullWidth: true,
+                  isEnabled:
+                      selectedStartTime != null && selectedEndTime != null,
+                  label: 'coworking.time_selection.confirm'.tr(),
+                ),
               ],
             ),
           ),

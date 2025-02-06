@@ -107,6 +107,7 @@ class Promotion {
   final int? order;
   final ButtonConfig? button;
   final Building? building;
+  final String? type;
 
   Promotion({
     required this.id,
@@ -128,6 +129,7 @@ class Promotion {
     this.order,
     this.button,
     this.building,
+    this.type,
   });
 
   factory Promotion.fromJson(Map<String, dynamic> json) {
@@ -213,6 +215,7 @@ class Promotion {
             ? ButtonConfig.fromJson(json['button'] as Map<String, dynamic>)
             : null,
         building: building,
+        type: json['type'] as String?,
       );
     } catch (e) {
       // print('Error parsing promotion: $e');

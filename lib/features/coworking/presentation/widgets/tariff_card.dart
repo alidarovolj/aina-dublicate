@@ -10,10 +10,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:aina_flutter/features/coworking/presentation/widgets/conference_tariff_card.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
+import 'package:aina_flutter/app.dart';
 
 mixin AuthCheckMixin {
   Future<bool> checkAuthAndBiometric(
-      BuildContext context, WidgetRef ref) async {
+      BuildContext context, WidgetRef ref, int coworkingId) async {
     final authState = ref.read(authProvider);
     final isAuthorized = authState.isAuthenticated;
 
@@ -34,21 +35,27 @@ mixin AuthCheckMixin {
       return false;
     }
 
-    final userData = authState.userData;
-    if (userData == null || userData['biometric_valid'] != true) {
-      BaseModal.show(
-        context,
-        message: 'auth.service_biometric_required'.tr(),
-        buttons: [
-          ModalButton(
-            label: 'auth.verify_biometric'.tr(),
-            onPressed: () {
-              context.pop();
-              context.pushNamed('biometric_verification');
-            },
-          ),
-        ],
-      );
+    try {
+      final promenadeProfileAsync =
+          await ref.read(promenadeProfileProvider.future);
+      if (!promenadeProfileAsync.isBiometricVerified) {
+        BaseModal.show(
+          context,
+          message: 'auth.service_biometric_required'.tr(),
+          buttons: [
+            ModalButton(
+              label: 'auth.verify_biometric'.tr(),
+              onPressed: () {
+                context.pop();
+                context.go('/coworking/$coworkingId/profile/biometric');
+              },
+            ),
+          ],
+        );
+        return false;
+      }
+    } catch (e) {
+      print('Error checking biometric status: $e');
       return false;
     }
 
@@ -74,7 +81,7 @@ class ConferenceTariffCard extends ConsumerWidget with AuthCheckMixin {
   Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
       onTap: () async {
-        if (await checkAuthAndBiometric(context, ref)) {
+        if (await checkAuthAndBiometric(context, ref, coworkingId)) {
           onTap?.call();
         }
       },
@@ -238,7 +245,8 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
                     Expanded(
                       child: InkWell(
                         onTap: () async {
-                          if (await checkAuthAndBiometric(context, ref)) {
+                          if (await checkAuthAndBiometric(
+                              context, ref, coworkingId)) {
                             context.pop();
                             onTap?.call();
                           }
@@ -288,7 +296,7 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
   }
 
   void _navigateToCalendar(BuildContext context, WidgetRef ref) async {
-    if (await checkAuthAndBiometric(context, ref)) {
+    if (await checkAuthAndBiometric(context, ref, coworkingId)) {
       context.pushNamed(
         'coworking_calendar',
         pathParameters: {
@@ -296,7 +304,7 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
           'tariffId': tariff.id.toString(),
         },
         queryParameters: {
-          'type': 'coworking',
+          'type': tariff.type.toLowerCase(),
         },
       );
     }
@@ -310,7 +318,7 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
     return ConferenceTariffCard(
       tariff: tariff,
       coworkingId: coworkingId,
-      onTap: onTap,
+      onTap: () => _navigateToCalendar(context, ref),
       onDetailsTap: onDetailsTap,
     );
   }
@@ -337,7 +345,7 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
             // Content
             InkWell(
               onTap: () async {
-                if (await checkAuthAndBiometric(context, ref)) {
+                if (await checkAuthAndBiometric(context, ref, coworkingId)) {
                   onTap?.call();
                 }
               },

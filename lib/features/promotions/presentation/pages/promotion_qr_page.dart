@@ -29,6 +29,7 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
   bool _isProcessing = false;
+  String? _lastScannedCode;
 
   @override
   void reassemble() {
@@ -40,15 +41,19 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
   }
 
   Future<void> _handleQrCode(String? code) async {
-    if (code == null || _isProcessing) return;
+    if (code == null || _isProcessing || code == _lastScannedCode) return;
 
     setState(() {
       _isProcessing = true;
+      _lastScannedCode = code;
     });
 
     if (!mounted) return;
 
     try {
+      // Immediately pause camera to prevent multiple scans
+      await controller?.pauseCamera();
+
       // First get the promotion details to get the building info
       final promotionDetailsService = ref.read(requestPromotionDetailsProvider);
       final promotionResponse = await promotionDetailsService
@@ -84,7 +89,6 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
 
         if (!mounted) return;
 
-        controller?.pauseCamera();
         await BaseModal.show(
           context,
           title: 'Ваш чек зарегистрирован. Поздравляем!',
@@ -119,7 +123,6 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
 
         if (!mounted) return;
 
-        controller?.pauseCamera();
         await BaseModal.show(
           context,
           message: message,
@@ -151,7 +154,6 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
         _isProcessing = false;
       });
 
-      controller?.pauseCamera();
       await BaseModal.show(
         context,
         message: errorMessage,

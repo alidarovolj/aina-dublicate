@@ -7,6 +7,31 @@ import 'core/styles/theme.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:aina_flutter/core/api/api_client.dart';
+import 'package:aina_flutter/core/widgets/chucker_overlay_wrapper.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:aina_flutter/core/types/promenade_profile.dart';
+import 'package:aina_flutter/core/providers/auth/auth_state.dart';
+
+// Global navigator key for accessing navigation from anywhere
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+// Create the promenade profile provider
+final promenadeProfileProvider = FutureProvider<PromenadeProfile>((ref) async {
+  final authState = ref.read(authProvider);
+  if (!authState.isAuthenticated) {
+    throw Exception('User is not authenticated');
+  }
+
+  try {
+    final response = await ApiClient().dio.get('/api/promenade/profile');
+    if (response.data['success'] == true && response.data['data'] != null) {
+      return PromenadeProfile.fromJson(response.data['data']);
+    }
+    throw Exception('Failed to fetch promenade profile');
+  } catch (e) {
+    throw Exception('Error fetching promenade profile: $e');
+  }
+});
 
 class MyApp extends StatefulWidget {
   final String initialRoute;
@@ -28,6 +53,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     // Update API client locale on initial load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ApiClient().updateLocaleFromContext(context);
+      // Fetch promenade profile if user is authenticated
+      final container = ProviderScope.containerOf(context);
+      final authState = container.read(authProvider);
+      if (authState.isAuthenticated) {
+        container.read(promenadeProfileProvider);
+      }
     });
   }
 
@@ -87,9 +118,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         ),
       ),
       builder: (context, child) {
-        return SafeArea(
-          child: child ?? const SizedBox.shrink(),
-        );
+        // return ChuckerOverlayWrapper(
+        //   child: child ?? const SizedBox.shrink(),
+        // );
+        return child ?? const SizedBox.shrink();
       },
       routerConfig: AppRouter.router,
     );

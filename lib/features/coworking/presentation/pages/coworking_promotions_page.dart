@@ -6,6 +6,7 @@ import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/widgets/promotions_block.dart';
 import 'package:aina_flutter/core/types/card_type.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shimmer/shimmer.dart';
 
 class CoworkingPromotionsPage extends ConsumerWidget {
   final int coworkingId;
@@ -20,8 +21,19 @@ class CoworkingPromotionsPage extends ConsumerWidget {
     final buildingsAsync = ref.watch(buildingsProvider);
 
     return buildingsAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      loading: () => Scaffold(
+        backgroundColor: AppColors.primary,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              _buildSkeletonLoader(),
+              const CustomHeader(
+                title: '',
+                type: HeaderType.pop,
+              ),
+            ],
+          ),
+        ),
       ),
       error: (error, stack) => Center(
         child: Text('coworking.error'.tr(args: [error.toString()])),
@@ -66,6 +78,75 @@ class CoworkingPromotionsPage extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSkeletonLoader() {
+    return Container(
+      color: AppColors.appBg,
+      margin: const EdgeInsets.only(top: 64),
+      padding: const EdgeInsets.only(top: 28),
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: AppLength.xs),
+        itemCount: 5, // Show 5 promotion skeletons
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Shimmer.fromColors(
+              baseColor: Colors.grey[100]!,
+              highlightColor: Colors.grey[300]!,
+              child: Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Image area
+                    Container(
+                      height: 140,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(8),
+                        ),
+                      ),
+                    ),
+                    // Text content area
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            width: 200,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

@@ -36,11 +36,24 @@ import 'package:aina_flutter/features/coworking/presentation/pages/coworking_cal
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_profile_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_community_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_biometric_page.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/coworking_camera_page.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/order_details_page.dart';
+import 'package:aina_flutter/features/coworking/domain/services/order_service.dart';
+import 'package:aina_flutter/core/api/api_client.dart';
+import 'package:aina_flutter/core/providers/api_client_provider.dart';
+import 'package:aina_flutter/features/profile/presentation/pages/community_card_page.dart';
+import 'package:aina_flutter/app.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/limit_accounts_page.dart';
+import 'package:aina_flutter/core/router/route_observer.dart';
 
 class AppRouter {
-  static final GoRouter router = GoRouter(
+  static final router = GoRouter(
+    navigatorKey: navigatorKey,
     initialLocation: '/',
-    observers: [ChuckerFlutter.navigatorObserver],
+    observers: [
+      ChuckerFlutter.navigatorObserver,
+      routeObserver,
+    ],
     routes: [
       // Auth routes (placed at the top level, outside of any ShellRoute)
       GoRoute(
@@ -59,6 +72,22 @@ class AppRouter {
         path: '/',
         name: 'home',
         builder: (context, state) => const HomePage(),
+      ),
+      // QR Scanner route (independent)
+      GoRoute(
+        path: '/promotions/:promotionId/qr',
+        name: 'promotion_qr',
+        builder: (context, state) {
+          final promotionId = state.pathParameters['promotionId'];
+          final mallId = state.uri.queryParameters['mallId'];
+          if (promotionId == null || mallId == null) {
+            return const HomePage();
+          }
+          return PromotionQrPage(
+            promotionId: int.parse(promotionId),
+            mallId: mallId,
+          );
+        },
       ),
       // Main mall routes
       ShellRoute(
@@ -141,24 +170,6 @@ class AppRouter {
                         return const Malls();
                       }
                     },
-                    routes: [
-                      GoRoute(
-                        path: ':promotionId/qr',
-                        name: 'promotion_qr',
-                        builder: (context, state) {
-                          final mallId = state.pathParameters['id'];
-                          final promotionId =
-                              state.pathParameters['promotionId'];
-                          if (mallId == null || promotionId == null) {
-                            return const Malls();
-                          }
-                          return PromotionQrPage(
-                            promotionId: int.parse(promotionId),
-                            mallId: mallId,
-                          );
-                        },
-                      ),
-                    ],
                   ),
                   GoRoute(
                     path: 'stores',
@@ -285,19 +296,32 @@ class AppRouter {
                       }
                       return CoworkingBiometricPage(coworkingId: int.parse(id));
                     },
-                    // routes: [
-                    //   GoRoute(
-                    //     path: 'camera',
-                    //     name: 'camera',
-                    //     builder: (context, state) {
-                    //       final id = state.pathParameters['id'];
-                    //       if (id == null || int.tryParse(id) == null) {
-                    //         return const CoworkingListPage();
-                    //       }
-                    //       return const CoworkingCameraPage();
-                    //     },
-                    //   ),
-                    // ],
+                    routes: [
+                      GoRoute(
+                        path: 'camera',
+                        name: 'biometric_camera',
+                        builder: (context, state) {
+                          final id = state.pathParameters['id'];
+                          if (id == null || int.tryParse(id) == null) {
+                            return const CoworkingListPage();
+                          }
+                          return CoworkingCameraPage(
+                              coworkingId: int.parse(id));
+                        },
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'community-card',
+                    name: 'community_card',
+                    builder: (context, state) => const CommunityCardPage(),
+                  ),
+                  GoRoute(
+                    path: 'limit-accounts',
+                    name: 'coworking_limit_accounts',
+                    builder: (context, state) => LimitAccountsPage(
+                      coworkingId: int.parse(state.pathParameters['id']!),
+                    ),
                   ),
                 ],
               ),
@@ -339,18 +363,19 @@ class AppRouter {
 
                       return serviceAsync.when(
                         loading: () =>
-                            const Center(child: CircularProgressIndicator()),
+                            CoworkingServiceDetailsPage.buildSkeletonLoader(),
                         error: (error, stack) =>
                             Center(child: Text('Error: $error')),
                         data: (service) => tariffsAsync.when(
                           loading: () =>
-                              const Center(child: CircularProgressIndicator()),
+                              CoworkingServiceDetailsPage.buildSkeletonLoader(),
                           error: (error, stack) =>
                               Center(child: Text('Error: $error')),
                           data: (tariffs) {
                             return CoworkingServiceDetailsPage(
                               service: service,
                               tariffs: tariffs,
+                              coworkingId: coworkingId,
                             );
                           },
                         ),
@@ -432,7 +457,25 @@ class AppRouter {
           final id = int.parse(state.pathParameters['id'] ?? '0');
           return NewsDetailsPage(id: id);
         },
-      )
+      ),
+      // Order details route
+      GoRoute(
+        path: '/orders/:id',
+        name: 'order_details',
+        builder: (context, state) {
+          final id = state.pathParameters['id'];
+          if (id == null) return const HomePage();
+          return Consumer(
+            builder: (context, ref, child) {
+              final apiClient = ref.read(apiClientProvider);
+              return OrderDetailsPage(
+                orderId: id,
+                orderService: OrderService(apiClient),
+              );
+            },
+          );
+        },
+      ),
     ],
   );
 }

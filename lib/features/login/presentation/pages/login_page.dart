@@ -10,6 +10,7 @@ import 'package:aina_flutter/core/providers/requests/auth/user.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/gestures.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PhoneNumberInputScreen extends ConsumerStatefulWidget {
   const PhoneNumberInputScreen({super.key});
@@ -206,8 +207,12 @@ class _PhoneNumberInputScreenState
                                         decoration: TextDecoration.underline,
                                       ),
                                       recognizer: TapGestureRecognizer()
-                                        ..onTap = () {
-                                          context.push('/terms');
+                                        ..onTap = () async {
+                                          final url = Uri.parse(
+                                              'https://aina-fashion-products-photos.object.pscloud.io/files/docs/Lic.pdf');
+                                          if (await canLaunchUrl(url)) {
+                                            await launchUrl(url);
+                                          }
                                         },
                                     ),
                                     TextSpan(
@@ -220,8 +225,12 @@ class _PhoneNumberInputScreenState
                                         decoration: TextDecoration.underline,
                                       ),
                                       recognizer: TapGestureRecognizer()
-                                        ..onTap = () {
-                                          context.push('/privacy');
+                                        ..onTap = () async {
+                                          final url = Uri.parse(
+                                              'https://aina-fashion-products-photos.object.pscloud.io/files/docs/policy.pdf');
+                                          if (await canLaunchUrl(url)) {
+                                            await launchUrl(url);
+                                          }
                                         },
                                     ),
                                   ],

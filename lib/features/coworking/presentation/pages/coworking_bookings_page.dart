@@ -7,12 +7,9 @@ import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/features/coworking/providers/orders_provider.dart';
-import 'package:aina_flutter/features/coworking/domain/models/order_response.dart';
 import 'package:aina_flutter/features/coworking/domain/services/order_service.dart';
 import 'package:aina_flutter/core/providers/api_client_provider.dart';
 import 'package:aina_flutter/core/router/route_observer.dart';
-import 'package:dio/dio.dart';
-import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:aina_flutter/features/coworking/presentation/widgets/booking_card.dart';
 import 'package:shimmer/shimmer.dart';
@@ -51,11 +48,8 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
   }
 
   void _handleFocusChange() {
-    if (_focusNode.hasFocus && !_isRefreshing) {
-      print('Page gained focus, refreshing orders');
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _refreshOrders();
-      });
+    if (_focusNode.hasFocus) {
+      _refreshOrders();
     }
   }
 
@@ -64,19 +58,13 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
     super.didChangeDependencies();
     routeObserver.subscribe(this, ModalRoute.of(context)!);
     _setupRefreshTimer();
-    // Use addPostFrameCallback to avoid updating state during build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _refreshOrders();
-    });
+    _refreshOrders();
   }
 
   void _setupRefreshTimer() {
-    // Cancel existing timer if any
     _refreshTimer?.cancel();
-
-    // Set up new periodic refresh
     _refreshTimer = Timer.periodic(const Duration(seconds: 60), (_) {
-      if (mounted && !_isRefreshing) {
+      if (mounted) {
         _refreshOrders();
       }
     });
@@ -85,56 +73,27 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
   @override
   void didPush() {
     super.didPush();
-    print('BookingsPage: didPush called');
-    if (!_isRefreshing) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _refreshOrders();
-      });
-    }
+    _refreshOrders();
   }
 
   @override
   void didPopNext() {
     super.didPopNext();
-    print('BookingsPage: didPopNext called');
-    // Reset timer and refresh data when returning to this page
     _setupRefreshTimer();
-    if (!_isRefreshing) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _refreshOrders();
-      });
-    }
+    _refreshOrders();
   }
 
   void _handleTabChange() {
-    if (_tabController.indexIsChanging && !_isRefreshing) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _refreshOrders();
-      });
+    if (_tabController.indexIsChanging) {
+      _refreshOrders();
     }
   }
 
-  Future<void> _refreshOrders() async {
-    if (!mounted || _isRefreshing) return;
-
-    try {
-      _isRefreshing = true;
-      print('Triggering orders refresh');
-
-      // Use addPostFrameCallback to avoid updating state during build
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(ordersRefreshProvider.notifier).state++;
-      });
-
-      // Wait a bit to ensure the refresh has started
-      await Future.delayed(const Duration(milliseconds: 100));
-    } catch (e) {
-      print("Error refreshing orders: $e");
-    } finally {
-      if (mounted) {
-        _isRefreshing = false;
-      }
-    }
+  void _refreshOrders() {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(ordersRefreshKeyProvider.notifier).state++;
+    });
   }
 
   @override
@@ -327,42 +286,37 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
   }
 
   Widget _buildBookingsList(bool isActive) {
-    print('Building bookings list with isActive: $isActive');
-    final ordersAsync =
-        ref.watch(isActive ? activeOrdersProvider : inactiveOrdersProvider);
+    final refreshKey = ref.watch(ordersRefreshKeyProvider);
+    final ordersAsync = ref.watch(
+      isActive
+          ? activeOrdersProvider(refreshKey)
+          : inactiveOrdersProvider(refreshKey),
+    );
 
     return ordersAsync.when(
       loading: () {
-        print('Orders loading state');
         return _buildSkeletonLoader();
       },
       error: (error, stack) {
-        print('Orders error state: $error');
-        print('Error stack: $stack');
         return Center(
           child: Text('Error: $error'),
         );
       },
       data: (orders) {
-        print('Orders data state. Orders length: ${orders.length}');
         if (orders.isEmpty) {
-          print('No orders found, showing empty state');
           return _buildEmptyState();
         }
 
-        print('Building list with ${orders.length} orders');
         return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
           itemCount: orders.length,
           itemBuilder: (context, index) {
             final order = orders[index];
-            print('Building card for order ${order.id}');
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: BookingCard(
                 order: order,
                 onTimerExpired: (orderId) async {
-                  // Add a small delay to ensure UI is ready
                   await Future.delayed(const Duration(milliseconds: 300));
                   if (mounted) {
                     _refreshOrders();
@@ -379,11 +333,10 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
   Widget _buildSkeletonLoader() {
     return Column(
       children: [
-        // Booking cards skeleton
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-            itemCount: 5, // Show 5 skeleton cards
+            itemCount: 5,
             itemBuilder: (context, index) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16),
@@ -400,7 +353,6 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Service title and status
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -423,7 +375,6 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
                           ],
                         ),
                         const SizedBox(height: 16),
-                        // Date and time info
                         Row(
                           children: [
                             Container(
@@ -446,7 +397,6 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
                           ],
                         ),
                         const SizedBox(height: 8),
-                        // Price info
                         Row(
                           children: [
                             Container(
@@ -469,7 +419,6 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
                           ],
                         ),
                         const SizedBox(height: 16),
-                        // Action buttons
                         Row(
                           children: [
                             Expanded(

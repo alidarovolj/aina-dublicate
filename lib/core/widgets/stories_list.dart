@@ -310,7 +310,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
 
   void handleNextStory() {
     if (currentInnerStoryIndex < currentStories.length - 1) {
-      print('Moving to next inner story: ${currentInnerStoryIndex + 1}');
+      // print('Moving to next inner story: ${currentInnerStoryIndex + 1}');
       setState(() {
         currentInnerStoryIndex++;
       });
@@ -322,7 +322,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
       _progressController.reset();
       _progressController.forward();
     } else if (currentStoryIndex < widget.stories.length - 1) {
-      print('Moving to next story set: ${currentStoryIndex + 1}');
+      // print('Moving to next story set: ${currentStoryIndex + 1}');
       setState(() {
         currentStoryIndex++;
         currentInnerStoryIndex = 0;
@@ -340,7 +340,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
 
   void handlePreviousStory() {
     if (currentInnerStoryIndex > 0) {
-      print('Moving to previous inner story: ${currentInnerStoryIndex - 1}');
+      // print('Moving to previous inner story: ${currentInnerStoryIndex - 1}');
       setState(() {
         currentInnerStoryIndex--;
       });
@@ -352,7 +352,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
       _progressController.reset();
       _progressController.forward();
     } else if (currentStoryIndex > 0) {
-      print('Moving to previous story set: ${currentStoryIndex - 1}');
+      // print('Moving to previous story set: ${currentStoryIndex - 1}');
       setState(() {
         currentStoryIndex--;
         currentStories = widget.stories[currentStoryIndex].stories ?? [];
@@ -371,9 +371,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final currentStory = currentStories[currentInnerStoryIndex];
 
-    print(
-        'Current story index: $currentStoryIndex, Inner story index: $currentInnerStoryIndex');
-    print('Current story ID: ${currentStory.id}, Name: ${currentStory.name}');
+    // print('Current story ID: ${currentStory.id}, Name: ${currentStory.name}');
 
     // Watch the story details
     final storyDetails = ref.watch(
@@ -382,18 +380,18 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
 
     final button = storyDetails.when(
       data: (data) {
-        print('Story details response for ID ${currentStory.id}:');
-        print('  Name: ${data?.name}');
-        print('  Button: ${data?.button?.label}');
-        print('  Link: ${data?.button?.link}');
+        // print('Story details response for ID ${currentStory.id}:');
+        // print('  Name: ${data?.name}');
+        // print('  Button: ${data?.button?.label}');
+        // print('  Link: ${data?.button?.link}');
         return data?.button;
       },
       loading: () {
-        print('Loading story details for ID ${currentStory.id}...');
+        // print('Loading story details for ID ${currentStory.id}...');
         return null;
       },
       error: (error, stack) {
-        print('Error loading story details for ID ${currentStory.id}: $error');
+        // print('Error loading story details for ID ${currentStory.id}: $error');
         return null;
       },
     );
@@ -520,8 +518,6 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
                   backgroundColor: Colors.white,
                   textColor: Colors.black,
                   onPressed: () {
-                    print(
-                        'Button clicked! Label: ${button.label}, Link: ${button.link}');
                     Navigator.of(context).pop(); // Close story first
                     ButtonNavigationHandler.handleNavigation(
                         context, ref, button);

@@ -145,7 +145,7 @@ class CoworkingPage extends ConsumerWidget {
                           showTitle: true,
                           showViewAll: true,
                           showDivider: false,
-                          showGradient: false,
+                          showGradient: true,
                           cardType: NewsCardType.full,
                           buildingId: coworkingId.toString(),
                           onViewAllTap: () {

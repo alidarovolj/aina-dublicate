@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:aina_flutter/core/widgets/communication_modal.dart';
 
 class CoworkingProfilePage extends ConsumerWidget {
   final int coworkingId;
@@ -230,14 +231,12 @@ class CoworkingProfilePage extends ConsumerWidget {
                             backgroundColor: Colors.grey[200],
                             onTap: () {
                               settingsAsync.whenData((settings) async {
-                                final whatsappUrl = Uri.parse(
-                                    settings.whatsappLinkAinaCoworking);
-                                if (await canLaunchUrl(whatsappUrl)) {
-                                  await launchUrl(
-                                    whatsappUrl,
-                                    mode: LaunchMode.externalApplication,
-                                  );
-                                }
+                                CommunicationModal.show(
+                                  context,
+                                  whatsappUrl:
+                                      settings.whatsappLinkAinaCoworking,
+                                  onlyWhatsapp: false,
+                                );
                               });
                             },
                           ),

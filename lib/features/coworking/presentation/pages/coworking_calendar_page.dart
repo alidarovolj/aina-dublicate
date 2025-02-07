@@ -7,14 +7,11 @@ import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:aina_flutter/features/coworking/domain/models/coworking_tariff_details.dart';
 import 'package:aina_flutter/features/coworking/providers/coworking_tariff_details_provider.dart';
 import 'package:aina_flutter/features/coworking/presentation/widgets/time_selection_modal.dart';
-import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/features/coworking/domain/models/order_request.dart';
 import 'package:aina_flutter/features/coworking/domain/services/order_service.dart';
-import 'package:aina_flutter/features/coworking/presentation/pages/order_details_page.dart';
-import 'package:aina_flutter/core/api/api_client.dart';
 import 'package:aina_flutter/core/providers/api_client_provider.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -651,7 +648,6 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
                 tariffDetailsState.when(
                   data: (tariffDetails) {
                     if (tariffDetails == null) {
-                      print('Tariff details is null'); // Debug print
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -673,9 +669,6 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
                         ),
                       );
                     }
-
-                    print(
-                        'Tariff details loaded: ${tariffDetails.title}'); // Debug print
                     return Column(
                       children: [
                         const SizedBox(height: 64),

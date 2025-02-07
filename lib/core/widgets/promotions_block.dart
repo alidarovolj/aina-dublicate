@@ -8,6 +8,7 @@ import 'package:aina_flutter/core/providers/requests/promotions_provider.dart';
 import 'package:aina_flutter/core/types/card_type.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class PromotionsBlock extends ConsumerWidget {
   final String? mallId;
@@ -20,6 +21,7 @@ class PromotionsBlock extends ConsumerWidget {
   final Widget Function(BuildContext)? emptyBuilder;
   final int? maxElements;
   final bool sortByQr;
+  final bool showArrow;
 
   const PromotionsBlock({
     super.key,
@@ -33,6 +35,7 @@ class PromotionsBlock extends ConsumerWidget {
     this.emptyBuilder,
     this.maxElements,
     this.sortByQr = false,
+    this.showArrow = false,
   });
 
   List<dynamic> _sortPromotions(List<dynamic> promotions) {
@@ -77,13 +80,17 @@ class PromotionsBlock extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     if (showTitle)
-                      Text(
-                        'promotions.title'.tr(),
-                        style: GoogleFonts.lora(
-                          fontSize: 22,
-                          color: Colors.black,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            'promotions.title'.tr(),
+                            style: GoogleFonts.lora(
+                              fontSize: 22,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          )
+                        ],
                       ),
                     if (showViewAll && onViewAllTap != null)
                       TextButton(
@@ -185,7 +192,21 @@ class PromotionsBlock extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildImageWithGradient(promotion.previewImage.url),
+                  Stack(
+                    children: [
+                      _buildImageWithGradient(promotion.previewImage.url),
+                      if (showArrow)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: SvgPicture.asset(
+                            'lib/core/assets/icons/linked-arrow.svg',
+                            width: 24,
+                            height: 24,
+                          ),
+                        ),
+                    ],
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     promotion.title,
@@ -242,6 +263,16 @@ class PromotionsBlock extends ConsumerWidget {
                   height: 200,
                   borderRadius: 8,
                 ),
+                if (showArrow)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: SvgPicture.asset(
+                      'lib/core/assets/icons/linked-arrow.svg',
+                      width: 24,
+                      height: 24,
+                    ),
+                  ),
                 Positioned(
                   top: 16,
                   left: 16,
@@ -326,18 +357,35 @@ class PromotionsBlock extends ConsumerWidget {
                 pathParameters: {'id': promotion.id.toString()},
               );
             },
-            child: Container(
-              width: itemWidth,
-              margin: EdgeInsets.only(
-                  right:
-                      index != limitedPromotions.length - 1 ? itemSpacing : 0),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4),
-                image: DecorationImage(
-                  image: NetworkImage(promotion.previewImage.url),
-                  fit: BoxFit.cover,
+            child: Stack(
+              children: [
+                Container(
+                  width: itemWidth,
+                  margin: EdgeInsets.only(
+                      right: index != limitedPromotions.length - 1
+                          ? itemSpacing
+                          : 0),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    image: DecorationImage(
+                      image: NetworkImage(promotion.previewImage.url),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
-              ),
+                if (showArrow)
+                  Positioned(
+                    top: 8,
+                    right: index != limitedPromotions.length - 1
+                        ? itemSpacing + 8
+                        : 8,
+                    child: SvgPicture.asset(
+                      'lib/core/assets/icons/linked-arrow.svg',
+                      width: 24,
+                      height: 24,
+                    ),
+                  ),
+              ],
             ),
           );
         },

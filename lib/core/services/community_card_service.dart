@@ -7,17 +7,17 @@ class CommunityCardService {
 
   Future<Map<String, dynamic>> getCommunityCard() async {
     try {
-      print('Fetching community card data...');
+      // print('Fetching community card data...');
       final response =
           await _apiClient.dio.get('/api/promenade/community-card');
-      print('Response received: ${response.data}');
+      // print('Response received: ${response.data}');
 
       if (response.data['success'] == true && response.data['data'] != null) {
         return response.data['data'];
       }
       throw Exception('Invalid response format from server');
     } catch (e) {
-      print('Error fetching community card: $e');
+      // print('Error fetching community card: $e');
       throw Exception('Failed to get community card: $e');
     }
   }

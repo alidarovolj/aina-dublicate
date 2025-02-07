@@ -57,7 +57,7 @@ class OrderService {
           queryParameters: {
             'html': true,
           });
-      print('QR HTML Response: ${response.data}');
+      // print('QR HTML Response: ${response.data}');
       return response.data;
     } on DioException catch (e) {
       throw Exception('Failed to get order QR: ${e.message}');

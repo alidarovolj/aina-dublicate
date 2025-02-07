@@ -12,7 +12,7 @@ class BuildingsProvider
 
   Future<void> fetchBuildings() async {
     try {
-      // // print('Fetching buildings...');
+      // print('Fetching buildings...');
       final response = await _listService.buildings();
 
       if (response == null || !response.data['success']) {
@@ -30,9 +30,9 @@ class BuildingsProvider
       };
 
       state = AsyncValue.data(filteredBuildings);
-      // // print('Buildings fetched and filtered successfully.');
+      // print('Buildings fetched and filtered successfully.');
     } catch (error, stackTrace) {
-      // // print('Error fetching buildings: $error');
+      // print('Error fetching buildings: $error');
       state = AsyncValue.error(error, stackTrace);
     }
   }

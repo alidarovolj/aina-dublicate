@@ -23,24 +23,24 @@ class ApiService {
   Future<Response> get(String path,
       {Map<String, dynamic>? queryParameters}) async {
     try {
-      print('Making GET request to: ${_dio.options.baseUrl}$path');
+      // print('Making GET request to: ${_dio.options.baseUrl}$path');
       final response = await _dio.get(path, queryParameters: queryParameters);
-      print('Response received: ${response.data}');
+      // print('Response received: ${response.data}');
       return response;
     } catch (e) {
-      print('Error in GET request: $e');
+      // print('Error in GET request: $e');
       throw Exception('Failed to perform GET request: $e');
     }
   }
 
   Future<Response> post(String path, {dynamic data}) async {
     try {
-      print('Making POST request to: ${_dio.options.baseUrl}$path');
+      // print('Making POST request to: ${_dio.options.baseUrl}$path');
       final response = await _dio.post(path, data: data);
-      print('Response received: ${response.data}');
+      // print('Response received: ${response.data}');
       return response;
     } catch (e) {
-      print('Error in POST request: $e');
+      // print('Error in POST request: $e');
       throw Exception('Failed to perform POST request: $e');
     }
   }

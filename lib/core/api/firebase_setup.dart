@@ -7,7 +7,7 @@ Future<void> initializeFirebase() async {
 }
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // // print("Handling a background message: ${message.messageId}");
+  // print("Handling a background message: ${message.messageId}");
 }
 
 Future<void> requestNotificationPermissions() async {
@@ -18,5 +18,5 @@ Future<void> requestNotificationPermissions() async {
     sound: true,
   );
 
-  // // print('User granted permission: ${settings.authorizationStatus}');
+  // print('User granted permission: ${settings.authorizationStatus}');
 }

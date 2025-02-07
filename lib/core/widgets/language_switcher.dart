@@ -6,130 +6,121 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/restart_widget.dart';
 
 final localeChangeProvider = StateProvider<int>((ref) => 0);
+final isLanguageExpandedProvider = StateProvider<bool>((ref) => false);
 
 class LanguageSwitcher extends ConsumerWidget {
   const LanguageSwitcher({super.key});
 
   Future<void> _changeLanguage(
       BuildContext context, WidgetRef ref, String value) async {
-    // Save the selected locale to SharedPreferences first
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('selected_locale', value);
     await prefs.setString('locale', value);
-
-    // Set the locale in EasyLocalization and wait for it to be processed
     await context.setLocale(Locale(value));
-
-    // Wait for the locale change to be processed
     await Future.delayed(const Duration(milliseconds: 50));
 
-    // Force a complete app rebuild
     if (context.mounted) {
-      // Update the state first
       ref.read(localeChangeProvider.notifier).state++;
-
-      // Then restart the app
+      ref.read(isLanguageExpandedProvider.notifier).state = false;
       RestartWidget.restartApp(context);
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch the locale change provider to rebuild on changes
     ref.watch(localeChangeProvider);
+    final currentLocale = context.locale.languageCode;
+    final isExpanded = ref.watch(isLanguageExpandedProvider);
 
-    return PopupMenuButton<String>(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+    List<String> getLanguageOrder() {
+      final languages = ['kk', 'en', 'ru'];
+      languages.remove(currentLocale);
+      return languages;
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(4),
       ),
-      offset: const Offset(0, 40),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipRect(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: isExpanded ? 92 : 0,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: getLanguageOrder()
+                    .map((code) => _buildLanguageButton(
+                          context,
+                          ref,
+                          code.toUpperCase(),
+                          code,
+                          currentLocale,
+                          isCurrentLanguage: false,
+                        ))
+                    .toList(),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          _buildLanguageButton(
+            context,
+            ref,
+            currentLocale.toUpperCase(),
+            currentLocale,
+            currentLocale,
+            isCurrentLanguage: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLanguageButton(BuildContext context, WidgetRef ref, String label,
+      String code, String currentLocale,
+      {required bool isCurrentLanguage}) {
+    final isExpanded = ref.watch(isLanguageExpandedProvider);
+
+    return InkWell(
+      onTap: () {
+        if (isCurrentLanguage) {
+          ref.read(isLanguageExpandedProvider.notifier).state =
+              !ref.read(isLanguageExpandedProvider);
+        } else {
+          _changeLanguage(context, ref, code);
+        }
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppLength.tiny,
-          vertical: AppLength.xs,
+          vertical: 4,
+          horizontal: 8,
         ),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: isCurrentLanguage && isExpanded
+              ? Colors.white
+              : Colors.transparent,
+          border: isExpanded
+              ? Border.all(
+                  color: Colors.white,
+                  width: 1,
+                )
+              : null,
           borderRadius: BorderRadius.circular(4),
         ),
-        child: Row(
-          children: [
-            Text(
-              context.locale.languageCode.toUpperCase(),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(
-              Icons.arrow_drop_down,
-              color: Colors.white,
-              size: 20,
-            ),
-          ],
+        child: Text(
+          label,
+          style: TextStyle(
+            color:
+                isCurrentLanguage && isExpanded ? Colors.black : Colors.white,
+            fontSize: 14,
+            fontWeight: isCurrentLanguage ? FontWeight.w500 : FontWeight.w400,
+          ),
         ),
       ),
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: 'ru',
-          child: Row(
-            children: [
-              Text(
-                'RU',
-                style: TextStyle(
-                  fontWeight: context.locale.languageCode == 'ru'
-                      ? FontWeight.bold
-                      : FontWeight.normal,
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (context.locale.languageCode == 'ru')
-                const Icon(Icons.check, size: 16),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: 'kk',
-          child: Row(
-            children: [
-              Text(
-                'KK',
-                style: TextStyle(
-                  fontWeight: context.locale.languageCode == 'kk'
-                      ? FontWeight.bold
-                      : FontWeight.normal,
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (context.locale.languageCode == 'kk')
-                const Icon(Icons.check, size: 16),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: 'en',
-          child: Row(
-            children: [
-              Text(
-                'EN',
-                style: TextStyle(
-                  fontWeight: context.locale.languageCode == 'en'
-                      ? FontWeight.bold
-                      : FontWeight.normal,
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (context.locale.languageCode == 'en')
-                const Icon(Icons.check, size: 16),
-            ],
-          ),
-        ),
-      ],
-      onSelected: (String value) async {
-        await _changeLanguage(context, ref, value);
-      },
     );
   }
 }

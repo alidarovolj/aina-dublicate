@@ -27,10 +27,7 @@ class Story {
             : null,
         stories = json['stories'] != null
             ? (() {
-                debugPrint('Raw story JSON: $json');
-                debugPrint('Raw stories data: ${json['stories']}');
                 return (json['stories'] as List).map((item) {
-                  debugPrint('Processing story item: $item');
                   return StoryItem.fromJson(item as Map<String, dynamic>);
                 }).toList();
               })()
@@ -61,7 +58,6 @@ class StoryItem {
         order = json['order'] as int?,
         button = json['button'] != null
             ? (() {
-                debugPrint('Raw button data: ${json['button']}');
                 return ButtonConfig.fromJson(
                     json['button'] as Map<String, dynamic>);
               })()

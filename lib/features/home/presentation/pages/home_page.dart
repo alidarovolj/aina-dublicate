@@ -42,7 +42,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           ref.read(authProvider.notifier).updateUserData(response.data['data']);
         }
       } catch (error) {
-        print('Error fetching profile: $error');
+        // print('Error fetching profile: $error');
       }
     }
   }
@@ -56,7 +56,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final bannersAsync = ref.watch(bannersProvider);
     final promotionsAsync = ref.watch(promotionsProvider);
-    print('show token ${ref.read(authProvider).token}');
+    // print('show token ${ref.read(authProvider).token}');
 
     return Scaffold(
       body: Container(
@@ -93,12 +93,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                     error: (error, stack) =>
                         Center(child: Text('Error: $error')),
                     data: (banners) {
-                      print('Banners data received: ${banners.length} banners');
+                      // print('Banners data received: ${banners.length} banners');
                       return CarouselWithIndicator(
                         slideList: banners,
-                        showIndicators: false,
+                        showIndicators: true,
                         onSlideClick: (slide) {
-                          print('Slide clicked: ${slide.id}');
+                          // print('Slide clicked: ${slide.id}');
                           if (slide.button == null) return;
 
                           final button = slide.button!;
@@ -139,6 +139,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     cardType: PromotionCardType.small,
                     maxElements: 2,
                     sortByQr: true,
+                    showArrow: true,
                   ),
                 ),
                 const SliverToBoxAdapter(

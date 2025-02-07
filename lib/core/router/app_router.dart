@@ -10,13 +10,10 @@ import 'package:aina_flutter/features/stores/presentation/pages/category_stores_
 import 'package:aina_flutter/features/news/presentation/pages/news_details_page.dart';
 import 'package:aina_flutter/features/news/presentation/pages/news_list_page.dart';
 import 'package:go_router/go_router.dart';
-// import 'package:aina_flutter/core/services/storage_service.dart';
 import 'package:aina_flutter/features/home/presentation/pages/home_page.dart';
 import 'package:aina_flutter/features/storybook/presentation/pages/storybook.dart';
 import 'package:aina_flutter/core/widgets/main_tabbar_screen.dart';
-// import 'package:aina_flutter/features/login/presentation/pages/login_page.dart';
 import 'package:aina_flutter/features/login/presentation/pages/code_page.dart';
-// import 'package:aina_flutter/features/promotions/presentation/pages/promotion_details_page.dart';
 import 'package:aina_flutter/features/malls/presentation/pages/mall_details_page.dart';
 import 'package:aina_flutter/features/promotions/presentation/pages/promotions_page.dart';
 import 'package:aina_flutter/features/stores/presentation/pages/stores_page.dart';
@@ -39,7 +36,6 @@ import 'package:aina_flutter/features/coworking/presentation/pages/coworking_bio
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_camera_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/order_details_page.dart';
 import 'package:aina_flutter/features/coworking/domain/services/order_service.dart';
-import 'package:aina_flutter/core/api/api_client.dart';
 import 'package:aina_flutter/core/providers/api_client_provider.dart';
 import 'package:aina_flutter/features/profile/presentation/pages/community_card_page.dart';
 import 'package:aina_flutter/app.dart';
@@ -209,8 +205,6 @@ class AppRouter {
       // Coworking routes
       ShellRoute(
         builder: (context, state, child) {
-          print(
-              'Router: Building CoworkingTabBarScreen with route: ${state.uri}');
           // Don't show the tab bar on the login page
           if (state.uri.toString().startsWith('/login')) {
             return child;
@@ -250,17 +244,12 @@ class AppRouter {
                 name: 'coworking_services',
                 builder: (context, state) {
                   final id = state.pathParameters['id'];
-                  print('Router: Building services page with id: $id');
-                  print('Router: All path parameters: ${state.pathParameters}');
 
-                  // Validate the ID
                   if (id == null || int.tryParse(id) == null) {
-                    print('Router: Invalid ID, redirecting to coworking list');
                     return const CoworkingListPage();
                   }
 
                   final parsedId = int.parse(id);
-                  print('Router: Valid ID found: $parsedId');
                   return ServicesPage(coworkingId: parsedId);
                 },
               ),

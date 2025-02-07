@@ -1,10 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/api/api_client.dart';
 import 'package:aina_flutter/features/coworking/domain/models/order_response.dart';
+import 'package:aina_flutter/features/coworking/domain/services/cache_service.dart';
 import 'dart:async';
 
 // Refresh trigger for orders
 final ordersRefreshProvider = StateProvider<int>((ref) => 0);
+
+// Add refresh key to force provider recreation
+final ordersRefreshKeyProvider = StateProvider<int>((ref) => 0);
 
 class OrdersNotifier extends StateNotifier<AsyncValue<List<OrderResponse>>> {
   final bool isActive;
@@ -17,10 +21,18 @@ class OrdersNotifier extends StateNotifier<AsyncValue<List<OrderResponse>>> {
   }
 
   Future<void> loadOrders() async {
-    try {
-      state = const AsyncValue.loading();
+    if (!mounted) return;
 
-      print('Fetching orders with isActive: $isActive');
+    try {
+      // Try to get cached data first
+      final cachedOrders = await CacheService.getCachedOrders(isActive);
+      if (cachedOrders.isNotEmpty) {
+        state = AsyncValue.data(cachedOrders);
+      } else {
+        state = const AsyncValue.loading();
+      }
+
+      // Fetch fresh data from API
       final response = await _apiClient.dio.get(
         '/api/promenade/orders',
         queryParameters: {
@@ -30,26 +42,34 @@ class OrdersNotifier extends StateNotifier<AsyncValue<List<OrderResponse>>> {
         },
       );
 
-      print('Orders API Response: ${response.data}');
+      if (!mounted) return;
 
       if (response.data['success'] == true && response.data['data'] != null) {
         final List<dynamic> data = response.data['data'];
-        print('Raw orders data: $data');
         final orders =
             data.map((item) => OrderResponse.fromJson(item)).toList();
-        print('Parsed orders: ${orders.length}');
+
+        // Cache the new data
+        await CacheService.cacheOrders(orders, isActive);
+
         state = AsyncValue.data(orders);
       } else {
         state = const AsyncValue.data([]);
       }
     } catch (e, stack) {
-      print('Error loading orders: $e');
-      state = AsyncValue.error(e, stack);
+      if (!mounted) return;
+
+      // If we have cached data, keep showing it
+      final cachedOrders = await CacheService.getCachedOrders(isActive);
+      if (cachedOrders.isNotEmpty) {
+        state = AsyncValue.data(cachedOrders);
+      } else {
+        state = AsyncValue.error(e, stack);
+      }
     }
   }
 
   Future<void> refresh() async {
-    print('Refreshing orders for ${isActive ? 'active' : 'inactive'} list');
     await loadOrders();
   }
 
@@ -60,30 +80,34 @@ class OrdersNotifier extends StateNotifier<AsyncValue<List<OrderResponse>>> {
   }
 }
 
-final activeOrdersProvider = StateNotifierProvider.autoDispose<OrdersNotifier,
-    AsyncValue<List<OrderResponse>>>((ref) {
-  print('Creating active orders provider');
+final activeOrdersProvider = StateNotifierProvider.family
+    .autoDispose<OrdersNotifier, AsyncValue<List<OrderResponse>>, int>(
+        (ref, refreshKey) {
   final apiClient = ApiClient();
   final notifier = OrdersNotifier(true, apiClient);
 
+  // Force refresh on initialization
+  Future.microtask(() => notifier.refresh());
+
   // Listen to the refresh trigger
   ref.listen(ordersRefreshProvider, (previous, next) {
-    print('Active orders refresh triggered');
     notifier.refresh();
   });
 
   return notifier;
 });
 
-final inactiveOrdersProvider = StateNotifierProvider.autoDispose<OrdersNotifier,
-    AsyncValue<List<OrderResponse>>>((ref) {
-  print('Creating inactive orders provider');
+final inactiveOrdersProvider = StateNotifierProvider.family
+    .autoDispose<OrdersNotifier, AsyncValue<List<OrderResponse>>, int>(
+        (ref, refreshKey) {
   final apiClient = ApiClient();
   final notifier = OrdersNotifier(false, apiClient);
 
+  // Force refresh on initialization
+  Future.microtask(() => notifier.refresh());
+
   // Listen to the refresh trigger
   ref.listen(ordersRefreshProvider, (previous, next) {
-    print('Inactive orders refresh triggered');
     notifier.refresh();
   });
 

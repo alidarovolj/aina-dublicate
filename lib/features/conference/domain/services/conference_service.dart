@@ -21,7 +21,7 @@ class ConferenceService {
       }
       throw Exception('Failed to create order');
     } catch (error) {
-      print('Error creating order: $error');
+      // print('Error creating order: $error');
       throw Exception('Failed to create order');
     }
   }

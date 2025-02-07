@@ -23,13 +23,13 @@ final _newsProvider =
         queryParameters: queryParams,
       );
 
-  print('News API response data type: ${response.data['data'].runtimeType}');
-  print('News API response: ${response.data}');
+  // print('News API response data type: ${response.data['data'].runtimeType}');
+  // print('News API response: ${response.data}');
 
   if (response.data['success'] == true) {
     final result = NewsResponse.fromJson(response.data);
-    print('Parsed news count: ${result.data.length}');
-    print('First news item: ${result.data.firstOrNull?.title}');
+    // print('Parsed news count: ${result.data.length}');
+    // print('First news item: ${result.data.firstOrNull?.title}');
     return result;
   } else {
     throw Exception('Failed to fetch news');

@@ -55,7 +55,7 @@ mixin AuthCheckMixin {
         return false;
       }
     } catch (e) {
-      print('Error checking biometric status: $e');
+      // print('Error checking biometric status: $e');
       return false;
     }
 

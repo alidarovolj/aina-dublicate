@@ -104,7 +104,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
         _employment = data['employment'];
       });
     } catch (e) {
-      print('Error loading data: $e');
+      // print('Error loading data: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading data: $e')),
@@ -121,7 +121,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
       });
       ref.invalidate(communityCardProvider);
     } catch (e) {
-      print('Error updating visibility: $e');
+      // print('Error updating visibility: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error updating visibility: $e')),
@@ -165,7 +165,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
       ref.invalidate(communityCardProvider);
       await _loadData();
     } catch (e) {
-      print('Error saving data: $e');
+      // print('Error saving data: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error saving data: $e')),
@@ -211,7 +211,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
         ref.invalidate(communityCardProvider);
       }
     } catch (e) {
-      print('Error picking image: $e');
+      // print('Error picking image: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error picking image: $e')),
@@ -233,7 +233,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
       });
       ref.invalidate(communityCardProvider);
     } catch (e) {
-      print('Error removing image: $e');
+      // print('Error removing image: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error removing image: $e')),

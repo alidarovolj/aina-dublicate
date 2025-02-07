@@ -54,19 +54,17 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
 
   String? _getCurrentCoworkingId() {
     final parts = widget.currentRoute.split('/');
-    print('Current route parts: $parts'); // Debug print
+    // print('Current route parts: $parts'); // Debug print
     if (parts.length >= 3 && parts[1] == 'coworking') {
       final id = parts[2];
       final isValid = int.tryParse(id) != null;
       if (isValid) {
         _lastKnownCoworkingId = id; // Сохраняем валидный ID
-        print('Found valid coworking ID: $id'); // Debug print
+        // print('Found valid coworking ID: $id'); // Debug print
         return id;
       }
     }
     // Возвращаем последний известный ID, если текущий невалиден
-    print(
-        'Using last known coworking ID: $_lastKnownCoworkingId'); // Debug print
     return _lastKnownCoworkingId;
   }
 

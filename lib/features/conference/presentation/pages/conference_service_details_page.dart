@@ -169,7 +169,7 @@ class ConferenceServiceDetailsPage extends ConsumerWidget {
                 : null;
 
         if (coworkingId == null) {
-          print('Error: Could not find coworking ID in route');
+          // print('Error: Could not find coworking ID in route');
           return;
         }
 

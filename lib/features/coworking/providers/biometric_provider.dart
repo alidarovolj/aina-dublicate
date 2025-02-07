@@ -25,7 +25,7 @@ class RetryOnErrorInterceptor extends Interceptor {
       options.extra['retryCount'] = currentRetry + 1;
 
       try {
-        print('Retrying request (${currentRetry + 1}/$maxRetries)');
+        // print('Retrying request (${currentRetry + 1}/$maxRetries)');
         final response = await ApiClient().dio.fetch(options);
         return handler.resolve(response);
       } catch (e) {
@@ -92,7 +92,7 @@ class BiometricService {
       throw Exception('Failed to load biometric data');
     } on DioError catch (e) {
       if (CancelToken.isCancel(e)) {
-        print('Request cancelled: ${e.message}');
+        // print('Request cancelled: ${e.message}');
         throw Exception('Request cancelled');
       }
       rethrow;
@@ -117,7 +117,7 @@ class BiometricService {
       );
     } on DioError catch (e) {
       if (CancelToken.isCancel(e)) {
-        print('Upload cancelled: ${e.message}');
+        // print('Upload cancelled: ${e.message}');
         throw Exception('Upload cancelled');
       }
       rethrow;
@@ -146,7 +146,7 @@ class BiometricService {
       );
     } on DioError catch (e) {
       if (CancelToken.isCancel(e)) {
-        print('Update cancelled: ${e.message}');
+        // print('Update cancelled: ${e.message}');
         throw Exception('Update cancelled');
       }
       rethrow;
@@ -166,7 +166,7 @@ class BiometricService {
       );
     } on DioError catch (e) {
       if (CancelToken.isCancel(e)) {
-        print('Validation cancelled: ${e.message}');
+        // print('Validation cancelled: ${e.message}');
         throw Exception('Validation cancelled');
       }
       rethrow;

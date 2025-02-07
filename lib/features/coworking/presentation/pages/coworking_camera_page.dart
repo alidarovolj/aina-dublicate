@@ -43,13 +43,13 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
-    print("Camera page initialized");
+    // print("Camera page initialized");
     _checkPermissionAndInitialize();
   }
 
   @override
   void dispose() {
-    print("Disposing camera page");
+    // print("Disposing camera page");
     _isDisposed = true;
     WidgetsBinding.instance.removeObserver(this);
     _disposeCamera();
@@ -61,7 +61,7 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
 
   void _disposeCamera() {
     if (_controller != null) {
-      print("Disposing camera controller");
+      // print("Disposing camera controller");
       _controller!.dispose();
       _controller = null;
     }
@@ -84,14 +84,14 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
   }
 
   Future<void> _checkPermissionAndInitialize() async {
-    print("Checking camera permission");
+    // print("Checking camera permission");
     final status = await Permission.camera.request();
-    print("Camera permission status: $status");
+    // print("Camera permission status: $status");
 
     if (status.isGranted) {
       await _initializeCamera();
     } else {
-      print("Camera permission denied");
+      // print("Camera permission denied");
       setState(() {
         _isCameraPermissionDenied = true;
       });
@@ -105,9 +105,9 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
   }
 
   Future<void> _initializeCamera() async {
-    print("Initializing camera");
+    // print("Initializing camera");
     if (_isDisposed) {
-      print("Page is disposed, skipping camera initialization");
+      // print("Page is disposed, skipping camera initialization");
       return;
     }
 
@@ -118,7 +118,7 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
 
     try {
       final cameras = await availableCameras();
-      print("Available cameras: ${cameras.length}");
+      // print("Available cameras: ${cameras.length}");
 
       if (cameras.isEmpty) {
         throw Exception('No cameras available');
@@ -128,10 +128,10 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
         (camera) => camera.lensDirection == CameraLensDirection.front,
         orElse: () => cameras.first,
       );
-      print("Selected camera: ${frontCamera.name}");
+      // print("Selected camera: ${frontCamera.name}");
 
       if (_isDisposed) {
-        print("Page was disposed during camera initialization");
+        // print("Page was disposed during camera initialization");
         return;
       }
 
@@ -148,7 +148,7 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
       // Initialize camera
       await controller.initialize();
       if (_isDisposed) {
-        print("Page was disposed after camera initialization");
+        // print("Page was disposed after camera initialization");
         _disposeCamera();
         return;
       }
@@ -159,9 +159,9 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
       // Lock orientation
       await controller.lockCaptureOrientation(DeviceOrientation.portraitUp);
 
-      print("Camera initialized successfully");
-      print("Camera preview size: ${controller.value.previewSize}");
-      print("Camera aspect ratio: ${controller.value.aspectRatio}");
+      // print("Camera initialized successfully");
+      // print("Camera preview size: ${controller.value.previewSize}");
+      // print("Camera aspect ratio: ${controller.value.aspectRatio}");
 
       if (mounted && !_isDisposed) {
         setState(() {
@@ -169,7 +169,7 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
         });
       }
     } catch (e) {
-      print("Camera initialization error: $e");
+      // print("Camera initialization error: $e");
       if (_isDisposed) return;
 
       setState(() {
@@ -187,7 +187,7 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
 
   Future<void> _capturePhoto() async {
     if (_controller == null || !_controller!.value.isInitialized) {
-      print("Camera not initialized for capture");
+      // print("Camera not initialized for capture");
       return;
     }
 
@@ -196,19 +196,19 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
     });
 
     try {
-      print("Taking picture");
+      // print("Taking picture");
       final image = await _controller!.takePicture();
-      print("Picture taken: ${image.path}");
+      // print("Picture taken: ${image.path}");
 
       final service = BiometricService();
       await service.uploadBiometricPhoto(File(image.path));
-      print("Photo uploaded successfully");
+      // print("Photo uploaded successfully");
 
       if (mounted) {
         context.pop(true);
       }
     } catch (e) {
-      print("Error during photo capture: $e");
+      // print("Error during photo capture: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString())),
@@ -225,9 +225,9 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
 
   @override
   Widget build(BuildContext context) {
-    print("Building camera page");
+    // print("Building camera page");
     final screenSize = MediaQuery.of(context).size;
-    print("Screen size: $screenSize");
+    // print("Screen size: $screenSize");
 
     return Container(
       height: MediaQuery.of(context).size.height,

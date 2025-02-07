@@ -24,8 +24,8 @@ class CodeInputScreen extends ConsumerStatefulWidget {
 }
 
 class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
-  final List<TextEditingController> controllers =
-      List.generate(4, (index) => TextEditingController());
+  final TextEditingController _codeController = TextEditingController();
+  List<String> _codeDigits = ['', '', '', ''];
   bool isLoading = false;
   Timer? _timer;
   int _timeLeft = 59;
@@ -45,9 +45,7 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
   @override
   void dispose() {
     _timer?.cancel();
-    for (var controller in controllers) {
-      controller.dispose();
-    }
+    _codeController.dispose();
     super.dispose();
   }
 
@@ -74,6 +72,12 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
 
   Future<void> _resendCode() async {
     if (!_canResend) return;
+
+    // Clear the input
+    _codeController.clear();
+    setState(() {
+      _codeDigits = ['', '', '', ''];
+    });
 
     await sendInitialLoginRequest();
     _startTimer();
@@ -105,7 +109,7 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
   void checkCodeCompletion() async {
     if (isLoading) return;
 
-    final code = controllers.map((controller) => controller.text).join();
+    final code = _codeController.text;
     if (code.length == 4) {
       setState(() {
         isLoading = true;
@@ -251,64 +255,73 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
                             ),
                             const SizedBox(height: AppLength.body),
                             AutofillGroup(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: List.generate(4, (index) {
-                                  return Container(
-                                    width: 58,
-                                    height: 54,
-                                    margin: const EdgeInsets.only(right: 8),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.white,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        width: 1,
-                                        color: AppColors.lightGrey,
-                                      ),
-                                    ),
+                              child: Stack(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: List.generate(4, (index) {
+                                      return Container(
+                                        width: 58,
+                                        height: 54,
+                                        margin: const EdgeInsets.only(right: 8),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          border: Border.all(
+                                            width: 1,
+                                            color: AppColors.lightGrey,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            _codeDigits[index],
+                                            style: const TextStyle(
+                                              fontSize: AppLength.lg,
+                                              fontWeight: FontWeight.w500,
+                                              color: AppColors.textDarkGrey,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }),
+                                  ),
+                                  Positioned.fill(
                                     child: TextField(
-                                      controller: controllers[index],
+                                      controller: _codeController,
                                       keyboardType: TextInputType.number,
-                                      autofillHints: index == 0
-                                          ? const [AutofillHints.oneTimeCode]
-                                          : null,
-                                      inputFormatters: [
-                                        LengthLimitingTextInputFormatter(1),
-                                        FilteringTextInputFormatter.digitsOnly,
+                                      autofillHints: const [
+                                        AutofillHints.oneTimeCode
                                       ],
-                                      textAlign: TextAlign.center,
+                                      maxLength: 4,
                                       style: const TextStyle(
-                                        fontSize: AppLength.lg,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppColors.textDarkGrey,
+                                        color: Colors.transparent,
+                                        fontSize: 1,
                                       ),
-                                      onChanged: (value) {
-                                        if (index == 0 && value.length > 1) {
-                                          final fullCode = value;
-                                          for (var i = 0;
-                                              i < controllers.length &&
-                                                  i < fullCode.length;
-                                              i++) {
-                                            controllers[i].text = fullCode[i];
-                                          }
-                                          FocusScope.of(context).unfocus();
-                                          checkCodeCompletion();
-                                        } else if (value.isNotEmpty &&
-                                            index < 3) {
-                                          FocusScope.of(context).nextFocus();
-                                        } else if (value.isEmpty && index > 0) {
-                                          FocusScope.of(context)
-                                              .previousFocus();
-                                        }
-                                        checkCodeCompletion();
-                                      },
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                        LengthLimitingTextInputFormatter(4),
+                                      ],
                                       decoration: const InputDecoration(
+                                        counterText: '',
                                         border: InputBorder.none,
                                         contentPadding: EdgeInsets.zero,
                                       ),
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _codeDigits = value
+                                              .padRight(4)
+                                              .split('')
+                                              .take(4)
+                                              .toList();
+                                        });
+                                        if (value.length == 4) {
+                                          checkCodeCompletion();
+                                        }
+                                      },
                                     ),
-                                  );
-                                }),
+                                  ),
+                                ],
                               ),
                             ),
                             const SizedBox(height: AppLength.xxxl),

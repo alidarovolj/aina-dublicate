@@ -284,7 +284,8 @@
       "reserved_date": "Selected date is already reserved",
       "reserved_info": "Reserved dates are marked in yellow",
       "overlap_error": "Selected period overlaps with existing reservation",
-      "go_back": "Go back"
+      "go_back": "Go back",
+      "order_error": "Error creating order"
     },
     "profile": {
       "title": "Profile",
@@ -423,6 +424,31 @@
         "cancelled": "Cancelled",
         "refunded": "Refunded"
       }
+    }
+  },
+  "communication": {
+    "modal": {
+      "title": "Request type:",
+      "whatsapp": {
+        "button_text": "App-related questions",
+        "description": "questions about tariffs, payments, booking issues, app functionality, etc."
+      },
+      "create_request": {
+        "button_text": "Create request",
+        "description": "questions about office rental, repairs, cleaning, event organization, etc."
+      }
+    }
+  },
+  "contact_admin": {
+    "title": "Feedback",
+    "comment_label": "Comment",
+    "comment_placeholder": "Describe your question",
+    "phone_label": "Contact phone",
+    "phone_placeholder": "Enter phone number",
+    "response_note": "We will contact you shortly",
+    "submit_button": "Submit",
+    "errors": {
+      "required": "Required field"
     }
   }
 }

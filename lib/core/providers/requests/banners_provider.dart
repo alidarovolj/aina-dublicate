@@ -11,7 +11,7 @@ class BannersProvider extends StateNotifier<AsyncValue<List<Slide>>> {
 
   Future<void> fetchBanners() async {
     try {
-      // // print('Fetching banners...');
+      // print('Fetching banners...');
       final response = await _listService.banners();
 
       if (response == null || !response.data['success']) {
@@ -22,9 +22,9 @@ class BannersProvider extends StateNotifier<AsyncValue<List<Slide>>> {
           .map((json) => Slide.fromJson(json as Map<String, dynamic>))
           .toList();
       state = AsyncValue.data(banners);
-      // // print('Banners fetched successfully.');
+      // print('Banners fetched successfully.');
     } catch (error, stackTrace) {
-      // // print('Error fetching banners: $error');
+      // print('Error fetching banners: $error');
       state = AsyncValue.error(error, stackTrace);
     }
   }

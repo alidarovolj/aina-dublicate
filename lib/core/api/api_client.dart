@@ -75,7 +75,7 @@ class ApiClient {
   }
 
   void _updateHeaders() {
-    print('Updating headers with locale: $_currentLocale'); // Debug print
+    // print('Updating headers with locale: $_currentLocale'); // Debug print
     dio.options.headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -106,7 +106,7 @@ class ApiClient {
     dio.interceptors.add(InterceptorsWrapper(
       onError: (error, handler) {
         if (error.response?.statusCode == 401) {
-          print('Received 401 response, clearing token and redirecting...');
+          // print('Received 401 response, clearing token and redirecting...');
           // Clear token and cache
           _token = null;
           _clearCache();
@@ -115,14 +115,14 @@ class ApiClient {
           // Get the navigator key to access navigation
           final context = navigatorKey.currentContext;
           if (context != null && context.mounted) {
-            print('Context available, scheduling navigation...');
+            // print('Context available, scheduling navigation...');
             // Schedule navigation for next frame
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              print('Executing navigation to /login');
+              // print('Executing navigation to /login');
               context.go('/');
             });
           } else {
-            print('No valid context available for navigation');
+            // print('No valid context available for navigation');
           }
         }
         return handler.next(error);
@@ -149,7 +149,7 @@ class ApiClient {
           final cachedEntry = _requestCache[cacheKey];
 
           if (cachedEntry != null && !cachedEntry.isExpired) {
-            print('Returning cached response for $cacheKey');
+            // print('Returning cached response for $cacheKey');
             return handler.resolve(cachedEntry.response);
           }
         }

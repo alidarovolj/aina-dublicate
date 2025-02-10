@@ -36,8 +36,55 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
     with SingleTickerProviderStateMixin, RouteAware {
   late TabController _tabController;
   Timer? _refreshTimer;
+  Timer? _debounceTimer;
   bool _isRefreshing = false;
   final _focusNode = FocusNode();
+  DateTime? _lastRefreshTime;
+  bool _isInitialized = false;
+
+  static const _minRefreshInterval = Duration(seconds: 2);
+
+  Future<void> _debouncedRefresh() async {
+    if (!mounted) return;
+
+    // Check if enough time has passed since the last refresh
+    final now = DateTime.now();
+    if (_lastRefreshTime != null &&
+        now.difference(_lastRefreshTime!) < _minRefreshInterval) {
+      debugPrint(
+          'BookingsPage: Skipping refresh - too soon since last refresh');
+      return;
+    }
+
+    if (_isRefreshing) {
+      debugPrint('BookingsPage: Skipping refresh - already refreshing');
+      return;
+    }
+
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () async {
+      if (!mounted) return;
+
+      debugPrint('BookingsPage: Executing debounced refresh');
+      _isRefreshing = true;
+      _lastRefreshTime = DateTime.now();
+
+      try {
+        // Generate new refresh key and update providers
+        final newRefreshKey = DateTime.now().millisecondsSinceEpoch;
+        ref.read(ordersRefreshKeyProvider.notifier).state = newRefreshKey;
+        ref.invalidate(activeOrdersProvider(newRefreshKey));
+        ref.invalidate(inactiveOrdersProvider(newRefreshKey));
+        debugPrint('BookingsPage: Orders refreshed successfully');
+      } catch (e) {
+        debugPrint('BookingsPage: Error refreshing orders: $e');
+      } finally {
+        if (mounted) {
+          _isRefreshing = false;
+        }
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -45,11 +92,39 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_handleTabChange);
     _focusNode.addListener(_handleFocusChange);
+    Future.microtask(() {
+      if (mounted) {
+        _loadInitialData();
+      }
+    });
+  }
+
+  Future<void> _loadInitialData() async {
+    if (!mounted || _isInitialized) return;
+    debugPrint('BookingsPage: Loading initial data');
+
+    try {
+      await _debouncedRefresh();
+      debugPrint('BookingsPage: Initial data load complete');
+      _setupRefreshTimer();
+      _isInitialized = true;
+    } catch (e) {
+      debugPrint('BookingsPage: Error in _loadInitialData: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    }
   }
 
   void _handleFocusChange() {
     if (_focusNode.hasFocus) {
-      _refreshOrders();
+      Future.microtask(() {
+        if (mounted) {
+          _debouncedRefresh();
+        }
+      });
     }
   }
 
@@ -57,15 +132,13 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
   void didChangeDependencies() {
     super.didChangeDependencies();
     routeObserver.subscribe(this, ModalRoute.of(context)!);
-    _setupRefreshTimer();
-    _refreshOrders();
   }
 
   void _setupRefreshTimer() {
     _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(const Duration(seconds: 60), (_) {
       if (mounted) {
-        _refreshOrders();
+        Future.microtask(() => _debouncedRefresh());
       }
     });
   }
@@ -73,32 +146,43 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
   @override
   void didPush() {
     super.didPush();
-    _refreshOrders();
+    debugPrint('BookingsPage: didPush called');
+    Future.microtask(() {
+      if (mounted) {
+        _loadInitialData();
+      }
+    });
   }
 
   @override
   void didPopNext() {
     super.didPopNext();
-    _setupRefreshTimer();
-    _refreshOrders();
+    debugPrint('BookingsPage: didPopNext called');
+    if (mounted) {
+      Future.microtask(() {
+        if (mounted) {
+          _debouncedRefresh();
+          _setupRefreshTimer();
+        }
+      });
+    }
   }
 
   void _handleTabChange() {
     if (_tabController.indexIsChanging) {
-      _refreshOrders();
+      debugPrint('BookingsPage: Tab changed, refreshing orders');
+      Future.microtask(() {
+        if (mounted) {
+          _debouncedRefresh();
+        }
+      });
     }
-  }
-
-  void _refreshOrders() {
-    if (!mounted) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(ordersRefreshKeyProvider.notifier).state++;
-    });
   }
 
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _debounceTimer?.cancel();
     _tabController.removeListener(_handleTabChange);
     routeObserver.unsubscribe(this);
     _tabController.dispose();
@@ -319,7 +403,7 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
                 onTimerExpired: (orderId) async {
                   await Future.delayed(const Duration(milliseconds: 300));
                   if (mounted) {
-                    _refreshOrders();
+                    _debouncedRefresh();
                   }
                 },
               ),

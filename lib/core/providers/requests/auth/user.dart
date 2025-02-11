@@ -25,6 +25,7 @@ class RequestCodeService {
           headers: {
             'Authorization': 'Bearer $token',
             'Accept': 'application/json',
+            'force-refresh': 'true',
           },
           validateStatus: (status) => status != null && status < 500,
         ),
@@ -45,6 +46,56 @@ class RequestCodeService {
       rethrow;
     } catch (e) {
       // print('Error fetching profile: $e');
+      rethrow;
+    }
+  }
+
+  Future<Response?> updateAinaProfile({
+    required String firstName,
+    required String lastName,
+    String? patronymic,
+    String? email,
+    String? licensePlate,
+    String? gender,
+  }) async {
+    try {
+      final token = await StorageService.getToken();
+      if (token == null) {
+        throw Exception('No auth token found');
+      }
+
+      final response = await _dio.post(
+        '/api/aina/profile',
+        data: {
+          'firstname': firstName,
+          'lastname': lastName,
+          'patronymic': patronymic,
+          'email': email,
+          'license_plate': licensePlate,
+          'gender': gender,
+        },
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+            'force-refresh': 'true',
+          },
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
+
+      if (response.statusCode != 200) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          error: 'Failed to update profile: ${response.statusCode}',
+        );
+      }
+
+      return response;
+    } on DioException {
+      rethrow;
+    } catch (e) {
       rethrow;
     }
   }
@@ -136,6 +187,7 @@ class RequestCodeService {
           headers: {
             'Authorization': 'Bearer $token',
             'Accept': 'application/json',
+            'force-refresh': 'true',
           },
           validateStatus: (status) => status != null && status < 500,
         ),

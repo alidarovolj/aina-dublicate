@@ -7,7 +7,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/providers/requests/settings_provider.dart';
 import 'package:aina_flutter/core/widgets/feedback_form_modal.dart';
-import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/providers/requests/auth/user.dart';
 

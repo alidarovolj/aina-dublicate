@@ -50,6 +50,7 @@ dependencies:
   json_annotation: ^4.9.0
   camera: ^0.10.5+9
   webview_flutter: ^4.10.0
+  app_settings: ^5.1.1
 
 dev_dependencies:
   flutter_test:

@@ -210,25 +210,26 @@
     "about_app": "About app",
     "switch_to_coworking": "Switch to Aina Coworking profile",
     "settings": {
-      "firstname_placeholder": "First name",
-      "lastname_placeholder": "Last name",
       "edit": {
         "title": "Personal Information",
         "phone": "Phone",
         "main_info": "Main",
-        "firstname": "First name*",
-        "lastname": "Last name*",
-        "patronymic": "Middle name",
+        "firstname": "First Name*",
+        "lastname": "Last Name*",
+        "patronymic": "Middle Name",
         "email": "E-mail",
-        "car_number": "Car plate number (for parking payment)*",
-        "car_number_note": "*Car plate number can be changed no more than once per day",
+        "car_number": "Car Number (for parking payment)*",
+        "car_number_note": "*Car number can be changed no more than once per day",
         "required_field": "Required field",
         "min_length": "Minimum 5 characters",
+        "validation_error": "Please fix the errors in the form",
+        "save_success": "Changes saved successfully",
+        "update_error": "Error saving data",
         "gender": {
           "title": "Gender",
-          "female": "Female",
-          "male": "Male",
-          "not_specified": "Not specified"
+          "female": "F",
+          "male": "M",
+          "not_specified": "N/A"
         },
         "settings": "Settings",
         "logout": {
@@ -312,6 +313,31 @@
         "intersection": "Selected time range is not available",
         "back": "Select again"
       }
+    },
+    "edit_data": {
+      "title": "Personal Information",
+      "phone": "Phone",
+      "firstname": "First name*",
+      "lastname": "Last name*",
+      "patronymic": "Middle name",
+      "email": "E-mail*",
+      "iin": "IIN*",
+      "required_field": "Required field",
+      "invalid_email": "Invalid email format",
+      "invalid_iin": "IIN must contain 12 digits",
+      "gender": {
+        "title": "Gender",
+        "male": "Male",
+        "female": "Female",
+        "none": "Not specified"
+      },
+      "settings": "Settings",
+      "language": "Language",
+      "select_language": "Select language",
+      "account": "Account",
+      "logout": "Log out",
+      "logout_title": "Log out",
+      "logout_message": "Are you sure you want to log out?"
     }
   },
   "scanner": {
@@ -363,7 +389,9 @@
     }
   },
   "camera": {
-    "permission_denied": "Camera permission is required for biometric verification",
+    "permission_title": "Camera Access Required",
+    "permission_denied": "Camera access denied. Please enable camera access in your device settings to continue.",
+    "permission_required": "Please allow camera access to take a photo. You can enable it in Settings.",
     "initialization_error": "Failed to initialize camera"
   },
   "orders": {
@@ -397,7 +425,13 @@
   "common": {
     "currency": "₸",
     "close": "Close",
-    "ok": "Back to biometry"
+    "ok": "Back to biometry",
+    "cancel": "Cancel",
+    "settings": "Settings",
+    "confirm": "Confirm",
+    "save": "Save",
+    "discard": "Discard",
+    "logout": "Logout"
   },
   "limits": {
     "title": "Limit Accounts",
@@ -449,6 +483,24 @@
     "submit_button": "Submit",
     "errors": {
       "required": "Required field"
+    }
+  },
+  "modals": {
+    "save_changes": {
+      "title": "Save Changes",
+      "message": "You have unsaved changes. Would you like to save them?"
+    },
+    "validation_error": {
+      "title": "Warning",
+      "message": "There are errors in the form. All entered data will be lost if you exit.",
+      "stay": "Fix errors",
+      "discard": "Exit without saving"
+    },
+    "logout": {
+      "title": "Logout",
+      "message": "Confirm logout?",
+      "confirm": "Logout",
+      "cancel": "Cancel"
     }
   }
 }

@@ -14,7 +14,7 @@ class RetryOnErrorInterceptor extends Interceptor {
   });
 
   @override
-  Future onError(DioError err, ErrorInterceptorHandler handler) async {
+  Future onError(DioException err, ErrorInterceptorHandler handler) async {
     final options = err.requestOptions;
     final int currentRetry = options.extra['retryCount'] ?? 0;
 
@@ -51,7 +51,12 @@ final biometricDataProvider =
   ));
 
   try {
-    final response = await dio.get('/api/promenade/profile/biometric');
+    final response = await dio.get(
+      '/api/promenade/profile/biometric',
+      options: Options(
+        headers: {'force-refresh': 'true'},
+      ),
+    );
     return BiometricData.fromJson(response.data['data']);
   } catch (e) {
     throw Exception('Failed to load biometric data after retries');
@@ -75,7 +80,7 @@ class BiometricService {
     _cancelToken = null;
   }
 
-  Future<BiometricData> getBiometricInfo() async {
+  Future<BiometricData> getBiometricInfo({bool forceRefresh = true}) async {
     // Cancel any existing requests
     cancelRequests();
     // Create new token for this request
@@ -85,12 +90,15 @@ class BiometricService {
       final response = await _dio.get(
         '/api/promenade/profile/biometric',
         cancelToken: _cancelToken,
+        options: Options(
+          headers: forceRefresh ? {'force-refresh': 'true'} : null,
+        ),
       );
       if (response.data['success']) {
         return BiometricData.fromJson(response.data['data']);
       }
       throw Exception('Failed to load biometric data');
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       if (CancelToken.isCancel(e)) {
         // print('Request cancelled: ${e.message}');
         throw Exception('Request cancelled');
@@ -110,12 +118,9 @@ class BiometricService {
     });
 
     try {
-      await _dio.post(
-        '/api/promenade/profile/biometric',
-        data: formData,
-        cancelToken: _cancelToken,
-      );
-    } on DioError catch (e) {
+      await _dio.post('/api/promenade/profile/biometric',
+          data: formData, cancelToken: _cancelToken);
+    } on DioException catch (e) {
       if (CancelToken.isCancel(e)) {
         // print('Upload cancelled: ${e.message}');
         throw Exception('Upload cancelled');
@@ -139,12 +144,9 @@ class BiometricService {
     });
 
     try {
-      await _dio.post(
-        '/promenade/profile/biometric',
-        data: formData,
-        cancelToken: _cancelToken,
-      );
-    } on DioError catch (e) {
+      await _dio.post('/promenade/profile/biometric',
+          data: formData, cancelToken: _cancelToken);
+    } on DioException catch (e) {
       if (CancelToken.isCancel(e)) {
         // print('Update cancelled: ${e.message}');
         throw Exception('Update cancelled');
@@ -160,11 +162,9 @@ class BiometricService {
     _cancelToken = CancelToken();
 
     try {
-      await _dio.post(
-        '/api/promenade/profile/biometric-validate',
-        cancelToken: _cancelToken,
-      );
-    } on DioError catch (e) {
+      await _dio.post('/api/promenade/profile/biometric-validate',
+          cancelToken: _cancelToken);
+    } on DioException catch (e) {
       if (CancelToken.isCancel(e)) {
         // print('Validation cancelled: ${e.message}');
         throw Exception('Validation cancelled');

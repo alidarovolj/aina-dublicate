@@ -27,7 +27,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Camera access is required for document scanning</string>
+	<string>Camera access is required for biometric verification to ensure secure access to coworking spaces</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>Приложению требуется доступ к геолокации для отображения вашего местоположения на карте</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

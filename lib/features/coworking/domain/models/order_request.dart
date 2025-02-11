@@ -1,5 +1,3 @@
-import 'package:json_annotation/json_annotation.dart';
-
 class OrderRequest {
   final String startAt;
   final String endAt;

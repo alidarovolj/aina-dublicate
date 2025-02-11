@@ -5,8 +5,6 @@ import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/features/coworking/domain/models/order_response.dart';
 import 'package:aina_flutter/features/coworking/domain/services/order_service.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:intl/intl.dart';
 import 'package:aina_flutter/features/coworking/presentation/widgets/qr_modal.dart';
 import 'package:aina_flutter/features/coworking/presentation/widgets/history_modal.dart';
 import 'package:webview_flutter/webview_flutter.dart';

@@ -9,7 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-class ProfilePage extends ConsumerWidget {
+class ProfilePage extends ConsumerStatefulWidget {
   final int mallId;
 
   const ProfilePage({
@@ -18,7 +18,21 @@ class ProfilePage extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends ConsumerState<ProfilePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Force refresh profile data when page is loaded
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(userProvider);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final userAsync = ref.watch(userProvider);
     final ticketsAsync = ref.watch(userTicketsProvider);
@@ -36,7 +50,7 @@ class ProfilePage extends ConsumerWidget {
     // If not authenticated, redirect to malls
     if (!authState.isAuthenticated) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go('/malls');
+        context.go('/');
       });
       return const SizedBox.shrink();
     }
@@ -155,7 +169,9 @@ class ProfilePage extends ConsumerWidget {
                             onTap: () {
                               context.pushNamed(
                                 'mall_edit',
-                                pathParameters: {'id': mallId.toString()},
+                                pathParameters: {
+                                  'id': widget.mallId.toString()
+                                },
                               );
                             },
                           ),
@@ -177,7 +193,7 @@ class ProfilePage extends ConsumerWidget {
                                         context.pushNamed(
                                           'tickets',
                                           pathParameters: {
-                                            'id': mallId.toString()
+                                            'id': widget.mallId.toString()
                                           },
                                         );
                                       },

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
-import 'package:aina_flutter/core/providers/requests/auth/user.dart';
 
 class AuthWarningModal {
   static Future<void> show(
@@ -52,7 +50,7 @@ class AuthWarningModal {
                     return;
                   }
 
-                  context.goNamed(
+                  context.pushNamed(
                     'promotion_qr',
                     pathParameters: {
                       'promotionId': promotionId,

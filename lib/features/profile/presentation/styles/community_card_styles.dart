@@ -32,7 +32,7 @@ class CommunityCardStyles {
     borderRadius: BorderRadius.circular(borderRadius),
   );
 
-  static BoxDecoration statusDecoration = BoxDecoration(
+  static BoxDecoration statusDecoration = const BoxDecoration(
     color: backgroundGrey,
     border: Border(
       bottom: BorderSide(

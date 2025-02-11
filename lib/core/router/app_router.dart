@@ -41,6 +41,7 @@ import 'package:aina_flutter/features/profile/presentation/pages/community_card_
 import 'package:aina_flutter/app.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/limit_accounts_page.dart';
 import 'package:aina_flutter/core/router/route_observer.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/coworking_edit_data_page.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -268,37 +269,36 @@ class AppRouter {
                 path: 'profile',
                 name: 'coworking_profile',
                 builder: (context, state) {
-                  final id = state.pathParameters['id'];
-                  if (id == null || int.tryParse(id) == null) {
-                    return const CoworkingListPage();
-                  }
-                  return CoworkingProfilePage(coworkingId: int.parse(id));
+                  final id = int.parse(state.pathParameters['id']!);
+                  return CoworkingProfilePage(coworkingId: id);
                 },
                 routes: [
                   GoRoute(
+                    path: 'edit',
+                    name: 'coworking_edit_data',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      return CoworkingEditDataPage(coworkingId: id);
+                    },
+                  ),
+                  GoRoute(
                     path: 'biometric',
-                    name: 'biometric',
+                    name: 'coworking_biometric',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      return CoworkingBiometricPage(coworkingId: id);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'camera',
+                    name: 'biometric_camera',
                     builder: (context, state) {
                       final id = state.pathParameters['id'];
                       if (id == null || int.tryParse(id) == null) {
                         return const CoworkingListPage();
                       }
-                      return CoworkingBiometricPage(coworkingId: int.parse(id));
+                      return CoworkingCameraPage(coworkingId: int.parse(id));
                     },
-                    routes: [
-                      GoRoute(
-                        path: 'camera',
-                        name: 'biometric_camera',
-                        builder: (context, state) {
-                          final id = state.pathParameters['id'];
-                          if (id == null || int.tryParse(id) == null) {
-                            return const CoworkingListPage();
-                          }
-                          return CoworkingCameraPage(
-                              coworkingId: int.parse(id));
-                        },
-                      ),
-                    ],
                   ),
                   GoRoute(
                     path: 'community-card',

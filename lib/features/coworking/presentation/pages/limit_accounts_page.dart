@@ -14,9 +14,9 @@ class LimitAccountsPage extends ConsumerWidget {
   final int coworkingId;
 
   const LimitAccountsPage({
-    Key? key,
+    super.key,
     required this.coworkingId,
-  }) : super(key: key);
+  });
 
   String formatDate(String? dateStr) {
     if (dateStr == null) return '';
@@ -63,7 +63,45 @@ class LimitAccountsPage extends ConsumerWidget {
   Widget _buildSettingsList(BuildContext context, List<Quota> quotas) {
     if (quotas.isEmpty) {
       return Center(
-        child: Text(tr('limits.no_quotas')),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                tr('limits.no_quotas'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: AppColors.textDarkGrey,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 24),
+              InkWell(
+                onTap: () {
+                  context.push('/coworking/$coworkingId/profile');
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    tr('coworking.profile.title'),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -185,11 +223,11 @@ class _QuotaCard extends StatelessWidget {
   final String Function(String?) formatDate;
 
   const _QuotaCard({
-    Key? key,
+    super.key,
     required this.quota,
     required this.onTap,
     required this.formatDate,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

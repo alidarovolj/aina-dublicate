@@ -7,10 +7,10 @@ import 'core/styles/theme.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:aina_flutter/core/api/api_client.dart';
-import 'package:aina_flutter/core/widgets/chucker_overlay_wrapper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/types/promenade_profile.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
+import 'package:dio/dio.dart';
 
 // Global navigator key for accessing navigation from anywhere
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -23,7 +23,12 @@ final promenadeProfileProvider = FutureProvider<PromenadeProfile>((ref) async {
   }
 
   try {
-    final response = await ApiClient().dio.get('/api/promenade/profile');
+    final response = await ApiClient().dio.get(
+          '/api/promenade/profile',
+          options: Options(
+            headers: {'force-refresh': 'true'},
+          ),
+        );
     if (response.data['success'] == true && response.data['data'] != null) {
       return PromenadeProfile.fromJson(response.data['data']);
     }

@@ -159,4 +159,26 @@ class OrderService {
       throw Exception('Failed to initiate payment: ${e.message}');
     }
   }
+
+  Future<List<dynamic>> getOrders({
+    required String stateGroup,
+    bool forceRefresh = false,
+  }) async {
+    final response = await _apiClient.dio.get(
+      '/api/promenade/orders',
+      queryParameters: {
+        'per_page': 10,
+        'page': 1,
+        'state_group': stateGroup,
+      },
+      options: Options(
+        headers: forceRefresh ? {'force-refresh': 'true'} : null,
+      ),
+    );
+
+    if (response.data['success'] == true && response.data['data'] != null) {
+      return response.data['data'];
+    }
+    return [];
+  }
 }

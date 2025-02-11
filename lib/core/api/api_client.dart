@@ -47,7 +47,7 @@ class ApiClient {
     }
   }
 
-  void _clearCache() {
+  void clearCache() {
     _requestCache.clear();
   }
 
@@ -109,7 +109,7 @@ class ApiClient {
           // print('Received 401 response, clearing token and redirecting...');
           // Clear token and cache
           _token = null;
-          _clearCache();
+          clearCache();
           _updateHeaders();
 
           // Get the navigator key to access navigation
@@ -134,6 +134,17 @@ class ApiClient {
       onRequest: (options, handler) {
         // Clean expired cache entries
         _cleanExpiredCache();
+
+        // Check for force refresh header
+        final forceRefresh = options.headers['force-refresh'] == 'true';
+        if (forceRefresh) {
+          // Remove force-refresh header before sending request
+          options.headers.remove('force-refresh');
+          // Clear cache for this specific endpoint
+          final cacheKey = '${options.uri}_$_currentLocale';
+          _requestCache.remove(cacheKey);
+          return handler.next(options);
+        }
 
         // Clear cache for specific endpoints when POST requests are made
         if (options.method == 'POST') {

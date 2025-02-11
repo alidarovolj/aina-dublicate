@@ -183,9 +183,16 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
                 key: qrKey,
                 onQRViewCreated: _onQRViewCreated,
               ),
-              const CustomHeader(
+              CustomHeader(
                 title: 'AINA QR',
                 type: HeaderType.pop,
+                onBack: () {
+                  controller?.pauseCamera();
+                  controller?.dispose();
+                  if (mounted) {
+                    context.pop();
+                  }
+                },
               ),
               Center(
                 child: Column(
@@ -235,6 +242,7 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
 
   @override
   void dispose() {
+    controller?.pauseCamera();
     controller?.dispose();
     super.dispose();
   }

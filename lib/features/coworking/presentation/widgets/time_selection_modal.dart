@@ -241,8 +241,9 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
   }
 
   String _formatSelectedDateTime(String? fullDateTime) {
-    if (fullDateTime == null)
+    if (fullDateTime == null) {
       return 'coworking.time_selection.not_selected'.tr();
+    }
     final dateTime = DateTime.parse('$fullDateTime:00');
     return '${DateFormat('dd MMMM yyyy', context.locale.languageCode).format(dateTime)} ${DateFormat('HH:mm').format(dateTime)}';
   }

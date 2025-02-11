@@ -263,11 +263,15 @@ class StoryDetailsPage extends ConsumerStatefulWidget {
 }
 
 class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late int currentStoryIndex;
   late int currentInnerStoryIndex = 0;
   late PageController _pageController;
   late AnimationController _progressController;
+  late AnimationController _transitionController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+  bool _isForward = true;
   late List<StoryItem> currentStories = [];
 
   @override
@@ -285,10 +289,30 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
         }
       });
 
+    _transitionController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _transitionController,
+      curve: Curves.easeInOut,
+    ));
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0.0, 0.0),
+      end: const Offset(-1.0, 0.0),
+    ).animate(CurvedAnimation(
+      parent: _transitionController,
+      curve: Curves.easeInOut,
+    ));
+
     _markCurrentStoryAsRead();
     _progressController.forward();
 
-    // Initialize story details
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchStoryDetails();
     });
@@ -308,9 +332,8 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
     }
   }
 
-  void handleNextStory() {
+  Future<void> handleNextStory() async {
     if (currentInnerStoryIndex < currentStories.length - 1) {
-      // print('Moving to next inner story: ${currentInnerStoryIndex + 1}');
       setState(() {
         currentInnerStoryIndex++;
       });
@@ -322,7 +345,15 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
       _progressController.reset();
       _progressController.forward();
     } else if (currentStoryIndex < widget.stories.length - 1) {
-      // print('Moving to next story set: ${currentStoryIndex + 1}');
+      _isForward = true;
+      _slideAnimation = Tween<Offset>(
+        begin: const Offset(0.0, 0.0),
+        end: const Offset(-1.0, 0.0),
+      ).animate(CurvedAnimation(
+        parent: _transitionController,
+        curve: Curves.easeInOut,
+      ));
+      await _transitionController.forward();
       setState(() {
         currentStoryIndex++;
         currentInnerStoryIndex = 0;
@@ -333,14 +364,14 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
       _markCurrentStoryAsRead();
       _progressController.reset();
       _progressController.forward();
+      await _transitionController.reverse();
     } else {
       Navigator.of(context).pop();
     }
   }
 
-  void handlePreviousStory() {
+  Future<void> handlePreviousStory() async {
     if (currentInnerStoryIndex > 0) {
-      // print('Moving to previous inner story: ${currentInnerStoryIndex - 1}');
       setState(() {
         currentInnerStoryIndex--;
       });
@@ -352,7 +383,15 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
       _progressController.reset();
       _progressController.forward();
     } else if (currentStoryIndex > 0) {
-      // print('Moving to previous story set: ${currentStoryIndex - 1}');
+      _isForward = false;
+      _slideAnimation = Tween<Offset>(
+        begin: const Offset(0.0, 0.0),
+        end: const Offset(1.0, 0.0),
+      ).animate(CurvedAnimation(
+        parent: _transitionController,
+        curve: Curves.easeInOut,
+      ));
+      await _transitionController.forward();
       setState(() {
         currentStoryIndex--;
         currentStories = widget.stories[currentStoryIndex].stories ?? [];
@@ -362,6 +401,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
       _fetchStoryDetails();
       _progressController.reset();
       _progressController.forward();
+      await _transitionController.reverse();
     }
   }
 
@@ -400,102 +440,123 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          PageView.builder(
-            controller: _pageController,
-            itemCount: currentStories.length,
-            onPageChanged: (index) {
-              setState(() {
-                currentInnerStoryIndex = index;
-              });
-              _fetchStoryDetails();
-              _progressController.reset();
-              _progressController.forward();
-            },
-            itemBuilder: (context, index) {
-              final story = currentStories[index];
-              return GestureDetector(
-                onTapDown: (details) {
-                  _progressController.stop();
-                  if (details.globalPosition.dx < screenWidth / 2) {
-                    handlePreviousStory();
-                  } else {
-                    handleNextStory();
-                  }
-                },
-                onTapUp: (details) {
-                  _progressController.forward();
-                },
-                child: Image.network(
-                  story.previewImage ?? '',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => const Center(
-                      child: Icon(Icons.error, color: Colors.white)),
+          AnimatedBuilder(
+            animation: _transitionController,
+            builder: (context, child) {
+              return SlideTransition(
+                position: _slideAnimation,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Stack(
+                    children: [
+                      PageView.builder(
+                        controller: _pageController,
+                        itemCount: currentStories.length,
+                        onPageChanged: (index) {
+                          setState(() {
+                            currentInnerStoryIndex = index;
+                          });
+                          _fetchStoryDetails();
+                          _progressController.reset();
+                          _progressController.forward();
+                        },
+                        itemBuilder: (context, index) {
+                          final story = currentStories[index];
+                          return GestureDetector(
+                            onTapDown: (details) {
+                              _progressController.stop();
+                              if (details.globalPosition.dx < screenWidth / 2) {
+                                handlePreviousStory();
+                              } else {
+                                handleNextStory();
+                              }
+                            },
+                            onTapUp: (details) {
+                              _progressController.forward();
+                            },
+                            child: Image.network(
+                              story.previewImage ?? '',
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Center(
+                                      child: Icon(Icons.error,
+                                          color: Colors.white)),
+                            ),
+                          );
+                        },
+                      ),
+                      Positioned(
+                        top: paddingTop + 8,
+                        left: 16,
+                        right: 16,
+                        child: Column(
+                          children: [
+                            Row(
+                              children: List.generate(
+                                currentStories.length,
+                                (index) => Expanded(
+                                  child: Container(
+                                    height: 2,
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 2),
+                                    child: ValueListenableBuilder<double>(
+                                      valueListenable: _progressController,
+                                      builder: (context, value, child) {
+                                        return LinearProgressIndicator(
+                                          value: index < currentInnerStoryIndex
+                                              ? 1.0
+                                              : (index == currentInnerStoryIndex
+                                                  ? value
+                                                  : 0.0),
+                                          backgroundColor:
+                                              Colors.grey.withOpacity(0.5),
+                                          valueColor:
+                                              const AlwaysStoppedAnimation<
+                                                  Color>(Colors.white),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    image: DecorationImage(
+                                      image: NetworkImage(
+                                        widget.stories[currentStoryIndex]
+                                                .previewImage ??
+                                            '',
+                                      ),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  widget.stories[currentStoryIndex].name ?? '',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
-          ),
-          Positioned(
-            top: paddingTop + 8,
-            left: 16,
-            right: 16,
-            child: Column(
-              children: [
-                Row(
-                  children: List.generate(
-                    currentStories.length,
-                    (index) => Expanded(
-                      child: Container(
-                        height: 2,
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        child: ValueListenableBuilder<double>(
-                          valueListenable: _progressController,
-                          builder: (context, value, child) {
-                            return LinearProgressIndicator(
-                              value: index < currentInnerStoryIndex
-                                  ? 1.0
-                                  : (index == currentInnerStoryIndex
-                                      ? value
-                                      : 0.0),
-                              backgroundColor: Colors.grey.withOpacity(0.5),
-                              valueColor: const AlwaysStoppedAnimation<Color>(
-                                  Colors.white),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          image: NetworkImage(
-                            widget.stories[currentStoryIndex].previewImage ??
-                                '',
-                          ),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      widget.stories[currentStoryIndex].name ?? '',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
           ),
           Positioned(
             top: paddingTop,
@@ -518,7 +579,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
                   backgroundColor: Colors.white,
                   textColor: Colors.black,
                   onPressed: () {
-                    Navigator.of(context).pop(); // Close story first
+                    Navigator.of(context).pop();
                     ButtonNavigationHandler.handleNavigation(
                         context, ref, button);
                   },
@@ -534,6 +595,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
   void dispose() {
     _progressController.dispose();
     _pageController.dispose();
+    _transitionController.dispose();
     super.dispose();
   }
 }

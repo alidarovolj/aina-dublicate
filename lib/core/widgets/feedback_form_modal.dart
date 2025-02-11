@@ -41,7 +41,7 @@ class FeedbackFormModal extends ConsumerStatefulWidget {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              Expanded(
+              const Expanded(
                 child: SingleChildScrollView(
                   child: FeedbackFormModal(),
                 ),

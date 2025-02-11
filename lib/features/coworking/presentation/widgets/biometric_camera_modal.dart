@@ -109,22 +109,23 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
   }
 
   Future<void> _checkPermissionAndInitialize() async {
-    // print("Checking camera permission");
-    final status = await Permission.camera.request();
-    // print("Camera permission status: $status");
+    final status = await Permission.camera.status;
 
     if (status.isGranted) {
       await _initializeCamera();
     } else {
-      // print("Camera permission denied");
-      setState(() {
-        _isCameraPermissionDenied = true;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('camera.permission_denied'.tr())),
-        );
-        context.pop(false);
+      // Request permission
+      final result = await Permission.camera.request();
+
+      if (result.isGranted) {
+        await _initializeCamera();
+      } else {
+        setState(() {
+          _isCameraPermissionDenied = true;
+        });
+        if (mounted) {
+          context.pop(false);
+        }
       }
     }
   }

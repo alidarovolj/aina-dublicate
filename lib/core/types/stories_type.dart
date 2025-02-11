@@ -1,5 +1,4 @@
 import 'package:aina_flutter/core/types/button_config.dart';
-import 'package:flutter/foundation.dart';
 
 class Story {
   final int? id; // Changed from String? to int?

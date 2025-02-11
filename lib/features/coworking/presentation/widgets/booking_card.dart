@@ -9,10 +9,10 @@ class BookingCard extends StatefulWidget {
   final Function(int)? onTimerExpired;
 
   const BookingCard({
-    Key? key,
+    super.key,
     required this.order,
     this.onTimerExpired,
-  }) : super(key: key);
+  });
 
   @override
   State<BookingCard> createState() => _BookingCardState();
@@ -35,7 +35,7 @@ class _BookingCardState extends State<BookingCard> {
     final createdAt =
         DateTime.parse(widget.order.createdAt).millisecondsSinceEpoch;
     final now = DateTime.now().millisecondsSinceEpoch;
-    final fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
+    const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
     final endTime = createdAt + fifteenMinutes;
     _remainingTime = ((endTime - now) / 1000).floor();
 

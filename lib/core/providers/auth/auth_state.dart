@@ -78,6 +78,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> setToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
+    // Clear cache before setting new token
+    ApiClient().clearCache();
     await prefs.setString(_tokenKey, token);
     ApiClient().token = token;
     state = state.copyWith(
@@ -101,6 +103,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
     ApiClient().token = null;
+    // Clear API client's cache
+    ApiClient().clearCache();
     state = AuthState(isAuthenticated: false);
   }
 

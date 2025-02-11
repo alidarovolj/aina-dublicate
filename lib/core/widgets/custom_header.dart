@@ -15,12 +15,16 @@ class CustomHeader extends StatelessWidget {
   final String title;
   final HeaderType type;
   final bool isDark;
+  final VoidCallback? onBack;
+  final Widget? trailing;
 
   const CustomHeader({
     super.key,
     required this.title,
     this.type = HeaderType.close,
     this.isDark = false,
+    this.onBack,
+    this.trailing,
   });
 
   @override
@@ -34,7 +38,13 @@ class CustomHeader extends StatelessWidget {
         children: [
           if (type == HeaderType.pop)
             GestureDetector(
-              onTap: () => context.pop(),
+              onTap: () {
+                if (onBack != null) {
+                  onBack!();
+                } else if (Navigator.canPop(context)) {
+                  context.pop();
+                }
+              },
               child: Transform.scale(
                 scaleX: -1,
                 child: SvgPicture.asset(
@@ -60,6 +70,7 @@ class CustomHeader extends StatelessWidget {
               textAlign: TextAlign.left,
             ),
           ),
+          if (trailing != null) trailing!,
           if (type == HeaderType.close)
             GestureDetector(
               onTap: () => context.go('/'),

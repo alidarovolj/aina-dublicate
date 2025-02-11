@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:aina_flutter/core/widgets/chucker_floating_button.dart';
 
 class ChuckerOverlayWrapper extends StatelessWidget {
   final Widget child;

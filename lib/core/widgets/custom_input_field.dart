@@ -11,6 +11,7 @@ class CustomInputField extends StatelessWidget {
   final Function(String)? onChanged;
   final bool hasError;
   final String? errorText;
+  final TextInputType? keyboardType;
 
   const CustomInputField({
     super.key,
@@ -23,6 +24,7 @@ class CustomInputField extends StatelessWidget {
     this.onChanged,
     this.hasError = false,
     this.errorText,
+    this.keyboardType,
   });
 
   @override
@@ -39,6 +41,7 @@ class CustomInputField extends StatelessWidget {
         TextField(
           controller: controller,
           focusNode: focusNode,
+          keyboardType: keyboardType,
           style: const TextStyle(
             color: AppColors.textDarkGrey,
           ),

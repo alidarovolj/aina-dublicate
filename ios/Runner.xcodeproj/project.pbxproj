@@ -12,6 +12,8 @@
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		46DC4B57EE76D197A8467FFA /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2922ED653E9C2D95DDF208F5 /* Pods_Runner.framework */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
+		86CF653E2D5C89ED007545F0 /* CardScan in Frameworks */ = {isa = PBXBuildFile; productRef = 86CF653D2D5C89ED007545F0 /* CardScan */; };
+		86CF65402D5C89ED007545F0 /* EpaySDK in Frameworks */ = {isa = PBXBuildFile; productRef = 86CF653F2D5C89ED007545F0 /* EpaySDK */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
@@ -26,19 +28,6 @@
 			remoteInfo = Runner;
 		};
 /* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		9705A1C41CF9048500538489 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
@@ -60,9 +49,6 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		DE891D262D550D3200E18865 /* EpaySDK-master */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = "EpaySDK-master"; sourceTree = "<group>"; };
-		DE891D272D550E3400E18865 /* EpaySDK-master */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "EpaySDK-master"; path = "Runner/EpaySDK-master"; sourceTree = "<group>"; };
-		DE891D282D550F0B00E18865 /* EpaySDK-master */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "EpaySDK-master"; path = "Runner/Frameworks/EpaySDK-master"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,7 +63,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				86CF65402D5C89ED007545F0 /* EpaySDK in Frameworks */,
 				46DC4B57EE76D197A8467FFA /* Pods_Runner.framework in Frameworks */,
+				86CF653E2D5C89ED007545F0 /* CardScan in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -142,9 +130,6 @@
 		AC231A31FD73AF8207F69A30 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				DE891D262D550D3200E18865 /* EpaySDK-master */,
-				DE891D272D550E3400E18865 /* EpaySDK-master */,
-				DE891D282D550F0B00E18865 /* EpaySDK-master */,
 				2922ED653E9C2D95DDF208F5 /* Pods_Runner.framework */,
 			);
 			name = Frameworks;
@@ -190,7 +175,6 @@
 				97C146EA1CF9000F007C117D /* Sources */,
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
-				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				CFBC3E85E49A16E688BCD123 /* [CP] Embed Pods Frameworks */,
 				AB97C156E808271FA1D31AB0 /* [CP] Copy Pods Resources */,
@@ -233,6 +217,9 @@
 				Base,
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
+			packageReferences = (
+				86CF653C2D5C89ED007545F0 /* XCLocalSwiftPackageReference "Runner/Frameworks/EpaySDK-master" */,
+			);
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -878,6 +865,24 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		86CF653C2D5C89ED007545F0 /* XCLocalSwiftPackageReference "Runner/Frameworks/EpaySDK-master" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "Runner/Frameworks/EpaySDK-master";
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		86CF653D2D5C89ED007545F0 /* CardScan */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CardScan;
+		};
+		86CF653F2D5C89ED007545F0 /* EpaySDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = EpaySDK;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 97C146E61CF9000F007C117D /* Project object */;
 }

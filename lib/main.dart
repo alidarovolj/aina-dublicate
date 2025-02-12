@@ -20,6 +20,7 @@ Future<void> main() async {
 
   // Initialize Chucker
   ChuckerFlutter.showOnRelease = true;
+  ChuckerFlutter.isDebugMode = true; // Enable debug mode for better logging
 
   // Load environment variables and other initializations
   await dotenv.load();

@@ -20,6 +20,7 @@ class LoadingViewController: UIViewController {
     private var didObtainReference = false
     private var qrStatusTimer: Timer?
     private var timerTickCount = 0
+    private var loadingStartTime: Date?
     
     // MARK: - UI Elements
     
@@ -69,8 +70,17 @@ class LoadingViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        loadingStartTime = Date()
         activityIndicatorView.startAnimating()
+        NSLog("📱 Loading view appeared, starting activity indicator")
+        
+        // Post loading state notification
+        NotificationCenter.default.post(
+            name: NSNotification.Name("payment_loading_notification"),
+            object: nil,
+            userInfo: ["isLoading": true]
+        )
+        NSLog("📱 Posted loading state notification: true")
     }
     
     override func viewDidLoad() {
@@ -89,6 +99,26 @@ class LoadingViewController: UIViewController {
         setupConstraints()
         getQRStatusIfNeeded()
         setCustomStyle()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        if let startTime = loadingStartTime {
+            let duration = Date().timeIntervalSince(startTime)
+            NSLog("📱 Total loading view duration: \(duration) seconds")
+        }
+        
+        // Post loading state ended notification
+        NotificationCenter.default.post(
+            name: NSNotification.Name("payment_loading_notification"),
+            object: nil,
+            userInfo: ["isLoading": false]
+        )
+        NSLog("📱 Posted loading state notification: false")
+        
+        invalidateTimer()
+        NSLog("📱 Invalidated timers")
     }
     
     // MARK: - Private methods
@@ -192,14 +222,23 @@ class LoadingViewController: UIViewController {
     
     private func showResponse() {
         invalidateTimer()
+        NSLog("📱 Showing payment response")
+        
+        // Calculate loading duration
+        if let startTime = loadingStartTime {
+            let duration = Date().timeIntervalSince(startTime)
+            NSLog("✅ Payment completed successfully after \(duration) seconds")
+        }
 
         DispatchQueue.main.async { [weak self] in
             guard let loadingVC = self else { return }
             if let response = loadingVC.paymentModel.paymentResponseBody,
                let details3D = response.secure3D,
                loadingVC.didObtainReference == false {
+                NSLog("📱 Opening 3D Secure web view")
                 loadingVC.openWebView(details3D: details3D)
             } else {
+                NSLog("📱 Showing success view controller")
                 let successVC = SuccessViewController(paymentModel: loadingVC.paymentModel)
                 loadingVC.navigationController?.pushViewController(successVC, animated: false)
             }
@@ -208,9 +247,17 @@ class LoadingViewController: UIViewController {
     
     private func showError() {
         invalidateTimer()
+        NSLog("❌ Showing payment error")
+        
+        // Calculate loading duration
+        if let startTime = loadingStartTime {
+            let duration = Date().timeIntervalSince(startTime)
+            NSLog("❌ Payment failed after \(duration) seconds")
+        }
 
         DispatchQueue.main.async { [weak self] in
             guard let loadingVC = self else { return }
+            NSLog("❌ Showing failure view controller")
             let failureVC = FailureViewController(
                 paymentModel: loadingVC.paymentModel,
                 failType: loadingVC.paymentModel.invoice.transferType != nil ? .transfer : .payment
@@ -268,17 +315,22 @@ class LoadingViewController: UIViewController {
     // MARK: - Public methods
     
     func makePayment(completion: ((Bool) -> Void)? = nil) {
+        NSLog("📱 Starting payment request")
+        
         if paymentModel.paymentType == .halykID {
             paymentModel.makeHalykIDPayment { [weak self] success in
+                NSLog("📱 HalykID payment completed with success: \(success)")
                 self?.handlePaymentRequestStatus(success: success)
             }
         } else if paymentModel.paymentType == .applePay {
             paymentModel.makePaymentWithApplePay { [weak self] success in
+                NSLog("📱 Apple Pay payment completed with success: \(success)")
                 completion?(success)
                 self?.handlePaymentRequestStatus(success: success)
             }
         } else {
             paymentModel.makePayment { [weak self] success in
+                NSLog("📱 Standard payment completed with success: \(success)")
                 self?.handlePaymentRequestStatus(success: success)
             }
         }

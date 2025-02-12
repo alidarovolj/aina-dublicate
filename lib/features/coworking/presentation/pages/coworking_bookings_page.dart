@@ -6,7 +6,6 @@ import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
-import 'package:aina_flutter/features/coworking/providers/orders_provider.dart';
 import 'package:aina_flutter/features/coworking/domain/services/order_service.dart';
 import 'package:aina_flutter/core/providers/api_client_provider.dart';
 import 'package:aina_flutter/core/router/route_observer.dart';

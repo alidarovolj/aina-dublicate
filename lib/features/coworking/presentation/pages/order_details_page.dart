@@ -9,6 +9,7 @@ import 'package:aina_flutter/features/coworking/presentation/widgets/qr_modal.da
 import 'package:aina_flutter/features/coworking/presentation/widgets/history_modal.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:flutter/services.dart';
 
 class OrderDetailsPage extends StatefulWidget {
   final String orderId;
@@ -262,42 +263,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                       onPressed: () async {
                         try {
                           setState(() => isLoading = true);
-                          final htmlContent = await widget.orderService
+                          await widget.orderService
                               .initiatePayment(widget.orderId);
-
-                          if (mounted) {
-                            final webViewController = WebViewController()
-                              ..setJavaScriptMode(JavaScriptMode.unrestricted)
-                              ..setBackgroundColor(Colors.transparent)
-                              ..setNavigationDelegate(
-                                NavigationDelegate(
-                                  onNavigationRequest: (request) {
-                                    if (request.url.startsWith('aina://')) {
-                                      _loadOrderDetails();
-                                      return NavigationDecision.prevent;
-                                    }
-                                    return NavigationDecision.navigate;
-                                  },
-                                ),
-                              )
-                              ..loadHtmlString(htmlContent,
-                                  baseUrl: 'https://test-epay.homebank.kz');
-
-                            if (mounted) {
-                              await showDialog(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (context) => WillPopScope(
-                                  onWillPop: () async => false,
-                                  child: Dialog.fullscreen(
-                                    backgroundColor: Colors.transparent,
-                                    child: WebViewWidget(
-                                        controller: webViewController),
-                                  ),
-                                ),
-                              );
-                            }
-                          }
                         } catch (e) {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(

@@ -223,7 +223,6 @@ class _QuotaCard extends StatelessWidget {
   final String Function(String?) formatDate;
 
   const _QuotaCard({
-    super.key,
     required this.quota,
     required this.onTap,
     required this.formatDate,

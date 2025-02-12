@@ -420,6 +420,9 @@
       "pending": "Pending payment",
       "cancelled": "Cancelled",
       "refunded": "Refunded"
+    },
+    "payment": {
+      "error": "An error occurred during payment. Please try again"
     }
   },
   "common": {

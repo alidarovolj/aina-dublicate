@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/types/promenade_profile.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:dio/dio.dart';
+import 'package:chucker_flutter/chucker_flutter.dart';
 
 // Global navigator key for accessing navigation from anywhere
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -123,9 +124,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         ),
       ),
       builder: (context, child) {
-        // return ChuckerOverlayWrapper(
-        //   child: child ?? const SizedBox.shrink(),
-        // );
         return child ?? const SizedBox.shrink();
       },
       routerConfig: AppRouter.router,

@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:aina_flutter/core/models/feedback_category.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
-import 'package:aina_flutter/core/widgets/custom_text_field.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/feedback_provider.dart';
-import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/providers/requests/auth/user.dart';
 
 class FeedbackFormModal extends ConsumerStatefulWidget {

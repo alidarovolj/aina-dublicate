@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:aina_flutter/features/coworking/domain/models/coworking_tariff_details.dart';
-import 'package:aina_flutter/features/conference/domain/services/conference_service.dart';
-import 'package:aina_flutter/features/conference/presentation/pages/order_details_page.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/features/coworking/domain/services/order_service.dart';

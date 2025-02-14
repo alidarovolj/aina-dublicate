@@ -100,16 +100,23 @@ class RequestCodeService {
     }
   }
 
-  Future<Response?> sendCodeRequest(String phoneNumber) async {
+  Future<Response?> sendCodeRequest(
+    String phone, {
+    String? appHash,
+  }) async {
     try {
       final response = await _dio.get(
         '/auth/get-otp',
-        queryParameters: {'phone': phoneNumber}, // Параметры запроса
+        queryParameters: {
+          'phone': phone,
+          if (appHash != null) 'app_hash': appHash,
+        },
       );
+
       return response;
     } catch (e) {
-      // print('Ошибка при запросе кода: $e');
-      return null;
+      print('Error sending code request: $e');
+      rethrow;
     }
   }
 
@@ -203,7 +210,6 @@ class RequestCodeService {
 
       return response;
     } catch (e) {
-      // print('Error fetching tickets: $e');
       rethrow;
     }
   }
@@ -261,8 +267,9 @@ final userProvider = FutureProvider<UserProfile>((ref) async {
 
 class Ticket {
   final int id;
-  final String promotionName;
+  final String? promotionName;
   final String? promotionImage;
+  final String? promotionType;
   final DateTime createdAt;
   final int ticketNo;
   final String? receiptNo;
@@ -272,8 +279,9 @@ class Ticket {
 
   Ticket({
     required this.id,
-    required this.promotionName,
+    this.promotionName,
     this.promotionImage,
+    this.promotionType,
     required this.createdAt,
     required this.ticketNo,
     this.receiptNo,
@@ -285,8 +293,9 @@ class Ticket {
   factory Ticket.fromJson(Map<String, dynamic> json) {
     return Ticket(
       id: json['id'],
-      promotionName: json['promotion']['title'],
-      promotionImage: json['promotion']['preview_image']?['url'],
+      promotionName: json['promotion']?['name'],
+      promotionImage: json['promotion']?['preview_image']?['url'],
+      promotionType: json['promotion']?['type'],
       createdAt: DateTime.parse(json['created_at']),
       ticketNo: json['ticket_no'],
       receiptNo: json['receipt_no'],
@@ -313,7 +322,6 @@ final userTicketsProvider = FutureProvider<List<Ticket>>((ref) async {
     final data = response.data['data'] as List;
     return data.map((ticket) => Ticket.fromJson(ticket)).toList();
   } catch (e) {
-    // print('Error fetching tickets: $e');
     return [];
   }
 });

@@ -5,16 +5,26 @@ import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/providers/requests/auth/user.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-class TicketsPage extends ConsumerWidget {
-  final int mallId;
-
+class TicketsPage extends ConsumerStatefulWidget {
   const TicketsPage({
     super.key,
-    required this.mallId,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TicketsPage> createState() => _TicketsPageState();
+}
+
+class _TicketsPageState extends ConsumerState<TicketsPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(userTicketsProvider);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final ticketsAsync = ref.watch(userTicketsProvider);
 
     return Scaffold(
@@ -50,6 +60,14 @@ class TicketsPage extends ConsumerWidget {
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: Colors.white,
+                            gradient: const LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                Color.fromARGB(255, 186, 167, 82),
+                                Color.fromARGB(255, 224, 206, 117),
+                              ],
+                            ),
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: [
                               BoxShadow(
@@ -62,22 +80,26 @@ class TicketsPage extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                ticket.promotionName,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
+                              if (ticket.promotionName != null) ...[
+                                Text(
+                                  ticket.promotionName!,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                              ),
-                              if (ticket.receiptNo != null) ...[
                                 const SizedBox(height: 8),
+                              ],
+                              if (ticket.receiptNo != null) ...[
                                 Text(
                                   'tickets.receipt_number'
                                       .tr(args: [ticket.receiptNo!]),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 14,
-                                    color: Colors.black87,
+                                    color: ticket.promotionType == 'RAFFLE'
+                                        ? Colors.white
+                                        : Colors.black87,
                                   ),
                                 ),
                               ],
@@ -86,9 +108,11 @@ class TicketsPage extends ConsumerWidget {
                                   'tickets.receipt_amount'.tr(args: [
                                     ticket.amount!.toStringAsFixed(0)
                                   ]),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 14,
-                                    color: Colors.black87,
+                                    color: ticket.promotionType == 'RAFFLE'
+                                        ? Colors.white
+                                        : Colors.black87,
                                   ),
                                 ),
                               ],
@@ -96,24 +120,22 @@ class TicketsPage extends ConsumerWidget {
                                 Text(
                                   'tickets.organization'
                                       .tr(args: [ticket.organization!]),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 14,
-                                    color: Colors.black87,
+                                    color: ticket.promotionType == 'RAFFLE'
+                                        ? Colors.white
+                                        : Colors.black87,
                                   ),
                                 ),
                               ],
-                              if (ticket.purchaseDate != null) ...[
-                                Text(
-                                  'tickets.purchase_date'.tr(args: [
-                                    DateFormat('dd.MM.yy')
-                                        .format(ticket.purchaseDate!)
-                                  ]),
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.black87,
-                                  ),
+                              Text(
+                                'Купон №${ticket.ticketNo}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                              ],
+                              ),
                               Text(
                                 'tickets.registration_date'.tr(args: [
                                   DateFormat('dd.MM.yy')
@@ -121,7 +143,7 @@ class TicketsPage extends ConsumerWidget {
                                 ]),
                                 style: const TextStyle(
                                   fontSize: 14,
-                                  color: Colors.black87,
+                                  color: Colors.white,
                                 ),
                               ),
                             ],

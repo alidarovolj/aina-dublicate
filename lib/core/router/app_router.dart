@@ -140,17 +140,17 @@ class AppRouter {
                           return EditDataPage(mallId: int.parse(mallId));
                         },
                       ),
-                      GoRoute(
-                        path: 'tickets',
-                        name: 'tickets',
-                        builder: (context, state) {
-                          final mallId = state.pathParameters['id'];
-                          if (mallId == null) {
-                            return const Malls();
-                          }
-                          return TicketsPage(mallId: int.parse(mallId));
-                        },
-                      ),
+                      // GoRoute(
+                      //   path: 'tickets',
+                      //   name: 'tickets',
+                      //   builder: (context, state) {
+                      //     final mallId = state.pathParameters['id'];
+                      //     if (mallId == null) {
+                      //       return const Malls();
+                      //     }
+                      //     return TicketsPage(mallId: int.parse(mallId));
+                      //   },
+                      // ),
                     ],
                   ),
                   GoRoute(
@@ -416,6 +416,11 @@ class AppRouter {
         path: '/about',
         name: 'about',
         builder: (context, state) => const AboutPage(),
+      ),
+      GoRoute(
+        path: '/tickets/:id',
+        name: 'tickets',
+        builder: (context, state) => const TicketsPage(),
       ),
       GoRoute(
         path: '/malls/:mallId/profile',

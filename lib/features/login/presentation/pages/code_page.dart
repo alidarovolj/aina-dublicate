@@ -11,6 +11,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'dart:async';
+import 'package:sms_autofill/sms_autofill.dart';
+import 'dart:io' show Platform;
 
 class CodeInputScreen extends ConsumerStatefulWidget {
   final String phoneNumber;
@@ -23,7 +25,8 @@ class CodeInputScreen extends ConsumerStatefulWidget {
   ConsumerState<CodeInputScreen> createState() => CodeInputScreenState();
 }
 
-class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
+class CodeInputScreenState extends ConsumerState<CodeInputScreen>
+    with CodeAutoFill {
   final TextEditingController _codeController = TextEditingController();
   List<String> _codeDigits = ['', '', '', ''];
   bool isLoading = false;
@@ -32,8 +35,21 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
   bool _canResend = false;
 
   @override
+  void codeUpdated() {
+    if (code != null) {
+      setState(() {
+        _codeController.text = code!;
+        _codeDigits = code!.split('');
+      });
+      checkCodeCompletion();
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
+    listenForCode();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.isFromRegistration) {
         sendInitialLoginRequest();
@@ -44,6 +60,7 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen> {
 
   @override
   void dispose() {
+    cancel();
     _timer?.cancel();
     _codeController.dispose();
     super.dispose();

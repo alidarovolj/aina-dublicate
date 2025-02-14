@@ -79,9 +79,16 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
 
       final data = response.data as Map<String, dynamic>;
       if (data['tickets'] != null) {
-        final List<dynamic> ticketsList = data['tickets'] as List<dynamic>;
-        final List<int> tickets = ticketsList.map((e) => e as int).toList();
-        final double amount = (data['amount'] as num).toDouble();
+        List<int> tickets = [];
+        if (data['tickets'] is List) {
+          final List<dynamic> ticketsList = data['tickets'] as List<dynamic>;
+          tickets = ticketsList.map((e) => e as int).toList();
+        } else if (data['tickets'] is int) {
+          tickets = [data['tickets'] as int];
+        }
+
+        final double? amount =
+            data['amount'] != null ? (data['amount'] as num).toDouble() : null;
 
         setState(() {
           _isProcessing = false;

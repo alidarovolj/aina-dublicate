@@ -7,9 +7,21 @@ import 'package:aina_flutter/features/coworking/domain/services/order_service.da
 import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/features/coworking/presentation/widgets/qr_modal.dart';
 import 'package:aina_flutter/features/coworking/presentation/widgets/history_modal.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:aina_flutter/features/payment/widgets/payment_webview.dart';
+import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
+import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
+import 'package:webview_flutter/webview_flutter.dart'
+    show
+        WebViewController,
+        WebViewWidget,
+        NavigationDelegate,
+        JavaScriptMode,
+        NavigationDecision;
 import 'package:shimmer/shimmer.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
+import 'package:aina_flutter/features/payment/pages/payment_success_page.dart';
+import 'package:aina_flutter/features/payment/pages/payment_failure_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class OrderDetailsPage extends StatefulWidget {
   final String orderId;
@@ -35,6 +47,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
   void initState() {
     super.initState();
     _loadOrderDetails();
+    _startPaymentTimer();
   }
 
   @override
@@ -43,29 +56,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     super.dispose();
   }
 
-  Future<void> _loadOrderDetails() async {
-    setState(() => isLoading = true);
-    try {
-      final response =
-          await widget.orderService.getOrderDetails(widget.orderId);
-      setState(() {
-        order = response;
-        isLoading = false;
-      });
-      if (order?.status == 'PENDING') {
-        _startTimer();
-      }
-    } catch (e) {
-      setState(() => isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
-  }
-
-  void _startTimer() {
+  void _startPaymentTimer() {
     if (order?.createdAt == null) return;
 
     final createdAt = DateTime.parse(order!.createdAt);
@@ -74,31 +65,228 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
 
     // Only start timer if we're within the 15-minute window
     if (now.isAfter(endTime)) {
-      setState(() => timerText = '');
+      if (mounted) {
+        setState(() => timerText = '');
+      }
       return;
     }
 
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
       final now = DateTime.now();
       final remaining = endTime.difference(now);
 
       if (remaining.isNegative) {
         timer.cancel();
-        setState(() => timerText = '');
-        _loadOrderDetails();
+        if (mounted) {
+          setState(() => timerText = '');
+          _loadOrderDetails();
+        }
       } else {
         final minutes =
             remaining.inMinutes.remainder(60).toString().padLeft(2, '0');
         final seconds =
             remaining.inSeconds.remainder(60).toString().padLeft(2, '0');
-        setState(() => timerText = '$minutes:$seconds');
+        if (mounted) {
+          setState(() => timerText = '$minutes:$seconds');
+        }
       }
     });
+  }
+
+  Future<void> _loadOrderDetails() async {
+    if (!mounted) return;
+
+    try {
+      final response = await widget.orderService
+          .getOrderDetails(widget.orderId, forceRefresh: true);
+      if (mounted) {
+        setState(() {
+          order = response;
+          _startPaymentTimer();
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        // Handle error appropriately
+        debugPrint('Error loading order details: $e');
+      }
+    }
   }
 
   String _formatDateTime(String dateTimeStr) {
     final dateTime = DateTime.parse(dateTimeStr).toLocal();
     return DateFormat('dd.MM.yyyy HH:mm').format(dateTime);
+  }
+
+  void _handlePaymentResult(String url) {
+    debugPrint('Payment redirect detected: $url');
+
+    final uri = Uri.parse(url);
+    final isSuccess = url.contains('success-payment');
+
+    Navigator.of(context).pop(); // Close WebView
+
+    if (isSuccess) {
+      PaymentSuccessPage.show(
+        context,
+        orderId: widget.orderId,
+        reference: uri.queryParameters['reference'],
+        onClose: () {
+          Navigator.of(context).pop(); // Close dialog
+          _loadOrderDetails();
+        },
+      );
+    } else {
+      PaymentFailurePage.show(
+        context,
+        orderId: widget.orderId,
+        reference: uri.queryParameters['reference'],
+        onClose: () {
+          Navigator.of(context).pop(); // Close dialog
+          _loadOrderDetails();
+        },
+        onTryAgain: () {
+          Navigator.of(context).pop(); // Close dialog
+          _initiatePayment();
+        },
+      );
+    }
+  }
+
+  Future<void> _initiatePayment() async {
+    try {
+      setState(() => isLoading = true);
+      final htmlContent =
+          await widget.orderService.initiatePayment(widget.orderId);
+
+      if (mounted) {
+        final webViewController = WebViewController()
+          ..setJavaScriptMode(JavaScriptMode.unrestricted)
+          ..setBackgroundColor(Colors.transparent)
+          ..setNavigationDelegate(
+            NavigationDelegate(
+              onNavigationRequest: (request) {
+                debugPrint('Navigation request to: ${request.url}');
+                if (request.url.startsWith('aina://')) {
+                  _loadOrderDetails();
+                  return NavigationDecision.prevent;
+                }
+                // Handle success/failure redirects
+                if (request.url.contains('success-payment') ||
+                    request.url.contains('failure-payment')) {
+                  _handlePaymentResult(request.url);
+                  return NavigationDecision.prevent;
+                }
+                return NavigationDecision.navigate;
+              },
+              onPageFinished: (url) {
+                debugPrint('Page finished loading: $url');
+              },
+              onWebResourceError: (error) {
+                debugPrint('Web resource error: ${error.description}');
+                _loadOrderDetails();
+                Navigator.of(context).pop(); // Close on error
+
+                PaymentFailurePage.show(
+                  context,
+                  orderId: widget.orderId,
+                  onClose: () {
+                    Navigator.of(context).pop();
+                    _loadOrderDetails();
+                  },
+                  onTryAgain: () {
+                    Navigator.of(context).pop();
+                    _initiatePayment();
+                  },
+                );
+              },
+            ),
+          )
+          ..addJavaScriptChannel(
+            'closePayment',
+            onMessageReceived: (message) {
+              debugPrint('Close payment requested');
+              _loadOrderDetails();
+              Navigator.of(context).pop();
+
+              PaymentFailurePage.show(
+                context,
+                orderId: widget.orderId,
+                onClose: () {
+                  Navigator.of(context).pop();
+                  _loadOrderDetails();
+                },
+                onTryAgain: () {
+                  Navigator.of(context).pop();
+                  _initiatePayment();
+                },
+              );
+            },
+          )
+          ..loadHtmlString(htmlContent,
+              baseUrl: 'https://test-epay.homebank.kz');
+
+        if (mounted) {
+          await showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => WillPopScope(
+              onWillPop: () async => false,
+              child: Dialog.fullscreen(
+                backgroundColor: Colors.transparent,
+                child: WebViewWidget(controller: webViewController),
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Payment error: $e');
+      if (mounted) {
+        await PaymentFailurePage.show(
+          context,
+          orderId: widget.orderId,
+          onClose: () {
+            Navigator.of(context).pop();
+            _loadOrderDetails();
+          },
+          onTryAgain: () {
+            Navigator.of(context).pop();
+            _initiatePayment();
+          },
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _downloadFiscal() async {
+    if (order?.fiscalLinkUrl != null) {
+      try {
+        final uri = Uri.parse(order!.fiscalLinkUrl!);
+        await launchUrl(uri);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('orders.fiscal.error_download'.tr())),
+          );
+        }
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('orders.fiscal.error_no_url'.tr())),
+        );
+      }
+    }
   }
 
   @override
@@ -263,18 +451,13 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                       onPressed: () async {
                         try {
                           setState(() => isLoading = true);
-                          await widget.orderService
-                              .initiatePayment(widget.orderId);
+                          await _initiatePayment();
                         } catch (e) {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                   content: Text('orders.payment.error'.tr())),
                             );
-                          }
-                        } finally {
-                          if (mounted) {
-                            setState(() => isLoading = false);
                           }
                         }
                       },
@@ -288,9 +471,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                     padding: const EdgeInsets.only(top: 20),
                     child: CustomButton(
                       label: 'orders.detail.download_fiscal'.tr(),
-                      onPressed: () {
-                        // Download fiscal
-                      },
+                      onPressed: _downloadFiscal,
                       isFullWidth: true,
                       type: ButtonType.normal,
                     ),

@@ -32,12 +32,10 @@
       },
       "title": "Community Card",
       "status": {
-        "review": "Under Review",
-        "approved": {
-          "visible": "Approved and visible in community",
-          "not_visible": "Approved but hidden"
-        },
-        "unapproved": "Not approved"
+        "approved": "Approved for publication",
+        "in_community": "in community",
+        "review": "Your card is under review",
+        "unapproved": "Your card is not approved"
       },
       "visibility": {
         "title": "Visibility Settings",
@@ -47,50 +45,41 @@
       },
       "main": {
         "title": "Main Information",
-        "name": "Full Name",
-        "about": "About",
-        "employment": "Work",
+        "name": "First and last name",
         "position": "Position",
+        "about": "About me",
         "company": "Company"
       },
       "contacts": {
-        "title": "Contacts (optional)",
-        "telegram": "Telegram (username)",
+        "title": "Contacts",
+        "telegram": "Telegram",
         "whatsapp": "WhatsApp",
         "linkedin": "LinkedIn",
         "email": "Email",
         "phone": "Phone"
       },
       "work": {
-        "title": "Work",
-        "employment": {
-          "placeholder": "Employment",
-          "full_time": "Full Time",
-          "casual": "Casual",
-          "part_time": "Part Time",
-          "contract": "Contract"
-        }
+        "title": "Work"
       },
       "image": {
-        "add": "Add Image",
         "title": "Image",
-        "placeholder": "Click to select image"
+        "add": "Add image"
       },
       "button": {
-        "add": "Add Button",
         "title": "Button",
-        "name": "Button Name",
+        "add": "Add button",
+        "name": "Button name",
         "link": "Link"
       },
       "text": {
-        "add": "Add Text Block",
-        "title": "Text Block",
+        "title": "Text block",
+        "add": "Add text block",
         "header": "Header",
         "content": "Content"
       },
       "submit": {
-        "note": "Review will take up to 24 hours. Please make sure all required fields are filled.",
-        "button": "Submit for Review"
+        "note": "After saving, the card will be sent for review",
+        "button": "Submit for review"
       }
     }
   },
@@ -390,7 +379,7 @@
   },
   "camera": {
     "permission_title": "Camera Access Required",
-    "permission_denied": "Camera access denied. Please enable camera access in your device settings to continue.",
+    "permission_denied": "Camera access is required. Please enable camera access in device settings.",
     "permission_required": "Please allow camera access to take a photo. You can enable it in Settings.",
     "initialization_error": "Failed to initialize camera"
   },
@@ -423,6 +412,11 @@
     },
     "payment": {
       "error": "An error occurred during payment. Please try again"
+    },
+    "fiscal": {
+      "error_launch": "Failed to open fiscal receipt",
+      "error_download": "Error downloading fiscal receipt",
+      "error_no_url": "Fiscal receipt is not available"
     }
   },
   "common": {
@@ -505,5 +499,17 @@
       "confirm": "Logout",
       "cancel": "Cancel"
     }
-  }
+  },
+  "payment_accepted": "Payment Successful",
+  "payment_declined": "Payment Declined",
+  "invoice_id": "Order ID: ",
+  "reference": "Reference: ",
+  "close": "Close",
+  "try_again": "Try Again",
+  "error_payment_default": "An error occurred while processing the payment. Please try again.",
+  "payment_success_details": "You can view the details in\nthe \"Bookings\" section by tapping on your order.",
+  "return_to_order": "Return to Order",
+  "go_to_bookings": "Go to Bookings",
+  "go_to_home": "Go to Home",
+  "payment_declined_details": "You can try to pay again\nor come back later."
 }

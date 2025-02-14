@@ -6,6 +6,7 @@ import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AboutPage extends ConsumerStatefulWidget {
   const AboutPage({super.key});
@@ -16,6 +17,21 @@ class AboutPage extends ConsumerStatefulWidget {
 
 class _AboutPageState extends ConsumerState<AboutPage> {
   late Future<PackageInfo> _packageInfo;
+
+  Future<void> _launchURL(String urlString) async {
+    final url = Uri.parse(urlString);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('about.url_error'.tr()),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -85,13 +101,16 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                       children: [
                         // Links
                         _buildLink('about.license_agreement'.tr(), () {
-                          // Handle license agreement tap
+                          _launchURL(
+                              'https://aina-fashion-products-photos.object.pscloud.io/files/docs/Lic.pdf');
                         }),
                         _buildLink('about.public_offer'.tr(), () {
-                          // Handle public offer tap
+                          _launchURL(
+                              'https://aina-fashion-products-photos.object.pscloud.io/files/docs/consent.pdf');
                         }),
                         _buildLink('about.privacy_policy'.tr(), () {
-                          // Handle privacy policy tap
+                          _launchURL(
+                              'https://aina-fashion-products-photos.object.pscloud.io/files/docs/policy.pdf');
                         }),
                       ],
                     ),

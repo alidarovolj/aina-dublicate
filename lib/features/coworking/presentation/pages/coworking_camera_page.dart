@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:app_settings/app_settings.dart';
 
 class BiometricCameraModal extends ConsumerStatefulWidget {
   const BiometricCameraModal({super.key});
@@ -34,7 +35,7 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
   bool _isLoading = true;
   bool _isCameraPermissionDenied = false;
   bool _isDisposed = false;
-  String? _error;
+  bool _error = false;
 
   @override
   void initState() {
@@ -84,41 +85,125 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
   }
 
   Future<void> _checkPermissionAndInitialize() async {
-    // print("Checking camera permission");
-    final status = await Permission.camera.request();
-    // print("Camera permission status: $status");
+    setState(() => _isLoading = true);
 
-    if (status.isGranted) {
-      await _initializeCamera();
-    } else {
-      // print("Camera permission denied");
-      setState(() {
-        _isCameraPermissionDenied = true;
-      });
+    try {
+      // Get available cameras first
+      final cameras = await availableCameras();
+      print('DEBUG: Available cameras: ${cameras.length}');
+
+      if (cameras.isEmpty) {
+        print('DEBUG: No cameras available');
+        throw Exception('No cameras available');
+      }
+
+      // Select front camera
+      final frontCamera = cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.first,
+      );
+      print(
+          'DEBUG: Selected camera: ${frontCamera.name}, direction: ${frontCamera.lensDirection}');
+
+      // Create controller - this will trigger native permission request on iOS
+      print('DEBUG: Creating camera controller');
+      final controller = CameraController(
+        frontCamera,
+        ResolutionPreset.medium,
+        enableAudio: false,
+        imageFormatGroup:
+            Platform.isIOS ? ImageFormatGroup.bgra8888 : ImageFormatGroup.jpeg,
+      );
+
+      try {
+        // Initialize controller - this will show native permission dialog on iOS
+        print('DEBUG: Initializing controller');
+        await controller.initialize();
+        print('DEBUG: Controller initialized successfully');
+
+        if (_isDisposed) {
+          print('DEBUG: Widget disposed after initialization');
+          await controller.dispose();
+          return;
+        }
+
+        _controller = controller;
+
+        // Set additional parameters
+        print('DEBUG: Setting camera parameters');
+        await controller.setFlashMode(FlashMode.off);
+        await controller.lockCaptureOrientation(DeviceOrientation.portraitUp);
+        await controller.setZoomLevel(1.0);
+
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          print('DEBUG: Camera setup completed successfully');
+        }
+      } catch (e) {
+        print(
+            'DEBUG: Camera initialization error (possibly permission denied): $e');
+        await controller.dispose();
+
+        if (mounted) {
+          _showPermissionDeniedDialog();
+        }
+      }
+    } catch (e) {
+      print('DEBUG: General camera setup error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('camera.permission_denied'.tr())),
-        );
-        context.pop(false);
+        setState(() {
+          _error = true;
+          _isLoading = false;
+        });
       }
     }
   }
 
+  void _showPermissionDeniedDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text('camera.permission_title'.tr()),
+        content: Text('camera.permission_denied'.tr()),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop(null);
+            },
+            child: Text('common.cancel'.tr()),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await AppSettings.openAppSettings();
+              Navigator.of(context).pop(null);
+            },
+            child: Text('common.settings'.tr()),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _initializeCamera() async {
-    // print("Initializing camera");
+    print("DEBUG: Starting camera initialization");
     if (_isDisposed) {
-      // print("Page is disposed, skipping camera initialization");
+      print("DEBUG: Widget is disposed, skipping camera initialization");
       return;
     }
 
     setState(() {
       _isLoading = true;
-      _error = null;
+      _error = false;
     });
 
     try {
       final cameras = await availableCameras();
-      // print("Available cameras: ${cameras.length}");
+      print("DEBUG: Available cameras for initialization: ${cameras.length}");
 
       if (cameras.isEmpty) {
         throw Exception('No cameras available');
@@ -128,13 +213,15 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
         (camera) => camera.lensDirection == CameraLensDirection.front,
         orElse: () => cameras.first,
       );
-      // print("Selected camera: ${frontCamera.name}");
+      print(
+          "DEBUG: Selected camera: ${frontCamera.name}, direction: ${frontCamera.lensDirection}");
 
       if (_isDisposed) {
-        // print("Page was disposed during camera initialization");
+        print("DEBUG: Widget disposed during camera initialization");
         return;
       }
 
+      print("DEBUG: Creating CameraController");
       final controller = CameraController(
         frontCamera,
         ResolutionPreset.medium,
@@ -143,41 +230,42 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
             Platform.isIOS ? ImageFormatGroup.bgra8888 : ImageFormatGroup.jpeg,
       );
 
-      _controller = controller;
+      try {
+        print("DEBUG: Initializing controller");
+        await controller.initialize();
+        print("DEBUG: Controller initialized successfully");
 
-      // Initialize camera
-      await controller.initialize();
-      if (_isDisposed) {
-        // print("Page was disposed after camera initialization");
-        _disposeCamera();
-        return;
-      }
+        if (_isDisposed) {
+          print("DEBUG: Widget disposed after controller initialization");
+          await controller.dispose();
+          return;
+        }
 
-      // Disable flash
-      await controller.setFlashMode(FlashMode.off);
+        _controller = controller;
 
-      // Lock orientation
-      await controller.lockCaptureOrientation(DeviceOrientation.portraitUp);
+        print("DEBUG: Setting camera parameters");
+        await controller.setFlashMode(FlashMode.off);
+        await controller.lockCaptureOrientation(DeviceOrientation.portraitUp);
+        await controller.setZoomLevel(1.0);
 
-      // print("Camera initialized successfully");
-      // print("Camera preview size: ${controller.value.previewSize}");
-      // print("Camera aspect ratio: ${controller.value.aspectRatio}");
-
-      if (mounted && !_isDisposed) {
-        setState(() {
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          print("DEBUG: Camera setup completed successfully");
+        }
+      } catch (e) {
+        print("DEBUG: Error during controller initialization: $e");
+        await controller.dispose();
+        throw e;
       }
     } catch (e) {
-      // print("Camera initialization error: $e");
-      if (_isDisposed) return;
-
-      setState(() {
-        _isLoading = false;
-        _error = 'camera.initialization_error'.tr();
-      });
-
+      print("DEBUG: Camera initialization error: $e");
       if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _error = true;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('camera.initialization_error'.tr())),
         );
@@ -237,20 +325,43 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
       child: SafeArea(
         child: Stack(
           children: [
+            // Camera Preview
             if (_controller != null &&
                 _controller!.value.isInitialized &&
                 !_isLoading)
               Center(
-                child: CameraPreview(_controller!),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: ClipRect(
+                    child: OverflowBox(
+                      alignment: Alignment.center,
+                      child: FittedBox(
+                        fit: BoxFit.fitWidth,
+                        child: SizedBox(
+                          width: MediaQuery.of(context).size.width,
+                          height: MediaQuery.of(context).size.width *
+                              _controller!.value.aspectRatio,
+                          child: CameraPreview(_controller!),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
 
+            // Face Overlay
             if (_controller != null &&
                 _controller!.value.isInitialized &&
                 !_isLoading)
               Positioned.fill(
-                child: Image.asset(
-                  'lib/core/assets/images/biometry/face.png',
-                  fit: BoxFit.cover,
+                child: Center(
+                  child: SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.8,
+                    child: Image.asset(
+                      'lib/core/assets/images/biometry/face.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
               ),
 
@@ -261,12 +372,12 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
               ),
 
             // Error message
-            if (_error != null)
+            if (_error)
               Center(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
-                    _error!,
+                    'camera.initialization_error'.tr(),
                     style: const TextStyle(color: Colors.white),
                     textAlign: TextAlign.center,
                   ),
@@ -300,29 +411,17 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
             ),
 
             // Description Text
-            if (!_isLoading && _error == null)
+            if (!_isLoading && !_error)
               Positioned(
-                top: kToolbarHeight + 16,
+                bottom: 117,
                 left: 0,
                 right: 0,
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black,
-                        Colors.black.withOpacity(0.7),
-                        Colors.transparent,
-                      ],
-                      stops: const [0.0, 0.5, 1.0],
-                    ),
-                  ),
-                  child: const Text(
-                    'Смотрите прямо в камеру, поместите лицо в овал. Держите устройство на уровне глаз',
-                    style: TextStyle(
+                  child: Text(
+                    'biometry.camera.description'.tr(),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
                       height: 1.5,
@@ -334,7 +433,7 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
 
             // Capture Button
             if (!_isLoading &&
-                _error == null &&
+                !_error &&
                 _controller != null &&
                 _controller!.value.isInitialized)
               Positioned(
@@ -391,7 +490,7 @@ class _CoworkingCameraPageState extends ConsumerState<CoworkingCameraPage>
   bool _isLoading = true;
   bool _isCameraPermissionDenied = false;
   bool _isDisposed = false;
-  String? _error;
+  bool _error = false;
 
   @override
   void initState() {
@@ -438,33 +537,126 @@ class _CoworkingCameraPageState extends ConsumerState<CoworkingCameraPage>
   }
 
   Future<void> _checkPermissionAndInitialize() async {
-    final status = await Permission.camera.request();
+    setState(() => _isLoading = true);
 
-    if (status.isGranted) {
-      await _initializeCamera();
-    } else {
-      setState(() {
-        _isCameraPermissionDenied = true;
-      });
+    try {
+      // Get available cameras first
+      final cameras = await availableCameras();
+      print('DEBUG: Available cameras: ${cameras.length}');
+
+      if (cameras.isEmpty) {
+        print('DEBUG: No cameras available');
+        throw Exception('No cameras available');
+      }
+
+      // Select front camera
+      final frontCamera = cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.first,
+      );
+      print(
+          'DEBUG: Selected camera: ${frontCamera.name}, direction: ${frontCamera.lensDirection}');
+
+      // Create controller - this will trigger native permission request on iOS
+      print('DEBUG: Creating camera controller');
+      final controller = CameraController(
+        frontCamera,
+        ResolutionPreset.medium,
+        enableAudio: false,
+        imageFormatGroup:
+            Platform.isIOS ? ImageFormatGroup.bgra8888 : ImageFormatGroup.jpeg,
+      );
+
+      try {
+        // Initialize controller - this will show native permission dialog on iOS
+        print('DEBUG: Initializing controller');
+        await controller.initialize();
+        print('DEBUG: Controller initialized successfully');
+
+        if (_isDisposed) {
+          print('DEBUG: Widget disposed after initialization');
+          await controller.dispose();
+          return;
+        }
+
+        _controller = controller;
+
+        // Set additional parameters
+        print('DEBUG: Setting camera parameters');
+        await controller.setFlashMode(FlashMode.off);
+        await controller.lockCaptureOrientation(DeviceOrientation.portraitUp);
+        await controller.setZoomLevel(1.0);
+
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          print('DEBUG: Camera setup completed successfully');
+        }
+      } catch (e) {
+        print(
+            'DEBUG: Camera initialization error (possibly permission denied): $e');
+        await controller.dispose();
+
+        if (mounted) {
+          _showPermissionDeniedDialog();
+        }
+      }
+    } catch (e) {
+      print('DEBUG: General camera setup error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('camera.permission_denied'.tr())),
-        );
-        context.pop(false);
+        setState(() {
+          _error = true;
+          _isLoading = false;
+        });
       }
     }
   }
 
+  void _showPermissionDeniedDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text('camera.permission_title'.tr()),
+        content: Text('camera.permission_denied'.tr()),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop(null);
+            },
+            child: Text('common.cancel'.tr()),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await AppSettings.openAppSettings();
+              Navigator.of(context).pop(null);
+            },
+            child: Text('common.settings'.tr()),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _initializeCamera() async {
-    if (_isDisposed) return;
+    print("DEBUG: Starting camera initialization");
+    if (_isDisposed) {
+      print("DEBUG: Widget is disposed, skipping camera initialization");
+      return;
+    }
 
     setState(() {
       _isLoading = true;
-      _error = null;
+      _error = false;
     });
 
     try {
       final cameras = await availableCameras();
+      print("DEBUG: Available cameras for initialization: ${cameras.length}");
+
       if (cameras.isEmpty) {
         throw Exception('No cameras available');
       }
@@ -473,43 +665,59 @@ class _CoworkingCameraPageState extends ConsumerState<CoworkingCameraPage>
         (camera) => camera.lensDirection == CameraLensDirection.front,
         orElse: () => cameras.first,
       );
+      print(
+          "DEBUG: Selected camera: ${frontCamera.name}, direction: ${frontCamera.lensDirection}");
 
-      if (_isDisposed) return;
+      if (_isDisposed) {
+        print("DEBUG: Widget disposed during camera initialization");
+        return;
+      }
 
+      print("DEBUG: Creating CameraController");
       final controller = CameraController(
         frontCamera,
-        ResolutionPreset.high,
+        ResolutionPreset.medium,
         enableAudio: false,
         imageFormatGroup:
             Platform.isIOS ? ImageFormatGroup.bgra8888 : ImageFormatGroup.jpeg,
       );
 
-      _controller = controller;
+      try {
+        print("DEBUG: Initializing controller");
+        await controller.initialize();
+        print("DEBUG: Controller initialized successfully");
 
-      await controller.initialize();
-      if (_isDisposed) {
-        _disposeCamera();
-        return;
-      }
+        if (_isDisposed) {
+          print("DEBUG: Widget disposed after controller initialization");
+          await controller.dispose();
+          return;
+        }
 
-      await controller.setFlashMode(FlashMode.off);
-      await controller.lockCaptureOrientation(DeviceOrientation.portraitUp);
-      await controller.setZoomLevel(1.0);
+        _controller = controller;
 
-      if (mounted && !_isDisposed) {
-        setState(() {
-          _isLoading = false;
-        });
+        print("DEBUG: Setting camera parameters");
+        await controller.setFlashMode(FlashMode.off);
+        await controller.lockCaptureOrientation(DeviceOrientation.portraitUp);
+        await controller.setZoomLevel(1.0);
+
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          print("DEBUG: Camera setup completed successfully");
+        }
+      } catch (e) {
+        print("DEBUG: Error during controller initialization: $e");
+        await controller.dispose();
+        throw e;
       }
     } catch (e) {
-      if (_isDisposed) return;
-
-      setState(() {
-        _isLoading = false;
-        _error = 'camera.initialization_error'.tr();
-      });
-
+      print("DEBUG: Camera initialization error: $e");
       if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _error = true;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('camera.initialization_error'.tr())),
         );
@@ -559,121 +767,132 @@ class _CoworkingCameraPageState extends ConsumerState<CoworkingCameraPage>
 
   @override
   Widget build(BuildContext context) {
+    print(
+        "DEBUG: Building camera page. Controller initialized: ${_controller?.value.isInitialized}, Loading: $_isLoading, Error: $_error");
+
     return Scaffold(
-      body: Container(
-        color: Colors.black,
-        child: SafeArea(
-          child: Stack(
-            children: [
-              if (_controller != null &&
-                  _controller!.value.isInitialized &&
-                  !_isLoading)
-                SizedBox.expand(
-                  child: FittedBox(
-                    fit: BoxFit.cover,
-                    child: SizedBox(
-                      width: _controller!.value.previewSize!.height,
-                      height: _controller!.value.previewSize!.width,
-                      child: CameraPreview(_controller!),
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // Camera Preview
+            if (_controller != null &&
+                _controller!.value.isInitialized &&
+                !_isLoading)
+              Container(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height,
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: _controller!.value.previewSize!.height,
+                    height: _controller!.value.previewSize!.width,
+                    child: Stack(
+                      children: [
+                        CameraPreview(_controller!),
+                      ],
                     ),
                   ),
                 ),
-
-              if (_controller != null &&
-                  _controller!.value.isInitialized &&
-                  !_isLoading)
-                Positioned.fill(
-                  child: Center(
-                    child: SizedBox(
-                      width: MediaQuery.of(context).size.width * 1,
-                      child: Image.asset(
-                        'lib/core/assets/images/biometry/face.png',
-                        fit: BoxFit.fitWidth,
-                      ),
-                    ),
-                  ),
-                ),
-
-              // Loading indicator
-              if (_isLoading)
-                const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                ),
-
-              // Error message
-              if (_error != null)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      _error!,
-                      style: const TextStyle(color: Colors.white),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-
-              // Description Text
-              if (!_isLoading && _error == null)
-                Positioned(
-                  bottom: 117,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                    child: const Text(
-                      'Смотрите прямо в камеру, поместите лицо в овал. Держите устройство на уровне глаз',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        height: 1.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-
-              // Capture Button
-              if (!_isLoading &&
-                  _error == null &&
-                  _controller != null &&
-                  _controller!.value.isInitialized)
-                Positioned(
-                  bottom: 40,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: GestureDetector(
-                      onTap: _capturePhoto,
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 4,
-                          ),
-                        ),
-                        child: Container(
-                          margin: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-              CustomHeader(
-                title: 'biometry.title'.tr(),
-                type: HeaderType.pop,
               ),
-            ],
-          ),
+
+            // Face Overlay
+            if (_controller != null &&
+                _controller!.value.isInitialized &&
+                !_isLoading)
+              Positioned.fill(
+                child: Center(
+                  child: SizedBox(
+                    width: MediaQuery.of(context).size.width * 1,
+                    height: MediaQuery.of(context).size.height * 1,
+                    child: Image.asset(
+                      'lib/core/assets/images/biometry/face.png',
+                      fit: BoxFit.fitWidth,
+                    ),
+                  ),
+                ),
+              ),
+
+            // Loading indicator
+            if (_isLoading)
+              const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+
+            // Error message
+            if (_error)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'camera.initialization_error'.tr(),
+                    style: const TextStyle(color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+
+            // Description Text
+            if (!_isLoading && !_error)
+              Positioned(
+                bottom: 117,
+                left: 0,
+                right: 0,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: Text(
+                    'biometry.camera.description'.tr(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+
+            // Capture Button
+            if (!_isLoading &&
+                !_error &&
+                _controller != null &&
+                _controller!.value.isInitialized)
+              Positioned(
+                bottom: 40,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: GestureDetector(
+                    onTap: _capturePhoto,
+                    child: Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 4,
+                        ),
+                      ),
+                      child: Container(
+                        margin: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+            // Header
+            CustomHeader(
+              title: 'biometry.title'.tr(),
+              type: HeaderType.pop,
+            ),
+          ],
         ),
       ),
     );

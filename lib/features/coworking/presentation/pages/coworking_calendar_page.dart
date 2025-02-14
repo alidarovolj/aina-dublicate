@@ -98,13 +98,13 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
     });
 
     try {
-      // Load both tariff details and reserved dates
-      await Future.wait([
-        ref
-            .read(coworkingTariffDetailsProvider.notifier)
-            .fetchTariffDetails(widget.tariffId),
-        _loadReservedDates(),
-      ]);
+      // First, load tariff details
+      await ref
+          .read(coworkingTariffDetailsProvider.notifier)
+          .fetchTariffDetails(widget.tariffId);
+
+      // Then, load reserved dates
+      await _loadReservedDates();
     } catch (e) {
       print('Error initializing data: $e');
     } finally {
@@ -118,26 +118,48 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
 
   Future<void> _loadReservedDates() async {
     try {
-      final dio = Dio();
-      final response = await dio.get(
-        'https://devsuperapi.aina-fashion.kz/api/promenade/orders',
-        queryParameters: {
-          'service_id': widget.tariffId,
-          'state_group': 'ACTIVE',
-          'per_page': 100,
-        },
-      );
+      final tariffDetails = ref.read(coworkingTariffDetailsProvider).value;
+      if (tariffDetails == null) {
+        return;
+      }
 
-      print('Reserved dates response: ${response.data}');
+      // Skip loading reserved dates if not a COWORKING type tariff
+      if (tariffDetails.type != 'COWORKING') {
+        setState(() {
+          reservedDates = [];
+        });
+        return;
+      }
 
-      if (response.data is Map<String, dynamic> &&
-          response.data['success'] == true &&
-          response.data['data'] != null) {
-        final List<dynamic> ordersData = response.data['data'] as List<dynamic>;
-        if (mounted) {
-          setState(() {
-            reservedDates = ordersData
-                .map((order) {
+      final apiClient = ref.read(apiClientProvider);
+      List<ReservedDateRange> allReservedDates = [];
+      int currentPage = 1;
+      bool hasMorePages = true;
+
+      while (hasMorePages) {
+        final response = await apiClient.dio.get(
+          '/api/promenade/orders',
+          queryParameters: {
+            'state_group': 'ACTIVE',
+            'per_page': 100,
+            'page': currentPage,
+          },
+          options: Options(
+            headers: {
+              'force-refresh': 'true',
+            },
+          ),
+        );
+
+        if (response.data is Map<String, dynamic> &&
+            response.data['success'] == true &&
+            response.data['data'] != null) {
+          final List<dynamic> ordersData =
+              response.data['data'] as List<dynamic>;
+
+          final List<ReservedDateRange> pageReservedDates = ordersData
+              .map((order) {
+                try {
                   if (order is Map<String, dynamic> &&
                       order['start_at'] != null &&
                       order['end_at'] != null) {
@@ -146,17 +168,42 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
                       endAt: order['end_at'].toString(),
                     );
                   }
-                  return null;
-                })
-                .whereType<ReservedDateRange>()
-                .toList();
-          });
+                } catch (e) {
+                  print('Error parsing order: $e');
+                }
+                return null;
+              })
+              .whereType<ReservedDateRange>()
+              .toList();
+
+          allReservedDates.addAll(pageReservedDates);
+
+          // Check if we have more pages
+          final meta = response.data['meta'] as Map<String, dynamic>?;
+          if (meta != null) {
+            final lastPage = meta['last_page'] as int? ?? 1;
+            hasMorePages = currentPage < lastPage;
+            currentPage++;
+          } else {
+            hasMorePages = false;
+          }
+        } else {
+          hasMorePages = false;
         }
+      }
+
+      if (mounted) {
+        setState(() {
+          reservedDates = allReservedDates;
+          print('Loaded ${reservedDates.length} total reserved date ranges');
+          for (var range in reservedDates) {
+            print('Reserved range: ${range.startAt} - ${range.endAt}');
+          }
+        });
       }
     } catch (e, stackTrace) {
       print('Error loading reserved dates: $e');
       print('Stack trace: $stackTrace');
-      rethrow;
     }
   }
 
@@ -639,138 +686,146 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
     return Container(
       color: AppColors.primary,
       child: SafeArea(
-        child: Scaffold(
-          body: Stack(
-            children: [
-              if (isLoading)
-                _buildSkeletonLoader()
-              else
-                tariffDetailsState.when(
-                  data: (tariffDetails) {
-                    if (tariffDetails == null) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Тариф не найден',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            CustomButton(
-                              label: 'Вернуться назад',
-                              onPressed: () => context.pop(),
-                              isFullWidth: false,
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    return Column(
-                      children: [
-                        const SizedBox(height: 64),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Focus(
+          onFocusChange: (hasFocus) {
+            if (hasFocus) {
+              _loadReservedDates();
+            }
+          },
+          child: Scaffold(
+            body: Stack(
+              children: [
+                if (isLoading)
+                  _buildSkeletonLoader()
+                else
+                  tariffDetailsState.when(
+                    data: (tariffDetails) {
+                      if (tariffDetails == null) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(
-                                'coworking.calendar.select_date'.tr(),
-                                style: const TextStyle(
+                              const Text(
+                                'Тариф не найден',
+                                style: TextStyle(
                                   fontSize: 16,
                                   color: AppColors.primary,
                                 ),
-                              ).tr(),
-                              IconButton(
-                                onPressed: () =>
-                                    _showReservedInfoModal(context),
-                                icon: const Icon(Icons.info_outline),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(child: _buildCalendar()),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, -5),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              _buildInfoRow(
-                                  '${'coworking.calendar.cost'.tr()}:',
-                                  '${total ?? tariffDetails.price} ₸'),
-                              const SizedBox(height: 8),
-                              _buildInfoRow(
-                                '${'coworking.calendar.start_date'.tr()}:',
-                                formData['start_at'].isNotEmpty
-                                    ? formData['start_at']
-                                    : 'coworking.calendar.not_selected'.tr(),
-                              ),
-                              const SizedBox(height: 8),
-                              _buildInfoRow(
-                                '${'coworking.calendar.end_date'.tr()}:',
-                                formData['end_at'].isNotEmpty
-                                    ? formData['end_at']
-                                    : 'coworking.calendar.not_selected'.tr(),
                               ),
                               const SizedBox(height: 16),
                               CustomButton(
-                                label: 'coworking.calendar.proceed_to_payment'
-                                    .tr(),
-                                onPressed:
-                                    isLoading ? null : _handlePaymentPress,
-                                isFullWidth: true,
-                                isLoading: isLoading,
+                                label: 'Вернуться назад',
+                                onPressed: () => context.pop(),
+                                isFullWidth: false,
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    );
-                  },
-                  loading: () => _buildSkeletonLoader(),
-                  error: (error, stack) => Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Ошибка: $error',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: AppColors.primary,
+                        );
+                      }
+                      return Column(
+                        children: [
+                          const SizedBox(height: 64),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'coworking.calendar.select_date'.tr(),
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    color: AppColors.primary,
+                                  ),
+                                ).tr(),
+                                IconButton(
+                                  onPressed: () =>
+                                      _showReservedInfoModal(context),
+                                  icon: const Icon(Icons.info_outline),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        CustomButton(
-                          label: 'Вернуться назад',
-                          onPressed: () => context.pop(),
-                          isFullWidth: false,
-                        ),
-                      ],
+                          Expanded(child: _buildCalendar()),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, -5),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                _buildInfoRow(
+                                    '${'coworking.calendar.cost'.tr()}:',
+                                    '${total ?? tariffDetails.price} ₸'),
+                                const SizedBox(height: 8),
+                                _buildInfoRow(
+                                  '${'coworking.calendar.start_date'.tr()}:',
+                                  formData['start_at'].isNotEmpty
+                                      ? formData['start_at']
+                                      : 'coworking.calendar.not_selected'.tr(),
+                                ),
+                                const SizedBox(height: 8),
+                                _buildInfoRow(
+                                  '${'coworking.calendar.end_date'.tr()}:',
+                                  formData['end_at'].isNotEmpty
+                                      ? formData['end_at']
+                                      : 'coworking.calendar.not_selected'.tr(),
+                                ),
+                                const SizedBox(height: 16),
+                                CustomButton(
+                                  label: 'coworking.calendar.proceed_to_payment'
+                                      .tr(),
+                                  onPressed:
+                                      isLoading ? null : _handlePaymentPress,
+                                  isFullWidth: true,
+                                  isLoading: isLoading,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                    loading: () => _buildSkeletonLoader(),
+                    error: (error, stack) => Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Ошибка: $error',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          CustomButton(
+                            label: 'Вернуться назад',
+                            onPressed: () => context.pop(),
+                            isFullWidth: false,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                CustomHeader(
+                  title: tariffDetailsState.whenOrNull(
+                        data: (tariffDetails) =>
+                            tariffDetails?.title ??
+                            'coworking.calendar.page_title'.tr(),
+                      ) ??
+                      'coworking.calendar.page_title'.tr(),
+                  type: HeaderType.pop,
                 ),
-              CustomHeader(
-                title: tariffDetailsState.whenOrNull(
-                      data: (tariffDetails) =>
-                          tariffDetails?.title ??
-                          'coworking.calendar.page_title'.tr(),
-                    ) ??
-                    'coworking.calendar.page_title'.tr(),
-                type: HeaderType.pop,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -1020,4 +1075,17 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
       ],
     );
   }
+}
+
+class ReservedDateRange {
+  final String startAt;
+  final String endAt;
+
+  ReservedDateRange({
+    required this.startAt,
+    required this.endAt,
+  });
+
+  @override
+  String toString() => 'ReservedDateRange(startAt: $startAt, endAt: $endAt)';
 }

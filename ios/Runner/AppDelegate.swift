@@ -376,15 +376,22 @@ import EpaySDK
         if let flutterVC = viewController as? FlutterViewController {
             flutterVC.dismiss(animated: true) {
                 NSLog("📱 Dismissed payment screen due to cancellation")
+                // Get the failure URL from notification if available
+                let failureUrl = notification.userInfo?["failureUrl"] as? String
                 let error = FlutterError(
                     code: "CANCELLED",
                     message: "Payment cancelled by user",
-                    details: nil
+                    details: ["failureUrl": failureUrl ?? ""]
                 )
                 self.pendingResult?(error)
                 self.pendingResult = nil
             }
         }
+    }
+
+    @objc private func handleBackButton() {
+        NSLog("📱 Back button pressed")
+        handlePaymentCancelled(Notification(name: Notification.Name(kCancelledNotification)))
     }
 }
 
@@ -395,6 +402,14 @@ import EpaySDK
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
+    
+    // Setup deep link channel
+    let deepLinkChannel = FlutterMethodChannel(
+      name: "kz.aina/deep_links",
+      binaryMessenger: controller.binaryMessenger
+    )
+    
+    // Setup epay channel
     let epayChannel = FlutterMethodChannel(
       name: "kz.aina/epay",
       binaryMessenger: controller.binaryMessenger
@@ -406,5 +421,25 @@ import EpaySDK
     
     GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+  
+  // Handle deep links when app is opened from a URL
+  override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+    if let controller = window?.rootViewController as? FlutterViewController {
+      let channel = FlutterMethodChannel(name: "kz.aina/deep_links", binaryMessenger: controller.binaryMessenger)
+      channel.invokeMethod("handleDeepLink", arguments: url.absoluteString)
+    }
+    return true
+  }
+  
+  // Handle universal links
+  override func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
+    if let webpageURL = userActivity.webpageURL {
+      if let controller = window?.rootViewController as? FlutterViewController {
+        let channel = FlutterMethodChannel(name: "kz.aina/deep_links", binaryMessenger: controller.binaryMessenger)
+        channel.invokeMethod("handleDeepLink", arguments: webpageURL.absoluteString)
+      }
+    }
+    return true
   }
 }

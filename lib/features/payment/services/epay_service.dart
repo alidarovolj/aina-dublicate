@@ -4,6 +4,11 @@ import 'package:flutter/foundation.dart';
 class EpayService {
   static const MethodChannel _channel = MethodChannel('kz.aina/epay');
 
+  // Test credentials
+  static const String testClientId = 'test';
+  static const String testClientSecret = 'yF587AV9Ms94qN2QShFzVR3vFnWkhjbAK3sG';
+  static const String testTerminalId = '67e34d63-102f-4bd1-898e-370781d0074d';
+
   // Configuration for the SDK
   Future<void> configure({
     required String merchantId,
@@ -98,12 +103,19 @@ class EpayService {
     required String backLink,
     required String failureBackLink,
     required String description,
-    required String terminal,
-    required Map<String, dynamic> auth,
+    String terminal = testTerminalId,
+    Map<String, dynamic>? auth,
     String? accountId,
     String language = 'rus',
   }) async {
     try {
+      // Use test credentials if auth is not provided
+      final Map<String, dynamic> testAuth = {
+        'access_token': testClientSecret,
+        // 'client_id': testClientId,
+        'client_id': "test",
+      };
+
       final Map<String, dynamic> paymentData = {
         'invoiceId': invoiceId,
         'amount': amount,
@@ -114,9 +126,10 @@ class EpayService {
         'failureBackLink': failureBackLink,
         'description': description,
         'terminal': terminal,
-        'auth': auth,
+        'auth': auth ?? testAuth,
         'accountId': accountId ?? '1',
         'language': language,
+        'isTestMode': true, // Force test mode
       };
 
       debugPrint('Initializing payment with data: $paymentData');

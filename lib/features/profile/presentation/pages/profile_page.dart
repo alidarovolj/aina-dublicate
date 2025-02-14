@@ -28,6 +28,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     // Force refresh profile data when page is loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.invalidate(userProvider);
+      ref.invalidate(userTicketsProvider);
     });
   }
 

@@ -30,6 +30,7 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage> {
     // Force refresh profile data when page is loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.invalidate(userProvider);
+      ref.invalidate(userTicketsProvider);
     });
   }
 
@@ -37,6 +38,7 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final userAsync = ref.watch(userProvider);
+    final ticketsAsync = ref.watch(userTicketsProvider);
     final settingsAsync = ref.watch(settingsProvider);
 
     // Show loading state while checking authentication
@@ -203,6 +205,35 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage> {
                             },
                           ),
                           const SizedBox(height: 8),
+
+                          // Show tickets menu item if tickets are available
+                          ticketsAsync.when(
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, __) => const SizedBox.shrink(),
+                            data: (tickets) {
+                              if (tickets.isNotEmpty) {
+                                return Column(
+                                  children: [
+                                    _buildMenuItem(
+                                      'profile.coupons'.tr(),
+                                      Icons.chevron_right,
+                                      backgroundColor: Colors.grey[200],
+                                      onTap: () {
+                                        context.pushNamed(
+                                          'tickets',
+                                          pathParameters: {
+                                            'id': widget.coworkingId.toString()
+                                          },
+                                        );
+                                      },
+                                    ),
+                                    const SizedBox(height: 8),
+                                  ],
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
 
                           _buildMenuItem(
                             'coworking.profile.biometric'.tr(),

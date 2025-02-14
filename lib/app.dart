@@ -12,6 +12,7 @@ import 'package:aina_flutter/core/types/promenade_profile.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:dio/dio.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
+import 'core/services/deep_link_service.dart';
 
 // Global navigator key for accessing navigation from anywhere
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -52,6 +53,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  DeepLinkService? _deepLinkService;
+
   @override
   void initState() {
     super.initState();
@@ -59,6 +62,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     // Update API client locale on initial load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ApiClient().updateLocaleFromContext(context);
+      // Initialize deep link service
+      _deepLinkService = DeepLinkService(context);
       // Fetch promenade profile if user is authenticated
       final container = ProviderScope.containerOf(context);
       final authState = container.read(authProvider);

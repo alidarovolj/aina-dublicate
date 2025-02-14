@@ -22,10 +22,63 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>kz.aina.ios</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>aina</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>homebank</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAllowsArbitraryLoadsInWebContent</key>
+	<true/>
+	<key>NSAllowsLocalNetworking</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>test-epay.homebank.kz</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSExceptionMinimumTLSVersion</key>
+				<string>TLSv1.2</string>
+				<key>NSExceptionRequiresForwardSecrecy</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+			<key>stage-payment.mpservices.kz</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSExceptionMinimumTLSVersion</key>
+				<string>TLSv1.2</string>
+				<key>NSExceptionRequiresForwardSecrecy</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access is required for biometric verification to ensure secure access to coworking spaces</string>
 	<key>NSLocationAlwaysUsageDescription</key>
@@ -53,27 +106,32 @@
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
+	<key>WKAppBoundDomains</key>
+	<array>
+		<string>test-epay.homebank.kz</string>
+		<string>stage-payment.mpservices.kz</string>
+		<string>app.aina-fashion.kz</string>
+		<string>devsuperapi.aina-fashion.kz</string>
+	</array>
+	<key>WKWebViewConfiguration</key>
+	<dict>
+		<key>allowsInlineMediaPlayback</key>
+		<true/>
+		<key>allowsPictureInPictureMediaPlayback</key>
+		<true/>
+		<key>allowsAirPlayForMediaPlayback</key>
+		<true/>
+		<key>allowsBackForwardNavigationGestures</key>
+		<true/>
+		<key>suppressesIncrementalRendering</key>
+		<false/>
+	</dict>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:app.aina-fashion.kz</string>
+		<string>applinks:*.app.aina-fashion.kz</string>
+	</array>
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>aina</string>
-			</array>
-			<key>CFBundleURLName</key>
-			<string>kz.aina-fashion</string>
-		</dict>
-	</array>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>homebank</string>
-	</array>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-	</dict>
 </dict>
 </plist>

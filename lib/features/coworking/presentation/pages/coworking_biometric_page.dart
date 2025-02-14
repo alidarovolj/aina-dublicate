@@ -12,6 +12,7 @@ import 'package:aina_flutter/features/coworking/presentation/widgets/biometric_c
 import 'package:dio/dio.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/coworking_camera_page.dart';
 
 class CoworkingBiometricPage extends ConsumerStatefulWidget {
   final int coworkingId;
@@ -107,14 +108,25 @@ class _CoworkingBiometricPageState
   }
 
   Future<void> _openCamera() async {
-    setState(() {
-      _isLoading = true;
-    });
+    print('DEBUG: _openCamera triggered');
+
+    if (!mounted) return;
 
     try {
-      final result = await BiometricCameraModal.show(context);
+      final result = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (context) => CoworkingCameraPage(
+            coworkingId: widget.coworkingId,
+          ),
+        ),
+      );
 
+      print('DEBUG: Camera page returned: $result');
       if (result == true && mounted) {
+        setState(() {
+          _isLoading = true;
+        });
+
         // Cancel any existing requests
         final service = BiometricService();
         service.cancelRequests();
@@ -135,12 +147,12 @@ class _CoworkingBiometricPageState
             setState(() {
               _firstnameController.text = freshData.firstname ?? '';
               _lastnameController.text = freshData.lastname ?? '';
+              _isLoading = false;
             });
           }
         }
       }
     } catch (e) {
-      // print("Error with camera: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString())),
@@ -295,26 +307,31 @@ class _CoworkingBiometricPageState
                                     ),
                                     const SizedBox(height: 16),
                                     Center(
-                                      child: GestureDetector(
-                                        onTap: _openCamera,
-                                        child: Container(
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.5,
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                            color: Colors.grey[200],
-                                          ),
-                                          child: AspectRatio(
-                                            aspectRatio: 1,
-                                            child: ClipRRect(
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          onTap: _openCamera,
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                          child: Container(
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.5,
+                                            decoration: BoxDecoration(
                                               borderRadius:
                                                   BorderRadius.circular(4),
-                                              child: Image.network(
-                                                data.biometric!.urlOriginal,
-                                                fit: BoxFit.cover,
+                                              color: Colors.grey[200],
+                                            ),
+                                            child: AspectRatio(
+                                              aspectRatio: 1,
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                                child: Image.network(
+                                                  data.biometric!.urlOriginal,
+                                                  fit: BoxFit.cover,
+                                                ),
                                               ),
                                             ),
                                           ),

@@ -461,6 +461,20 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                             fullDateTime == selectedEndTime;
                         final isSelectable = _isTimeSlotSelectable(date, time);
 
+                        // Check if this time slot is in the selected range
+                        bool isInRange = false;
+                        if (selectedStartTime != null &&
+                            selectedEndTime != null) {
+                          final currentDateTime =
+                              DateTime.parse('$fullDateTime:00');
+                          final startDateTime =
+                              DateTime.parse('$selectedStartTime:00');
+                          final endDateTime =
+                              DateTime.parse('$selectedEndTime:00');
+                          isInRange = currentDateTime.isAfter(startDateTime) &&
+                              currentDateTime.isBefore(endDateTime);
+                        }
+
                         return GestureDetector(
                           onTap: isSelectable
                               ? () => _selectTime(time, date)
@@ -470,9 +484,11 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? AppColors.primary
-                                  : isSelectable
-                                      ? Colors.grey[200]
-                                      : Colors.grey[100],
+                                  : isInRange
+                                      ? AppColors.primary.withOpacity(0.3)
+                                      : isSelectable
+                                          ? Colors.grey[200]
+                                          : Colors.grey[100],
                               borderRadius: BorderRadius.circular(4),
                             ),
                             alignment: Alignment.center,
@@ -480,7 +496,7 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                               time,
                               style: TextStyle(
                                 fontSize: 22,
-                                color: isSelected
+                                color: isSelected || isInRange
                                     ? Colors.white
                                     : isSelectable
                                         ? AppColors.primary

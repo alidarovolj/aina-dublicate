@@ -11,6 +11,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/gestures.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:sms_autofill/sms_autofill.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io' show Platform;
 
 class PhoneNumberInputScreen extends ConsumerStatefulWidget {
   const PhoneNumberInputScreen({super.key});
@@ -27,6 +30,29 @@ class _PhoneNumberInputScreenState
 
   bool isButtonEnabled = false;
   bool isLoading = false;
+  String? _appSignature;
+
+  @override
+  void initState() {
+    super.initState();
+    _getAppSignature();
+  }
+
+  Future<void> _getAppSignature() async {
+    if (!Platform.isAndroid) return;
+
+    try {
+      final signature = await SmsAutoFill().getAppSignature;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('app-hash', signature);
+      setState(() {
+        _appSignature = signature;
+      });
+      print('App Signature: $signature');
+    } catch (e) {
+      print('Error getting app signature: $e');
+    }
+  }
 
   void updateButtonState() {
     final phoneRegex = RegExp(r'^\(\d{3}\) \d{3}-\d{2}-\d{2}$');
@@ -43,9 +69,21 @@ class _PhoneNumberInputScreenState
       });
 
       try {
+        final prefs = await SharedPreferences.getInstance();
+        final appHash = prefs.getString('app-hash');
+
         await ref.read(requestCodeProvider).sendCodeRequest(
               '7$phoneNumber',
+              appHash: appHash,
             );
+
+        if (Platform.isAndroid) {
+          try {
+            await SmsAutoFill().listenForCode;
+          } catch (e) {
+            print('Error starting SMS listener: $e');
+          }
+        }
 
         if (mounted) {
           context.go('/code', extra: _phoneController.text);

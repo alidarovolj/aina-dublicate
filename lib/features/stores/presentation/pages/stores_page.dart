@@ -134,6 +134,7 @@ class _StoresPageState extends ConsumerState<StoresPage> {
                           selectedCategoryId = categoryId;
                         });
                       },
+                      useRouting: false,
                     ),
                     const SliverToBoxAdapter(
                       child: SizedBox(height: 16),

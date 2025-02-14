@@ -19,7 +19,10 @@ class BiometricCameraModal extends ConsumerStatefulWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => const BiometricCameraModal(),
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.9,
+        child: const BiometricCameraModal(),
+      ),
     );
   }
 
@@ -300,13 +303,19 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
               ClipRRect(
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(20)),
-                child: SizedBox.expand(
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  height: MediaQuery.of(context).size.height,
                   child: FittedBox(
-                    fit: BoxFit.fitHeight,
+                    fit: BoxFit.cover,
                     child: SizedBox(
                       width: _controller!.value.previewSize!.height,
                       height: _controller!.value.previewSize!.width,
-                      child: CameraPreview(_controller!),
+                      child: Stack(
+                        children: [
+                          CameraPreview(_controller!),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -338,6 +347,7 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
                 child: Center(
                   child: SizedBox(
                     width: MediaQuery.of(context).size.width * 1,
+                    height: MediaQuery.of(context).size.height * 1,
                     child: Image.asset(
                       'lib/core/assets/images/biometry/face.png',
                       fit: BoxFit.fitWidth,
@@ -374,9 +384,9 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  child: const Text(
-                    'Смотрите прямо в камеру, поместите лицо в овал. Держите устройство на уровне глаз',
-                    style: TextStyle(
+                  child: Text(
+                    'biometry.camera.description'.tr(),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
                       height: 1.5,

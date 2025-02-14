@@ -28,8 +28,10 @@ struct ApiRequest {
         let params: [String: Any] = [
             "grant_type": body.grantType.addingPercentEncoding(withAllowedCharacters: urlAllowed) ?? "",
             "scope": body.scope.addingPercentEncoding(withAllowedCharacters: urlAllowed) ?? "",
-            "client_id": body.clientId.addingPercentEncoding(withAllowedCharacters: urlAllowed) ?? "",
-            "client_secret": body.clientSecret.addingPercentEncoding(withAllowedCharacters: urlAllowed) ?? "",
+            // "client_id": body.clientId.addingPercentEncoding(withAllowedCharacters: urlAllowed) ?? "",
+            "client_id": "test",
+            // "client_secret": body.clientSecret.addingPercentEncoding(withAllowedCharacters: urlAllowed) ?? "",
+            "client_secret": "yF587AV9Ms94qN2QShFzVR3vFnWkhjbAK3sG",
             "amount": body.amount,
             "currency": body.currency.addingPercentEncoding(withAllowedCharacters: urlAllowed) ?? "",
             "terminal": body.terminal.addingPercentEncoding(withAllowedCharacters: urlAllowed) ?? "",

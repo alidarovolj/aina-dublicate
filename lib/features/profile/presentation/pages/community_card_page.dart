@@ -39,6 +39,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
   bool _showImageInput = false;
   bool _showButton = false;
   bool _showText = false;
+  String? _avatarUrl;
   String? _imageUrl;
   String? _status;
   String? _reviewComment;
@@ -84,27 +85,32 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
       setState(() {
         _nameController.text = data['name'] ?? '';
         _positionController.text = data['position'] ?? '';
+        _companyController.text = data['company'] ?? '';
+        _infoController.text = data['info'] ?? '';
+        _emailController.text = data['email'] ?? '';
         _telegramController.text = data['telegram'] ?? '';
         _whatsappController.text = data['whatsapp']?['numeric'] ?? '';
         _linkedinController.text = data['linkedin'] ?? '';
-        _emailController.text = data['email'] ?? '';
         _phoneController.text = data['phone']?['numeric'] ?? '';
-        _infoController.text = data['info'] ?? '';
-        _companyController.text = data['company'] ?? '';
-        _buttonTitleController.text = data['button_title'] ?? '';
-        _buttonLinkController.text = data['button_link'] ?? '';
         _textTitleController.text = data['text_title'] ?? '';
         _textContentController.text = data['text_content'] ?? '';
+        _buttonTitleController.text = data['button_title'] ?? '';
+        _buttonLinkController.text = data['button_link'] ?? '';
+
+        // Handle avatar and image separately
+        _avatarUrl = data['avatar']?['url'];
+        _imageUrl = data['image']?['url'];
+
+        _status = data['status'] ?? '';
         _pageVisible = data['page_visible'] ?? false;
         _phoneVisible = data['phone_visible'] ?? false;
         _imageVisible = data['image_visible'] ?? false;
-        _imageUrl = data['image']?['url'];
-        _status = data['status'];
-        _reviewComment = data['review_comment'];
-        _employment = data['employment'];
+
+        print('Avatar URL: $_avatarUrl');
+        print('Image URL: $_imageUrl');
       });
     } catch (e) {
-      // print('Error loading data: $e');
+      print('Error loading data: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading data: $e')),
@@ -258,7 +264,6 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
         ),
       );
     } else if (_status == 'APPROVED') {
-      final visibility = ref.watch(communityCardVisibilityProvider);
       return Container(
         color: AppColors.bgCom,
         padding: const EdgeInsets.all(16),
@@ -266,11 +271,22 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
           children: [
             const Icon(Icons.check_circle_outline),
             const SizedBox(width: 8),
-            Text(
-              visibility['page_visible'] == true
-                  ? tr('community.card.status.approved.visible')
-                  : tr('community.card.status.approved.not_visible'),
-              style: const TextStyle(color: AppColors.primary, fontSize: 14),
+            Expanded(
+              child: RichText(
+                text: TextSpan(
+                  style:
+                      const TextStyle(color: AppColors.primary, fontSize: 14),
+                  children: [
+                    TextSpan(text: tr('community.card.status.approved')),
+                    TextSpan(
+                      text: ' ${tr('community.card.status.in_community')}',
+                      style: const TextStyle(
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -357,9 +373,8 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
                                           _pageVisible = value;
                                         });
                                       },
-                                label:
-                                    tr('community.card.visibility.show_card'),
-                                activeColor: const Color(0xFFD4B33E),
+                                label: 'Показывать мою карточку в сообществе',
+                                activeColor: AppColors.secondary,
                               ),
                               CustomToggle(
                                 value: _phoneVisible,
@@ -370,9 +385,8 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
                                           _phoneVisible = value;
                                         });
                                       },
-                                label:
-                                    tr('community.card.visibility.show_phone'),
-                                activeColor: const Color(0xFFD4B33E),
+                                label: 'Показывать мой номер телефона',
+                                activeColor: AppColors.secondary,
                               ),
                               const SizedBox(height: 16),
                               CustomButton(
@@ -380,10 +394,11 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
                                     ? null
                                     : _updateVisibility,
                                 isLoading: _isLoading,
-                                type: ButtonType.bordered,
+                                type: ButtonType.filled,
                                 isFullWidth: true,
-                                label: tr('community.card.visibility.apply'),
+                                label: 'Применить',
                                 backgroundColor: AppColors.bgLight,
+                                textColor: AppColors.primary,
                                 style: CustomButtonStyle.outlined,
                               ),
                             ],
@@ -407,25 +422,39 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Container(
-                                    width: 80,
-                                    height: 80,
+                                    width: 88,
+                                    height: 128,
                                     decoration: BoxDecoration(
-                                      color: _imageUrl != null
-                                          ? null
-                                          : const Color(0xFFD4B33E),
+                                      gradient: _avatarUrl == null
+                                          ? const LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: [
+                                                Color(0xFFE8DB9A),
+                                                Color(0xFFCCB861),
+                                              ],
+                                            )
+                                          : null,
                                       borderRadius: BorderRadius.circular(4),
-                                      image: _imageUrl != null
+                                      image: _avatarUrl != null
                                           ? DecorationImage(
-                                              image: NetworkImage(_imageUrl!),
+                                              image: NetworkImage(_avatarUrl!),
                                               fit: BoxFit.cover,
                                             )
                                           : null,
                                     ),
-                                    child: _imageUrl == null
-                                        ? const Icon(
-                                            Icons.person_outline,
-                                            color: Colors.white,
-                                            size: 40,
+                                    child: _avatarUrl == null
+                                        ? Center(
+                                            child: SvgPicture.asset(
+                                              'lib/core/assets/icons/person_add.svg',
+                                              width: 44,
+                                              height: 44,
+                                              colorFilter:
+                                                  const ColorFilter.mode(
+                                                Colors.white,
+                                                BlendMode.srcIn,
+                                              ),
+                                            ),
                                           )
                                         : null,
                                   ),
@@ -450,19 +479,6 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
                                     ),
                                   ),
                                 ],
-                              ),
-                              const SizedBox(height: 16),
-                              CustomTextField(
-                                controller: _companyController,
-                                hintText: tr('community.card.main.company'),
-                                enabled: _status != 'REVIEW',
-                              ),
-                              const SizedBox(height: 16),
-                              CustomTextField(
-                                controller: _infoController,
-                                hintText: tr('community.card.main.about'),
-                                maxLines: 4,
-                                enabled: _status != 'REVIEW',
                               ),
                               const SizedBox(height: 24),
                               Text(
@@ -526,12 +542,34 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              const SizedBox(height: 24),
+                              Text(
+                                tr('profile.personal_info'),
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              CustomTextField(
+                                controller: _infoController,
+                                hintText: tr('community.card.main.about'),
+                                maxLines: 4,
+                                enabled: _status != 'REVIEW',
+                              ),
+                              const SizedBox(height: 24),
                               Text(
                                 tr('community.card.work.title'),
                                 style: TextStyle(
                                   color: Colors.grey[600],
                                   fontSize: 14,
                                 ),
+                              ),
+                              const SizedBox(height: 16),
+                              CustomTextField(
+                                controller: _companyController,
+                                hintText: tr('community.card.main.company'),
+                                enabled: _status != 'REVIEW',
                               ),
                               const SizedBox(height: 16),
                               DropdownButtonFormField<String>(

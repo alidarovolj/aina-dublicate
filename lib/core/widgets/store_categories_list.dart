@@ -8,11 +8,13 @@ import 'package:shimmer/shimmer.dart';
 class StoreCategoriesList extends ConsumerStatefulWidget {
   final String mallId;
   final Function(String?) onCategorySelected;
+  final bool useRouting;
 
   const StoreCategoriesList({
     super.key,
     required this.mallId,
     required this.onCategorySelected,
+    this.useRouting = true,
   });
 
   @override
@@ -86,17 +88,19 @@ class _StoreCategoriesListState extends ConsumerState<StoreCategoriesList> {
                         selectedCategoryId = category.id.toString();
                         widget.onCategorySelected(category.id.toString());
 
-                        // Navigate to category stores page
-                        context.pushNamed(
-                          'category_stores',
-                          pathParameters: {
-                            'mallId': widget.mallId,
-                            'categoryId': category.id.toString(),
-                          },
-                          queryParameters: {
-                            'title': category.title,
-                          },
-                        );
+                        // Navigate to category stores page only if useRouting is true
+                        if (widget.useRouting) {
+                          context.pushNamed(
+                            'category_stores',
+                            pathParameters: {
+                              'mallId': widget.mallId,
+                              'categoryId': category.id.toString(),
+                            },
+                            queryParameters: {
+                              'title': category.title,
+                            },
+                          );
+                        }
                       }
                     });
                   },

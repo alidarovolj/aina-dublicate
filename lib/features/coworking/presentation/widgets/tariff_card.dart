@@ -9,6 +9,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:aina_flutter/app.dart';
+import 'package:aina_flutter/core/providers/requests/auth/profile.dart'
+    as profile;
 
 mixin AuthCheckMixin {
   Future<bool> checkAuthAndBiometric(
@@ -34,9 +36,12 @@ mixin AuthCheckMixin {
     }
 
     try {
-      final promenadeProfileAsync =
-          await ref.read(promenadeProfileProvider.future);
-      if (!promenadeProfileAsync.isBiometricVerified) {
+      // Get fresh profile data
+      final profileService = ref.read(profile.promenadeProfileProvider);
+      final profileData = await profileService.getProfile(forceRefresh: true);
+
+      if (profileData['biometric_valid'] != true ||
+          profileData['biometric_status'] != 'VALID') {
         BaseModal.show(
           context,
           message: 'auth.service_biometric_required'.tr(),

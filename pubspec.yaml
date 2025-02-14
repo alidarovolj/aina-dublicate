@@ -49,7 +49,10 @@ dependencies:
   json_annotation: ^4.9.0
   camera: ^0.10.5+9
   webview_flutter: ^4.10.0
-  app_settings: ^5.1.1
+  webview_flutter_wkwebview: 3.17.0
+  app_settings: ^5.2.0
+  sms_autofill: ^2.4.1
+  local_auth: ^2.2.0
 
 dev_dependencies:
   flutter_test:

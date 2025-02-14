@@ -9,6 +9,24 @@
 import UIKit
 import WebKit
 
+#if canImport(Flutter)
+import Flutter
+#else
+public typealias FlutterResult = (Any?) -> Void
+public class FlutterError: NSObject {
+    public let code: String
+    public let message: String?
+    public let details: Any?
+    
+    public init(code: String, message: String?, details: Any?) {
+        self.code = code
+        self.message = message
+        self.details = details
+        super.init()
+    }
+}
+#endif
+
 class LoadingViewController: UIViewController {
     
     // MARK: - Public properties
@@ -21,6 +39,17 @@ class LoadingViewController: UIViewController {
     private var qrStatusTimer: Timer?
     private var timerTickCount = 0
     private var loadingStartTime: Date?
+    private var maxLoadingAttempts = 5
+    private var loadingTimeout: TimeInterval = 60.0
+    private var loadingStateCount = 0
+    private var loadingStateTimer: Timer?
+    private var paymentTimer: Timer?
+    private var pendingResult: FlutterResult?
+    
+    // Test credentials
+    private let testClientId = "test"
+    private let testClientSecret = "yF587AV9Ms94qN2QShFzVR3vFnWkhjbAK3sG"
+    private let testTerminalId = "67e34d63-102f-4bd1-898e-370781d0074d"
     
     // MARK: - UI Elements
     
@@ -46,9 +75,7 @@ class LoadingViewController: UIViewController {
     
     private lazy var titleLabel: UILabel = {
         let l = UILabel()
-        l.text = String(
-            Constants.Localizable.loadingText
-        ).localized()
+        l.text = String(Constants.Localizable.loadingText).localized()
         l.textAlignment = .center
         l.font = UIFont.systemFont(ofSize: 14)
         l.numberOfLines = 0
@@ -60,6 +87,31 @@ class LoadingViewController: UIViewController {
     init(paymentModel: PaymentModel) {
         self.paymentModel = paymentModel
         super.init(nibName: nil, bundle: nil)
+        
+        // Set test environment
+        Constants.Url.environment = .dev
+        
+        // Use test credentials for staging environment
+        let testAuthConfig = AuthConfig(
+            merchantId: testTerminalId,
+            merchantName: "Aina",
+            clientId: "test",
+            clientSecret: testClientSecret
+        )
+        
+        // Create payment model with test credentials
+        paymentModel.authConfig = testAuthConfig
+        
+        // Create token response body with test credentials
+        paymentModel.tokenResponseBody = TokenResponseBody(
+            access_token: testClientSecret,
+            expires_in: "1200",
+            scope: "payment",
+            token_type: "Bearer"
+        )
+        
+        // Start payment immediately
+        makePayment()
     }
     
     required init?(coder: NSCoder) {
@@ -74,27 +126,24 @@ class LoadingViewController: UIViewController {
         activityIndicatorView.startAnimating()
         NSLog("📱 Loading view appeared, starting activity indicator")
         
-        // Post loading state notification
         NotificationCenter.default.post(
-            name: NSNotification.Name("payment_loading_notification"),
+            name: NSNotification.Name(Constants.Notification.loading),
             object: nil,
             userInfo: ["isLoading": true]
         )
         NSLog("📱 Posted loading state notification: true")
+        
+        // Start payment timer
+        startPaymentTimer()
+        
+        // Start payment immediately since we have the token
+        makePayment()
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.navigationItem.setHidesBackButton(true, animated: false)
-        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
-        self.navigationController?.navigationBar.shadowImage = UIImage()
-        self.navigationController?.navigationBar.isTranslucent = true
-        self.navigationController?.view.backgroundColor = .clear
-
-        self.navigationController?.navigationBar.barTintColor = UIColor.white
-        self.navigationController?.navigationBar.shadowImage = UIImage()
-        
+        setupUI()
         setupViews()
         setupConstraints()
         getQRStatusIfNeeded()
@@ -109,19 +158,59 @@ class LoadingViewController: UIViewController {
             NSLog("📱 Total loading view duration: \(duration) seconds")
         }
         
-        // Post loading state ended notification
         NotificationCenter.default.post(
-            name: NSNotification.Name("payment_loading_notification"),
+            name: NSNotification.Name(Constants.Notification.loading),
             object: nil,
             userInfo: ["isLoading": false]
         )
         NSLog("📱 Posted loading state notification: false")
         
-        invalidateTimer()
+        invalidateTimers()
         NSLog("📱 Invalidated timers")
     }
     
     // MARK: - Private methods
+    
+    private func setupUI() {
+        self.navigationItem.setHidesBackButton(true, animated: false)
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.isTranslucent = true
+        self.navigationController?.view.backgroundColor = .clear
+        self.navigationController?.navigationBar.barTintColor = UIColor.white
+    }
+    
+    private func startPaymentTimer() {
+        paymentTimer = Timer.scheduledTimer(withTimeInterval: loadingTimeout, repeats: false) { [weak self] _ in
+            self?.handlePaymentTimeout()
+        }
+    }
+    
+    private func invalidateTimers() {
+        paymentTimer?.invalidate()
+        paymentTimer = nil
+        loadingStateTimer?.invalidate()
+        loadingStateTimer = nil
+        qrStatusTimer?.invalidate()
+        qrStatusTimer = nil
+    }
+    
+    private func handlePaymentTimeout() {
+        NSLog("❌ Payment timeout reached")
+        invalidateTimers()
+        loadingStateCount = 0
+        
+        dismiss(animated: true) {
+            NSLog("📱 Dismissed payment screen due to payment timeout")
+            let error = FlutterError(
+                code: "PAYMENT_TIMEOUT",
+                message: "Payment process timed out. Please try again.",
+                details: nil
+            )
+            self.pendingResult?(error)
+            self.pendingResult = nil
+        }
+    }
     
     private func setupViews() {
         view.addSubview(statusBarView)

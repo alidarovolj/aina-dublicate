@@ -251,20 +251,17 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
                           if (await checkAuthAndBiometric(
                               context, ref, coworkingId)) {
                             context.pop();
-                            onTap?.call();
+                            _navigateToCalendar(context, ref);
                           }
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
-                            vertical: 4,
+                            vertical: 8,
                           ),
                           decoration: BoxDecoration(
                             color: Colors.black,
-                            border: Border.all(
-                              color: AppColors.primary,
-                              width: 1,
-                            ),
+                            borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             '${tariff.price}₸',
@@ -277,15 +274,24 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
                         ),
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                      ),
-                      child: const Icon(
-                        Icons.arrow_forward,
-                        color: Colors.black,
-                        size: 20,
+                    InkWell(
+                      onTap: () async {
+                        if (await checkAuthAndBiometric(
+                            context, ref, coworkingId)) {
+                          context.pop();
+                          _navigateToCalendar(context, ref);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                        ),
+                        child: const Icon(
+                          Icons.arrow_forward,
+                          color: Colors.black,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ],
@@ -328,6 +334,9 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
 
   Widget _buildCoworkingTariffCard(BuildContext context, WidgetRef ref) {
     return Container(
+      constraints: const BoxConstraints(
+        minHeight: 260,
+      ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -354,47 +363,65 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
               },
               borderRadius: BorderRadius.circular(12),
               child: Padding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      tariff.title.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: AppColors.primary,
-                      ),
+                    // Title section
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          tariff.title.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          tariff.subtitle,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: AppColors.primary,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          tariff.isFixed
+                              ? 'coworking.tariffs.fixed_place'.tr()
+                              : 'coworking.tariffs.unfixed_place'.tr(),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: AppColors.primary,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      tariff.subtitle,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      tariff.isFixed
-                          ? 'coworking.tariffs.fixed_place'.tr()
-                          : 'coworking.tariffs.unfixed_place'.tr(),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const Spacer(),
+
+                    const SizedBox(height: 12),
+
+                    // Benefits button
                     InkWell(
                       onTap: () => _showTariffDetails(context, ref),
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
+                          horizontal: 6,
+                          vertical: 8,
                         ),
                         decoration: BoxDecoration(
+                          color: Colors.transparent,
                           border: Border.all(
-                            color: AppColors.primary,
+                            color: Colors.black,
                             width: 1,
                           ),
                           borderRadius: BorderRadius.circular(4),
@@ -402,14 +429,19 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
                         child: Text(
                           'coworking.tariffs.all_benefits'.tr(),
                           style: const TextStyle(
-                            fontSize: 15,
+                            fontSize: 12,
                             color: AppColors.primary,
                           ),
                           textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
-                    const Spacer(),
+
+                    const SizedBox(height: 12),
+
+                    // Price section
                     Row(
                       children: [
                         Expanded(
@@ -418,14 +450,11 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
-                                vertical: 4,
+                                vertical: 8,
                               ),
                               decoration: BoxDecoration(
                                 color: Colors.black,
-                                border: Border.all(
-                                  color: AppColors.primary,
-                                  width: 1,
-                                ),
+                                borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 '${tariff.price}₸',
@@ -434,19 +463,24 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
                                   color: Colors.white,
                                 ),
                                 textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_forward,
-                            color: Colors.black,
-                            size: 20,
+                        InkWell(
+                          onTap: () => _navigateToCalendar(context, ref),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                            ),
+                            child: const Icon(
+                              Icons.arrow_forward,
+                              color: Colors.black,
+                              size: 20,
+                            ),
                           ),
                         ),
                       ],

@@ -15,10 +15,6 @@ class MainActivity: FlutterActivity() {
         
         // Setup deep link channel
         deepLinkChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, DEEP_LINK_CHANNEL)
-        
-        // Setup epay channel
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "kz.aina/epay")
-            .setMethodCallHandler(EpayPlugin(this))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

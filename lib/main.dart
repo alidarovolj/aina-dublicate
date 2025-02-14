@@ -19,8 +19,8 @@ Future<void> main() async {
   await EasyLocalization.ensureInitialized();
 
   // Initialize Chucker
-  ChuckerFlutter.showOnRelease = true;
-  ChuckerFlutter.isDebugMode = true; // Enable debug mode for better logging
+  ChuckerFlutter.showOnRelease = false;
+  ChuckerFlutter.isDebugMode = false; // Disable debug mode
 
   // Load environment variables and other initializations
   await dotenv.load();

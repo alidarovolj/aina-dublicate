@@ -127,18 +127,19 @@
     "error": "Error: {}"
   },
   "qr": {
-    "processing": "Please wait, checking promotion conditions.",
-    "scan_title": "Scan QR",
-    "auth_required": "To scan the receipt, please register in the app. Make sure your name and surname are filled in correctly in your profile. This is a mandatory condition for participation in the promotion.",
-    "profile_required": "Before scanning the receipt, please make sure your name and surname are correct in your profile. This is a mandatory condition for participation in the promotion.",
-    "register": "Register",
-    "to_profile": "To profile",
-    "scan": "Scan",
-    "scan_hint": "Point the camera at the QR code",
-    "success": "Success",
-    "error": "Error",
-    "status": "Status: {}",
-    "close": "Close"
+    "title": "AINA QR",
+    "processing": "Please wait...",
+    "success": {
+      "title": "Your receipt has been registered. Congratulations!",
+      "message": "Coupon numbers for participation in the drawing: {tickets}\nThe number is stored in your profile, in the \"Coupons\" section.",
+      "to_profile": "To Profile",
+      "back_to_promotion": "Back to Promotion"
+    },
+    "error": {
+      "unknown": "Unknown error",
+      "processing": "An error occurred while processing the QR code",
+      "back": "Go Back"
+    }
   },
   "receipt": {
     "error": "Error",

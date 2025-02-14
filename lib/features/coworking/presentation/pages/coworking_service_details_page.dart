@@ -105,7 +105,9 @@ class CoworkingServiceDetailsPage extends ConsumerWidget {
                         mainAxisSpacing: 8.0,
                         childAspectRatio:
                             tariffs.firstOrNull?.type == 'COWORKING'
-                                ? 0.8
+                                ? MediaQuery.of(context).size.width > 600
+                                    ? 0.85
+                                    : 0.65
                                 : 2.2,
                       ),
                       itemCount: tariffs.length,

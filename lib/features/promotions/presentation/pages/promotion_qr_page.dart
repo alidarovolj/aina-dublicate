@@ -10,6 +10,7 @@ import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:aina_flutter/core/providers/requests/promotions/details.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class PromotionQrPage extends ConsumerStatefulWidget {
   final int promotionId;
@@ -51,10 +52,8 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
     if (!mounted) return;
 
     try {
-      // Immediately pause camera to prevent multiple scans
       await controller?.pauseCamera();
 
-      // First get the promotion details to get the building info
       final promotionDetailsService = ref.read(requestPromotionDetailsProvider);
       final promotionResponse = await promotionDetailsService
           .promotionDetails(widget.promotionId.toString());
@@ -68,7 +67,6 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
       final building = promotionData['building'] as Map<String, dynamic>?;
       final buildingId = building?['id']?.toString() ?? widget.mallId;
 
-      // Now register the receipt
       final service = ref.read(registerReceiptProvider);
       final response = await service.registerReceipt(
         widget.promotionId.toString(),
@@ -87,9 +85,6 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
           tickets = [data['tickets'] as int];
         }
 
-        final double? amount =
-            data['amount'] != null ? (data['amount'] as num).toDouble() : null;
-
         setState(() {
           _isProcessing = false;
         });
@@ -98,12 +93,11 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
 
         await BaseModal.show(
           context,
-          title: 'Ваш чек зарегистрирован. Поздравляем!',
-          message:
-              'Номера купонов для участия в розыгрыше: ${tickets.join(", ")}\nНомер хранится в профиле, в разделе «Купоны».',
+          title: 'qr.success.title'.tr(),
+          message: 'qr.success.message'.tr(args: [tickets.join(", ")]),
           buttons: [
             ModalButton(
-              label: 'В профиль',
+              label: 'qr.success.to_profile'.tr(),
               onPressed: () async {
                 context.go('/malls/${widget.mallId}/profile');
               },
@@ -111,7 +105,7 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
               backgroundColor: Colors.white,
             ),
             ModalButton(
-              label: 'Назад к акции',
+              label: 'qr.success.back_to_promotion'.tr(),
               onPressed: () async {
                 context.go(
                     '/malls/${widget.mallId}/promotions/${widget.promotionId}');
@@ -122,7 +116,7 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
         );
       } else {
         final String message =
-            data['message'] as String? ?? 'Неизвестная ошибка';
+            data['message'] as String? ?? 'qr.error.unknown'.tr();
 
         setState(() {
           _isProcessing = false;
@@ -135,9 +129,9 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
           message: message,
           buttons: [
             ModalButton(
-              label: 'Сканировать снова',
+              label: 'qr.error.back'.tr(),
               onPressed: () async {
-                await controller?.resumeCamera();
+                context.pop();
               },
               type: ButtonType.light,
             ),
@@ -145,10 +139,9 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
         );
       }
     } catch (e) {
-      // print('Error processing QR code: $e');
       if (!mounted) return;
 
-      String errorMessage = 'Произошла ошибка при обработке QR-кода';
+      String errorMessage = 'qr.error.processing'.tr();
 
       if (e is DioException && e.response?.data != null) {
         final responseData = e.response!.data;
@@ -167,9 +160,9 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
         width: MediaQuery.of(context).size.width - 40,
         buttons: [
           ModalButton(
-            label: 'Сканировать снова',
+            label: 'qr.error.back'.tr(),
             onPressed: () async {
-              await controller?.resumeCamera();
+              context.pop();
             },
             type: ButtonType.light,
           ),
@@ -191,7 +184,7 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
                 onQRViewCreated: _onQRViewCreated,
               ),
               CustomHeader(
-                title: 'AINA QR',
+                title: 'qr.title'.tr(),
                 type: HeaderType.pop,
                 onBack: () {
                   controller?.pauseCamera();
@@ -216,22 +209,23 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
               if (_isProcessing)
                 Container(
                   color: Colors.black.withOpacity(0.5),
-                  child: const Center(
-                      child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(
-                        color: AppColors.secondary,
-                      ),
-                      SizedBox(height: 20),
-                      Text(
-                        'Пожалуйста, подождите...',
-                        style: TextStyle(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CircularProgressIndicator(
                           color: AppColors.secondary,
                         ),
-                      )
-                    ],
-                  )),
+                        const SizedBox(height: 20),
+                        Text(
+                          'qr.processing'.tr(),
+                          style: const TextStyle(
+                            color: AppColors.secondary,
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
                 ),
             ],
           ),

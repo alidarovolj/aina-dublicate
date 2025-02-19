@@ -22,7 +22,7 @@
     "card": {
       "phone_label": "Phone",
       "email_label": "Email",
-      "personal_info": "Personal information",
+      "personal_info": "Personal data",
       "company_label": "Company",
       "employment": {
         "contract": "Contract",
@@ -79,7 +79,13 @@
       },
       "submit": {
         "note": "After saving, the card will be sent for review",
-        "button": "Submit for review"
+        "button": "Submit for review",
+        "confirmation": {
+          "title": "Submit card for review?",
+          "message": "After submission, the card will be reviewed by a moderator before being published in the community",
+          "cancel": "Cancel",
+          "confirm": "Submit"
+        }
       }
     }
   },
@@ -131,9 +137,9 @@
     "processing": "Please wait...",
     "success": {
       "title": "Your receipt has been registered. Congratulations!",
-      "message": "Coupon numbers for participation in the drawing: {tickets}\nThe number is stored in your profile, in the \"Coupons\" section.",
-      "to_profile": "To Profile",
-      "back_to_promotion": "Back to Promotion"
+      "message": "Coupon numbers for participation in the draw: ${tickets}\n\nThe number is stored in your profile, in the \"Coupons\" section.",
+      "to_profile": "To profile",
+      "back_to_promotion": "Back to promotion"
     },
     "error": {
       "unknown": "Unknown error",
@@ -194,7 +200,7 @@
   "profile": {
     "mall_title": "Mall profile",
     "load_error": "Failed to load profile data",
-    "personal_info": "Personal information",
+    "personal_info": "Personal data",
     "coupons": "Coupons",
     "contact_us": "Contact us",
     "about_app": "About app",
@@ -215,6 +221,14 @@
         "validation_error": "Please fix the errors in the form",
         "save_success": "Changes saved successfully",
         "update_error": "Error saving data",
+        "uploading_avatar": "Uploading avatar...",
+        "avatar_updated": "Avatar updated successfully",
+        "avatar_error": "Error uploading avatar",
+        "removing_avatar": "Removing avatar...",
+        "avatar_removed": "Avatar removed successfully",
+        "add_avatar": "Add photo",
+        "change_avatar": "Change photo",
+        "remove_avatar": "Remove photo",
         "gender": {
           "title": "Gender",
           "female": "F",
@@ -280,7 +294,7 @@
     },
     "profile": {
       "title": "Profile",
-      "personal_info": "Personal Information",
+      "personal_info": "Personal data",
       "biometric": "Biometric",
       "community_card": "Community Card",
       "limit_accounts": "Limit Accounts",
@@ -372,6 +386,9 @@
     "added": "Photo added",
     "save": "Save and verify",
     "waiting": "Processing biometric data...",
+    "success": "Photo sent for verification",
+    "tariffs_description": "While we verify your biometric data, you can check out our tariffs",
+    "view_tariffs": "View tariffs",
     "camera": {
       "description": "Position your face in the center of the oval and take a photo",
       "permission_denied": "Camera access is required for verification",
@@ -409,7 +426,8 @@
       "paid": "Paid",
       "pending": "Pending payment",
       "cancelled": "Cancelled",
-      "refunded": "Refunded"
+      "refunded": "Refunded",
+      "completed": "Completed"
     },
     "payment": {
       "error": "An error occurred during payment. Please try again"
@@ -429,7 +447,8 @@
     "confirm": "Confirm",
     "save": "Save",
     "discard": "Discard",
-    "logout": "Logout"
+    "logout": "Logout",
+    "delete": "Delete"
   },
   "limits": {
     "title": "Limit Accounts",
@@ -499,6 +518,10 @@
       "message": "Confirm logout?",
       "confirm": "Logout",
       "cancel": "Cancel"
+    },
+    "delete_profile": {
+      "title": "Are you sure you want to delete your profile?",
+      "message": ""
     }
   },
   "payment_accepted": "Payment Successful",
@@ -512,5 +535,21 @@
   "return_to_order": "Return to Order",
   "go_to_bookings": "Go to Bookings",
   "go_to_home": "Go to Home",
-  "payment_declined_details": "You can try to pay again\nor come back later."
+  "payment_declined_details": "You can try to pay again\nor come back later.",
+  "update": {
+    "new_version": "New version available",
+    "description": "To access all features, please update the app",
+    "skip": "Skip",
+    "update": "Update"
+  },
+  "payment": {
+    "connecting": "Connecting to payment service...",
+    "retry_attempt": "Retrying connection to payment service (Attempt {} of {})...",
+    "check_internet": "Please check your internet connection",
+    "connection_error": "Failed to connect to payment service. Please check your internet connection and try again."
+  },
+  "language": "Language Selection",
+  "errors": {
+    "delete_profile": "Error deleting profile"
+  }
 }

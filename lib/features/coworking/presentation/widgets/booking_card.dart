@@ -19,61 +19,87 @@ class BookingCard extends StatefulWidget {
 }
 
 class _BookingCardState extends State<BookingCard> {
-  Timer? _timer;
-  String? _timerDisplay;
-  int _remainingTime = 0;
+  Timer? timer;
+  String timerText = '';
 
   @override
   void initState() {
     super.initState();
-    if (widget.order.status == 'PENDING') {
-      _calculateRemainingTime();
-    }
+    _startPaymentTimer();
   }
 
-  void _calculateRemainingTime() {
-    final createdAt =
-        DateTime.parse(widget.order.createdAt).millisecondsSinceEpoch;
-    final now = DateTime.now().millisecondsSinceEpoch;
-    const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
-    final endTime = createdAt + fifteenMinutes;
-    _remainingTime = ((endTime - now) / 1000).floor();
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
+  }
 
-    if (_remainingTime > 0) {
-      _startTimer();
-    } else {
-      _timerDisplay = "00:00";
+  void _startPaymentTimer() {
+    timer?.cancel();
+
+    if (widget.order.createdAt == null || widget.order.status != 'PENDING') {
+      return;
+    }
+
+    final createdAt = DateTime.parse(widget.order.createdAt);
+    final endTime = createdAt.add(const Duration(minutes: 15));
+    final now = DateTime.now();
+
+    if (now.isAfter(endTime)) {
+      setState(() => timerText = '');
       widget.onTimerExpired?.call(widget.order.id);
+      return;
     }
-  }
 
-  void _startTimer() {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_remainingTime > 0) {
-        setState(() {
-          _remainingTime--;
-          final minutes = (_remainingTime ~/ 60).toString().padLeft(2, '0');
-          final seconds = (_remainingTime % 60).toString().padLeft(2, '0');
-          _timerDisplay = "$minutes:$seconds";
-        });
-      } else {
+    // Устанавливаем начальное значение таймера сразу
+    final remaining = endTime.difference(now);
+    final minutes =
+        remaining.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds =
+        remaining.inSeconds.remainder(60).toString().padLeft(2, '0');
+    setState(() => timerText = '$minutes:$seconds');
+
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
         timer.cancel();
-        _timerDisplay = "00:00";
-        widget.onTimerExpired?.call(widget.order.id);
+        return;
+      }
+
+      final now = DateTime.now();
+      final remaining = endTime.difference(now);
+
+      if (remaining.isNegative) {
+        timer.cancel();
+        if (mounted) {
+          setState(() => timerText = '');
+          widget.onTimerExpired?.call(widget.order.id);
+        }
+        return;
+      }
+
+      final minutes =
+          remaining.inMinutes.remainder(60).toString().padLeft(2, '0');
+      final seconds =
+          remaining.inSeconds.remainder(60).toString().padLeft(2, '0');
+      if (mounted) {
+        setState(() => timerText = '$minutes:$seconds');
       }
     });
   }
 
   @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  void didUpdateWidget(BookingCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.order.status != widget.order.status ||
+        oldWidget.order.createdAt != widget.order.createdAt) {
+      _startPaymentTimer();
+    }
   }
 
   Color _getStatusColor() {
     switch (widget.order.status) {
       case 'PAID':
+      case 'COMPLETED':
         return const Color(0xFF2AC52A);
       case 'PENDING':
         return const Color(0xFFD42525);
@@ -89,6 +115,8 @@ class _BookingCardState extends State<BookingCard> {
     switch (widget.order.status) {
       case 'PAID':
         return 'orders.status.paid'.tr();
+      case 'COMPLETED':
+        return 'orders.status.completed'.tr();
       case 'PENDING':
         return 'orders.status.pending'.tr();
       case 'CANCELED':
@@ -150,10 +178,10 @@ class _BookingCardState extends State<BookingCard> {
                     ),
                   ),
                   if (widget.order.status == 'PENDING' &&
-                      _timerDisplay != null) ...[
+                      timerText.isNotEmpty) ...[
                     const SizedBox(width: 4),
                     Text(
-                      _timerDisplay!,
+                      timerText,
                       style: TextStyle(
                         fontSize: 14,
                         color: _getStatusColor(),
@@ -169,7 +197,8 @@ class _BookingCardState extends State<BookingCard> {
                       color: _getStatusColor().withOpacity(0.1),
                     ),
                     child: Icon(
-                      widget.order.status == 'PAID'
+                      widget.order.status == 'PAID' ||
+                              widget.order.status == 'COMPLETED'
                           ? Icons.check_circle
                           : Icons.error,
                       size: 16,

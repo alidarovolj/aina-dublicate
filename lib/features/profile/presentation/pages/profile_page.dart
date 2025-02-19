@@ -8,6 +8,11 @@ import 'package:aina_flutter/core/providers/requests/settings_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:aina_flutter/core/providers/requests/auth/profile.dart';
+import 'dart:io';
+import 'package:aina_flutter/core/widgets/avatar_edit_widget.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:shimmer/shimmer.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   final int mallId;
@@ -22,14 +27,109 @@ class ProfilePage extends ConsumerStatefulWidget {
 }
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
+  File? _temporaryAvatar;
+  bool _isLoading = false;
+  bool _isInitialized = false;
+
   @override
-  void initState() {
-    super.initState();
-    // Force refresh profile data when page is loaded
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.invalidate(userProvider);
-      ref.invalidate(userTicketsProvider);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInitialized) {
+      _isInitialized = true;
+      // Wrap the provider updates in a Future to avoid build-time modifications
+      Future(() {
+        if (mounted) {
+          _refreshProfileData();
+        }
+      });
+    }
+  }
+
+  Future<void> _refreshProfileData() async {
+    if (!mounted) return;
+
+    ref.invalidate(userProvider);
+    ref.invalidate(userTicketsProvider);
+    ref.invalidate(promenadeProfileProvider);
+    ref.invalidate(profileCacheKeyProvider);
+
+    // Wrap the state update in a Future to avoid build-time modifications
+    Future(() {
+      if (mounted) {
+        ref.read(profileCacheKeyProvider.notifier).state++;
+      }
     });
+  }
+
+  Future<void> _handleAvatarPicked(File photo) async {
+    setState(() {
+      _isLoading = true;
+      _temporaryAvatar = photo;
+    });
+
+    try {
+      final profileService = ref.read(promenadeProfileProvider);
+      await profileService.uploadAvatar(photo);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('profile.settings.edit.avatar_updated'.tr()),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        _temporaryAvatar = null;
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('profile.settings.edit.avatar_error'.tr()),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _handleAvatarRemoved() async {
+    setState(() {
+      _isLoading = true;
+      _temporaryAvatar = null;
+    });
+
+    try {
+      final profileService = ref.read(promenadeProfileProvider);
+      await profileService.removeAvatar();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('profile.settings.edit.avatar_removed'.tr()),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('profile.settings.edit.avatar_error'.tr()),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -41,17 +141,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
     // Show loading state while checking authentication
     if (authState.token == null) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return _buildSkeletonLoader();
     }
 
     // If not authenticated, redirect to malls
     if (!authState.isAuthenticated) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go('/');
+        context.go('/home');
       });
       return const SizedBox.shrink();
     }
@@ -100,40 +196,28 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   color: AppColors.white,
                   margin: const EdgeInsets.only(top: 64),
                   child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Profile Info Section
-                        Column(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: MediaQuery.of(context).size.height -
+                            64, // 64 это высота хедера
+                      ),
+                      child: IntrinsicHeight(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.max,
                           children: [
+                            // Profile Info Section
                             Container(
                               padding: const EdgeInsets.all(12),
                               margin: const EdgeInsets.only(bottom: 30),
                               child: Row(
                                 children: [
-                                  if (userData.avatarUrl != null)
-                                    Container(
-                                      width: 80,
-                                      height: 80,
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[300],
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Image.network(
-                                        userData.avatarUrl!,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    )
-                                  else
-                                    CircleAvatar(
-                                      radius: 30,
-                                      backgroundColor: Colors.grey[300],
-                                      child: const Icon(
-                                        Icons.person,
-                                        size: 40,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
+                                  AvatarEditWidget(
+                                    avatarUrl: userData.avatarUrl,
+                                    temporaryImage: _temporaryAvatar,
+                                    onAvatarPicked: _handleAvatarPicked,
+                                    onAvatarRemoved: _handleAvatarRemoved,
+                                    isLoading: _isLoading,
+                                  ),
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
@@ -168,13 +252,28 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                               'profile.personal_info'.tr(),
                               Icons.chevron_right,
                               backgroundColor: Colors.grey[200],
-                              onTap: () {
-                                context.pushNamed(
+                              onTap: () async {
+                                // Navigate and wait for result
+                                final result = await context.pushNamed(
                                   'mall_edit',
                                   pathParameters: {
                                     'id': widget.mallId.toString()
                                   },
                                 );
+
+                                // After returning, refresh the data
+                                if (mounted) {
+                                  await _refreshProfileData();
+
+                                  // Clear image cache for the avatar
+                                  if (userData.avatarUrl != null) {
+                                    imageCache.evict(
+                                        NetworkImage(userData.avatarUrl!));
+                                  }
+
+                                  // Force rebuild
+                                  setState(() {});
+                                }
                               },
                             ),
                             const SizedBox(height: 8),
@@ -214,13 +313,60 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                               backgroundColor: Colors.grey[200],
                               onTap: () {
                                 settingsAsync.whenData((settings) async {
-                                  final whatsappUrl =
-                                      Uri.parse(settings.whatsappLinkAinaMall);
-                                  if (await canLaunchUrl(whatsappUrl)) {
-                                    await launchUrl(
-                                      whatsappUrl,
-                                      mode: LaunchMode.externalApplication,
-                                    );
+                                  try {
+                                    // Декодируем URL и заменяем закодированные символы
+                                    final decodedUrl = Uri.decodeFull(
+                                            settings.whatsappLinkAinaMall)
+                                        .replaceAll('%2B', '+')
+                                        .replaceAll('%20', ' ');
+
+                                    // Пробуем сначала открыть через whatsapp://
+                                    final whatsappUri =
+                                        Uri.parse(decodedUrl.replaceAll(
+                                      'https://api.whatsapp.com/send',
+                                      'whatsapp://send',
+                                    ));
+
+                                    bool launched = false;
+                                    try {
+                                      launched = await launchUrl(
+                                        whatsappUri,
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    } catch (_) {
+                                      launched = false;
+                                    }
+
+                                    // Если не получилось открыть через whatsapp://, пробуем через https://
+                                    if (!launched) {
+                                      final httpUri = Uri.parse(decodedUrl);
+                                      launched = await launchUrl(
+                                        httpUri,
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    }
+
+                                    if (!launched && context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              'communication.modal.whatsapp.error'
+                                                  .tr()),
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              'communication.modal.whatsapp.error'
+                                                  .tr()),
+                                        ),
+                                      );
+                                    }
                                   }
                                 });
                               },
@@ -237,7 +383,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -247,6 +393,123 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSkeletonLoader() {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Container(
+        color: AppColors.primary,
+        child: SafeArea(
+          child: Stack(
+            children: [
+              Container(
+                color: Colors.white,
+                margin: const EdgeInsets.only(top: 64),
+                child: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: MediaQuery.of(context).size.height - 64,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          // Profile Info Section Skeleton
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            margin: const EdgeInsets.only(bottom: 30),
+                            child: Row(
+                              children: [
+                                Shimmer.fromColors(
+                                  baseColor: Colors.grey[300]!,
+                                  highlightColor: Colors.grey[100]!,
+                                  child: Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Shimmer.fromColors(
+                                        baseColor: Colors.grey[300]!,
+                                        highlightColor: Colors.grey[100]!,
+                                        child: Container(
+                                          height: 20,
+                                          width: 150,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Shimmer.fromColors(
+                                        baseColor: Colors.grey[300]!,
+                                        highlightColor: Colors.grey[100]!,
+                                        child: Container(
+                                          height: 16,
+                                          width: 120,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Menu Items Skeleton
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Column(
+                              children: List.generate(
+                                3, // Number of menu items
+                                (index) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Shimmer.fromColors(
+                                    baseColor: Colors.grey[300]!,
+                                    highlightColor: Colors.grey[100]!,
+                                    child: Container(
+                                      height: 56,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              CustomHeader(
+                title: 'profile.mall_title'.tr(),
+                type: HeaderType.close,
+              ),
+            ],
           ),
         ),
       ),

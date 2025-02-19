@@ -61,7 +61,7 @@ class CustomHeader extends StatelessWidget {
           ),
           if (type == HeaderType.close)
             GestureDetector(
-              onTap: () => context.go('/'),
+              onTap: () => context.go('/home'),
               child: SvgPicture.asset(
                 'lib/core/assets/icons/close.svg',
                 width: 32,

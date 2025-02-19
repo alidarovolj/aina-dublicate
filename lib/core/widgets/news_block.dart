@@ -69,7 +69,6 @@ class NewsBlock extends ConsumerWidget {
                         style: GoogleFonts.lora(
                           fontSize: 22,
                           color: Colors.black,
-                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     if (showViewAll && onViewAllTap != null)
@@ -170,9 +169,8 @@ class NewsBlock extends ConsumerWidget {
                   Text(
                     newsItem.title,
                     style: GoogleFonts.lora(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
+                      fontSize: 22,
+                      color: Colors.black,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,

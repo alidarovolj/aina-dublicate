@@ -14,6 +14,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:sms_autofill/sms_autofill.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io' show Platform;
+import 'package:dio/dio.dart';
 
 class PhoneNumberInputScreen extends ConsumerStatefulWidget {
   const PhoneNumberInputScreen({super.key});
@@ -90,9 +91,18 @@ class _PhoneNumberInputScreenState
         }
       } catch (e) {
         if (mounted) {
+          String errorMessage = 'auth.code_send_error'.tr();
+
+          if (e is DioException && e.response?.data != null) {
+            final responseData = e.response?.data;
+            if (responseData is Map<String, dynamic>) {
+              errorMessage = responseData['message'] ?? errorMessage;
+            }
+          }
+
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Ошибка при отправке кода'),
+            SnackBar(
+              content: Text(errorMessage),
             ),
           );
         }

@@ -12,6 +12,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/core/widgets/restart_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:aina_flutter/core/api/api_client.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:aina_flutter/core/providers/requests/auth/profile.dart';
+import 'package:aina_flutter/core/widgets/avatar_edit_widget.dart';
 
 final selectedGenderProvider = StateProvider<String>((ref) => 'Не указывать');
 
@@ -28,214 +32,164 @@ class EditDataPage extends ConsumerStatefulWidget {
 }
 
 class _EditDataPageState extends ConsumerState<EditDataPage> {
-  late TextEditingController firstNameController;
-  late TextEditingController lastNameController;
-  late TextEditingController patronymicController;
-  late TextEditingController emailController;
-  late TextEditingController licensePlateController;
-  late Map<String, FocusNode> focusNodes;
-  bool _isDirty = false;
-
-  // Validation state
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController patronymicController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController licensePlateController = TextEditingController();
+  final Map<String, FocusNode> focusNodes = {
+    'firstName': FocusNode(),
+    'lastName': FocusNode(),
+    'patronymic': FocusNode(),
+    'email': FocusNode(),
+    'licensePlate': FocusNode(),
+  };
+  bool _isLoading = false;
+  bool _hasChanges = false;
   bool isFirstNameValid = true;
   bool isLastNameValid = true;
   bool isLicensePlateValid = true;
+  bool isEmailValid = true;
 
   @override
   void initState() {
     super.initState();
-
-    // Initialize with empty values first
-    firstNameController = TextEditingController();
-    lastNameController = TextEditingController();
-    patronymicController = TextEditingController();
-    emailController = TextEditingController();
-    licensePlateController = TextEditingController();
-
-    focusNodes = {
-      'firstName': FocusNode(),
-      'lastName': FocusNode(),
-      'patronymic': FocusNode(),
-      'email': FocusNode(),
-      'licensePlate': FocusNode(),
-    };
-
     for (var node in focusNodes.values) {
-      node.addListener(_onFocusChange);
+      node.addListener(_onFieldChanged);
     }
-
-    // Load initial data
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadInitialData();
-    });
+    _loadUserData();
   }
 
-  void _loadInitialData() async {
-    try {
-      final requestService = ref.read(requestCodeProvider);
-      final response = await requestService.userProfile();
+  Future<void> _loadUserData() async {
+    final userData = await ref.read(userProvider.future);
+    if (!mounted) return;
 
-      if (response != null && response.statusCode == 200 && mounted) {
-        final userData = UserProfile.fromJson(response.data);
+    firstNameController.text = userData.firstName;
+    lastNameController.text = userData.lastName;
+    patronymicController.text = userData.patronymic ?? '';
+    emailController.text = userData.email ?? '';
+    licensePlateController.text = userData.licensePlate ?? '';
+    ref.read(selectedGenderProvider.notifier).state =
+        userData.gender ?? 'Не указывать';
 
-        firstNameController.text = userData.firstName;
-        lastNameController.text = userData.lastName;
-        patronymicController.text = userData.patronymic ?? '';
-        emailController.text = userData.email ?? '';
-        licensePlateController.text = userData.licensePlate ?? '';
-
-        ref.read(selectedGenderProvider.notifier).state =
-            getInitialGender(userData.gender);
-
-        // Invalidate the provider to refresh UI
-        ref.invalidate(userProvider);
-      }
-    } catch (e) {
-      // Handle error
-    }
+    // Add listeners to track changes
+    firstNameController.addListener(_onFieldChanged);
+    lastNameController.addListener(_onFieldChanged);
+    patronymicController.addListener(_onFieldChanged);
+    emailController.addListener(_onFieldChanged);
+    licensePlateController.addListener(_onFieldChanged);
   }
 
-  bool validateFields() {
+  void _onFieldChanged() {
+    if (!mounted) return;
     setState(() {
-      isFirstNameValid = firstNameController.text.trim().isNotEmpty;
-      isLastNameValid = lastNameController.text.trim().isNotEmpty;
-      isLicensePlateValid = licensePlateController.text.trim().length >= 5;
+      _hasChanges = true;
     });
-
-    return isFirstNameValid && isLastNameValid && isLicensePlateValid;
   }
 
-  void _onFocusChange() {
-    final hasFocus = focusNodes.values.any((node) => node.hasFocus);
-    if (!hasFocus) {
-      _markDirty();
-    }
-  }
+  Future<void> _pickImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
-  Future<bool> _onWillPop() async {
-    if (_isDirty) {
-      if (!validateFields()) {
-        // Show warning modal about validation errors
-        bool shouldExit = false;
-        await BaseModal.show(
-          context,
-          title: 'modals.validation_error.title'.tr(),
-          message: 'modals.validation_error.message'.tr(),
-          buttons: [
-            ModalButton(
-              label: 'modals.validation_error.stay'.tr(),
-              type: ButtonType.filled,
-              onPressed: () {},
-            ),
-            ModalButton(
-              label: 'modals.validation_error.discard'.tr(),
-              type: ButtonType.bordered,
-              textColor: Colors.red,
-              onPressed: () {
-                shouldExit = true;
-              },
-            ),
-          ],
-        );
+      if (image == null) return;
 
-        return shouldExit; // Only exit if user explicitly chose to discard
-      }
+      setState(() => _isLoading = true);
 
-      // If validation passes, show save changes modal
-      bool? result;
-      await BaseModal.show(
-        context,
-        title: 'modals.save_changes.title'.tr(),
-        message: 'modals.save_changes.message'.tr(),
-        buttons: [
-          ModalButton(
-            label: 'common.discard'.tr(),
-            type: ButtonType.bordered,
-            onPressed: () {
-              result = false;
-            },
-          ),
-          ModalButton(
-            label: 'common.save'.tr(),
-            type: ButtonType.filled,
-            onPressed: () async {
-              result = true;
-            },
-          ),
-        ],
-      );
+      final file = File(image.path);
+      await ref.read(promenadeProfileProvider).uploadAvatar(file);
 
-      if (result == null) return false;
-      if (result == true) {
-        return await _saveChanges();
-      }
-      return true;
-    }
-    return true;
-  }
+      if (!mounted) return;
 
-  Future<bool> _saveChanges() async {
-    if (!_isDirty) return true;
+      // Обновляем данные профиля
+      ref.invalidate(userProvider);
+      ref.invalidate(userTicketsProvider);
 
-    if (!validateFields()) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('profile.settings.edit.validation_error'.tr()),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      return false;
-    }
-
-    final success = await _updateProfile();
-    if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('profile.settings.edit.save_success'.tr()),
+          content: Text('profile.settings.edit.avatar_updated'.tr()),
           backgroundColor: Colors.green,
         ),
       );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('profile.settings.edit.avatar_error'.tr()),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
-    return success;
   }
 
-  void _markDirty() {
-    setState(() {
-      _isDirty = true;
-    });
+  Future<void> _removeAvatar() async {
+    try {
+      setState(() => _isLoading = true);
+
+      await ref.read(promenadeProfileProvider).removeAvatar();
+
+      // Обновляем данные профиля
+      ref.invalidate(userProvider);
+      ref.invalidate(userTicketsProvider);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('profile.settings.edit.avatar_removed'.tr()),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('profile.settings.edit.avatar_error'.tr()),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
-  Future<bool> _updateProfile() async {
-    if (!validateFields()) {
-      return false;
-    }
+  Future<void> _saveChanges() async {
+    if (!_validateFields()) return;
 
     try {
-      final requestService = ref.read(requestCodeProvider);
-      final response = await requestService.updateAinaProfile(
-        firstName: firstNameController.text,
-        lastName: lastNameController.text,
-        patronymic: patronymicController.text,
-        email: emailController.text,
-        licensePlate: licensePlateController.text,
-        gender: getApiGender(ref.read(selectedGenderProvider)),
-      );
+      setState(() => _isLoading = true);
 
-      if (response != null && response.statusCode == 200 && mounted) {
-        // Invalidate and refresh the userProvider to fetch new data
+      final success = await ref.read(profileProvider).updateProfile(
+            firstName: firstNameController.text,
+            lastName: lastNameController.text,
+            patronymic: patronymicController.text,
+            email: emailController.text,
+            licensePlate: licensePlateController.text,
+            gender: ref.read(selectedGenderProvider),
+          );
+
+      if (!mounted) return;
+
+      if (success) {
+        // Обновляем данные профиля
         ref.invalidate(userProvider);
-        await ref.read(userProvider.future);
-        setState(() {
-          _isDirty = false;
-        });
-        return true;
-      }
-      return false;
-    } catch (e) {
-      print('Error updating profile: $e');
-      if (mounted) {
+        ref.invalidate(userTicketsProvider);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('profile.settings.edit.update_success'.tr()),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        setState(() => _hasChanges = false);
+        context.pop();
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('profile.settings.edit.update_error'.tr()),
@@ -243,7 +197,18 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
           ),
         );
       }
-      return false;
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('profile.settings.edit.update_error'.tr()),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -255,7 +220,7 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
     emailController.dispose();
     licensePlateController.dispose();
     for (var node in focusNodes.values) {
-      node.removeListener(_onFocusChange);
+      node.removeListener(_onFieldChanged);
       node.dispose();
     }
     super.dispose();
@@ -294,31 +259,83 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: userData.avatarUrl != null
-                                    ? null
-                                    : AppColors.secondary,
-                                borderRadius: BorderRadius.circular(8),
-                                image: userData.avatarUrl != null
-                                    ? DecorationImage(
-                                        image:
-                                            NetworkImage(userData.avatarUrl!),
-                                        fit: BoxFit.cover,
-                                      )
-                                    : null,
-                              ),
-                              child: userData.avatarUrl == null
-                                  ? const Center(
-                                      child: Icon(
-                                        Icons.person_add,
-                                        color: Colors.white,
-                                        size: 24,
-                                      ),
-                                    )
-                                  : null,
+                            AvatarEditWidget(
+                              avatarUrl: userData.avatarUrl,
+                              isLoading: _isLoading,
+                              onAvatarPicked: (file) async {
+                                try {
+                                  setState(() => _isLoading = true);
+                                  await ref
+                                      .read(promenadeProfileProvider)
+                                      .uploadAvatar(file);
+
+                                  if (!mounted) return;
+
+                                  // Обновляем данные профиля
+                                  ref.invalidate(userProvider);
+                                  ref.invalidate(userTicketsProvider);
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          'profile.settings.edit.avatar_updated'
+                                              .tr()),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                } catch (e) {
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          'profile.settings.edit.avatar_error'
+                                              .tr()),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                } finally {
+                                  if (mounted) {
+                                    setState(() => _isLoading = false);
+                                  }
+                                }
+                              },
+                              onAvatarRemoved: () async {
+                                try {
+                                  setState(() => _isLoading = true);
+
+                                  await ref
+                                      .read(promenadeProfileProvider)
+                                      .removeAvatar();
+
+                                  // Обновляем данные профиля
+                                  ref.invalidate(userProvider);
+                                  ref.invalidate(userTicketsProvider);
+
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          'profile.settings.edit.avatar_removed'
+                                              .tr()),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                } catch (e) {
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          'profile.settings.edit.avatar_error'
+                                              .tr()),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                } finally {
+                                  if (mounted) {
+                                    setState(() => _isLoading = false);
+                                  }
+                                }
+                              },
                             ),
                           ],
                         ),
@@ -569,7 +586,7 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
 
                                       // Navigate to home and wait for navigation to complete
                                       print('Logout: Navigating to home');
-                                      context.go('/');
+                                      context.go('/home');
 
                                       // Wait for navigation and state cleanup
                                       print('Logout: Waiting before restart');
@@ -681,5 +698,84 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
     } else {
       return 'NONE';
     }
+  }
+
+  bool _validateFields() {
+    setState(() {
+      isFirstNameValid = firstNameController.text.trim().isNotEmpty;
+      isLastNameValid = lastNameController.text.trim().isNotEmpty;
+      isLicensePlateValid = licensePlateController.text.trim().length >= 5;
+    });
+
+    return isFirstNameValid && isLastNameValid && isLicensePlateValid;
+  }
+
+  void _markDirty() {
+    setState(() {
+      _hasChanges = true;
+    });
+  }
+
+  Future<bool> _onWillPop() async {
+    if (_hasChanges) {
+      if (!_validateFields()) {
+        // Show warning modal about validation errors
+        bool shouldExit = false;
+        await BaseModal.show(
+          context,
+          title: 'modals.validation_error.title'.tr(),
+          message: 'modals.validation_error.message'.tr(),
+          buttons: [
+            ModalButton(
+              label: 'modals.validation_error.stay'.tr(),
+              type: ButtonType.filled,
+              onPressed: () {},
+            ),
+            ModalButton(
+              label: 'modals.validation_error.discard'.tr(),
+              type: ButtonType.bordered,
+              textColor: Colors.red,
+              onPressed: () {
+                shouldExit = true;
+              },
+            ),
+          ],
+        );
+
+        return shouldExit; // Only exit if user explicitly chose to discard
+      }
+
+      // If validation passes, show save changes modal
+      bool? result;
+      await BaseModal.show(
+        context,
+        title: 'modals.save_changes.title'.tr(),
+        message: 'modals.save_changes.message'.tr(),
+        buttons: [
+          ModalButton(
+            label: 'common.discard'.tr(),
+            type: ButtonType.light,
+            onPressed: () {
+              result = false;
+            },
+          ),
+          ModalButton(
+            label: 'common.save'.tr(),
+            type: ButtonType.filled,
+            onPressed: () async {
+              result = true;
+            },
+          ),
+        ],
+      );
+
+      if (result == null) return false;
+      if (result == true) {
+        await _saveChanges();
+        return true;
+      }
+      return true;
+    }
+    return true;
   }
 }

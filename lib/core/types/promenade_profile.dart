@@ -44,7 +44,7 @@ class MediaFile {
       id: json['id'] as int,
       uuid: json['uuid'] as String,
       url: json['url'] as String,
-      urlOriginal: json['urlOriginal'] as String,
+      urlOriginal: json['urlOriginal'] ?? json['url'] as String,
       orderColumn: json['order_column'] as int,
       collectionName: json['collection_name'] as String,
     );

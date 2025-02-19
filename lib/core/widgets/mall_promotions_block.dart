@@ -63,7 +63,6 @@ class MallPromotionsBlock extends ConsumerWidget {
                         style: GoogleFonts.lora(
                           fontSize: 22,
                           color: Colors.black,
-                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     if (showViewAll && onViewAllTap != null)

@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:app_settings/app_settings.dart';
 
 class BiometricCameraModal extends ConsumerStatefulWidget {
   const BiometricCameraModal({super.key});
@@ -179,8 +178,13 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop();
-              await AppSettings.openAppSettings();
-              Navigator.of(context).pop(null);
+              if (await openAppSettings()) {
+                Navigator.of(context).pop(null);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('camera.settings_open_failed'.tr())),
+                );
+              }
             },
             child: Text('common.settings'.tr()),
           ),
@@ -631,8 +635,13 @@ class _CoworkingCameraPageState extends ConsumerState<CoworkingCameraPage>
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop();
-              await AppSettings.openAppSettings();
-              Navigator.of(context).pop(null);
+              if (await openAppSettings()) {
+                Navigator.of(context).pop(null);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('camera.settings_open_failed'.tr())),
+                );
+              }
             },
             child: Text('common.settings'.tr()),
           ),

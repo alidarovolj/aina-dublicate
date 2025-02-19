@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 class PaymentFailurePage extends StatelessWidget {
   final String orderId;
   final String? reference;
+  final String? errorMessage;
   final VoidCallback onClose;
   final VoidCallback onTryAgain;
 
@@ -12,6 +13,7 @@ class PaymentFailurePage extends StatelessWidget {
     super.key,
     required this.orderId,
     this.reference,
+    this.errorMessage,
     required this.onClose,
     required this.onTryAgain,
   });
@@ -20,6 +22,7 @@ class PaymentFailurePage extends StatelessWidget {
     BuildContext context, {
     required String orderId,
     String? reference,
+    String? errorMessage,
     required VoidCallback onClose,
     required VoidCallback onTryAgain,
   }) {
@@ -32,6 +35,7 @@ class PaymentFailurePage extends StatelessWidget {
       builder: (context) => PaymentFailurePage(
         orderId: orderId,
         reference: reference,
+        errorMessage: errorMessage,
         onClose: onClose,
         onTryAgain: onTryAgain,
       ),
@@ -75,7 +79,7 @@ class PaymentFailurePage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'payment_declined_details'.tr(),
+            errorMessage ?? 'payment_declined_details'.tr(),
             style: const TextStyle(
               fontSize: 14,
               color: Colors.black54,

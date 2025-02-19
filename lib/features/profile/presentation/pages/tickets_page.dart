@@ -59,15 +59,19 @@ class _TicketsPageState extends ConsumerState<TicketsPage> {
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            gradient: const LinearGradient(
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                              colors: [
-                                Color.fromARGB(255, 186, 167, 82),
-                                Color.fromARGB(255, 224, 206, 117),
-                              ],
-                            ),
+                            color: ticket.promotionType == 'RAFFLE'
+                                ? null
+                                : Colors.white,
+                            gradient: ticket.promotionType == 'RAFFLE'
+                                ? const LinearGradient(
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
+                                    colors: [
+                                      Color.fromARGB(255, 186, 167, 82),
+                                      Color.fromARGB(255, 224, 206, 117),
+                                    ],
+                                  )
+                                : null,
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: [
                               BoxShadow(
@@ -83,10 +87,12 @@ class _TicketsPageState extends ConsumerState<TicketsPage> {
                               if (ticket.promotionName != null) ...[
                                 Text(
                                   ticket.promotionName!,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
-                                    color: Colors.white,
+                                    color: ticket.promotionType == 'RAFFLE'
+                                        ? Colors.white
+                                        : Colors.black,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -99,7 +105,7 @@ class _TicketsPageState extends ConsumerState<TicketsPage> {
                                     fontSize: 14,
                                     color: ticket.promotionType == 'RAFFLE'
                                         ? Colors.white
-                                        : Colors.black87,
+                                        : Colors.black,
                                   ),
                                 ),
                               ],
@@ -112,7 +118,7 @@ class _TicketsPageState extends ConsumerState<TicketsPage> {
                                     fontSize: 14,
                                     color: ticket.promotionType == 'RAFFLE'
                                         ? Colors.white
-                                        : Colors.black87,
+                                        : Colors.black,
                                   ),
                                 ),
                               ],
@@ -124,16 +130,18 @@ class _TicketsPageState extends ConsumerState<TicketsPage> {
                                     fontSize: 14,
                                     color: ticket.promotionType == 'RAFFLE'
                                         ? Colors.white
-                                        : Colors.black87,
+                                        : Colors.black,
                                   ),
                                 ),
                               ],
                               Text(
                                 'Купон №${ticket.ticketNo}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.white,
                                   fontWeight: FontWeight.w500,
+                                  color: ticket.promotionType == 'RAFFLE'
+                                      ? Colors.white
+                                      : Colors.black,
                                 ),
                               ),
                               Text(
@@ -141,9 +149,11 @@ class _TicketsPageState extends ConsumerState<TicketsPage> {
                                   DateFormat('dd.MM.yy')
                                       .format(ticket.createdAt)
                                 ]),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.white,
+                                  color: ticket.promotionType == 'RAFFLE'
+                                      ? Colors.white
+                                      : Colors.black,
                                 ),
                               ),
                             ],

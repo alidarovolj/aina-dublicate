@@ -9,7 +9,8 @@ class RequestPromotionsService {
 
   RequestPromotionsService(this._apiClient);
 
-  Future<Response> promotions(BuildContext context) async {
+  Future<Response> promotions(BuildContext context,
+      {bool forceRefresh = false}) async {
     return await _apiClient.dio.get(
       '/api/aina/promotions',
       options: Options(
@@ -18,6 +19,7 @@ class RequestPromotionsService {
           'Accept': 'application/json',
           'Accept-Language': context.locale.languageCode,
           'Language': context.locale.languageCode,
+          if (forceRefresh) 'force-refresh': 'true',
         },
       ),
     );

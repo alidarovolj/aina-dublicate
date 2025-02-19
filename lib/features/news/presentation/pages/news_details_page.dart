@@ -58,7 +58,6 @@ class NewsDetailsPage extends ConsumerWidget {
                                 news.title,
                                 style: GoogleFonts.lora(
                                   fontSize: 24,
-                                  fontWeight: FontWeight.w500,
                                   color: AppColors.textDarkGrey,
                                 ),
                               ),

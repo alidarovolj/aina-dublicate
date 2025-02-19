@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/api/api_client.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:io';
 
 final profileProvider = Provider((ref) => ProfileProvider(ref));
 
@@ -73,6 +75,39 @@ class PromenadeProfileService {
     }
   }
 
+  Future<Map<String, dynamic>> uploadAvatar(File photo) async {
+    try {
+      final formData = FormData.fromMap({
+        'avatar': await MultipartFile.fromFile(photo.path),
+      });
+
+      final response = await _dio.post(
+        '/api/promenade/profile',
+        data: formData,
+        options: Options(
+          headers: {'force-refresh': 'true'},
+        ),
+      );
+
+      if (response.data['success'] == true && response.data['data'] != null) {
+        // Get fresh profile data to ensure we have the latest avatar URL
+        final updatedProfile = await getProfile(forceRefresh: true);
+
+        // Verify that we have the avatar in the response
+        if (updatedProfile['avatar'] == null) {
+          throw Exception(
+              'Avatar upload succeeded but avatar is missing in profile');
+        }
+
+        return updatedProfile;
+      }
+      throw Exception('Failed to upload avatar: Invalid response format');
+    } catch (e) {
+      print('Error uploading avatar: $e');
+      rethrow;
+    }
+  }
+
   Future<Map<String, dynamic>> updateProfile({
     required String firstName,
     required String lastName,
@@ -80,22 +115,27 @@ class PromenadeProfileService {
     String? email,
     String? gender,
     String? iin,
+    File? avatar,
   }) async {
     try {
-      final formData = {
+      final Map<String, dynamic> formData = {
         'firstname': firstName,
         'lastname': lastName,
-        'patronymic': patronymic,
-        'email': email,
-        'gender': gender,
-        'iin': iin,
+        if (patronymic != null) 'patronymic': patronymic,
+        if (email != null) 'email': email,
+        if (gender != null) 'gender': gender,
+        if (iin != null) 'iin': iin,
       };
+
+      if (avatar != null) {
+        formData['avatar'] = await MultipartFile.fromFile(avatar.path);
+      }
 
       final response = await _dio.post(
         '/api/promenade/profile',
-        data: formData,
+        data: FormData.fromMap(formData),
         options: Options(
-          headers: {'force-refresh': 'true'}, // Always force refresh on update
+          headers: {'force-refresh': 'true'},
         ),
       );
 
@@ -104,6 +144,39 @@ class PromenadeProfileService {
       }
       throw Exception('Failed to update profile');
     } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> removeAvatar() async {
+    try {
+      final response = await _dio.post(
+        '/api/promenade/profile/remove-avatar',
+        options: Options(
+          headers: {
+            'force-refresh': 'true',
+            'cache-control': 'no-cache, no-store, must-revalidate',
+            'pragma': 'no-cache',
+            'expires': '0',
+          },
+        ),
+      );
+
+      if (response.data == null || response.data['success'] != true) {
+        throw Exception('Failed to remove avatar');
+      }
+
+      // Get fresh profile data with force refresh to ensure avatar is removed
+      final updatedProfile = await getProfile(forceRefresh: true);
+
+      // Verify that the avatar is actually null in the response
+      if (updatedProfile['avatar'] != null) {
+        throw Exception('Avatar was not properly removed');
+      }
+
+      return updatedProfile;
+    } catch (e) {
+      print('Error in removeAvatar: $e');
       rethrow;
     }
   }

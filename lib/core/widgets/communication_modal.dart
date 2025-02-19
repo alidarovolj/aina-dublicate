@@ -84,9 +84,52 @@ class CommunicationModal {
       child: CustomButton(
         label: 'communication.modal.whatsapp.button_text'.tr(),
         onPressed: () async {
-          final url = Uri.parse(whatsappUrl);
-          if (await canLaunchUrl(url)) {
-            await launchUrl(url, mode: LaunchMode.externalApplication);
+          try {
+            // Декодируем URL и заменяем закодированные символы
+            final decodedUrl = Uri.decodeFull(whatsappUrl)
+                .replaceAll('%2B', '+')
+                .replaceAll('%20', ' ');
+
+            // Пробуем сначала открыть через whatsapp://
+            final whatsappUri = Uri.parse(decodedUrl.replaceAll(
+              'https://api.whatsapp.com/send',
+              'whatsapp://send',
+            ));
+
+            bool launched = false;
+            try {
+              launched = await launchUrl(
+                whatsappUri,
+                mode: LaunchMode.externalApplication,
+              );
+            } catch (_) {
+              launched = false;
+            }
+
+            // Если не получилось открыть через whatsapp://, пробуем через https://
+            if (!launched) {
+              final httpUri = Uri.parse(decodedUrl);
+              launched = await launchUrl(
+                httpUri,
+                mode: LaunchMode.externalApplication,
+              );
+            }
+
+            if (!launched && context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('communication.modal.whatsapp.error'.tr()),
+                ),
+              );
+            }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('communication.modal.whatsapp.error'.tr()),
+                ),
+              );
+            }
           }
         },
         type: ButtonType.filled,
@@ -132,7 +175,7 @@ class CommunicationModal {
 
   static Widget _buildDescription(String text) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Text(
         text,
         textAlign: TextAlign.center,

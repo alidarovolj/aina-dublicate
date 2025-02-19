@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class BuildingsList extends ConsumerWidget {
   const BuildingsList({super.key});
@@ -93,38 +94,104 @@ class BuildingsList extends ConsumerWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppLength.xs),
-          child: Row(
-            children: buildings
-                .asMap()
-                .entries
-                .map((entry) => GestureDetector(
-                      onTap: () {
-                        context.pushNamed(
-                          'coworking_details',
-                          pathParameters: {'id': entry.value.id.toString()},
-                        );
-                      },
-                      child: Container(
-                        width: MediaQuery.of(context).size.width * 0.5 -
-                            (AppLength.xs + 7.5),
-                        height: 94,
-                        margin: EdgeInsets.only(
-                          right: entry.key < buildings.length - 1 ? 15 : 0,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                ...buildings
+                    .asMap()
+                    .entries
+                    .map((entry) => GestureDetector(
+                          onTap: () {
+                            context.pushNamed(
+                              'coworking_details',
+                              pathParameters: {'id': entry.value.id.toString()},
+                            );
+                          },
+                          child: Container(
+                            width: MediaQuery.of(context).size.width * 0.5 -
+                                (AppLength.xs + 7.5),
+                            height: 94,
+                            margin: EdgeInsets.only(
+                              right: entry.key < buildings.length - 1 ? 15 : 0,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(4),
+                              image: DecorationImage(
+                                image:
+                                    NetworkImage(entry.value.previewImage.url),
+                                fit: BoxFit.cover,
+                                colorFilter: ColorFilter.mode(
+                                  Colors.black.withOpacity(0.3),
+                                  BlendMode.darken,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ))
+                    .toList(),
+                GestureDetector(
+                  onTap: () {
+                    if (buildings.isNotEmpty) {
+                      context.pushNamed(
+                        'coworking_services',
+                        pathParameters: {'id': buildings[0].id.toString()},
+                      );
+                    }
+                  },
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 0.5 -
+                        (AppLength.xs + 7.5),
+                    height: 94,
+                    margin: const EdgeInsets.only(left: 15),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
                         ),
-                        decoration: BoxDecoration(
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        ClipRRect(
                           borderRadius: BorderRadius.circular(4),
-                          image: DecorationImage(
-                            image: NetworkImage(entry.value.previewImage.url),
+                          child: Image.asset(
+                            'lib/core/assets/images/rent.png',
+                            width: double.infinity,
+                            height: double.infinity,
                             fit: BoxFit.cover,
-                            colorFilter: ColorFilter.mode(
-                              Colors.black.withOpacity(0.3),
-                              BlendMode.darken,
+                          ),
+                        ),
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: SvgPicture.asset(
+                            'lib/core/assets/icons/linked-arrow.svg',
+                            width: 24,
+                            height: 24,
+                          ),
+                        ),
+                        Positioned(
+                          left: 8,
+                          bottom: 8,
+                          child: Text(
+                            'services.title'.tr(),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Colors.black,
                             ),
                           ),
                         ),
-                      ),
-                    ))
-                .toList(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],

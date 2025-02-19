@@ -14,12 +14,15 @@ class FeedbackFormModal extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      useSafeArea: true,
       builder: (context) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
         child: Container(
-          height: MediaQuery.of(context).size.height * 0.9,
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
           decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.only(
@@ -27,23 +30,30 @@ class FeedbackFormModal extends ConsumerStatefulWidget {
               topRight: Radius.circular(20),
             ),
           ),
-          child: Column(
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
-              const Expanded(
-                child: SingleChildScrollView(
-                  child: FeedbackFormModal(),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    physics: const ClampingScrollPhysics(),
+                    children: const [
+                      FeedbackFormModal(),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -139,7 +149,7 @@ class _FeedbackFormModalState extends ConsumerState<FeedbackFormModal> {
     final categoriesAsync = ref.watch(feedbackCategoriesProvider);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Form(
         key: _formKey,
         child: Column(
@@ -156,35 +166,44 @@ class _FeedbackFormModalState extends ConsumerState<FeedbackFormModal> {
             ),
             const SizedBox(height: 24),
             categoriesAsync.when(
-              data: (categories) => DropdownButtonFormField<int>(
-                value: _form['category_id'] as int?,
-                items: categories
-                    .map((category) => DropdownMenuItem(
-                          value: category.id,
-                          child: Text(
-                            category.title,
-                            style: const TextStyle(color: AppColors.primary),
-                          ),
-                        ))
-                    .toList(),
-                onChanged: (value) =>
-                    setState(() => _form['category_id'] = value),
-                validator: (value) =>
-                    value == null ? 'contact_admin.errors.required'.tr() : null,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  filled: true,
-                  fillColor: Color(0xFFF5F5F5),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              data: (categories) => Theme(
+                data: Theme.of(context).copyWith(
+                  inputDecorationTheme: const InputDecorationTheme(
+                    border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    filled: true,
+                    fillColor: Color(0xFFF5F5F5),
+                  ),
                 ),
-                icon: const Icon(Icons.keyboard_arrow_down),
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.primary,
+                child: DropdownButtonFormField<int>(
+                  value: _form['category_id'] as int?,
+                  items: categories
+                      .map((category) => DropdownMenuItem(
+                            value: category.id,
+                            child: Text(
+                              category.title,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ))
+                      .toList(),
+                  onChanged: (value) =>
+                      setState(() => _form['category_id'] = value),
+                  validator: (value) => value == null
+                      ? 'contact_admin.errors.required'.tr()
+                      : null,
+                  icon: const Icon(Icons.keyboard_arrow_down),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.primary,
+                  ),
+                  decoration: const InputDecoration(),
+                  dropdownColor: Colors.white,
+                  isExpanded: true,
                 ),
-                dropdownColor: Colors.white,
-                isExpanded: true,
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (_, __) => const Text('Error loading categories'),
@@ -251,7 +270,7 @@ class _FeedbackFormModalState extends ConsumerState<FeedbackFormModal> {
               type: ButtonType.filled,
               isFullWidth: true,
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
           ],
         ),
       ),

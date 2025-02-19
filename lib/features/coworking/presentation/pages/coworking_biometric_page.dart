@@ -13,6 +13,7 @@ import 'package:dio/dio.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_camera_page.dart';
+import 'package:go_router/go_router.dart';
 
 class CoworkingBiometricPage extends ConsumerStatefulWidget {
   final int coworkingId;
@@ -177,9 +178,22 @@ class _CoworkingBiometricPageState
       await service.validateBiometric();
       ref.invalidate(biometricDataProvider);
       if (mounted) {
-        setState(() {
-          _showTariffsModal = true;
-        });
+        BaseModal.show(
+          context,
+          title: 'biometry.success'.tr(),
+          message: 'biometry.tariffs_description'.tr(),
+          buttons: [
+            ModalButton(
+                label: 'biometry.view_tariffs'.tr(),
+                onPressed: () {
+                  context.go('/coworking/${widget.coworkingId}/services');
+                  setState(() {
+                    _showTariffsModal = true;
+                  });
+                },
+                type: ButtonType.normal)
+          ],
+        );
       }
     } catch (e) {
       if (e is DioException && e.response?.statusCode == 500) {
@@ -220,184 +234,202 @@ class _CoworkingBiometricPageState
       body: Container(
         color: AppColors.primary,
         child: SafeArea(
+          bottom: false,
           child: Stack(
             children: [
-              Container(
-                color: Colors.white,
-                margin: const EdgeInsets.only(top: 64),
-                child: biometricDataAsync.when(
-                  data: (data) => SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Container(
-                          width: MediaQuery.of(context).size.width,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 62),
-                          decoration: const BoxDecoration(
-                            image: DecorationImage(
-                              image: AssetImage(
-                                  'lib/core/assets/images/biometry/card.png'),
-                              fit: BoxFit.cover,
-                              alignment: Alignment.bottomRight,
-                            ),
-                          ),
+              Column(
+                children: [
+                  const SizedBox(height: 64),
+                  Expanded(
+                    child: Container(
+                      color: Colors.white,
+                      child: biometricDataAsync.when(
+                        data: (data) => SingleChildScrollView(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.5,
-                                child: Text(
-                                  'biometry.description'.tr(),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white,
+                              Container(
+                                width: MediaQuery.of(context).size.width,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 62),
+                                decoration: const BoxDecoration(
+                                  image: DecorationImage(
+                                    image: AssetImage(
+                                        'lib/core/assets/images/biometry/card.png'),
+                                    fit: BoxFit.cover,
+                                    alignment: Alignment.bottomRight,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'profile.personal_info'.tr(),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              CustomTextField(
-                                controller: _firstnameController,
-                                hintText:
-                                    'profile.settings.firstname_placeholder'
-                                        .tr(),
-                                enabled: data.biometricStatus != 'VALID',
-                                onChanged: (_) => _saveInfo(),
-                                isValid: _firstnameController.text.isNotEmpty,
-                              ),
-                              const SizedBox(height: 12),
-                              CustomTextField(
-                                controller: _lastnameController,
-                                hintText:
-                                    'profile.settings.lastname_placeholder'
-                                        .tr(),
-                                enabled: data.biometricStatus != 'VALID',
-                                onChanged: (_) => _saveInfo(),
-                                isValid: _lastnameController.text.isNotEmpty,
-                              ),
-                              const SizedBox(height: 24),
-                              if (data.biometric != null &&
-                                  _lastnameController.text.isNotEmpty &&
-                                  _firstnameController.text.isNotEmpty)
-                                Column(
+                                child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'biometry.added'.tr(),
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Center(
-                                      child: Material(
-                                        color: Colors.transparent,
-                                        child: InkWell(
-                                          onTap: _openCamera,
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                          child: Container(
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.5,
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
-                                              color: Colors.grey[200],
-                                            ),
-                                            child: AspectRatio(
-                                              aspectRatio: 1,
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(4),
-                                                child: Image.network(
-                                                  data.biometric!.urlOriginal,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
+                                    SizedBox(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.5,
+                                      child: Text(
+                                        'biometry.description'.tr(),
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.white,
                                         ),
                                       ),
                                     ),
                                   ],
-                                )
-                              else if (_lastnameController.text.isNotEmpty &&
-                                  _firstnameController.text.isNotEmpty)
-                                CustomButton(
-                                  onPressed: _openCamera,
-                                  label: 'biometry.add_photo'.tr(),
-                                  isFullWidth: true,
                                 ),
-                              if (_firstnameController.text.isNotEmpty &&
-                                  _lastnameController.text.isNotEmpty &&
-                                  data.biometric != null &&
-                                  data.biometricStatus != 'VALID')
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 40),
-                                  child: CustomButton(
-                                    onPressed: _sendToValidate,
-                                    label: 'biometry.save'.tr(),
-                                    isFullWidth: true,
-                                    type: ButtonType.filled,
-                                  ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'profile.personal_info'.tr(),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    CustomTextField(
+                                      controller: _firstnameController,
+                                      hintText:
+                                          'profile.settings.firstname_placeholder'
+                                              .tr(),
+                                      enabled: data.biometricStatus != 'VALID',
+                                      onChanged: (_) => _saveInfo(),
+                                      isValid:
+                                          _firstnameController.text.isNotEmpty,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    CustomTextField(
+                                      controller: _lastnameController,
+                                      hintText:
+                                          'profile.settings.lastname_placeholder'
+                                              .tr(),
+                                      enabled: data.biometricStatus != 'VALID',
+                                      onChanged: (_) => _saveInfo(),
+                                      isValid:
+                                          _lastnameController.text.isNotEmpty,
+                                    ),
+                                    const SizedBox(height: 24),
+                                    if (data.biometric != null &&
+                                        _lastnameController.text.isNotEmpty &&
+                                        _firstnameController.text.isNotEmpty)
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'biometry.added'.tr(),
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Center(
+                                            child: Material(
+                                              color: Colors.transparent,
+                                              child: InkWell(
+                                                onTap: _openCamera,
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                                child: Container(
+                                                  width: MediaQuery.of(context)
+                                                          .size
+                                                          .width *
+                                                      0.5,
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            4),
+                                                    color: Colors.grey[200],
+                                                  ),
+                                                  child: AspectRatio(
+                                                    aspectRatio: 1,
+                                                    child: ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              4),
+                                                      child: Image.network(
+                                                        data.biometric!
+                                                            .urlOriginal,
+                                                        fit: BoxFit.cover,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    else if (_lastnameController
+                                            .text.isNotEmpty &&
+                                        _firstnameController.text.isNotEmpty)
+                                      CustomButton(
+                                        onPressed: _openCamera,
+                                        label: 'biometry.add_photo'.tr(),
+                                        isFullWidth: true,
+                                      ),
+                                    if (_firstnameController.text.isNotEmpty &&
+                                        _lastnameController.text.isNotEmpty &&
+                                        data.biometric != null &&
+                                        data.biometricStatus != 'VALID')
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 40),
+                                        child: CustomButton(
+                                          onPressed: _sendToValidate,
+                                          label: 'biometry.save'.tr(),
+                                          isFullWidth: true,
+                                          type: ButtonType.filled,
+                                        ),
+                                      ),
+                                  ],
                                 ),
+                              ),
                             ],
                           ),
                         ),
-                      ],
+                        loading: () => _buildSkeletonLoader(),
+                        error: (error, stack) => Center(
+                          child: Text(error.toString()),
+                        ),
+                      ),
                     ),
                   ),
-                  loading: () => _buildSkeletonLoader(),
-                  error: (error, stack) => Center(
-                    child: Text(error.toString()),
+                ],
+              ),
+              if (_isLoading)
+                Positioned.fill(
+                  top: 64,
+                  child: Container(
+                    color: Colors.white,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const CircularProgressIndicator(
+                            color: AppColors.secondary,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'biometry.waiting'.tr(),
+                            style: const TextStyle(
+                              color: AppColors.secondary,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
               CustomHeader(
                 title: 'biometry.title'.tr(),
                 type: HeaderType.pop,
               ),
-              if (_isLoading)
-                Container(
-                  color: Colors.black.withOpacity(0.5),
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const CircularProgressIndicator(
-                          color: AppColors.secondary,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'biometry.waiting'.tr(),
-                          style: const TextStyle(
-                            color: AppColors.secondary,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               if (_showErrorDialog)
                 ErrorDialog(
                   message: _errorMessage,
@@ -421,7 +453,7 @@ class _CoworkingBiometricPageState
           // Banner section
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 62),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 62),
             decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage('lib/core/assets/images/biometry/card.png'),

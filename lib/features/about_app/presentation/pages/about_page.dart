@@ -1,3 +1,4 @@
+import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:aina_flutter/core/widgets/base_modal.dart';
+import 'package:aina_flutter/core/api/api_client.dart';
+import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AboutPage extends ConsumerStatefulWidget {
   const AboutPage({super.key});
@@ -33,6 +38,54 @@ class _AboutPageState extends ConsumerState<AboutPage> {
     }
   }
 
+  Future<void> _showDeleteConfirmation() async {
+    await BaseModal.show(
+      context,
+      title: 'modals.delete_profile.title'.tr(),
+      message: 'modals.delete_profile.message'.tr(),
+      buttons: [
+        ModalButton(
+          label: 'common.cancel'.tr(),
+          type: ButtonType.normal,
+          backgroundColor: AppColors.appBg,
+          textColor: AppColors.secondary,
+          onPressed: () => context.pop(),
+        ),
+        ModalButton(
+          label: 'common.delete'.tr(),
+          type: ButtonType.light,
+          onPressed: () {
+            _deleteProfile();
+          },
+        ),
+      ],
+    );
+  }
+
+  Future<void> _deleteProfile() async {
+    try {
+      final response =
+          await ApiClient().dio.post('/api/aina/profile/deactivate');
+
+      if (response.data['success'] == true) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('auth_token');
+        ApiClient().token = null;
+        ApiClient().clearCache();
+        ref.read(authProvider.notifier).state =
+            AuthState(isAuthenticated: false);
+        ref.read(authProvider.notifier).logout();
+        context.go('/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('errors.delete_profile'.tr())),
+        );
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -42,9 +95,11 @@ class _AboutPageState extends ConsumerState<AboutPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.primary,
       body: Container(
         color: AppColors.primary,
         child: SafeArea(
+          bottom: false,
           child: Stack(
             children: [
               Container(
@@ -118,9 +173,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                       label: 'about.delete_profile'.tr(),
                       isFullWidth: true,
                       type: ButtonType.bordered,
-                      onPressed: () {
-                        // Handle profile deletion
-                      },
+                      onPressed: _showDeleteConfirmation,
                     ),
                   ],
                 ),

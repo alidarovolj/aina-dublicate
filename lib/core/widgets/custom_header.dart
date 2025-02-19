@@ -67,13 +67,15 @@ class CustomHeader extends StatelessWidget {
                 color: Colors.white,
                 fontWeight: FontWeight.w500,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.left,
             ),
           ),
           if (trailing != null) trailing!,
           if (type == HeaderType.close)
             GestureDetector(
-              onTap: () => context.go('/'),
+              onTap: () => context.go('/home'),
               child: SvgPicture.asset(
                 'lib/core/assets/icons/close.svg',
                 width: 32,

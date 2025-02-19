@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/language_switcher.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class UpperHeader extends StatelessWidget {
   const UpperHeader({super.key});
@@ -17,10 +18,14 @@ class UpperHeader extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: AppLength.xl),
-                child: Image.asset(
-                  'lib/core/assets/images/logos/text.png',
+                child: SvgPicture.asset(
+                  'lib/core/assets/images/logo-short.svg',
                   height: 17,
                   fit: BoxFit.contain,
+                  colorFilter: const ColorFilter.mode(
+                    Colors.white,
+                    BlendMode.srcIn,
+                  ),
                 ),
               ),
               Container(

@@ -3,6 +3,7 @@ import 'package:aina_flutter/core/api/api_client.dart';
 import 'package:aina_flutter/features/coworking/domain/models/order_request.dart';
 import 'package:aina_flutter/features/coworking/domain/models/order_response.dart';
 import 'package:aina_flutter/features/coworking/domain/models/calendar_response.dart';
+import 'package:aina_flutter/features/coworking/domain/models/pre_calculation_response.dart';
 import 'dart:convert';
 
 class OrderService {
@@ -311,6 +312,31 @@ class OrderService {
       return response.data['data'];
     }
     return [];
+  }
+
+  Future<PreCalculationResponse> preCalculateOrder({
+    required int serviceId,
+    required String startAt,
+    required String endAt,
+  }) async {
+    try {
+      final response = await _apiClient.dio.post(
+        '/api/promenade/orders/pre-calc',
+        data: {
+          'service_id': serviceId,
+          'start_at': startAt,
+          'end_at': endAt,
+        },
+      );
+
+      if (response.data['success'] == true) {
+        return PreCalculationResponse.fromJson(response.data['data']);
+      }
+
+      throw Exception('Failed to pre-calculate order');
+    } catch (e) {
+      rethrow;
+    }
   }
 }
 

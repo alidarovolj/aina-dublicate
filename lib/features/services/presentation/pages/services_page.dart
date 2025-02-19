@@ -41,7 +41,9 @@ class ServicesPage extends ConsumerWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
+                      clipBehavior: Clip.antiAlias,
                       child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
                         onTap: () {
                           context.push(
                             '/coworking/$coworkingId/services/${service.id}',

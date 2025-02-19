@@ -292,6 +292,40 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
     return !current.isBefore(start) && !current.isAfter(end);
   }
 
+  bool _isRangeOverlappingReserved(DateTime start, DateTime end) {
+    // Normalize dates to start of day for consistent comparison
+    final rangeStart = DateTime(start.year, start.month, start.day);
+    final rangeEnd = DateTime(end.year, end.month, end.day);
+
+    return reservedDates.any((range) {
+      final reservedStart = DateTime.parse(range.startAt).toLocal();
+      final reservedEnd = DateTime.parse(range.endAt).toLocal();
+
+      // Normalize reserved dates to start of day
+      final normalizedReservedStart = DateTime(
+        reservedStart.year,
+        reservedStart.month,
+        reservedStart.day,
+      );
+      final normalizedReservedEnd = DateTime(
+        reservedEnd.year,
+        reservedEnd.month,
+        reservedEnd.day,
+      );
+
+      // Check if any day in the range overlaps with reserved dates
+      for (var day = rangeStart;
+          !day.isAfter(rangeEnd);
+          day = day.add(const Duration(days: 1))) {
+        if (!day.isBefore(normalizedReservedStart) &&
+            !day.isAfter(normalizedReservedEnd)) {
+          return true;
+        }
+      }
+      return false;
+    });
+  }
+
   void _selectDate(DateTime date) {
     if (!_isAvailableDay(date)) return;
 
@@ -299,24 +333,24 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
     if (tariffDetails == null) return;
 
     try {
-      // Check if date is reserved
+      // Check if the selected date itself is reserved
       if (_isDateReserved(date)) {
         _showReservedDateModal(context);
-        return;
-      }
-
-      // Для почасовой брони показываем модальное окно выбора времени
-      if (tariffDetails.timeUnit.toLowerCase() == 'hour') {
-        _showTimeSelectionModal(context, date, tariffDetails);
         return;
       }
 
       // Calculate end date based on duration and time unit
       final calculatedEndDate = _calculateEndDate(date, tariffDetails);
 
-      // Check for overlap with reserved dates
+      // Check for overlap with reserved dates in the entire range
       if (_isRangeOverlappingReserved(date, calculatedEndDate)) {
         _showReserveOverlapModal(context);
+        return;
+      }
+
+      // Для почасовой брони показываем модальное окно выбора времени
+      if (tariffDetails.timeUnit.toLowerCase() == 'hour') {
+        _showTimeSelectionModal(context, date, tariffDetails);
         return;
       }
 
@@ -391,68 +425,6 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
     });
   }
 
-  bool _isRangeOverlappingReserved(DateTime start, DateTime end) {
-    return reservedDates.any((range) {
-      final reservedStart = DateTime.parse(range.startAt);
-      final reservedEnd = DateTime.parse(range.endAt);
-      return start.isBefore(reservedEnd) && end.isAfter(reservedStart);
-    });
-  }
-
-  Widget _buildCalendar() {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-      itemCount: months.length,
-      itemBuilder: (context, index) {
-        final month = months[index];
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
-              child: Text(
-                DateFormat('MMMM yyyy', 'ru').format(month).toLowerCase(),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-            Row(
-              children: const [
-                'coworking.calendar.weekdays.mon',
-                'coworking.calendar.weekdays.tue',
-                'coworking.calendar.weekdays.wed',
-                'coworking.calendar.weekdays.thu',
-                'coworking.calendar.weekdays.fri',
-                'coworking.calendar.weekdays.sat',
-                'coworking.calendar.weekdays.sun'
-              ]
-                  .map((day) => Expanded(
-                        child: Center(
-                          child: Text(
-                            day.tr(),
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                      ))
-                  .toList(),
-            ),
-            const SizedBox(height: 8),
-            _buildMonthGrid(month),
-            const SizedBox(height: 16),
-          ],
-        );
-      },
-    );
-  }
-
   Widget _buildMonthGrid(DateTime month) {
     final days = _daysInMonth(month);
     return GridView.builder(
@@ -482,18 +454,21 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
     final isInRange = _isInRange(day);
     final isReserved = _isDateReserved(day);
 
+    // Don't allow selection or range display for reserved dates
+    final showSelected = (isSelected || isInRange) && !isReserved;
+
     return GestureDetector(
       onTap: isAvailable && !isReserved ? () => _selectDate(day) : null,
       child: Container(
         decoration: BoxDecoration(
-          color: isSelected || isInRange ? Colors.black : Colors.transparent,
+          color: showSelected ? AppColors.primary : Colors.white,
           border: isReserved
               ? Border.all(
                   color: const Color(0xFFE6B012),
                   width: 1,
                 )
               : Border.all(
-                  color: Colors.transparent,
+                  color: Colors.grey.withOpacity(0.2),
                   width: 1,
                 ),
           borderRadius: BorderRadius.circular(2),
@@ -505,15 +480,69 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
               fontSize: 13,
               height: 1,
               fontWeight: FontWeight.w400,
-              color: isSelected || isInRange
+              color: showSelected
                   ? Colors.white
-                  : !isAvailable
+                  : !isAvailable || isReserved
                       ? Colors.grey.withOpacity(0.5)
-                      : Colors.black,
+                      : AppColors.textPrimary,
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCalendar() {
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+      itemCount: months.length,
+      itemBuilder: (context, index) {
+        final month = months[index];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: Text(
+                DateFormat('MMMM yyyy', 'ru').format(month).toLowerCase(),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            Row(
+              children: const [
+                'coworking.calendar.weekdays.mon',
+                'coworking.calendar.weekdays.tue',
+                'coworking.calendar.weekdays.wed',
+                'coworking.calendar.weekdays.thu',
+                'coworking.calendar.weekdays.fri',
+                'coworking.calendar.weekdays.sat',
+                'coworking.calendar.weekdays.sun'
+              ]
+                  .map((day) => Expanded(
+                        child: Center(
+                          child: Text(
+                            day.tr(),
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ))
+                  .toList(),
+            ),
+            const SizedBox(height: 8),
+            _buildMonthGrid(month),
+            const SizedBox(height: 16),
+          ],
+        );
+      },
     );
   }
 
@@ -693,6 +722,7 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
             }
           },
           child: Scaffold(
+            backgroundColor: Colors.white,
             body: Stack(
               children: [
                 if (isLoading)
@@ -709,7 +739,7 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
                                 'Тариф не найден',
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: AppColors.primary,
+                                  color: AppColors.textPrimary,
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -722,75 +752,83 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
                           ),
                         );
                       }
-                      return Column(
-                        children: [
-                          const SizedBox(height: 64),
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 12.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'coworking.calendar.select_date'.tr(),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    color: AppColors.primary,
+                      return Container(
+                        color: Colors.white,
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 64),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12.0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'coworking.calendar.select_date'.tr(),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ).tr(),
+                                  IconButton(
+                                    onPressed: () =>
+                                        _showReservedInfoModal(context),
+                                    icon: const Icon(Icons.info_outline,
+                                        color: AppColors.textPrimary),
                                   ),
-                                ).tr(),
-                                IconButton(
-                                  onPressed: () =>
-                                      _showReservedInfoModal(context),
-                                  icon: const Icon(Icons.info_outline),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          Expanded(child: _buildCalendar()),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, -5),
-                                ),
-                              ],
+                            Expanded(child: _buildCalendar()),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, -5),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                children: [
+                                  _buildInfoRow(
+                                      '${'coworking.calendar.cost'.tr()}:',
+                                      '${total ?? tariffDetails.price} ₸'),
+                                  const SizedBox(height: 8),
+                                  _buildInfoRow(
+                                    '${'coworking.calendar.start_date'.tr()}:',
+                                    formData['start_at'].isNotEmpty
+                                        ? formData['start_at']
+                                        : 'coworking.calendar.not_selected'
+                                            .tr(),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  _buildInfoRow(
+                                    '${'coworking.calendar.end_date'.tr()}:',
+                                    formData['end_at'].isNotEmpty
+                                        ? formData['end_at']
+                                        : 'coworking.calendar.not_selected'
+                                            .tr(),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  CustomButton(
+                                    label:
+                                        'coworking.calendar.proceed_to_payment'
+                                            .tr(),
+                                    onPressed:
+                                        isLoading ? null : _handlePaymentPress,
+                                    isFullWidth: true,
+                                    isLoading: isLoading,
+                                  ),
+                                ],
+                              ),
                             ),
-                            child: Column(
-                              children: [
-                                _buildInfoRow(
-                                    '${'coworking.calendar.cost'.tr()}:',
-                                    '${total ?? tariffDetails.price} ₸'),
-                                const SizedBox(height: 8),
-                                _buildInfoRow(
-                                  '${'coworking.calendar.start_date'.tr()}:',
-                                  formData['start_at'].isNotEmpty
-                                      ? formData['start_at']
-                                      : 'coworking.calendar.not_selected'.tr(),
-                                ),
-                                const SizedBox(height: 8),
-                                _buildInfoRow(
-                                  '${'coworking.calendar.end_date'.tr()}:',
-                                  formData['end_at'].isNotEmpty
-                                      ? formData['end_at']
-                                      : 'coworking.calendar.not_selected'.tr(),
-                                ),
-                                const SizedBox(height: 16),
-                                CustomButton(
-                                  label: 'coworking.calendar.proceed_to_payment'
-                                      .tr(),
-                                  onPressed:
-                                      isLoading ? null : _handlePaymentPress,
-                                  isFullWidth: true,
-                                  isLoading: isLoading,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       );
                     },
                     loading: () => _buildSkeletonLoader(),

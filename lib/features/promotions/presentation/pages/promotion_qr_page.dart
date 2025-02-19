@@ -52,7 +52,11 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
     if (!mounted) return;
 
     try {
-      await controller?.pauseCamera();
+      try {
+        await controller?.pauseCamera();
+      } catch (e) {
+        // Ignore camera errors
+      }
 
       final promotionDetailsService = ref.read(requestPromotionDetailsProvider);
       final promotionResponse = await promotionDetailsService
@@ -94,12 +98,14 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
         await BaseModal.show(
           context,
           title: 'qr.success.title'.tr(),
-          message: 'qr.success.message'.tr(args: [tickets.join(", ")]),
+          message: 'qr.success.message'
+              .tr(namedArgs: {'tickets': tickets.join(", ")}),
           buttons: [
             ModalButton(
               label: 'qr.success.to_profile'.tr(),
               onPressed: () async {
-                context.go('/malls/${widget.mallId}/profile');
+                context.pushNamed('profile',
+                    pathParameters: {'id': widget.mallId.toString()});
               },
               textColor: AppColors.secondary,
               backgroundColor: Colors.white,
@@ -107,8 +113,10 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
             ModalButton(
               label: 'qr.success.back_to_promotion'.tr(),
               onPressed: () async {
-                context.go(
-                    '/malls/${widget.mallId}/promotions/${widget.promotionId}');
+                context.pushNamed('promotion_details', pathParameters: {
+                  'id': widget.mallId.toString(),
+                  'promotionId': widget.promotionId.toString(),
+                });
               },
               type: ButtonType.light,
             ),
@@ -187,8 +195,12 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
                 title: 'qr.title'.tr(),
                 type: HeaderType.pop,
                 onBack: () {
-                  controller?.pauseCamera();
-                  controller?.dispose();
+                  try {
+                    controller?.pauseCamera();
+                    controller?.dispose();
+                  } catch (e) {
+                    // Ignore camera errors during disposal
+                  }
                   if (mounted) {
                     context.pop();
                   }
@@ -243,8 +255,12 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
 
   @override
   void dispose() {
-    controller?.pauseCamera();
-    controller?.dispose();
+    try {
+      controller?.pauseCamera();
+      controller?.dispose();
+    } catch (e) {
+      // Ignore camera errors during disposal
+    }
     super.dispose();
   }
 }

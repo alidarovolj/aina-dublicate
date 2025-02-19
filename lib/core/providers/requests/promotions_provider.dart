@@ -8,10 +8,12 @@ class PromotionsProvider extends StateNotifier<AsyncValue<List<Promotion>>> {
 
   final RequestPromotionsService _listService;
 
-  Future<void> fetchPromotions(BuildContext context) async {
+  Future<void> fetchPromotions(BuildContext context,
+      {bool forceRefresh = false}) async {
     try {
       state = const AsyncValue.loading();
-      final response = await _listService.promotions(context);
+      final response =
+          await _listService.promotions(context, forceRefresh: forceRefresh);
 
       if (!response.data['success']) {
         throw Exception(

@@ -22,8 +22,10 @@ import 'package:flutter/foundation.dart';
 import 'package:aina_flutter/features/payment/pages/payment_success_page.dart';
 import 'package:aina_flutter/features/payment/pages/payment_failure_page.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:aina_flutter/app.dart';
 
-class OrderDetailsPage extends StatefulWidget {
+class OrderDetailsPage extends ConsumerStatefulWidget {
   final String orderId;
   final OrderService orderService;
 
@@ -34,10 +36,10 @@ class OrderDetailsPage extends StatefulWidget {
   });
 
   @override
-  State<OrderDetailsPage> createState() => _OrderDetailsPageState();
+  ConsumerState<OrderDetailsPage> createState() => _OrderDetailsPageState();
 }
 
-class _OrderDetailsPageState extends State<OrderDetailsPage> {
+class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
   OrderResponse? order;
   bool isLoading = false;
   String timerText = '';
@@ -47,7 +49,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
   void initState() {
     super.initState();
     _loadOrderDetails();
-    _startPaymentTimer();
   }
 
   @override
@@ -56,7 +57,29 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     super.dispose();
   }
 
+  Future<void> _loadOrderDetails() async {
+    if (!mounted) return;
+
+    try {
+      final response = await widget.orderService
+          .getOrderDetails(widget.orderId, forceRefresh: true);
+      if (mounted) {
+        setState(() {
+          order = response;
+        });
+        _startPaymentTimer();
+      }
+    } catch (e) {
+      if (mounted) {
+        // Handle error appropriately
+        debugPrint('Error loading order details: $e');
+      }
+    }
+  }
+
   void _startPaymentTimer() {
+    timer?.cancel();
+
     if (order?.createdAt == null) return;
 
     final createdAt = DateTime.parse(order!.createdAt);
@@ -69,6 +92,16 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
         setState(() => timerText = '');
       }
       return;
+    }
+
+    // Устанавливаем начальное значение таймера сразу
+    final remaining = endTime.difference(now);
+    final minutes =
+        remaining.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds =
+        remaining.inSeconds.remainder(60).toString().padLeft(2, '0');
+    if (mounted) {
+      setState(() => timerText = '$minutes:$seconds');
     }
 
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -96,26 +129,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
         }
       }
     });
-  }
-
-  Future<void> _loadOrderDetails() async {
-    if (!mounted) return;
-
-    try {
-      final response = await widget.orderService
-          .getOrderDetails(widget.orderId, forceRefresh: true);
-      if (mounted) {
-        setState(() {
-          order = response;
-          _startPaymentTimer();
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        // Handle error appropriately
-        debugPrint('Error loading order details: $e');
-      }
-    }
   }
 
   String _formatDateTime(String dateTimeStr) {
@@ -188,22 +201,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                 debugPrint('Page finished loading: $url');
               },
               onWebResourceError: (error) {
+                // Просто логируем ошибку без закрытия WebView
                 debugPrint('Web resource error: ${error.description}');
-                _loadOrderDetails();
-                Navigator.of(context).pop(); // Close on error
-
-                PaymentFailurePage.show(
-                  context,
-                  orderId: widget.orderId,
-                  onClose: () {
-                    Navigator.of(context).pop();
-                    _loadOrderDetails();
-                  },
-                  onTryAgain: () {
-                    Navigator.of(context).pop();
-                    _initiatePayment();
-                  },
-                );
               },
             ),
           )
@@ -213,19 +212,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
               debugPrint('Close payment requested');
               _loadOrderDetails();
               Navigator.of(context).pop();
-
-              PaymentFailurePage.show(
-                context,
-                orderId: widget.orderId,
-                onClose: () {
-                  Navigator.of(context).pop();
-                  _loadOrderDetails();
-                },
-                onTryAgain: () {
-                  Navigator.of(context).pop();
-                  _initiatePayment();
-                },
-              );
             },
           )
           ..loadHtmlString(htmlContent,
@@ -291,7 +277,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
+    if (isLoading || order == null) {
       return Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
@@ -305,12 +291,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
           ),
         ),
         body: _buildSkeletonLoader(),
-      );
-    }
-
-    if (order == null) {
-      return const Scaffold(
-        body: Center(child: Text('Error loading order details')),
       );
     }
 
@@ -372,6 +352,16 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                             _buildInfoRow('orders.detail.price_per_hour'.tr(),
                                 '${order!.service?.price} ₸'),
                           ],
+                          if (order!.appliedQuotaHours > 0)
+                            _buildInfoRow(
+                              'Лимитные счета',
+                              '${order!.appliedQuotaHours.toStringAsFixed(1)} ч.',
+                            ),
+                          if (order!.appliedDiscountPercentage > 0)
+                            _buildInfoRow(
+                              'Скидка',
+                              '${order!.appliedDiscountPercentage.toStringAsFixed(0)}%',
+                            ),
                         ],
                       ),
                     ),
@@ -431,7 +421,12 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 28),
+            padding: EdgeInsets.only(
+              left: 12,
+              right: 12,
+              top: 28,
+              bottom: MediaQuery.of(context).padding.bottom + 28,
+            ),
             child: Column(
               children: [
                 if (order!.history?.isNotEmpty ?? false)
@@ -512,6 +507,102 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
   }
 
   Widget _buildInfoRow(String label, String value) {
+    if (label == 'orders.detail.profile'.tr()) {
+      return Consumer(
+        builder: (context, ref, child) {
+          final profileAsync = ref.watch(promenadeProfileProvider);
+          return profileAsync.when(
+            data: (profile) {
+              final phone = profile.phone?.masked ?? value;
+              return Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF666666),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Flexible(
+                      child: Text(
+                        phone,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                        textAlign: TextAlign.right,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+            loading: () => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF666666),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[100]!,
+                    highlightColor: Colors.grey[300]!,
+                    child: Container(
+                      width: 120,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            error: (_, __) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF666666),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Flexible(
+                    child: Text(
+                      value,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF1A1A1A),
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
       child: Row(
@@ -552,14 +643,19 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Timer section skeleton
-                  Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(bottom: 20),
-                    child: Shimmer.fromColors(
-                      baseColor: Colors.grey[100]!,
-                      highlightColor: Colors.grey[300]!,
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey[100]!,
+                    highlightColor: Colors.grey[300]!,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                       child: Container(
-                        height: 24,
+                        height: 16,
                         decoration: BoxDecoration(
                           color: Colors.grey[300],
                           borderRadius: BorderRadius.circular(4),
@@ -567,19 +663,23 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                       ),
                     ),
                   ),
-                  // Info rows skeleton
+
+                  // Info section skeleton
                   Container(
                     margin: const EdgeInsets.only(bottom: 28),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                     child: Column(
                       children: List.generate(
-                        6, // Number of info rows
+                        7, // Количество строк информации
                         (index) => Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 8),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              // Label skeleton
                               Shimmer.fromColors(
                                 baseColor: Colors.grey[100]!,
                                 highlightColor: Colors.grey[300]!,
@@ -592,7 +692,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                   ),
                                 ),
                               ),
-                              // Value skeleton
                               Shimmer.fromColors(
                                 baseColor: Colors.grey[100]!,
                                 highlightColor: Colors.grey[300]!,
@@ -611,22 +710,23 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                       ),
                     ),
                   ),
+
                   // Total price box skeleton
-                  Shimmer.fromColors(
-                    baseColor: Colors.grey[100]!,
-                    highlightColor: Colors.grey[300]!,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 14),
-                      margin: const EdgeInsets.only(bottom: 28),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFE6E6E6)),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 28),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: const Color(0xFFE6E6E6)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Shimmer.fromColors(
+                          baseColor: Colors.grey[100]!,
+                          highlightColor: Colors.grey[300]!,
+                          child: Container(
                             width: 100,
                             height: 16,
                             decoration: BoxDecoration(
@@ -634,7 +734,11 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
-                          Container(
+                        ),
+                        Shimmer.fromColors(
+                          baseColor: Colors.grey[100]!,
+                          highlightColor: Colors.grey[300]!,
+                          child: Container(
                             width: 80,
                             height: 16,
                             decoration: BoxDecoration(
@@ -642,17 +746,18 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
+
                   // Rules text skeleton
                   Shimmer.fromColors(
                     baseColor: Colors.grey[100]!,
                     highlightColor: Colors.grey[300]!,
                     child: Container(
                       width: double.infinity,
-                      height: 16,
+                      height: 32,
                       decoration: BoxDecoration(
                         color: Colors.grey[300],
                         borderRadius: BorderRadius.circular(4),
@@ -664,9 +769,18 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
             ),
           ),
         ),
-        // Action buttons skeleton
+
+        // Bottom buttons skeleton
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 28),
+          padding: EdgeInsets.only(
+            left: 12,
+            right: 12,
+            top: 28,
+            bottom: MediaQuery.of(context).padding.bottom + 28,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+          ),
           child: Column(
             children: [
               Shimmer.fromColors(
@@ -681,7 +795,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               Shimmer.fromColors(
                 baseColor: Colors.grey[100]!,
                 highlightColor: Colors.grey[300]!,

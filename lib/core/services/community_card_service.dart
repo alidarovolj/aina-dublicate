@@ -5,11 +5,16 @@ import 'package:aina_flutter/core/api/api_client.dart';
 class CommunityCardService {
   final _apiClient = ApiClient();
 
-  Future<Map<String, dynamic>> getCommunityCard() async {
+  Future<Map<String, dynamic>> getCommunityCard(
+      {bool forceRefresh = false}) async {
     try {
       // print('Fetching community card data...');
-      final response =
-          await _apiClient.dio.get('/api/promenade/community-card');
+      final response = await _apiClient.dio.get(
+        '/api/promenade/community-card',
+        options: Options(
+          headers: forceRefresh ? {'force-refresh': 'true'} : null,
+        ),
+      );
       // print('Response received: ${response.data}');
 
       if (response.data['success'] == true && response.data['data'] != null) {
@@ -22,11 +27,11 @@ class CommunityCardService {
     }
   }
 
-  Future<void> updateCommunityCard(Map<String, dynamic> data) async {
+  Future<void> updateCommunityCard(dynamic data) async {
     try {
       await _apiClient.dio.post(
         '/api/promenade/community-card',
-        data: FormData.fromMap(data),
+        data: data is FormData ? data : FormData.fromMap(data),
       );
     } catch (e) {
       throw Exception('Failed to update community card: $e');

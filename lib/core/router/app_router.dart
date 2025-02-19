@@ -38,20 +38,26 @@ import 'package:aina_flutter/features/coworking/presentation/pages/order_details
 import 'package:aina_flutter/features/coworking/domain/services/order_service.dart';
 import 'package:aina_flutter/core/providers/api_client_provider.dart';
 import 'package:aina_flutter/features/profile/presentation/pages/community_card_page.dart';
-import 'package:aina_flutter/app.dart';
+import 'package:aina_flutter/app.dart' as app;
 import 'package:aina_flutter/features/coworking/presentation/pages/limit_accounts_page.dart';
 import 'package:aina_flutter/core/router/route_observer.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_edit_data_page.dart';
+import 'package:aina_flutter/features/splash/presentation/pages/splash_page.dart';
 
 class AppRouter {
   static final router = GoRouter(
-    navigatorKey: navigatorKey,
+    navigatorKey: app.navigatorKey,
     initialLocation: '/',
     observers: [
       ChuckerFlutter.navigatorObserver,
-      routeObserver,
+      app.routeObserver,
     ],
     routes: [
+      GoRoute(
+        path: '/',
+        name: 'splash',
+        builder: (context, state) => const SplashPage(),
+      ),
       // Auth routes (placed at the top level, outside of any ShellRoute)
       GoRoute(
         path: '/login',
@@ -66,7 +72,7 @@ class AppRouter {
         },
       ),
       GoRoute(
-        path: '/',
+        path: '/home',
         name: 'home',
         builder: (context, state) => const HomePage(),
       ),

@@ -224,15 +224,50 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
 
       setState(() {
         selectedEndTime = fullDateTime;
-        calculatedTotal = widget.tariffDetails.price * difference;
-        selectingStartTime = true;
+        isLoading = true;
       });
 
-      widget.onTimeSelected?.call(
-        selectedStartTime!,
-        selectedEndTime!,
-        calculatedTotal ?? 0,
-      );
+      // Make pre-calculation request
+      OrderService(ApiClient())
+          .preCalculateOrder(
+        serviceId: widget.tariffDetails.id,
+        startAt: '$selectedStartTime:00',
+        endAt: '$fullDateTime:00',
+      )
+          .then((response) {
+        setState(() {
+          calculatedTotal = response.total;
+          selectingStartTime = true;
+          isLoading = false;
+        });
+
+        widget.onTimeSelected?.call(
+          selectedStartTime!,
+          selectedEndTime!,
+          calculatedTotal ?? 0,
+        );
+      }).catchError((error) {
+        print('Error in pre-calculation: $error');
+        setState(() {
+          selectedEndTime = null;
+          calculatedTotal = null;
+          selectingStartTime = true;
+          isLoading = false;
+        });
+
+        BaseModal.show(
+          context,
+          title: 'coworking.time_selection.error.title'.tr(),
+          message: 'coworking.time_selection.error.calculation'.tr(),
+          buttons: [
+            ModalButton(
+              label: 'coworking.time_selection.error.back'.tr(),
+              onPressed: () {},
+              type: ButtonType.normal,
+            ),
+          ],
+        );
+      });
     }
   }
 

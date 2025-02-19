@@ -37,8 +37,20 @@ class MallDetailsPage extends ConsumerWidget {
       ),
       error: (error, stack) => Center(child: Text('Error: $error')),
       data: (buildings) {
-        final mall = (buildings['mall'] ?? [])
-            .firstWhere((building) => building.id == mallId);
+        final malls = buildings['mall'] ?? [];
+        final mall = malls.firstWhere(
+          (building) => building.id == mallId,
+          orElse: () => malls.first,
+        );
+
+        // Если ID не совпадает, выполняем навигацию после построения виджета
+        if (mall.id != mallId) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              context.go('/malls');
+            }
+          });
+        }
 
         return Scaffold(
           backgroundColor: AppColors.primary,

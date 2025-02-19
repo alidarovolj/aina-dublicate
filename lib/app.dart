@@ -11,11 +11,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/types/promenade_profile.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:dio/dio.dart';
-import 'package:chucker_flutter/chucker_flutter.dart';
 import 'core/services/deep_link_service.dart';
+import 'package:aina_flutter/core/providers/update_notifier_provider.dart';
+import 'package:aina_flutter/core/widgets/update_modal.dart';
 
 // Global navigator key for accessing navigation from anywhere
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+// Global route observer for navigation events
+final routeObserver = RouteObserver<ModalRoute>();
 
 // Create the promenade profile provider
 final promenadeProfileProvider = FutureProvider<PromenadeProfile>((ref) async {
@@ -70,6 +74,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       if (authState.isAuthenticated) {
         container.read(promenadeProfileProvider);
       }
+      // Check for updates
+      print('🚀 Инициализация проверки обновлений...');
+      container.read(updateNotifierProvider.notifier).checkForUpdates();
     });
   }
 
@@ -112,7 +119,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       supportedLocales: context.supportedLocales,
       locale: context.locale,
       theme: appTheme.copyWith(
-        scaffoldBackgroundColor: AppColors.backgroundLight,
+        scaffoldBackgroundColor: AppColors.primary,
         textTheme: GoogleFonts.latoTextTheme(
           const TextTheme(
             bodyMedium: TextStyle(
@@ -123,13 +130,33 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         appBarTheme: const AppBarTheme(
           systemOverlayStyle: SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,
-            statusBarIconBrightness: Brightness.light,
+            statusBarIconBrightness: Brightness.dark,
             statusBarBrightness: Brightness.dark,
+            systemNavigationBarColor: AppColors.primary,
+            systemNavigationBarIconBrightness: Brightness.light,
           ),
         ),
       ),
       builder: (context, child) {
-        return child ?? const SizedBox.shrink();
+        return Consumer(
+          builder: (context, ref, _) {
+            final updateState = ref.watch(updateNotifierProvider);
+            if (updateState.type != UpdateType.none) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (navigatorKey.currentContext != null &&
+                    Navigator.canPop(navigatorKey.currentContext!)) {
+                  return;
+                }
+                showDialog(
+                  context: navigatorKey.currentContext!,
+                  barrierDismissible: updateState.type != UpdateType.hard,
+                  builder: (context) => const UpdateModal(),
+                );
+              });
+            }
+            return child ?? const SizedBox.shrink();
+          },
+        );
       },
       routerConfig: AppRouter.router,
     );

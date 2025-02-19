@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
 
 class AuthWarningModal {
   static Future<void> show(
@@ -28,10 +30,35 @@ class AuthWarningModal {
                 label: 'В профиль',
                 onPressed: () async {
                   if (mallId == null || mallId.isEmpty) {
-                    showError(context, 'Ошибка: ID торгового центра не найден');
+                    showError(context, 'Ошибка: ID здания не найден');
                     return;
                   }
-                  context.go('/malls/$mallId/profile');
+
+                  final container = ProviderScope.containerOf(context);
+                  final buildingsAsync = container.read(buildingsProvider);
+
+                  final buildingsData = buildingsAsync.value;
+                  if (buildingsData == null) {
+                    showError(context, 'Ошибка: Данные зданий недоступны');
+                    return;
+                  }
+
+                  final buildings = [
+                    ...buildingsData['mall'] ?? [],
+                    ...buildingsData['coworking'] ?? []
+                  ];
+
+                  final building = buildings.firstWhere(
+                    (b) => b.id.toString() == mallId,
+                    orElse: () => buildings.first,
+                  );
+
+                  if (building.type == 'coworking') {
+                    context.go('/coworking/$mallId/profile');
+                  } else {
+                    context.pushNamed('mall_profile',
+                        pathParameters: {'id': mallId});
+                  }
                 },
                 textColor: AppColors.secondary,
                 backgroundColor: Colors.white,
@@ -39,9 +66,9 @@ class AuthWarningModal {
               ModalButton(
                 label: 'Сканировать',
                 type: ButtonType.light,
-                onPressed: () {
+                onPressed: () async {
                   if (mallId == null || mallId.isEmpty) {
-                    showError(context, 'Ошибка: ID торгового центра не найден');
+                    showError(context, 'Ошибка: ID здания не найден');
                     return;
                   }
 
@@ -49,6 +76,25 @@ class AuthWarningModal {
                     showError(context, 'Ошибка: ID акции не найден');
                     return;
                   }
+
+                  final container = ProviderScope.containerOf(context);
+                  final buildingsAsync = container.read(buildingsProvider);
+
+                  final buildingsData = buildingsAsync.value;
+                  if (buildingsData == null) {
+                    showError(context, 'Ошибка: Данные зданий недоступны');
+                    return;
+                  }
+
+                  final buildings = [
+                    ...buildingsData['mall'] ?? [],
+                    ...buildingsData['coworking'] ?? []
+                  ];
+
+                  final building = buildings.firstWhere(
+                    (b) => b.id.toString() == mallId,
+                    orElse: () => buildings.first,
+                  );
 
                   context.pushNamed(
                     'promotion_qr',

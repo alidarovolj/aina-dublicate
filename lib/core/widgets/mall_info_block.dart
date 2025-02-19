@@ -40,7 +40,7 @@ class MallInfoBlock extends StatelessWidget {
                     Text(
                       workingHours,
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 15,
                         color: Colors.black87,
                       ),
                     ),
@@ -60,7 +60,7 @@ class MallInfoBlock extends StatelessWidget {
                       child: Text(
                         address,
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           color: Colors.black87,
                         ),
                       ),
@@ -84,7 +84,7 @@ class MallInfoBlock extends StatelessWidget {
                       height: 20,
                     ),
                     label: 'mall_info.call'.tr(),
-                    fontSize: 14,
+                    fontSize: 16,
                   ),
                 ),
                 const VerticalDivider(
@@ -101,7 +101,7 @@ class MallInfoBlock extends StatelessWidget {
                       height: 20,
                     ),
                     label: 'mall_info.on_map'.tr(),
-                    fontSize: 14,
+                    fontSize: 16,
                   ),
                 ),
               ],
@@ -133,6 +133,7 @@ class _ActionButton extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Container(
+          height: 48,
           padding: const EdgeInsets.symmetric(
               vertical: 12, horizontal: AppLength.xs),
           decoration: const BoxDecoration(

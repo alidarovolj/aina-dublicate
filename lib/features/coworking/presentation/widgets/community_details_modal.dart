@@ -60,203 +60,212 @@ class CommunityDetailsModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(12),
-          topRight: Radius.circular(12),
-        ),
-      ),
-      child: SafeArea(
-        bottom: true,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Upper block with avatar and name
-            Container(
-              color: Colors.black,
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      image: DecorationImage(
-                        image: NetworkImage(
-                          user.avatar?.url ??
-                              'https://ionicframework.com/docs/img/demos/avatar.svg',
+    return ScaffoldMessenger(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(12),
+              topRight: Radius.circular(12),
+            ),
+          ),
+          child: SafeArea(
+            bottom: true,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Upper block with avatar and name
+                Container(
+                  color: Colors.black,
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          image: DecorationImage(
+                            image: NetworkImage(
+                              user.avatar?.url ??
+                                  'https://ionicframework.com/docs/img/demos/avatar.svg',
+                            ),
+                            fit: BoxFit.cover,
+                          ),
                         ),
-                        fit: BoxFit.cover,
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              user.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            if (user.position != null)
+                              Text(
+                                user.position!,
+                                style: TextStyle(
+                                  color: Colors.grey[400],
+                                  fontSize: 15,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
+                ),
+                // Lower block with details
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          user.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                        // Social media buttons
+                        if (user.whatsapp != null ||
+                            user.telegram != null ||
+                            user.linkedin != null)
+                          Row(
+                            children: [
+                              if (user.whatsapp != null)
+                                Expanded(
+                                  child: _SocialButton(
+                                    icon:
+                                        'lib/core/assets/icons/white-socials/whatsapp.svg',
+                                    onTap: () => _launchUrl(
+                                        'https://api.whatsapp.com/send?phone=${user.whatsapp!.numeric}'),
+                                  ),
+                                ),
+                              if (user.telegram != null) ...[
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _SocialButton(
+                                    icon:
+                                        'lib/core/assets/icons/white-socials/telegram.svg',
+                                    onTap: () => _launchUrl(user.telegram
+                                            is String
+                                        ? user.telegram as String
+                                        : 'https://t.me/${(user.telegram as PhoneNumber).numeric}'),
+                                  ),
+                                ),
+                              ],
+                              if (user.linkedin != null) ...[
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _SocialButton(
+                                    icon:
+                                        'lib/core/assets/icons/white-socials/linkedin.svg',
+                                    onTap: () => _launchUrl(user.linkedin!),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        const SizedBox(height: 24),
+                        // Contact information
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (user.phone != null)
+                                _ContactItem(
+                                  label: 'community.card.phone_label'.tr(),
+                                  value: user.phone!.masked,
+                                  onCopy: () => _copyToClipboard(
+                                      context, user.phone!.numeric),
+                                  onTap: () =>
+                                      _launchUrl('tel:${user.phone!.numeric}'),
+                                ),
+                              if (user.email != null)
+                                _ContactItem(
+                                  label: 'community.card.email_label'.tr(),
+                                  value: user.email!,
+                                  onCopy: () =>
+                                      _copyToClipboard(context, user.email!),
+                                  onTap: () =>
+                                      _launchUrl('mailto:${user.email}'),
+                                ),
+                            ],
                           ),
                         ),
-                        if (user.position != null)
-                          Text(
-                            user.position!,
-                            style: TextStyle(
-                              color: Colors.grey[400],
-                              fontSize: 15,
+                        const SizedBox(height: 24),
+                        // Additional information
+                        if (user.info != null)
+                          _InfoBlock(
+                            icon: 'lib/core/assets/icons/info/personal.svg',
+                            title: 'community.card.personal_info'.tr(),
+                            content: user.info!,
+                          ),
+                        if (user.company != null) ...[
+                          const SizedBox(height: 24),
+                          _InfoBlock(
+                            icon: 'lib/core/assets/icons/info/work.svg',
+                            title: 'community.card.work'.tr(),
+                            content: user.company!,
+                            employment: user.employment,
+                          ),
+                        ],
+                        if (user.textTitle != null &&
+                            user.textContent != null) ...[
+                          const SizedBox(height: 24),
+                          _InfoBlock(
+                            icon: 'lib/core/assets/icons/info/personal.svg',
+                            title: user.textTitle!,
+                            content: user.textContent!,
+                          ),
+                        ],
+                        if (user.image?.url != null) ...[
+                          const SizedBox(height: 24),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: Image.network(
+                              user.image!.url,
+                              width: double.infinity,
+                              height: 350,
+                              fit: BoxFit.cover,
                             ),
                           ),
+                        ],
+                        if (user.buttonTitle != null &&
+                            user.buttonLink != null) ...[
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () => _launchUrl(user.buttonLink!),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.black,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 13),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                              child: Text(
+                                user.buttonTitle!,
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
-            // Lower block with details
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Social media buttons
-                    if (user.whatsapp != null ||
-                        user.telegram != null ||
-                        user.linkedin != null)
-                      Row(
-                        children: [
-                          if (user.whatsapp != null)
-                            Expanded(
-                              child: _SocialButton(
-                                icon:
-                                    'lib/core/assets/icons/white-socials/whatsapp.svg',
-                                onTap: () => _launchUrl(
-                                    'https://api.whatsapp.com/send?phone=${user.whatsapp!.numeric}'),
-                              ),
-                            ),
-                          if (user.telegram != null) ...[
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _SocialButton(
-                                icon:
-                                    'lib/core/assets/icons/white-socials/telegram.svg',
-                                onTap: () => _launchUrl(user.telegram is String
-                                    ? user.telegram as String
-                                    : 'https://t.me/${(user.telegram as PhoneNumber).numeric}'),
-                              ),
-                            ),
-                          ],
-                          if (user.linkedin != null) ...[
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _SocialButton(
-                                icon:
-                                    'lib/core/assets/icons/white-socials/linkedin.svg',
-                                onTap: () => _launchUrl(user.linkedin!),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    const SizedBox(height: 24),
-                    // Contact information
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (user.phone != null)
-                            _ContactItem(
-                              label: 'community.card.phone_label'.tr(),
-                              value: user.phone!.masked,
-                              onCopy: () => _copyToClipboard(
-                                  context, user.phone!.numeric),
-                              onTap: () =>
-                                  _launchUrl('tel:${user.phone!.numeric}'),
-                            ),
-                          if (user.email != null)
-                            _ContactItem(
-                              label: 'community.card.email_label'.tr(),
-                              value: user.email!,
-                              onCopy: () =>
-                                  _copyToClipboard(context, user.email!),
-                              onTap: () => _launchUrl('mailto:${user.email}'),
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Additional information
-                    if (user.info != null)
-                      _InfoBlock(
-                        icon: 'lib/core/assets/icons/info/personal.svg',
-                        title: 'community.card.personal_info'.tr(),
-                        content: user.info!,
-                      ),
-                    if (user.company != null) ...[
-                      const SizedBox(height: 24),
-                      _InfoBlock(
-                        icon: 'lib/core/assets/icons/info/work.svg',
-                        title: 'community.card.work'.tr(),
-                        content: user.company!,
-                        employment: user.employment,
-                      ),
-                    ],
-                    if (user.textTitle != null && user.textContent != null) ...[
-                      const SizedBox(height: 24),
-                      _InfoBlock(
-                        icon: 'lib/core/assets/icons/info/personal.svg',
-                        title: user.textTitle!,
-                        content: user.textContent!,
-                      ),
-                    ],
-                    if (user.image?.url != null) ...[
-                      const SizedBox(height: 24),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: Image.network(
-                          user.image!.url,
-                          width: double.infinity,
-                          height: 350,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ],
-                    if (user.buttonTitle != null &&
-                        user.buttonLink != null) ...[
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () => _launchUrl(user.buttonLink!),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 13),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                          child: Text(
-                            user.buttonTitle!,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 24),
-                  ],
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -308,6 +317,28 @@ class _ContactItem extends StatelessWidget {
     required this.onTap,
   });
 
+  Future<void> _handleCopy(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: value));
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('community.copied'.tr()),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.black.withOpacity(0.8),
+          margin: EdgeInsets.only(
+            bottom: MediaQuery.of(context).padding.bottom + 16,
+            left: 16,
+            right: 16,
+          ),
+          duration: const Duration(seconds: 2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -333,7 +364,7 @@ class _ContactItem extends StatelessWidget {
               ),
             ),
             GestureDetector(
-              onTap: onCopy,
+              onTap: () => _handleCopy(context),
               child: SvgPicture.asset(
                 'lib/core/assets/icons/copy.svg',
                 width: 24,

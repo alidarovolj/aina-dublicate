@@ -48,23 +48,15 @@ class _PaymentWebViewState extends State<PaymentWebView> {
         NavigationDelegate(
           onNavigationRequest: (request) {
             debugPrint('Navigation request to: ${request.url}');
-
-            if (request.url.startsWith('aina://')) {
-              widget.onClose();
-              return NavigationDecision.prevent;
-            }
-
             final result = widget.onNavigationRequest(request.url);
-            return result == NavigationDecision.prevent
-                ? NavigationDecision.prevent
-                : NavigationDecision.navigate;
+            return result;
           },
           onPageFinished: (url) {
             debugPrint('Page finished loading: $url');
           },
+          // Просто логируем ошибки без каких-либо действий
           onWebResourceError: (error) {
             debugPrint('Web resource error: ${error.description}');
-            widget.onClose();
           },
         ),
       )

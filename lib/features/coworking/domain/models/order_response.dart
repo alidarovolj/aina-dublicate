@@ -13,6 +13,8 @@ class OrderResponse {
   final PaymentMethod? paymentMethod;
   final Service? service;
   final List<OrderHistory>? history;
+  final double appliedQuotaHours;
+  final double appliedDiscountPercentage;
 
   OrderResponse({
     required this.id,
@@ -27,6 +29,8 @@ class OrderResponse {
     this.paymentMethod,
     this.service,
     this.history,
+    this.appliedQuotaHours = 0,
+    this.appliedDiscountPercentage = 0,
   });
 
   factory OrderResponse.fromJson(Map<String, dynamic> json) {
@@ -51,6 +55,9 @@ class OrderResponse {
               ?.map((e) => OrderHistory.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      appliedQuotaHours: (json['applied_quota_hours'] as num?)?.toDouble() ?? 0,
+      appliedDiscountPercentage:
+          (json['applied_discount_percentage'] as num?)?.toDouble() ?? 0,
     );
   }
 
@@ -68,6 +75,8 @@ class OrderResponse {
       'payment_method': paymentMethod?.toJson(),
       'service': service?.toJson(),
       'history': history?.map((e) => e.toJson()).toList(),
+      'applied_quota_hours': appliedQuotaHours,
+      'applied_discount_percentage': appliedDiscountPercentage,
     };
   }
 }

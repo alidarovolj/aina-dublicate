@@ -119,7 +119,7 @@ class ApiClient {
             // Schedule navigation for next frame
             WidgetsBinding.instance.addPostFrameCallback((_) {
               // print('Executing navigation to /login');
-              context.go('/');
+              context.go('/home');
             });
           } else {
             // print('No valid context available for navigation');

@@ -27,7 +27,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(promotionsProvider.notifier).fetchPromotions(context);
+      ref
+          .read(promotionsProvider.notifier)
+          .fetchPromotions(context, forceRefresh: true);
       _checkAuthAndFetchProfile();
     });
   }

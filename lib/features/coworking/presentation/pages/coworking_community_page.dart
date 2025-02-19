@@ -74,6 +74,9 @@ class _CoworkingCommunityPageState
                     ),
                     child: TextField(
                       controller: _searchController,
+                      style: const TextStyle(
+                        color: AppColors.textDarkGrey,
+                      ),
                       decoration: InputDecoration(
                         hintText: 'community.search'.tr(),
                         filled: true,

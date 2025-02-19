@@ -194,13 +194,12 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      builder: (context, child) {
-        return SafeArea(
-          bottom: false,
-          child: child ?? const SizedBox.shrink(),
-        );
-      },
+    return Scaffold(
+      body: widget.child,
+      bottomNavigationBar: CoworkingCustomTabBar(
+        tabController: _tabController,
+      ),
+      extendBody: true,
     );
   }
 

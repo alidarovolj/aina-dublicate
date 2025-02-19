@@ -58,10 +58,6 @@ class BuildingsList extends ConsumerWidget {
                           image: DecorationImage(
                             image: NetworkImage(entry.value.previewImage.url),
                             fit: BoxFit.cover,
-                            colorFilter: ColorFilter.mode(
-                              Colors.black.withOpacity(0.3),
-                              BlendMode.darken,
-                            ),
                           ),
                         ),
                       ),
@@ -121,10 +117,6 @@ class BuildingsList extends ConsumerWidget {
                                 image:
                                     NetworkImage(entry.value.previewImage.url),
                                 fit: BoxFit.cover,
-                                colorFilter: ColorFilter.mode(
-                                  Colors.black.withOpacity(0.3),
-                                  BlendMode.darken,
-                                ),
                               ),
                             ),
                           ),

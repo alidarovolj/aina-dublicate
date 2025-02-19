@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
+import 'package:aina_flutter/core/providers/requests/services_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-class ServiceCard extends StatelessWidget {
+class ServiceCard extends ConsumerWidget {
   final String coworkingId;
 
   const ServiceCard({
@@ -13,45 +15,126 @@ class ServiceCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppLength.xs),
-      child: GestureDetector(
-        onTap: () {
-          context.pushNamed(
-            'coworking_services',
-            pathParameters: {'id': coworkingId},
-          );
-        },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Stack(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final servicesAsync = ref.watch(servicesProvider);
+
+    return servicesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(child: Text('Error: $error')),
+      data: (services) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
             children: [
-              Image.asset(
-                'lib/core/assets/images/book-coworking-bg.png',
-                height: 160,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-              Container(
-                height: 160,
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'coworking_tabs.services'.tr(),
-                      style: GoogleFonts.lora(
-                          fontSize: 15, color: AppColors.primary),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    final service = services.firstWhere(
+                      (s) => s.title.toLowerCase().contains('коворкинг'),
+                      orElse: () => services.first,
+                    );
+                    context.push(
+                      '/coworking/$coworkingId/services/${service.id}',
+                    );
+                  },
+                  child: Container(
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
+                      image: const DecorationImage(
+                        image: AssetImage(
+                            'lib/core/assets/images/book-coworking-bg.png'),
+                        fit: BoxFit.cover,
+                      ),
                     ),
-                  ],
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: SvgPicture.asset(
+                            'lib/core/assets/icons/linked-arrow.svg',
+                            width: 24,
+                            height: 24,
+                          ),
+                        ),
+                        Positioned(
+                          left: 8,
+                          right: 8,
+                          bottom: 8,
+                          child: Text(
+                            'bookings.book_coworking'.tr(),
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 15,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    final service = services.firstWhere(
+                      (s) => s.title.toLowerCase().contains('конференц'),
+                      orElse: () => services.last,
+                    );
+                    context.push(
+                      '/coworking/$coworkingId/services/${service.id}',
+                    );
+                  },
+                  child: Container(
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
+                      image: const DecorationImage(
+                        image:
+                            AssetImage('lib/core/assets/images/conf-room.png'),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: SvgPicture.asset(
+                            'lib/core/assets/icons/linked-arrow.svg',
+                            width: 24,
+                            height: 24,
+                          ),
+                        ),
+                        Positioned(
+                          left: 8,
+                          right: 8,
+                          bottom: 8,
+                          child: Text(
+                            'bookings.book_conference'.tr(),
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 15,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

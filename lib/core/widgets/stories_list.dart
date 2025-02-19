@@ -168,7 +168,7 @@ class _StoryListState extends ConsumerState<StoryList>
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: AppColors.white,
+                            color: AppColors.grey2,
                           ),
                           textAlign: TextAlign.center,
                           maxLines: 2,

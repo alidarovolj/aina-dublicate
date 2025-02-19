@@ -75,7 +75,10 @@ class PromotionsBlock extends ConsumerWidget {
           children: [
             if (showTitle || showViewAll)
               Padding(
-                padding: const EdgeInsets.all(AppLength.xs),
+                padding: const EdgeInsets.only(
+                    left: AppLength.xs,
+                    bottom: AppLength.xs,
+                    top: AppLength.xs),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -100,13 +103,17 @@ class PromotionsBlock extends ConsumerWidget {
                               'promotions.view_all'.tr(),
                               style: TextStyle(
                                 fontSize: 15,
-                                color: Colors.grey[600],
+                                color: AppColors.textDarkGrey,
                               ),
                             ),
-                            Icon(
-                              Icons.chevron_right,
-                              color: Colors.grey[600],
-                              size: 24,
+                            SvgPicture.asset(
+                              'lib/core/assets/icons/chevron-right.svg',
+                              width: 24,
+                              height: 24,
+                              colorFilter: ColorFilter.mode(
+                                AppColors.textDarkGrey,
+                                BlendMode.srcIn,
+                              ),
                             ),
                           ],
                         ),

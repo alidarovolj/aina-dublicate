@@ -100,7 +100,7 @@
     "home": "Home",
     "promotions": "Promotions",
     "shops": "Shops",
-    "profile": "Profile"
+    "menu": "Menu"
   },
   "events": {
     "title": "Events",
@@ -551,5 +551,12 @@
   "language": "Language Selection",
   "errors": {
     "delete_profile": "Error deleting profile"
+  },
+  "menu": {
+    "title": "Menu",
+    "join_aina": "Join AINA",
+    "authorize": "Authorize",
+    "contact_us": "Contact Us",
+    "about": "About App"
   }
 }

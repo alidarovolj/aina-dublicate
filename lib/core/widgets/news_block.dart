@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
@@ -80,13 +81,17 @@ class NewsBlock extends ConsumerWidget {
                               'news.view_all'.tr(),
                               style: TextStyle(
                                 fontSize: 15,
-                                color: Colors.grey[600],
+                                color: AppColors.textDarkGrey,
                               ),
                             ),
-                            Icon(
-                              Icons.chevron_right,
-                              color: Colors.grey[600],
-                              size: 24,
+                            SvgPicture.asset(
+                              'lib/core/assets/icons/chevron-right.svg',
+                              width: 24,
+                              height: 24,
+                              colorFilter: ColorFilter.mode(
+                                AppColors.textDarkGrey,
+                                BlendMode.srcIn,
+                              ),
                             ),
                           ],
                         ),

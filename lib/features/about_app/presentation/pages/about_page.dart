@@ -169,12 +169,13 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                         }),
                       ],
                     ),
-                    CustomButton(
-                      label: 'about.delete_profile'.tr(),
-                      isFullWidth: true,
-                      type: ButtonType.bordered,
-                      onPressed: _showDeleteConfirmation,
-                    ),
+                    if (ref.watch(authProvider).isAuthenticated)
+                      CustomButton(
+                        label: 'about.delete_profile'.tr(),
+                        isFullWidth: true,
+                        type: ButtonType.bordered,
+                        onPressed: _showDeleteConfirmation,
+                      ),
                   ],
                 ),
               ),

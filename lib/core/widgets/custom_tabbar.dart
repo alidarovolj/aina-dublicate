@@ -13,25 +13,11 @@ class CustomTabBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: AppColors.primary,
-          border: const Border(
-            top: BorderSide(
-              color: AppColors.primary,
-              width: 1,
-            ),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1), // Цвет тени
-              blurRadius: AppLength.xxs, // Радиус размытия
-              spreadRadius: 1, // Радиус распространения
-              offset: const Offset(
-                  0, 4), // Смещение тени (по горизонтали и вертикали)
-            ),
-          ],
         ),
         child: TabBar(
+          dividerColor: Colors.transparent,
           controller: tabController,
           indicatorColor: Colors.transparent,
           labelColor: AppColors.white,
@@ -54,7 +40,7 @@ class CustomTabBar extends StatelessWidget {
                   colorFilter: ColorFilter.mode(
                     tabController.index == 0
                         ? AppColors.white
-                        : AppColors.textDarkGrey,
+                        : AppColors.darkGrey,
                     BlendMode.srcIn,
                   ),
                   child: SvgPicture.asset(
@@ -69,7 +55,7 @@ class CustomTabBar extends StatelessWidget {
                   colorFilter: ColorFilter.mode(
                     tabController.index == 1
                         ? AppColors.white
-                        : AppColors.textDarkGrey,
+                        : AppColors.darkGrey,
                     BlendMode.srcIn,
                   ),
                   child: SvgPicture.asset(
@@ -84,7 +70,7 @@ class CustomTabBar extends StatelessWidget {
                   colorFilter: ColorFilter.mode(
                     tabController.index == 2
                         ? AppColors.white
-                        : AppColors.textDarkGrey,
+                        : AppColors.darkGrey,
                     BlendMode.srcIn,
                   ),
                   child: SvgPicture.asset(
@@ -99,7 +85,7 @@ class CustomTabBar extends StatelessWidget {
                   colorFilter: ColorFilter.mode(
                     tabController.index == 3
                         ? AppColors.white
-                        : AppColors.textDarkGrey,
+                        : AppColors.darkGrey,
                     BlendMode.srcIn,
                   ),
                   child: SvgPicture.asset(

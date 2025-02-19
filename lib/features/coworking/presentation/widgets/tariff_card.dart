@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/features/coworking/domain/models/coworking_service.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -89,21 +90,21 @@ class ConferenceTariffCard extends ConsumerWidget with AuthCheckMixin {
         }
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
+        margin: const EdgeInsets.only(bottom: 15),
         child: Stack(
           children: [
             if (tariff.image?.url != null && tariff.image!.url.isNotEmpty)
               Container(
                 height: 200,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(4),
                   image: DecorationImage(
                     image: NetworkImage(tariff.image!.url),
                     fit: BoxFit.cover,
                   ),
                 ),
                 foregroundDecoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(4),
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
@@ -119,7 +120,7 @@ class ConferenceTariffCard extends ConsumerWidget with AuthCheckMixin {
                 height: 200,
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(4),
                 ),
                 child: const Center(
                   child: Icon(Icons.image_not_supported,
@@ -156,10 +157,10 @@ class ConferenceTariffCard extends ConsumerWidget with AuthCheckMixin {
                   Expanded(
                     child: Text(
                       tariff.title.toUpperCase(),
-                      style: GoogleFonts.lora(
-                        fontSize: 20,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400,
                         color: Colors.white,
-                        fontWeight: FontWeight.w500,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -170,9 +171,9 @@ class ConferenceTariffCard extends ConsumerWidget with AuthCheckMixin {
                     'coworking.tariffs.price_per_hour'
                         .tr(args: [tariff.price.toString()]),
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 15,
                       color: Colors.white,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
                 ],
@@ -261,7 +262,6 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
                           ),
                           decoration: BoxDecoration(
                             color: Colors.black,
-                            borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             '${tariff.price}₸',
@@ -287,10 +287,10 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
                         decoration: const BoxDecoration(
                           color: Colors.white,
                         ),
-                        child: const Icon(
-                          Icons.arrow_forward,
-                          color: Colors.black,
-                          size: 20,
+                        child: SvgPicture.asset(
+                          'lib/core/assets/icons/linked-arrow.svg',
+                          width: 24,
+                          height: 24,
                         ),
                       ),
                     ),
@@ -337,79 +337,74 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
       constraints: const BoxConstraints(
         minHeight: 260,
       ),
+      margin: const EdgeInsets.only(bottom: 15),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Material(
         color: Colors.transparent,
         child: Stack(
           children: [
-            // Background image
             Positioned.fill(
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(4),
                 child: Image.network(
                   tariff.image?.url ?? '',
                   fit: BoxFit.cover,
                 ),
               ),
             ),
-            // Content
             InkWell(
               onTap: () async {
                 if (await checkAuthAndBiometric(context, ref, coworkingId)) {
                   onTap?.call();
                 }
               },
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Title section
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           tariff.title.toUpperCase(),
                           style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
                             color: AppColors.primary,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 4),
                         Text(
                           tariff.subtitle,
                           style: const TextStyle(
-                            fontSize: 15,
+                            fontSize: 14,
                             color: AppColors.primary,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 4),
                         Text(
                           tariff.isFixed
                               ? 'coworking.tariffs.fixed_place'.tr()
                               : 'coworking.tariffs.unfixed_place'.tr(),
                           style: const TextStyle(
-                            fontSize: 15,
-                            color: AppColors.primary,
+                            fontSize: 14,
+                            color: AppColors.textDarkGrey,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
-
-                    const SizedBox(height: 12),
-
-                    // Benefits button
+                    const SizedBox(height: 8),
                     InkWell(
                       onTap: () => _showTariffDetails(context, ref),
                       child: Container(
@@ -438,49 +433,39 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
                         ),
                       ),
                     ),
-
-                    const SizedBox(height: 12),
-
-                    // Price section
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         Expanded(
-                          child: InkWell(
-                            onTap: () => _navigateToCalendar(context, ref),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black,
+                            ),
+                            child: Text(
+                              '${tariff.price}₸',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                color: Colors.white,
                               ),
-                              decoration: BoxDecoration(
-                                color: Colors.black,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                '${tariff.price}₸',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                ),
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ),
-                        InkWell(
-                          onTap: () => _navigateToCalendar(context, ref),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                            ),
-                            child: const Icon(
-                              Icons.arrow_forward,
-                              color: Colors.black,
-                              size: 20,
-                            ),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                          ),
+                          child: SvgPicture.asset(
+                            'lib/core/assets/icons/linked-arrow.svg',
+                            width: 24,
+                            height: 24,
                           ),
                         ),
                       ],

@@ -12,6 +12,7 @@ import 'package:aina_flutter/features/news/presentation/pages/news_list_page.dar
 import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/features/home/presentation/pages/home_page.dart';
 import 'package:aina_flutter/features/storybook/presentation/pages/storybook.dart';
+import 'package:aina_flutter/core/widgets/home_tabbar_screen.dart';
 import 'package:aina_flutter/core/widgets/main_tabbar_screen.dart';
 import 'package:aina_flutter/features/login/presentation/pages/code_page.dart';
 import 'package:aina_flutter/features/malls/presentation/pages/mall_details_page.dart';
@@ -43,6 +44,8 @@ import 'package:aina_flutter/features/coworking/presentation/pages/limit_account
 import 'package:aina_flutter/core/router/route_observer.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_edit_data_page.dart';
 import 'package:aina_flutter/features/splash/presentation/pages/splash_page.dart';
+import 'package:aina_flutter/features/home/presentation/pages/home_promotions_page.dart';
+import 'package:aina_flutter/features/menu/presentation/pages/menu_page.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -71,10 +74,36 @@ class AppRouter {
           return CodeInputScreen(phoneNumber: phoneNumber);
         },
       ),
-      GoRoute(
-        path: '/home',
-        name: 'home',
-        builder: (context, state) => const HomePage(),
+      // Main routes with new tabbar
+      ShellRoute(
+        builder: (context, state, child) {
+          return HomeTabBarScreen(
+            currentRoute: state.uri.toString(),
+            child: child,
+          );
+        },
+        routes: [
+          GoRoute(
+            path: '/home',
+            name: 'home',
+            builder: (context, state) => const HomePage(),
+          ),
+          GoRoute(
+            path: '/promotions',
+            name: 'promotions',
+            builder: (context, state) => const HomePromotionsPage(),
+          ),
+          GoRoute(
+            path: '/stores',
+            name: 'stores',
+            builder: (context, state) => const StoresPage(mallId: 0),
+          ),
+          GoRoute(
+            path: '/menu',
+            name: 'menu',
+            builder: (context, state) => const MenuPage(),
+          ),
+        ],
       ),
       // QR Scanner route (independent)
       GoRoute(
@@ -201,11 +230,6 @@ class AppRouter {
                 ],
               ),
             ],
-          ),
-          GoRoute(
-            path: '/stores',
-            name: 'stores',
-            builder: (context, state) => const StoresPage(mallId: 0),
           ),
         ],
       ),

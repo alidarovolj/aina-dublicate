@@ -3,13 +3,10 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-class CoworkingCustomTabBar extends StatelessWidget {
+class MainCustomTabBar extends StatelessWidget {
   final TabController tabController;
 
-  const CoworkingCustomTabBar({
-    super.key,
-    required this.tabController,
-  });
+  const MainCustomTabBar({super.key, required this.tabController});
 
   @override
   Widget build(BuildContext context) {
@@ -18,27 +15,13 @@ class CoworkingCustomTabBar extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.primary,
-          border: const Border(
-            top: BorderSide(
-              color: AppColors.primary,
-              width: 1,
-            ),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: AppLength.xxs,
-              spreadRadius: 1,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: TabBar(
           dividerColor: Colors.transparent,
           controller: tabController,
+          indicatorColor: Colors.transparent,
           labelColor: AppColors.white,
           unselectedLabelColor: AppColors.grey2,
-          indicatorColor: Colors.transparent,
           labelStyle: const TextStyle(
             fontSize: AppLength.xs,
             fontWeight: FontWeight.w600,
@@ -51,11 +34,8 @@ class CoworkingCustomTabBar extends StatelessWidget {
             height: 1.5,
             letterSpacing: 0.2,
           ),
-          padding: EdgeInsets.zero,
-          labelPadding: const EdgeInsets.only(top: 8),
           tabs: [
             Tab(
-                height: 56,
                 icon: ColorFiltered(
                   colorFilter: ColorFilter.mode(
                     tabController.index == 0
@@ -69,9 +49,8 @@ class CoworkingCustomTabBar extends StatelessWidget {
                     height: 28,
                   ),
                 ),
-                text: 'coworking_tabs.promenade'.tr()),
+                text: 'main_tabs.home'.tr()),
             Tab(
-                height: 56,
                 icon: ColorFiltered(
                   colorFilter: ColorFilter.mode(
                     tabController.index == 1
@@ -80,33 +59,16 @@ class CoworkingCustomTabBar extends StatelessWidget {
                     BlendMode.srcIn,
                   ),
                   child: SvgPicture.asset(
-                    "lib/core/assets/icons/tabbar_community.svg",
+                    "lib/core/assets/icons/sale.svg",
                     width: 28,
                     height: 28,
                   ),
                 ),
-                text: 'coworking_tabs.community'.tr()),
+                text: 'main_tabs.promotions'.tr()),
             Tab(
-                height: 56,
                 icon: ColorFiltered(
                   colorFilter: ColorFilter.mode(
                     tabController.index == 2
-                        ? AppColors.white
-                        : AppColors.darkGrey,
-                    BlendMode.srcIn,
-                  ),
-                  child: SvgPicture.asset(
-                    "lib/core/assets/icons/tabbar_services.svg",
-                    width: 28,
-                    height: 28,
-                  ),
-                ),
-                text: 'coworking_tabs.services'.tr()),
-            Tab(
-                height: 56,
-                icon: ColorFiltered(
-                  colorFilter: ColorFilter.mode(
-                    tabController.index == 3
                         ? AppColors.white
                         : AppColors.darkGrey,
                     BlendMode.srcIn,
@@ -119,21 +81,20 @@ class CoworkingCustomTabBar extends StatelessWidget {
                 ),
                 text: 'coworking_tabs.bookings'.tr()),
             Tab(
-                height: 56,
                 icon: ColorFiltered(
                   colorFilter: ColorFilter.mode(
-                    tabController.index == 4
+                    tabController.index == 3
                         ? AppColors.white
                         : AppColors.darkGrey,
                     BlendMode.srcIn,
                   ),
                   child: SvgPicture.asset(
-                    "lib/core/assets/icons/profile.svg",
+                    "lib/core/assets/icons/menu.svg",
                     width: 28,
                     height: 28,
                   ),
                 ),
-                text: 'coworking_tabs.profile'.tr()),
+                text: 'main_tabs.menu'.tr()),
           ],
         ),
       ),

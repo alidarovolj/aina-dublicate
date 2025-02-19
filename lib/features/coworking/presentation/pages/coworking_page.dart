@@ -15,6 +15,8 @@ import 'package:aina_flutter/core/types/card_type.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:aina_flutter/core/providers/requests/news_provider.dart';
+import 'package:aina_flutter/core/types/news_params.dart';
 
 class CoworkingPage extends ConsumerWidget {
   final int coworkingId;
@@ -116,6 +118,9 @@ class CoworkingPage extends ConsumerWidget {
                           },
                         ),
                       ),
+                      const SliverToBoxAdapter(
+                        child: SizedBox(height: 28),
+                      ),
                       // Services Section
                       SliverToBoxAdapter(
                         child: ServiceCard(
@@ -124,19 +129,39 @@ class CoworkingPage extends ConsumerWidget {
                       ),
                       // Promotions Section
                       SliverToBoxAdapter(
-                        child: PromotionsBlock(
-                          mallId: coworkingId.toString(),
-                          showTitle: true,
-                          showViewAll: true,
-                          showDivider: true,
-                          cardType: PromotionCardType.medium,
-                          onViewAllTap: () {
-                            context.pushNamed(
-                              'coworking_promotions',
-                              pathParameters: {'id': coworkingId.toString()},
+                        child: Consumer(
+                          builder: (context, ref, child) {
+                            final newsAsync = ref.watch(newsProvider(
+                              NewsParams(
+                                page: 1,
+                                buildingId: coworkingId.toString(),
+                              ),
+                            ));
+
+                            final hasNews = newsAsync.whenOrNull(
+                                  data: (newsResponse) =>
+                                      newsResponse.data.isNotEmpty,
+                                ) ??
+                                false;
+
+                            return PromotionsBlock(
+                              mallId: coworkingId.toString(),
+                              showTitle: true,
+                              showViewAll: true,
+                              showDivider: hasNews,
+                              cardType: PromotionCardType.medium,
+                              onViewAllTap: () {
+                                context.pushNamed(
+                                  'coworking_promotions',
+                                  pathParameters: {
+                                    'id': coworkingId.toString()
+                                  },
+                                );
+                              },
+                              emptyBuilder: (context) =>
+                                  const SizedBox.shrink(),
                             );
                           },
-                          emptyBuilder: (context) => const SizedBox.shrink(),
                         ),
                       ),
                       // News Section

@@ -62,11 +62,7 @@ class CustomHeader extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style: GoogleFonts.lora(
-                fontSize: 22,
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
+              style: GoogleFonts.lora(fontSize: 22, color: Colors.white),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.left,

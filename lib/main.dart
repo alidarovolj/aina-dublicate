@@ -12,6 +12,8 @@ import 'package:flutter/services.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/widgets/restart_widget.dart';
+import 'package:aina_flutter/core/api/firebase_setup.dart';
+import 'package:aina_flutter/core/utils/notification_utils.dart';
 
 Future<void> main() async {
   // Ensure Flutter bindings are initialized
@@ -43,6 +45,15 @@ Future<void> main() async {
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
+
+  // Initialize Firebase
+  await initializeFirebase();
+
+  // Request notification permissions
+  await requestNotificationPermissions();
+
+  // Set up notification listeners
+  setupNotificationListeners();
 
   // Check if user has seen onboarding
   // final hasSeenOnboarding = await StorageService.hasSeenOnboarding();

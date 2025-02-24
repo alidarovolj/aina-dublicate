@@ -130,11 +130,11 @@ class _AvatarEditWidgetState extends ConsumerState<AvatarEditWidget> {
                       colors: [Color(0xFFE8DB9A), Color(0xFFCCB861)],
                     )
                   : null,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(4),
             ),
             child: _localImage != null
                 ? ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(4),
                     child: Image.file(
                       _localImage!,
                       fit: BoxFit.cover,
@@ -142,13 +142,13 @@ class _AvatarEditWidgetState extends ConsumerState<AvatarEditWidget> {
                   )
                 : _currentAvatarUrl != null
                     ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(4),
                         child: Image.network(
                           '$_currentAvatarUrl?v=${DateTime.now().millisecondsSinceEpoch}',
                           fit: BoxFit.cover,
                           cacheWidth: null,
                           cacheHeight: null,
-                          headers: {
+                          headers: const {
                             'cache-control':
                                 'no-cache, no-store, must-revalidate',
                             'pragma': 'no-cache',
@@ -204,7 +204,7 @@ class _AvatarEditWidgetState extends ConsumerState<AvatarEditWidget> {
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(4),
                 ),
                 child: const Center(
                   child: CircularProgressIndicator(

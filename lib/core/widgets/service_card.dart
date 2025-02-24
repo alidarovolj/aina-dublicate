@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/requests/services_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shimmer/shimmer.dart';
 
 class ServiceCard extends ConsumerWidget {
   final String coworkingId;
@@ -14,12 +14,49 @@ class ServiceCard extends ConsumerWidget {
     required this.coworkingId,
   });
 
+  Widget _buildSkeletonLoader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Shimmer.fromColors(
+              baseColor: Colors.grey[300]!,
+              highlightColor: Colors.grey[100]!,
+              child: Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Shimmer.fromColors(
+              baseColor: Colors.grey[300]!,
+              highlightColor: Colors.grey[100]!,
+              child: Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final servicesAsync = ref.watch(servicesProvider);
 
     return servicesAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => _buildSkeletonLoader(),
       error: (error, stack) => Center(child: Text('Error: $error')),
       data: (services) {
         return Padding(

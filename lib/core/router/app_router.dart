@@ -28,7 +28,8 @@ import 'package:aina_flutter/features/coworking/presentation/pages/coworking_pro
 import 'package:aina_flutter/features/services/presentation/pages/services_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
-import 'package:aina_flutter/features/coworking/providers/coworking_service_provider.dart';
+import 'package:aina_flutter/features/coworking/providers/coworking_service_provider.dart'
+    as service_provider;
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_service_details_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_calendar_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_profile_page.dart';
@@ -41,11 +42,12 @@ import 'package:aina_flutter/core/providers/api_client_provider.dart';
 import 'package:aina_flutter/features/profile/presentation/pages/community_card_page.dart';
 import 'package:aina_flutter/app.dart' as app;
 import 'package:aina_flutter/features/coworking/presentation/pages/limit_accounts_page.dart';
-import 'package:aina_flutter/core/router/route_observer.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_edit_data_page.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/coworking_conference_service_page.dart';
 import 'package:aina_flutter/features/splash/presentation/pages/splash_page.dart';
 import 'package:aina_flutter/features/home/presentation/pages/home_promotions_page.dart';
 import 'package:aina_flutter/features/menu/presentation/pages/menu_page.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/conference_room_details_page.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -65,13 +67,32 @@ class AppRouter {
       GoRoute(
         path: '/login',
         name: 'login',
-        builder: (context, state) => const PhoneNumberInputScreen(),
+        builder: (context, state) {
+          final buildingId =
+              (state.extra as Map<String, dynamic>?)?['buildingId'] as String?;
+          final buildingType = (state.extra
+              as Map<String, dynamic>?)?['buildingType'] as String?;
+          return PhoneNumberInputScreen(
+            buildingId: buildingId,
+            buildingType: buildingType,
+          );
+        },
       ),
       GoRoute(
         path: '/code',
         builder: (context, state) {
-          final phoneNumber = (state.extra as String?) ?? '';
-          return CodeInputScreen(phoneNumber: phoneNumber);
+          final phoneNumber =
+              (state.extra as Map<String, dynamic>)['phoneNumber'] as String? ??
+                  '';
+          final buildingId =
+              (state.extra as Map<String, dynamic>)['buildingId'] as String?;
+          final buildingType =
+              (state.extra as Map<String, dynamic>)['buildingType'] as String?;
+          return CodeInputScreen(
+            phoneNumber: phoneNumber,
+            buildingId: buildingId,
+            buildingType: buildingType,
+          );
         },
       ),
       // Main routes with new tabbar
@@ -285,6 +306,87 @@ class AppRouter {
                 },
               ),
               GoRoute(
+                path: 'conference-services/:serviceId',
+                name: 'coworking_conference_services',
+                builder: (context, state) {
+                  final serviceId =
+                      int.tryParse(state.pathParameters['serviceId'] ?? '');
+                  final coworkingId =
+                      int.tryParse(state.pathParameters['id'] ?? '');
+
+                  if (serviceId == null || coworkingId == null) {
+                    return const CoworkingListPage();
+                  }
+
+                  return Consumer(
+                    builder: (context, ref, _) {
+                      final serviceAsync = ref.watch(
+                          service_provider.coworkingServiceProvider(serviceId));
+                      final tariffsAsync = ref.watch(
+                          service_provider.coworkingTariffsProvider(serviceId));
+
+                      return serviceAsync.when(
+                        loading: () => CoworkingConferenceServicePage
+                            .buildSkeletonLoader(),
+                        error: (error, stack) =>
+                            Center(child: Text('Error: $error')),
+                        data: (service) => tariffsAsync.when(
+                          loading: () => CoworkingConferenceServicePage
+                              .buildSkeletonLoader(),
+                          error: (error, stack) =>
+                              Center(child: Text('Error: $error')),
+                          data: (tariffs) => CoworkingConferenceServicePage(
+                            service: service,
+                            tariffs: tariffs,
+                            coworkingId: coworkingId,
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+              GoRoute(
+                path: 'conference-rooms/:serviceId/:tariffId',
+                name: 'conference_room_details',
+                builder: (context, state) {
+                  final serviceId =
+                      int.tryParse(state.pathParameters['serviceId'] ?? '');
+                  final tariffId =
+                      int.tryParse(state.pathParameters['tariffId'] ?? '');
+                  final coworkingId =
+                      int.tryParse(state.pathParameters['id'] ?? '');
+
+                  if (serviceId == null ||
+                      tariffId == null ||
+                      coworkingId == null) {
+                    return const CoworkingListPage();
+                  }
+
+                  return Consumer(
+                    builder: (context, ref, _) {
+                      final tariffAsync = ref.watch(service_provider
+                          .coworkingTariffDetailsProvider(tariffId));
+
+                      return tariffAsync.when(
+                        loading: () =>
+                            ConferenceRoomDetailsPage.buildSkeletonLoader(),
+                        error: (error, stack) =>
+                            Center(child: Text('Error: $error')),
+                        data: (tariff) {
+                          print(
+                              'Loaded tariff details - ID: ${tariff.id}, Title: ${tariff.title}');
+                          return ConferenceRoomDetailsPage(
+                            tariff: tariff,
+                            coworkingId: coworkingId,
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+              GoRoute(
                 path: 'bookings',
                 name: 'coworking_bookings',
                 builder: (context, state) {
@@ -370,15 +472,20 @@ class AppRouter {
                 path: 'services/:serviceId',
                 builder: (context, state) {
                   final serviceId =
-                      int.parse(state.pathParameters['serviceId']!);
-                  final coworkingId = int.parse(state.pathParameters['id']!);
+                      int.tryParse(state.pathParameters['serviceId'] ?? '');
+                  final coworkingId =
+                      int.tryParse(state.pathParameters['id'] ?? '');
+
+                  if (serviceId == null || coworkingId == null) {
+                    return const CoworkingListPage();
+                  }
 
                   return Consumer(
                     builder: (context, ref, _) {
-                      final serviceAsync =
-                          ref.watch(coworkingServiceProvider(serviceId));
-                      final tariffsAsync =
-                          ref.watch(coworkingTariffsProvider(serviceId));
+                      final serviceAsync = ref.watch(
+                          service_provider.coworkingServiceProvider(serviceId));
+                      final tariffsAsync = ref.watch(
+                          service_provider.coworkingTariffsProvider(serviceId));
 
                       return serviceAsync.when(
                         loading: () =>
@@ -391,11 +498,19 @@ class AppRouter {
                           error: (error, stack) =>
                               Center(child: Text('Error: $error')),
                           data: (tariffs) {
-                            return CoworkingServiceDetailsPage(
-                              service: service,
-                              tariffs: tariffs,
-                              coworkingId: coworkingId,
-                            );
+                            if (service.subtype == 'COWORKING') {
+                              return CoworkingServiceDetailsPage(
+                                service: service,
+                                tariffs: tariffs,
+                                coworkingId: coworkingId,
+                              );
+                            } else {
+                              return CoworkingConferenceServicePage(
+                                service: service,
+                                tariffs: tariffs,
+                                coworkingId: coworkingId,
+                              );
+                            }
                           },
                         ),
                       );

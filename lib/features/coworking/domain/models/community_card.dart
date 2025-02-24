@@ -5,7 +5,7 @@ class CommunityCard {
   final String name;
   final Media? avatar;
   final PhoneNumber? whatsapp;
-  final PhoneNumber? telegram;
+  final String? telegram;
   final String? linkedin;
   final String? email;
   final String? company;
@@ -18,6 +18,7 @@ class CommunityCard {
   final String? textContent;
   final String? info;
   final PhoneNumber? phone;
+  final String? status;
 
   CommunityCard({
     required this.id,
@@ -37,6 +38,7 @@ class CommunityCard {
     this.textContent,
     this.info,
     this.phone,
+    this.status,
   });
 
   factory CommunityCard.fromJson(Map<String, dynamic> json) {
@@ -47,9 +49,7 @@ class CommunityCard {
       whatsapp: json['whatsapp'] != null
           ? PhoneNumber.fromJson(json['whatsapp'])
           : null,
-      telegram: json['telegram'] != null
-          ? PhoneNumber.fromJson(json['telegram'])
-          : null,
+      telegram: json['telegram'],
       linkedin: json['linkedin'],
       email: json['email'],
       company: json['company'],
@@ -62,6 +62,7 @@ class CommunityCard {
       textContent: json['text_content'],
       info: json['info'],
       phone: json['phone'] != null ? PhoneNumber.fromJson(json['phone']) : null,
+      status: json['status'],
     );
   }
 }

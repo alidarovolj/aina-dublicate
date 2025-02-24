@@ -19,16 +19,18 @@
     "empty": "No community members",
     "error": "Error loading members: {}",
     "copied": "Copied to clipboard",
+    "you": "You",
+    "create_card": "Create personal card",
     "card": {
       "phone_label": "Phone",
       "email_label": "Email",
       "personal_info": "Personal data",
       "company_label": "Company",
       "employment": {
-        "contract": "Contract",
-        "casual": "Casual",
-        "full_time": "Full time",
-        "part_time": "Part time"
+        "CONTRACT": "Contract",
+        "CASUAL": "Casual",
+        "FULL_TIME": "Full time",
+        "PART_TIME": "Part time"
       },
       "title": "Community Card",
       "status": {
@@ -38,14 +40,14 @@
         "unapproved": "Your card is not approved"
       },
       "visibility": {
-        "title": "Visibility Settings",
+        "title": "Visibility settings",
         "show_card": "Show my card in community",
         "show_phone": "Show my phone number",
         "apply": "Apply"
       },
       "main": {
-        "title": "Main Information",
-        "name": "First and last name",
+        "title": "Basic information",
+        "name": "Full name",
         "position": "Position",
         "about": "About me",
         "company": "Company"
@@ -79,12 +81,12 @@
       },
       "submit": {
         "note": "After saving, the card will be sent for review",
-        "button": "Submit for review",
+        "button": "Send for review",
         "confirmation": {
-          "title": "Submit card for review?",
-          "message": "After submission, the card will be reviewed by a moderator before being published in the community",
+          "title": "Send card for review?",
+          "message": "After submission, the card will be reviewed by a moderator before publication in the community",
           "cancel": "Cancel",
-          "confirm": "Submit"
+          "confirm": "Send"
         }
       }
     }
@@ -100,7 +102,8 @@
     "home": "Home",
     "promotions": "Promotions",
     "shops": "Shops",
-    "menu": "Menu"
+    "menu": "Menu",
+    "profile": "Profile"
   },
   "events": {
     "title": "Events",
@@ -165,7 +168,7 @@
     "confirmation": "Confirmation",
     "enter_phone": "Enter phone number",
     "sms_code_info": "We will send you an SMS with a 4-digit code",
-    "phone_number": "Phone number",
+    "phone_number": "(000) 000 00 00",
     "get_code": "Get code",
     "code_send_error": "Error sending code",
     "terms_prefix": "By clicking the button, you accept the terms of ",
@@ -256,7 +259,7 @@
     "registration_date": "Receipt registration date: {}"
   },
   "coworking": {
-    "title": "Coworking",
+    "title": "Coworking Promenade",
     "error": "Error: {}",
     "no_coworkings": "No available coworking spaces at the moment",
     "promotions_title": "Promotions {}",
@@ -381,7 +384,7 @@
   },
   "biometry": {
     "title": "Biometric data",
-    "description": "Please provide biometric data for secure access to coworking",
+    "description": "To purchase a tariff and enter the coworking space, add your personal data and set up face recognition (biometry)",
     "add_photo": "Add photo",
     "added": "Photo added",
     "save": "Save and verify",
@@ -558,5 +561,17 @@
     "authorize": "Authorize",
     "contact_us": "Contact Us",
     "about": "About App"
+  },
+  "categories": {
+    "title": "Categories",
+    "error": "Error: {}"
+  },
+  "conference_room": {
+    "capacity": "Capacity:",
+    "capacity_value": "up to %s people",
+    "price": "Price:",
+    "price_value": "%s ₸ / hour",
+    "book": "Book now",
+    "similar_services": "Similar services:"
   }
 }

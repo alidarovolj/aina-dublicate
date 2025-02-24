@@ -8,7 +8,6 @@ import 'package:aina_flutter/core/widgets/custom_text_field.dart';
 import 'package:aina_flutter/features/coworking/providers/biometric_provider.dart';
 import 'package:aina_flutter/core/widgets/error_dialog.dart';
 import 'package:aina_flutter/core/widgets/tariffs_modal.dart';
-import 'package:aina_flutter/features/coworking/presentation/widgets/biometric_camera_modal.dart';
 import 'package:dio/dio.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:shimmer/shimmer.dart';
@@ -247,34 +246,41 @@ class _CoworkingBiometricPageState
                         data: (data) => SingleChildScrollView(
                           child: Column(
                             children: [
-                              Container(
-                                width: MediaQuery.of(context).size.width,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 62),
-                                decoration: const BoxDecoration(
-                                  image: DecorationImage(
-                                    image: AssetImage(
-                                        'lib/core/assets/images/biometry/card.png'),
-                                    fit: BoxFit.cover,
-                                    alignment: Alignment.bottomRight,
+                              AspectRatio(
+                                aspectRatio: 16 / 9,
+                                child: Container(
+                                  width: MediaQuery.of(context).size.width,
+                                  decoration: const BoxDecoration(
+                                    image: DecorationImage(
+                                      image: AssetImage(
+                                          'lib/core/assets/images/biometry/card.png'),
+                                      fit: BoxFit.cover,
+                                      alignment: Alignment.bottomRight,
+                                    ),
                                   ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    SizedBox(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.5,
-                                      child: Text(
-                                        'biometry.description'.tr(),
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.white,
+                                  child: Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12),
+                                      child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: SizedBox(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.6,
+                                          child: Text(
+                                            'biometry.description'.tr(),
+                                            style: const TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.white,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ),
                               Padding(

@@ -63,7 +63,7 @@ class CoworkingServiceDetailsPage extends ConsumerWidget {
                       showGradient: true,
                       height: 200,
                     ),
-                    if (service.description.isNotEmpty)
+                    if (service.description?.isNotEmpty == true)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12.0),
                         child: Html(
@@ -101,14 +101,12 @@ class CoworkingServiceDetailsPage extends ConsumerWidget {
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount:
                             tariffs.firstOrNull?.type == 'COWORKING' ? 2 : 1,
-                        crossAxisSpacing: 8.0,
-                        mainAxisSpacing: 8.0,
+                        crossAxisSpacing: 15.0,
+                        mainAxisSpacing: 15.0,
                         childAspectRatio:
                             tariffs.firstOrNull?.type == 'COWORKING'
-                                ? MediaQuery.of(context).size.width > 600
-                                    ? 0.85
-                                    : 0.65
-                                : 2.2,
+                                ? 0.68
+                                : 1.8,
                       ),
                       itemCount: tariffs.length,
                       itemBuilder: (context, index) {
@@ -150,41 +148,42 @@ class CoworkingServiceDetailsPage extends ConsumerWidget {
     return Container(
       color: AppColors.primary,
       child: SafeArea(
-        child: Stack(
-          children: [
-            Container(
-              color: Colors.white,
-              margin: const EdgeInsets.only(top: 64),
-              child: SingleChildScrollView(
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          body: Stack(
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.only(top: 64),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Image carousel skeleton
                     Shimmer.fromColors(
-                      baseColor: Colors.grey[100]!,
-                      highlightColor: Colors.grey[300]!,
+                      baseColor: Colors.grey[300]!,
+                      highlightColor: Colors.grey[100]!,
                       child: Container(
                         height: 200,
-                        color: Colors.grey[300],
+                        color: Colors.white,
                       ),
                     ),
+                    const SizedBox(height: 16),
                     // Description skeleton
                     Padding(
-                      padding: const EdgeInsets.all(12.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: List.generate(
-                          4,
+                          3,
                           (index) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.only(bottom: 16),
                             child: Shimmer.fromColors(
-                              baseColor: Colors.grey[100]!,
-                              highlightColor: Colors.grey[300]!,
+                              baseColor: Colors.grey[300]!,
+                              highlightColor: Colors.grey[100]!,
                               child: Container(
-                                width: double.infinity,
                                 height: 16,
+                                width: double.infinity,
                                 decoration: BoxDecoration(
-                                  color: Colors.grey[300],
+                                  color: Colors.white,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                               ),
@@ -193,70 +192,59 @@ class CoworkingServiceDetailsPage extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: AppLength.none,
-                        horizontal: AppLength.xs,
-                      ),
-                      child: Divider(
-                        color: Colors.black12,
-                        thickness: 1,
-                      ),
-                    ),
-                    // Tariffs title skeleton
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Shimmer.fromColors(
-                        baseColor: Colors.grey[100]!,
-                        highlightColor: Colors.grey[300]!,
-                        child: Container(
-                          width: 150,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                      ),
-                    ),
+                    const SizedBox(height: 16),
                     // Tariffs grid skeleton
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                      child: GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 8.0,
-                          mainAxisSpacing: 8.0,
-                          childAspectRatio: 0.8,
-                        ),
-                        itemCount: 4, // Show 4 tariff skeletons
-                        itemBuilder: (context, index) {
-                          return Shimmer.fromColors(
-                            baseColor: Colors.grey[100]!,
-                            highlightColor: Colors.grey[300]!,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Shimmer.fromColors(
+                            baseColor: Colors.grey[300]!,
+                            highlightColor: Colors.grey[100]!,
                             child: Container(
+                              height: 24,
+                              width: 120,
                               decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                borderRadius: BorderRadius.circular(8),
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(4),
                               ),
                             ),
-                          );
-                        },
+                          ),
+                          const SizedBox(height: 16),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 8,
+                              mainAxisSpacing: 8,
+                              childAspectRatio: 0.75,
+                            ),
+                            itemCount: 4,
+                            itemBuilder: (context, index) {
+                              return Shimmer.fromColors(
+                                baseColor: Colors.grey[300]!,
+                                highlightColor: Colors.grey[100]!,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 32),
                   ],
                 ),
               ),
-            ),
-            const CustomHeader(
-              title: '',
-              type: HeaderType.pop,
-            ),
-          ],
+              const CustomHeader(title: ''),
+            ],
+          ),
         ),
       ),
     );

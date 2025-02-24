@@ -79,7 +79,7 @@ class NewsBlock extends ConsumerWidget {
                           children: [
                             Text(
                               'news.view_all'.tr(),
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 15,
                                 color: AppColors.textDarkGrey,
                               ),
@@ -88,7 +88,7 @@ class NewsBlock extends ConsumerWidget {
                               'lib/core/assets/icons/chevron-right.svg',
                               width: 24,
                               height: 24,
-                              colorFilter: ColorFilter.mode(
+                              colorFilter: const ColorFilter.mode(
                                 AppColors.textDarkGrey,
                                 BlendMode.srcIn,
                               ),

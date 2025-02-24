@@ -13,7 +13,7 @@ class MainCustomTabBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: AppColors.primary,
         ),
         child: TabBar(

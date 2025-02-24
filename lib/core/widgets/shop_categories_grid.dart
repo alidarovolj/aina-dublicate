@@ -23,7 +23,10 @@ class ShopCategoriesGrid extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.all(AppLength.xs),
+          padding: const EdgeInsets.only(
+            left: AppLength.xs,
+            right: AppLength.xs,
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -93,12 +96,12 @@ class ShopCategoriesGrid extends ConsumerWidget {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                       child: Column(
                         children: [
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(4),
                             child: category.image != null
                                 ? Image.network(
                                     category.image!.url,
@@ -125,6 +128,7 @@ class ShopCategoriesGrid extends ConsumerWidget {
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                                 color: AppColors.textDarkGrey,
+                                letterSpacing: 1,
                               ),
                               textAlign: TextAlign.center,
                               maxLines: 2,
@@ -167,7 +171,7 @@ class ShopCategoriesGrid extends ConsumerWidget {
                   height: 168,
                   decoration: BoxDecoration(
                     color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                 ),
                 const SizedBox(height: 8),

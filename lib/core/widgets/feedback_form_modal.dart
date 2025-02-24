@@ -5,6 +5,7 @@ import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/feedback_provider.dart';
 import 'package:aina_flutter/core/providers/requests/auth/user.dart';
+import 'package:shimmer/shimmer.dart';
 
 class FeedbackFormModal extends ConsumerStatefulWidget {
   const FeedbackFormModal({super.key});
@@ -13,50 +14,11 @@ class FeedbackFormModal extends ConsumerStatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      useSafeArea: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.85,
-          ),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-          ),
-          child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.only(bottom: 24),
-                    physics: const ClampingScrollPhysics(),
-                    children: const [
-                      FeedbackFormModal(),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
       ),
+      builder: (context) => const FeedbackFormModal(),
     );
   }
 
@@ -76,6 +38,62 @@ class _FeedbackFormModalState extends ConsumerState<FeedbackFormModal> {
     'description': '',
   };
 
+  Widget _buildSkeletonLoader() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title skeleton
+          Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(
+              height: 24,
+              width: 200,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Form fields skeleton
+          ...List.generate(
+            3,
+            (index) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Shimmer.fromColors(
+                baseColor: Colors.grey[300]!,
+                highlightColor: Colors.grey[100]!,
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Button skeleton
+          const SizedBox(height: 24),
+          Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -93,7 +111,6 @@ class _FeedbackFormModalState extends ConsumerState<FeedbackFormModal> {
       }
       _loadInitialCategory();
     } catch (e) {
-      // print('Error loading user data: $e');
       _loadInitialCategory();
     }
   }
@@ -134,7 +151,6 @@ class _FeedbackFormModalState extends ConsumerState<FeedbackFormModal> {
         description: _descriptionController.text,
       );
       Navigator.of(context).pop();
-      // TODO: Show success modal
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
@@ -166,47 +182,42 @@ class _FeedbackFormModalState extends ConsumerState<FeedbackFormModal> {
             ),
             const SizedBox(height: 24),
             categoriesAsync.when(
+              loading: () => _buildSkeletonLoader(),
+              error: (_, __) => const Text('Error loading categories'),
               data: (categories) => Theme(
                 data: Theme.of(context).copyWith(
                   inputDecorationTheme: const InputDecorationTheme(
                     border: OutlineInputBorder(),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                     filled: true,
                     fillColor: Color(0xFFF5F5F5),
                   ),
                 ),
                 child: DropdownButtonFormField<int>(
                   value: _form['category_id'] as int?,
-                  items: categories
-                      .map((category) => DropdownMenuItem(
-                            value: category.id,
-                            child: Text(
-                              category.title,
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ))
-                      .toList(),
-                  onChanged: (value) =>
-                      setState(() => _form['category_id'] = value),
+                  items: categories.map((category) {
+                    return DropdownMenuItem(
+                      value: category.id,
+                      child: Text(
+                        category.title,
+                        style: const TextStyle(color: AppColors.primary),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _form['category_id'] = value;
+                    });
+                  },
                   validator: (value) => value == null
                       ? 'contact_admin.errors.required'.tr()
                       : null,
-                  icon: const Icon(Icons.keyboard_arrow_down),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.primary,
+                  decoration: InputDecoration(
+                    labelText: 'contact_admin.category_label'.tr(),
+                    hintText: 'contact_admin.category_placeholder'.tr(),
                   ),
-                  decoration: const InputDecoration(),
-                  dropdownColor: Colors.white,
                   isExpanded: true,
                 ),
               ),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, __) => const Text('Error loading categories'),
             ),
             const SizedBox(height: 24),
             Text(

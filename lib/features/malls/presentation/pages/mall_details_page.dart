@@ -171,8 +171,11 @@ class MallDetailsPage extends ConsumerWidget {
                       SliverToBoxAdapter(
                         child: Column(
                           children: [
-                            CategoriesGrid(mallId: mallId.toString()),
-                            const SizedBox(height: 16),
+                            CategoriesGrid(
+                              mallId: mallId.toString(),
+                              showDivider: true,
+                            ),
+                            const SizedBox(height: 24),
                             ShopCategoriesGrid(mallId: mallId.toString()),
                           ],
                         ),

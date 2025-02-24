@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/requests/mall_categories_provider.dart';
 import 'package:shimmer/shimmer.dart';
 
 class CategoriesGrid extends ConsumerWidget {
   final String mallId;
+  final bool showDivider;
 
   const CategoriesGrid({
     super.key,
     required this.mallId,
+    this.showDivider = false,
   });
 
   @override
@@ -32,7 +35,7 @@ class CategoriesGrid extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.all(AppLength.xs),
           child: Text(
-            'Категории',
+            'categories.title'.tr(),
             style: GoogleFonts.lora(
               fontSize: 22,
               color: Colors.black,
@@ -41,14 +44,20 @@ class CategoriesGrid extends ConsumerWidget {
         ),
         categoriesAsync.when(
           loading: () => _buildSkeletonLoader(aspectRatio),
-          error: (error, stack) => Center(child: Text('Error: $error')),
+          error: (error, stack) => Center(
+            child: Text('categories.error'.tr(args: [error.toString()])),
+          ),
           data: (categories) {
             // Sort categories by order
             final sortedCategories = [...categories]
               ..sort((a, b) => a.order.compareTo(b.order));
 
             return Padding(
-              padding: const EdgeInsets.all(AppLength.xs),
+              padding: const EdgeInsets.only(
+                left: AppLength.xs,
+                right: AppLength.xs,
+                top: AppLength.xs,
+              ),
               child: GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -77,13 +86,13 @@ class CategoriesGrid extends ConsumerWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                       child: Stack(
                         children: [
                           // Background image
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(4),
                             child: category.image != null
                                 ? Image.network(
                                     category.image!.url,
@@ -108,8 +117,7 @@ class CategoriesGrid extends ConsumerWidget {
                               child: Text(
                                 category.title,
                                 style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
+                                  fontSize: 14,
                                   color: Colors.black,
                                 ),
                                 maxLines: 2,
@@ -125,6 +133,18 @@ class CategoriesGrid extends ConsumerWidget {
               ),
             );
           },
+        ),
+        if (showDivider) const SizedBox(height: 24),
+        Container(
+          padding: const EdgeInsets.only(
+            left: AppLength.xs,
+            right: AppLength.xs,
+          ),
+          child: const Divider(
+            height: 1,
+            thickness: 1,
+            color: AppColors.lightGrey,
+          ),
         ),
       ],
     );
@@ -150,7 +170,7 @@ class CategoriesGrid extends ConsumerWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(4),
               ),
             ),
           );

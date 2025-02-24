@@ -32,7 +32,7 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
     with WidgetsBindingObserver {
   CameraController? _controller;
   bool _isLoading = true;
-  bool _isCameraPermissionDenied = false;
+  final bool _isCameraPermissionDenied = false;
   bool _isDisposed = false;
   bool _error = false;
 
@@ -261,7 +261,7 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
       } catch (e) {
         print("DEBUG: Error during controller initialization: $e");
         await controller.dispose();
-        throw e;
+        rethrow;
       }
     } catch (e) {
       print("DEBUG: Camera initialization error: $e");
@@ -492,7 +492,7 @@ class _CoworkingCameraPageState extends ConsumerState<CoworkingCameraPage>
     with WidgetsBindingObserver {
   CameraController? _controller;
   bool _isLoading = true;
-  bool _isCameraPermissionDenied = false;
+  final bool _isCameraPermissionDenied = false;
   bool _isDisposed = false;
   bool _error = false;
 
@@ -718,7 +718,7 @@ class _CoworkingCameraPageState extends ConsumerState<CoworkingCameraPage>
       } catch (e) {
         print("DEBUG: Error during controller initialization: $e");
         await controller.dispose();
-        throw e;
+        rethrow;
       }
     } catch (e) {
       print("DEBUG: Camera initialization error: $e");
@@ -788,7 +788,7 @@ class _CoworkingCameraPageState extends ConsumerState<CoworkingCameraPage>
             if (_controller != null &&
                 _controller!.value.isInitialized &&
                 !_isLoading)
-              Container(
+              SizedBox(
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.height,
                 child: FittedBox(

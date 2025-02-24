@@ -303,7 +303,7 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
               ClipRRect(
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(20)),
-                child: Container(
+                child: SizedBox(
                   width: MediaQuery.of(context).size.width,
                   height: MediaQuery.of(context).size.height,
                   child: FittedBox(

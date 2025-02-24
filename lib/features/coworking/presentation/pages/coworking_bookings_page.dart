@@ -231,49 +231,54 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
   Widget _buildAuthorizedState() {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Container(
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicator: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+        Container(
+          color: AppColors.bgLight,
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Container(
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                indicator: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(4),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                indicatorColor: Colors.transparent,
+                dividerColor: Colors.transparent,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.black,
+                labelStyle: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.normal,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.normal,
+                ),
+                tabAlignment: TabAlignment.fill,
+                indicatorSize: TabBarIndicatorSize.tab,
+                tabs: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: Tab(text: 'bookings.active'.tr()),
+                  ),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Tab(text: 'bookings.history'.tr()),
                   ),
                 ],
               ),
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.black,
-              labelStyle: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.normal,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.normal,
-              ),
-              tabAlignment: TabAlignment.fill,
-              indicatorSize: TabBarIndicatorSize.tab,
-              tabs: [
-                SizedBox(
-                  width: double.infinity,
-                  child: Tab(text: 'bookings.active'.tr()),
-                ),
-                SizedBox(
-                  width: double.infinity,
-                  child: Tab(text: 'bookings.history'.tr()),
-                ),
-              ],
             ),
           ),
         ),
@@ -432,7 +437,7 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(4),
                       border: Border.all(color: Colors.grey[200]!),
                     ),
                     child: Column(
@@ -454,7 +459,7 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
                               height: 24,
                               decoration: BoxDecoration(
                                 color: Colors.grey[300],
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(4),
                               ),
                             ),
                           ],
@@ -511,7 +516,7 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
                                 height: 40,
                                 decoration: BoxDecoration(
                                   color: Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(4),
                                 ),
                               ),
                             ),
@@ -521,7 +526,7 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
                                 height: 40,
                                 decoration: BoxDecoration(
                                   color: Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(4),
                                 ),
                               ),
                             ),

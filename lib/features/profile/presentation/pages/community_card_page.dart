@@ -7,7 +7,6 @@ import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/widgets/custom_text_field.dart';
 import 'package:aina_flutter/core/widgets/custom_toggle.dart';
-import 'package:aina_flutter/core/providers/community_card_provider.dart';
 import 'package:aina_flutter/core/services/community_card_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';

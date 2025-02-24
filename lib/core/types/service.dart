@@ -3,6 +3,7 @@ class Service {
   final String title;
   final String? description;
   final String type;
+  final String? subtype;
   final int? parentId;
   final int sort;
   final String? createdAt;
@@ -18,6 +19,7 @@ class Service {
     required this.title,
     this.description,
     required this.type,
+    this.subtype,
     this.parentId,
     required this.sort,
     this.createdAt,
@@ -35,6 +37,7 @@ class Service {
       title: json['title'] as String,
       description: json['description'] as String?,
       type: json['type'] as String,
+      subtype: json['subtype'] as String?,
       parentId: json['parent_id'] as int?,
       sort: json['sort'] as int,
       createdAt: json['created_at'] as String?,
@@ -59,6 +62,7 @@ class Service {
       'title': title,
       'description': description,
       'type': type,
+      'subtype': subtype,
       'parent_id': parentId,
       'sort': sort,
       'created_at': createdAt,

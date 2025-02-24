@@ -117,10 +117,10 @@ class ApiClient {
           if (context != null && context.mounted) {
             // print('Context available, scheduling navigation...');
             // Schedule navigation for next frame
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              // print('Executing navigation to /login');
-              context.go('/home');
-            });
+            // WidgetsBinding.instance.addPostFrameCallback((_) {
+            //   // print('Executing navigation to /login');
+            //   context.go('/home');
+            // });
           } else {
             // print('No valid context available for navigation');
           }

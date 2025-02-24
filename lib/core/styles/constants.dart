@@ -22,7 +22,7 @@ class AppColors {
   static const Color white = Color(0xFFFFFFFF);
   static const Color appBg = Color.fromRGBO(236, 236, 236, 1);
   static const Color bgCom = Color.fromRGBO(216, 216, 216, 1);
-  static const Color blueGrey = Color.fromRGBO(115, 133, 172, 1);
+  static const Color blueGrey = Color.fromRGBO(80, 112, 182, 1);
 
   // Text colors
   static const Color textPrimary = Color.fromRGBO(41, 40, 76, 1);
@@ -38,7 +38,7 @@ class AppColors {
   static const Color backgroundDark = Color(0xFF212121);
   static const Color secondaryLight = Color.fromRGBO(237, 241, 247, 1);
   static const Color dividerColor = Color.fromRGBO(211, 217, 223, 1);
-  static const Color bgLight = Color.fromRGBO(240, 242, 244, 1);
+  static const Color bgLight = Color.fromRGBO(236, 236, 236, 1);
 
   // Button colors
   static const Color buttonDisabled = Color.fromRGBO(234, 237, 240, 1);

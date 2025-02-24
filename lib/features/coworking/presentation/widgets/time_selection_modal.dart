@@ -276,7 +276,7 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
       return 'coworking.time_selection.not_selected'.tr();
     }
     final dateTime = DateTime.parse('$fullDateTime:00');
-    return '${DateFormat('dd MMMM yyyy', context.locale.languageCode).format(dateTime)} ${DateFormat('HH:mm').format(dateTime)}';
+    return DateFormat('dd:MM:yyyy HH:mm').format(dateTime);
   }
 
   bool _isTimeSlotAvailable(DateTime date, String time) {
@@ -399,16 +399,15 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            Text(
-                              selectedStartTime != null
-                                  ? _formatSelectedDateTime(selectedStartTime)
-                                  : 'coworking.time_selection.not_selected'
-                                      .tr(),
-                              style: const TextStyle(
-                                color: AppColors.darkGrey,
-                                fontWeight: FontWeight.bold,
+                            if (selectedStartTime != null &&
+                                selectedEndTime != null)
+                              Text(
+                                _formatSelectedDateTime(selectedStartTime),
+                                style: const TextStyle(
+                                  color: AppColors.darkGrey,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
                           ],
                         ),
                       ),
@@ -435,16 +434,15 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            Text(
-                              selectedEndTime != null
-                                  ? _formatSelectedDateTime(selectedEndTime)
-                                  : 'coworking.time_selection.not_selected'
-                                      .tr(),
-                              style: const TextStyle(
-                                color: AppColors.darkGrey,
-                                fontWeight: FontWeight.bold,
+                            if (selectedStartTime != null &&
+                                selectedEndTime != null)
+                              Text(
+                                _formatSelectedDateTime(selectedEndTime),
+                                style: const TextStyle(
+                                  color: AppColors.darkGrey,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
                           ],
                         ),
                       ),
@@ -467,15 +465,17 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Text(
+                      child: Center(
+                          child: Text(
                         DateFormat('dd MMMM', context.locale.languageCode)
                             .format(date),
+                        textAlign: TextAlign.center,
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: AppColors.primary,
                         ),
-                      ),
+                      )),
                     ),
                     GridView.builder(
                       shrinkWrap: true,
@@ -483,7 +483,7 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        childAspectRatio: 4,
+                        childAspectRatio: 6,
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
                       ),
@@ -515,14 +515,14 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                               ? () => _selectTime(time, date)
                               : null,
                           child: Container(
-                            height: 32,
+                            padding: const EdgeInsets.symmetric(vertical: 3),
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? AppColors.primary
                                   : isInRange
                                       ? AppColors.primary.withOpacity(0.3)
                                       : isSelectable
-                                          ? Colors.grey[200]
+                                          ? AppColors.lightGrey
                                           : Colors.grey[100],
                               borderRadius: BorderRadius.circular(4),
                             ),
@@ -530,7 +530,7 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                             child: Text(
                               time,
                               style: TextStyle(
-                                fontSize: 22,
+                                fontSize: 15,
                                 color: isSelected || isInRange
                                     ? Colors.white
                                     : isSelectable

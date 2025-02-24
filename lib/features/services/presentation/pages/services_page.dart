@@ -37,6 +37,12 @@ class ServicesPage extends ConsumerWidget {
                   itemCount: services.length,
                   itemBuilder: (context, index) {
                     final service = services[index];
+                    print('Service data:');
+                    print('ID: ${service.id}');
+                    print('Title: ${service.title}');
+                    print('Type: ${service.type}');
+                    print('Subtype: ${service.subtype}');
+                    print('Category ID: ${service.categoryId}');
                     return Container(
                       margin: const EdgeInsets.only(bottom: 24),
                       decoration: BoxDecoration(
@@ -47,9 +53,19 @@ class ServicesPage extends ConsumerWidget {
                       child: InkWell(
                         borderRadius: BorderRadius.circular(4),
                         onTap: () {
-                          context.push(
-                            '/coworking/$coworkingId/services/${service.id}',
-                          );
+                          print('Service type: ${service.type}');
+                          print('Service subtype: ${service.subtype}');
+                          if (service.subtype == 'COWORKING') {
+                            print('Routing to coworking service details');
+                            context.push(
+                              '/coworking/$coworkingId/services/${service.id}',
+                            );
+                          } else {
+                            print('Routing to conference service');
+                            context.push(
+                              '/coworking/$coworkingId/conference-services/${service.id}',
+                            );
+                          }
                         },
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

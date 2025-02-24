@@ -33,7 +33,9 @@ class _MenuPageState extends ConsumerState<MenuPage> {
     final authState = ref.watch(authProvider);
     final isAuthenticated = authState.isAuthenticated;
     final cacheKey = ref.watch(profileCacheKeyProvider);
-    final profileAsync = ref.watch(promenadeProfileDataProvider(cacheKey));
+    final profileAsync = isAuthenticated
+        ? ref.watch(promenadeProfileDataProvider(cacheKey))
+        : null;
     final buildingsAsync = ref.watch(buildingsProvider);
 
     return Scaffold(
@@ -59,61 +61,61 @@ class _MenuPageState extends ConsumerState<MenuPage> {
             Expanded(
               child: Container(
                 color: Colors.white,
-                child: profileAsync.when(
+                child: buildingsAsync.when(
                   loading: () => _buildSkeletonLoader(),
                   error: (error, stack) => Center(child: Text('Error: $error')),
-                  data: (profile) => buildingsAsync.when(
-                    loading: () => _buildSkeletonLoader(),
-                    error: (error, stack) =>
-                        Center(child: Text('Error: $error')),
-                    data: (buildings) => SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (!isAuthenticated) ...[
-                            Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'menu.join_aina'.tr(),
-                                    style: const TextStyle(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
+                  data: (buildings) => SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (!isAuthenticated ||
+                            profileAsync?.hasError == true) ...[
+                          Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 8),
+                                Text(
+                                  'menu.join_aina'.tr(),
+                                  style: GoogleFonts.lora(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black,
                                   ),
-                                  const SizedBox(height: 8),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton(
-                                      onPressed: () => context.go('/login'),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.black,
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 16),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        elevation: 0,
+                                ),
+                                const SizedBox(height: 20),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    onPressed: () => context.go('/login'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.black,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: Text(
-                                        'menu.authorize'.tr(),
-                                        style: const TextStyle(
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                                      elevation: 0,
+                                    ),
+                                    child: Text(
+                                      'menu.authorize'.tr(),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ] else if (profile != null) ...[
-                            Padding(
+                          ),
+                        ] else if (isAuthenticated && profileAsync != null) ...[
+                          profileAsync.when(
+                            loading: () => _buildSkeletonLoader(),
+                            error: (_, __) => const SizedBox(),
+                            data: (profile) => Padding(
                               padding: const EdgeInsets.all(12),
                               child: Row(
                                 children: [
@@ -157,49 +159,48 @@ class _MenuPageState extends ConsumerState<MenuPage> {
                                 ],
                               ),
                             ),
-                          ],
-                          const SizedBox(height: 30),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Column(
-                              children: [
-                                if (buildings['coworking'] != null) ...[
-                                  ...(buildings['coworking'] as List)
-                                      .map((coworking) => _buildMenuItem(
-                                            context,
-                                            '${'buildings.coworking'.tr()} ${coworking.name}',
-                                            () => context.go(
-                                                '/coworking/${coworking.id}'),
-                                          )),
-                                ],
-                                if (buildings['mall'] != null) ...[
-                                  ...(buildings['mall'] as List)
-                                      .map((mall) => _buildMenuItem(
-                                            context,
-                                            '${'buildings.mall'.tr()} ${mall.name}',
-                                            () =>
-                                                context.go('/malls/${mall.id}'),
-                                          )),
-                                ],
-                                if (!isAuthenticated) ...[
-                                  _buildMenuItem(
-                                    context,
-                                    'menu.contact_us'.tr(),
-                                    () {},
-                                  ),
-                                ],
-                                const SizedBox(height: 32),
-                                _buildMenuItem(
-                                  context,
-                                  'menu.about'.tr(),
-                                  () => context.push('/about'),
-                                ),
-                                const SizedBox(height: 80),
-                              ],
-                            ),
                           ),
                         ],
-                      ),
+                        const SizedBox(height: 30),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Column(
+                            children: [
+                              if (buildings['coworking'] != null) ...[
+                                ...(buildings['coworking'] as List)
+                                    .map((coworking) => _buildMenuItem(
+                                          context,
+                                          '${'buildings.coworking'.tr()} ${coworking.name}',
+                                          () => context
+                                              .go('/coworking/${coworking.id}'),
+                                        )),
+                              ],
+                              if (buildings['mall'] != null) ...[
+                                ...(buildings['mall'] as List)
+                                    .map((mall) => _buildMenuItem(
+                                          context,
+                                          '${'buildings.mall'.tr()} ${mall.name}',
+                                          () => context.go('/malls/${mall.id}'),
+                                        )),
+                              ],
+                              if (!isAuthenticated) ...[
+                                _buildMenuItem(
+                                  context,
+                                  'menu.contact_us'.tr(),
+                                  () {},
+                                ),
+                              ],
+                              const SizedBox(height: 32),
+                              _buildMenuItem(
+                                context,
+                                'menu.about'.tr(),
+                                () => context.push('/about'),
+                              ),
+                              const SizedBox(height: 80),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -239,7 +240,7 @@ class _MenuPageState extends ConsumerState<MenuPage> {
                   color: Colors.black,
                 ),
               ),
-              Icon(
+              const Icon(
                 Icons.chevron_right,
                 color: AppColors.almostBlack,
                 size: 24,

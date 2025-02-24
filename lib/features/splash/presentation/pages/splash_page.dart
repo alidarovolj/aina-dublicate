@@ -61,43 +61,24 @@ class _SplashPageState extends State<SplashPage>
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width * 0.8;
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    // final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Container(
+      body: SizedBox(
         width: double.infinity,
-        padding: EdgeInsets.only(bottom: 100 + bottomPadding),
+        // padding: EdgeInsets.only(bottom: 100 + bottomPadding),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             FadeTransition(
               opacity: _fadeAnimation,
               child: SlideTransition(
                 position: _slideAnimation,
                 child: Image.asset(
-                  'lib/core/assets/images/logo_AINA.png',
+                  'lib/core/assets/images/logo-superapp.png',
                   width: width,
                   fit: BoxFit.contain,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            FadeTransition(
-              opacity: _fadeAnimation,
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: SizedBox(
-                  width: width,
-                  child: const Text(
-                    'Приложение Aina это автоматизированный помощник для получения информации, участия в акциях и пользования услугами в коворкинге Promenade и торговых центрах Moskva, Globus, Sputnik Mall',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      height: 1.5,
-                    ),
-                  ),
                 ),
               ),
             ),

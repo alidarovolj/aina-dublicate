@@ -9,7 +9,11 @@ class BannersProvider extends StateNotifier<AsyncValue<List<Slide>>> {
 
   final RequestCodeService _listService;
 
-  Future<void> fetchBanners() async {
+  Future<void> fetchBanners({bool forceRefresh = false}) async {
+    if (forceRefresh) {
+      state = const AsyncValue.loading();
+    }
+
     try {
       // print('Fetching banners...');
       final response = await _listService.banners();
@@ -31,6 +35,7 @@ class BannersProvider extends StateNotifier<AsyncValue<List<Slide>>> {
 }
 
 final bannersProvider =
-    StateNotifierProvider<BannersProvider, AsyncValue<List<Slide>>>(
-  (ref) => BannersProvider(ref.read(requestCodeProvider)),
-);
+    StateNotifierProvider.autoDispose<BannersProvider, AsyncValue<List<Slide>>>(
+        (ref) {
+  return BannersProvider(ref.read(requestCodeProvider));
+});

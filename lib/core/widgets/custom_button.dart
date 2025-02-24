@@ -160,10 +160,10 @@ class CustomButton extends ConsumerWidget {
 
   Color _getBackgroundColor(String? buttonColor) {
     if (!isEnabled) return Colors.grey[200]!;
-    if (type == ButtonType.bordered) return Colors.white;
     if (buttonColor != null && buttonColor.startsWith('#')) {
       return Color(int.parse(buttonColor.replaceAll('#', '0xFF')));
     }
+    if (type == ButtonType.bordered) return backgroundColor ?? Colors.white;
     if (type == ButtonType.light) return AppColors.lightGrey;
     return backgroundColor ?? AppColors.primary;
   }

@@ -101,7 +101,7 @@ class PromotionsBlock extends ConsumerWidget {
                           children: [
                             Text(
                               'promotions.view_all'.tr(),
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 15,
                                 color: AppColors.textDarkGrey,
                               ),
@@ -110,7 +110,7 @@ class PromotionsBlock extends ConsumerWidget {
                               'lib/core/assets/icons/chevron-right.svg',
                               width: 24,
                               height: 24,
-                              colorFilter: ColorFilter.mode(
+                              colorFilter: const ColorFilter.mode(
                                 AppColors.textDarkGrey,
                                 BlendMode.srcIn,
                               ),

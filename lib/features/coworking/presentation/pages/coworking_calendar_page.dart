@@ -781,52 +781,59 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
                               ),
                             ),
                             Expanded(child: _buildCalendar()),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, -5),
-                                  ),
-                                ],
+                            if (selectedDate !=
+                                null) // Only show when date is selected
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, -5),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  children: [
+                                    _buildInfoRow(
+                                        '${'coworking.calendar.cost'.tr()}:',
+                                        '${total ?? tariffDetails.price} ₸'),
+                                    const SizedBox(height: 8),
+                                    _buildInfoRow(
+                                      '${'coworking.calendar.start_date'.tr()}:',
+                                      formData['start_at'].isNotEmpty
+                                          ? DateFormat('dd:MM:yyyy HH:mm')
+                                              .format(DateTime.parse(
+                                                  formData['start_at']))
+                                          : 'coworking.calendar.not_selected'
+                                              .tr(),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _buildInfoRow(
+                                      '${'coworking.calendar.end_date'.tr()}:',
+                                      formData['end_at'].isNotEmpty
+                                          ? DateFormat('dd:MM:yyyy HH:mm')
+                                              .format(DateTime.parse(
+                                                  formData['end_at']))
+                                          : 'coworking.calendar.not_selected'
+                                              .tr(),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    CustomButton(
+                                      label:
+                                          'coworking.calendar.proceed_to_payment'
+                                              .tr(),
+                                      onPressed: isLoading
+                                          ? null
+                                          : _handlePaymentPress,
+                                      isFullWidth: true,
+                                      isLoading: isLoading,
+                                    ),
+                                  ],
+                                ),
                               ),
-                              child: Column(
-                                children: [
-                                  _buildInfoRow(
-                                      '${'coworking.calendar.cost'.tr()}:',
-                                      '${total ?? tariffDetails.price} ₸'),
-                                  const SizedBox(height: 8),
-                                  _buildInfoRow(
-                                    '${'coworking.calendar.start_date'.tr()}:',
-                                    formData['start_at'].isNotEmpty
-                                        ? formData['start_at']
-                                        : 'coworking.calendar.not_selected'
-                                            .tr(),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  _buildInfoRow(
-                                    '${'coworking.calendar.end_date'.tr()}:',
-                                    formData['end_at'].isNotEmpty
-                                        ? formData['end_at']
-                                        : 'coworking.calendar.not_selected'
-                                            .tr(),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  CustomButton(
-                                    label:
-                                        'coworking.calendar.proceed_to_payment'
-                                            .tr(),
-                                    onPressed:
-                                        isLoading ? null : _handlePaymentPress,
-                                    isFullWidth: true,
-                                    isLoading: isLoading,
-                                  ),
-                                ],
-                              ),
-                            ),
                           ],
                         ),
                       );

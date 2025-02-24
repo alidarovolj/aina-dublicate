@@ -80,18 +80,10 @@ class _HomeTabBarScreenState extends ConsumerState<HomeTabBarScreen>
     final route = _tabIndexToRoutes[index];
     if (route != null && widget.currentRoute != route) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (index == 3) {
-          final authState = ref.read(authProvider.notifier);
-          if (!authState.canAccessProfile) {
-            context.go('/login');
-            return;
-          }
-        }
-
         // Handle bookings tab
         if (index == 2) {
           final buildingsAsync = ref.read(buildingsProvider);
-          final buildings = await buildingsAsync.when(
+          final buildings = buildingsAsync.when(
             data: (data) => data,
             loading: () => null,
             error: (_, __) => null,

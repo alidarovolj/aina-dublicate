@@ -122,7 +122,7 @@ class StoreDetailsPage extends ConsumerWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   _InfoRow(
-                                    icon: Icons.access_time,
+                                    icon: 'lib/core/assets/icons/time.svg',
                                     text: storeData['working_hours'] ??
                                         '10:00-22:00',
                                     label: 'stores.working_hours'.tr(),
@@ -131,7 +131,8 @@ class StoreDetailsPage extends ConsumerWidget {
                                   if (storeData['buildings']?.isNotEmpty ??
                                       false) ...[
                                     _InfoRow(
-                                      icon: Icons.location_on,
+                                      icon:
+                                          'lib/core/assets/icons/location.svg',
                                       text: storeData['buildings'][0]
                                               ['address'] ??
                                           'stores.on_map'.tr(),
@@ -368,7 +369,7 @@ class StoreDetailsPage extends ConsumerWidget {
 }
 
 class _InfoRow extends StatelessWidget {
-  final IconData icon;
+  final String icon;
   final String text;
   final VoidCallback? onTap;
   final String label;
@@ -390,7 +391,15 @@ class _InfoRow extends StatelessWidget {
             onTap: onTap,
             child: Row(
               children: [
-                Icon(icon, color: AppColors.textDarkGrey),
+                SvgPicture.asset(
+                  icon,
+                  width: 24,
+                  height: 24,
+                  colorFilter: const ColorFilter.mode(
+                    AppColors.textDarkGrey,
+                    BlendMode.srcIn,
+                  ),
+                ),
                 const SizedBox(width: 12),
                 Text(
                   text,

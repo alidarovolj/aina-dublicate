@@ -12,14 +12,20 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'dart:async';
 import 'package:sms_autofill/sms_autofill.dart';
-import 'dart:io' show Platform;
 
 class CodeInputScreen extends ConsumerStatefulWidget {
   final String phoneNumber;
+  final String? buildingId;
+  final String? buildingType;
   final bool isFromRegistration;
 
-  const CodeInputScreen(
-      {required this.phoneNumber, this.isFromRegistration = false, super.key});
+  const CodeInputScreen({
+    required this.phoneNumber,
+    this.buildingId,
+    this.buildingType,
+    this.isFromRegistration = false,
+    super.key,
+  });
 
   @override
   ConsumerState<CodeInputScreen> createState() => CodeInputScreenState();
@@ -179,12 +185,10 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
   Future<void> _handleSuccessfulResponse(dynamic data) async {
     final responseData = Map<String, dynamic>.from(data);
 
-    // Проверяем успешность ответа
     if (!responseData.containsKey('success') || !responseData['success']) {
       throw Exception('Неуспешный ответ от сервера');
     }
 
-    // Получаем данные из вложенного объекта data
     final authData = Map<String, dynamic>.from(responseData['data']);
 
     if (!authData.containsKey('access_token')) {
@@ -202,9 +206,36 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
     await ref.read(authProvider.notifier).setToken(token);
     if (!mounted) return;
 
-    // Get mallId from the current route or use a default value
-    final mallId = GoRouterState.of(context).pathParameters['mallId'] ?? '2';
-    context.go('/home');
+    print(
+        'Debug: buildingType = ${widget.buildingType}, buildingId = ${widget.buildingId}');
+    print('Debug: current route = ${GoRouterState.of(context).uri.toString()}');
+    print('Debug: state.extra = ${GoRouterState.of(context).extra}');
+
+    if (widget.buildingType == 'coworking' && widget.buildingId != null) {
+      print('Debug: redirecting to coworking profile');
+      context.go('/coworking/${widget.buildingId}/profile');
+    } else if (widget.buildingType == 'mall' && widget.buildingId != null) {
+      print('Debug: redirecting to mall profile');
+      context.go('/malls/${widget.buildingId}/profile');
+    } else {
+      final currentRoute = GoRouterState.of(context).uri.toString();
+      final routeParts = currentRoute.split('/');
+      print('Debug: fallback route parts = $routeParts');
+
+      if (routeParts.length >= 3) {
+        if (routeParts[1] == 'coworking') {
+          print('Debug: redirecting to coworking from route');
+          context.go('/coworking/${routeParts[2]}/profile');
+          return;
+        } else if (routeParts[1] == 'malls') {
+          print('Debug: redirecting to mall from route');
+          context.go('/malls/${routeParts[2]}/profile');
+          return;
+        }
+      }
+      print('Debug: fallback to home');
+      context.go('/home');
+    }
   }
 
   @override
@@ -248,29 +279,29 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
                                   TextSpan(
                                     text: 'auth.sms_sent_to'.tr(),
                                     style: const TextStyle(
-                                      fontSize: 15,
+                                      fontSize: 16,
                                       color: AppColors.textDarkGrey,
                                     ),
                                   ),
                                   TextSpan(
                                     text: '+7 ${widget.phoneNumber}',
                                     style: const TextStyle(
-                                      fontSize: 15,
+                                      fontSize: 16,
                                       color: AppColors.textDarkGrey,
-                                      fontWeight: FontWeight.w500,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
                                   TextSpan(
                                     text: 'auth.with_login_code'.tr(),
                                     style: const TextStyle(
-                                      fontSize: 15,
+                                      fontSize: 16,
                                       color: AppColors.textDarkGrey,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(height: AppLength.body),
+                            const SizedBox(height: 36),
                             AutofillGroup(
                               child: Stack(
                                 children: [
@@ -287,18 +318,16 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
                                               BorderRadius.circular(12),
                                           border: Border.all(
                                             width: 1,
-                                            color: AppColors.lightGrey,
+                                            color: AppColors.darkGrey,
                                           ),
                                         ),
                                         child: Center(
-                                          child: Text(
-                                            _codeDigits[index],
-                                            style: const TextStyle(
-                                              fontSize: AppLength.lg,
-                                              fontWeight: FontWeight.w500,
-                                              color: AppColors.textDarkGrey,
-                                            ),
-                                          ),
+                                          child: Text(_codeDigits[index],
+                                              style: GoogleFonts.lora(
+                                                fontSize: 32,
+                                                fontWeight: FontWeight.w500,
+                                                color: AppColors.textDarkGrey,
+                                              )),
                                         ),
                                       );
                                     }),
@@ -311,8 +340,11 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
                                         AutofillHints.oneTimeCode
                                       ],
                                       maxLength: 4,
+                                      showCursor: false,
+                                      cursorWidth: 0,
                                       style: const TextStyle(
                                         color: Colors.transparent,
+                                        height: 0,
                                         fontSize: 1,
                                       ),
                                       inputFormatters: [
@@ -341,7 +373,7 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
                                 ],
                               ),
                             ),
-                            const SizedBox(height: AppLength.xxxl),
+                            const SizedBox(height: 36),
                             Center(
                               child: GestureDetector(
                                 onTap: _resendCode,

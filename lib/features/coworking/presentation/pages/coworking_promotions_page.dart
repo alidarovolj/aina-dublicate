@@ -51,18 +51,23 @@ class CoworkingPromotionsPage extends ConsumerWidget {
                   color: AppColors.appBg,
                   margin: const EdgeInsets.only(top: 64),
                   padding: const EdgeInsets.only(top: 28),
-                  child: PromotionsBlock(
-                    mallId: coworkingId.toString(),
-                    showTitle: false,
-                    showViewAll: false,
-                    showDivider: false,
-                    cardType: PromotionCardType.full,
-                    emptyBuilder: (context) => Center(
-                      child: Text(
-                        'coworking.no_active_promotions'.tr(),
-                        style: const TextStyle(
-                          fontSize: 15,
-                          color: AppColors.textDarkGrey,
+                  constraints: BoxConstraints(
+                    minHeight: MediaQuery.of(context).size.height - 64,
+                  ),
+                  child: SingleChildScrollView(
+                    child: PromotionsBlock(
+                      mallId: coworkingId.toString(),
+                      showTitle: false,
+                      showViewAll: false,
+                      showDivider: false,
+                      cardType: PromotionCardType.full,
+                      emptyBuilder: (context) => Center(
+                        child: Text(
+                          'coworking.no_active_promotions'.tr(),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: AppColors.textDarkGrey,
+                          ),
                         ),
                       ),
                     ),

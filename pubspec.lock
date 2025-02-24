@@ -382,6 +382,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.9.3+3"
+  file_state_manager:
+    dependency: transitive
+    description:
+      name: file_state_manager
+      sha256: "19ae8a33cf3bf6a9890f7819757531d5840fa6d8bf3a4be2fb89e94e9e5e3304"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.0"
   firebase_analytics:
     dependency: "direct main"
     description:
@@ -1354,6 +1362,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.6.1"
+  sakura_blizzard:
+    dependency: "direct main"
+    description:
+      name: sakura_blizzard
+      sha256: "43a3d5cc3d5038086bd1e8a85039b5daaddca24ba3f83b03d9c5c23226ea9114"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.0.0"
   share_plus:
     dependency: transitive
     description:
@@ -1450,6 +1466,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
+  simple_3d:
+    dependency: transitive
+    description:
+      name: simple_3d
+      sha256: "6e13eeb7c4dc4b3faf19e5e07bf79269e59d9a8cf496a6f202d0afd0aa05d471"
+      url: "https://pub.dev"
+    source: hosted
+    version: "15.0.0"
+  simple_3d_renderer:
+    dependency: transitive
+    description:
+      name: simple_3d_renderer
+      sha256: "149e989b27bc78f880ba450d672a9952785046caa4f998671904ac39122a47fa"
+      url: "https://pub.dev"
+    source: hosted
+    version: "21.0.0"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -1647,6 +1679,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.4"
+  util_simple_3d:
+    dependency: transitive
+    description:
+      name: util_simple_3d
+      sha256: "7f25a0554f3a6da7a52cde8d5c9f722b41e46b3f918b111eda8ce9b59f96f9a0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "11.0.0"
   uuid:
     dependency: transitive
     description:

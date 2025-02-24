@@ -43,10 +43,13 @@ class CustomInputField extends StatelessWidget {
           focusNode: focusNode,
           keyboardType: keyboardType,
           style: const TextStyle(
-            color: AppColors.textDarkGrey,
+            color: AppColors.primary,
           ),
           decoration: InputDecoration(
             hintText: placeholder ?? hintText,
+            hintStyle: const TextStyle(
+              color: AppColors.grey2,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(

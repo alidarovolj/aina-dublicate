@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
-import 'package:aina_flutter/core/providers/requests/auth/user.dart';
-import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/providers/requests/settings_provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:aina_flutter/core/widgets/communication_modal.dart';
 import 'package:aina_flutter/core/providers/requests/auth/profile.dart';
-import 'package:aina_flutter/app.dart' as app;
 import 'dart:io';
 import 'package:aina_flutter/core/widgets/avatar_edit_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -137,6 +134,8 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage> {
                         children: [
                           Container(
                             padding: const EdgeInsets.all(12),
+                            decoration:
+                                const BoxDecoration(color: AppColors.primary),
                             margin: const EdgeInsets.only(bottom: 30),
                             child: Row(
                               children: [
@@ -156,7 +155,7 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage> {
                                       Text(
                                         '${profile['firstname'] ?? ''} ${profile['lastname'] ?? ''}',
                                         style: const TextStyle(
-                                          color: AppColors.primary,
+                                          color: Colors.white,
                                           fontSize: 18,
                                           fontWeight: FontWeight.w500,
                                         ),
@@ -482,10 +481,11 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage> {
                 ),
               ),
               if (trailingIcon != null)
-                Icon(
-                  trailingIcon,
-                  color: Colors.grey,
-                  size: 24,
+                SvgPicture.asset(
+                  'lib/core/assets/icons/chevron-right.svg',
+                  width: 24,
+                  height: 24,
+                  color: AppColors.almostBlack,
                 ),
             ],
           ),

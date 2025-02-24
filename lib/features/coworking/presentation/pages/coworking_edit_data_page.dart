@@ -12,12 +12,9 @@ import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:aina_flutter/core/widgets/restart_widget.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:aina_flutter/core/widgets/avatar_edit_widget.dart';
-import 'package:aina_flutter/core/providers/requests/auth/user.dart';
-import 'package:aina_flutter/app.dart' as app;
 
 // Добавляем провайдер для кэш-ключа
 final profileCacheKeyProvider = StateProvider<int>((ref) => 0);
@@ -572,13 +569,11 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              SizedBox(
-                                width: 100,
+                              Expanded(
                                 child: _buildGenderOption('FEMALE',
                                     'profile.settings.edit.gender.female'.tr()),
                               ),
-                              SizedBox(
-                                width: 100,
+                              Expanded(
                                 child: _buildGenderOption('MALE',
                                     'profile.settings.edit.gender.male'.tr()),
                               ),
@@ -624,9 +619,11 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
                                         color: Colors.black87,
                                       ),
                                     ),
-                                    const Icon(
-                                      Icons.chevron_right,
-                                      color: Colors.grey,
+                                    SvgPicture.asset(
+                                      'lib/core/assets/icons/chevron-right.svg',
+                                      width: 24,
+                                      height: 24,
+                                      color: AppColors.almostBlack,
                                     ),
                                   ],
                                 ),
@@ -916,7 +913,7 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(

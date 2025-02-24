@@ -94,34 +94,29 @@ class BuildingsList extends ConsumerWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                ...buildings
-                    .asMap()
-                    .entries
-                    .map((entry) => GestureDetector(
-                          onTap: () {
-                            context.pushNamed(
-                              'coworking_details',
-                              pathParameters: {'id': entry.value.id.toString()},
-                            );
-                          },
-                          child: Container(
-                            width: MediaQuery.of(context).size.width * 0.5 -
-                                (AppLength.xs + 7.5),
-                            height: 94,
-                            margin: EdgeInsets.only(
-                              right: entry.key < buildings.length - 1 ? 15 : 0,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(4),
-                              image: DecorationImage(
-                                image:
-                                    NetworkImage(entry.value.previewImage.url),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
+                ...buildings.asMap().entries.map((entry) => GestureDetector(
+                      onTap: () {
+                        context.pushNamed(
+                          'coworking_details',
+                          pathParameters: {'id': entry.value.id.toString()},
+                        );
+                      },
+                      child: Container(
+                        width: MediaQuery.of(context).size.width * 0.5 -
+                            (AppLength.xs + 7.5),
+                        height: 94,
+                        margin: EdgeInsets.only(
+                          right: entry.key < buildings.length - 1 ? 15 : 0,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          image: DecorationImage(
+                            image: NetworkImage(entry.value.previewImage.url),
+                            fit: BoxFit.cover,
                           ),
-                        ))
-                    .toList(),
+                        ),
+                      ),
+                    )),
                 GestureDetector(
                   onTap: () {
                     if (buildings.isNotEmpty) {

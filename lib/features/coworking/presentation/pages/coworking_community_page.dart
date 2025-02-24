@@ -7,6 +7,11 @@ import 'package:aina_flutter/features/coworking/providers/community_cards_provid
 import 'package:aina_flutter/features/coworking/domain/models/community_card.dart';
 import 'package:aina_flutter/features/coworking/presentation/widgets/community_details_modal.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:aina_flutter/core/providers/community_card_provider.dart';
+import 'package:aina_flutter/core/widgets/custom_button.dart';
+import 'package:go_router/go_router.dart';
+import 'package:aina_flutter/core/router/route_observer.dart';
+import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 
 class CoworkingCommunityPage extends ConsumerStatefulWidget {
   final int coworkingId;
@@ -21,10 +26,48 @@ class CoworkingCommunityPage extends ConsumerStatefulWidget {
       _CoworkingCommunityPageState();
 }
 
-class _CoworkingCommunityPageState
-    extends ConsumerState<CoworkingCommunityPage> {
+class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
+    with RouteAware {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+
+    if (!_isInitialized) {
+      _isInitialized = true;
+      _refreshData();
+    }
+  }
+
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    _refreshData();
+  }
+
+  void _refreshData() {
+    final token = ref.read(authProvider).token;
+    if (token != null) {
+      ref.invalidate(communityCardsProvider);
+      ref.invalidate(communityCardProvider);
+    }
+  }
 
   Map<String, List<CommunityCard>> _groupCards(List<CommunityCard> cards) {
     final groups = <String, List<CommunityCard>>{};
@@ -42,14 +85,11 @@ class _CoworkingCommunityPageState
   }
 
   @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final token = ref.watch(authProvider).token;
     final communityCardsAsync = ref.watch(communityCardsProvider(_searchQuery));
+    final userCardAsync =
+        token != null ? ref.watch(communityCardProvider(true)) : null;
 
     return Container(
       color: AppColors.primary,
@@ -57,14 +97,14 @@ class _CoworkingCommunityPageState
         child: Stack(
           children: [
             Container(
-              color: Colors.white,
+              color: AppColors.bgLight,
               margin: const EdgeInsets.only(top: 64),
               child: Column(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.grey[100],
+                      color: AppColors.bgLight,
                       border: Border(
                         bottom: BorderSide(
                           color: Colors.grey[300]!,
@@ -75,7 +115,7 @@ class _CoworkingCommunityPageState
                     child: TextField(
                       controller: _searchController,
                       style: const TextStyle(
-                        color: AppColors.textDarkGrey,
+                        color: AppColors.darkGrey,
                       ),
                       decoration: InputDecoration(
                         hintText: 'community.search'.tr(),
@@ -98,11 +138,39 @@ class _CoworkingCommunityPageState
                       },
                     ),
                   ),
+                  if (token != null) ...[
+                    userCardAsync?.when(
+                          data: (userCard) {
+                            if (userCard['status'] != 'APPROVED') {
+                              return Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: CustomButton(
+                                  label: 'community.create_card'.tr(),
+                                  onPressed: () {
+                                    context.pushNamed(
+                                      'community_card',
+                                      pathParameters: {
+                                        'id': widget.coworkingId.toString()
+                                      },
+                                    );
+                                  },
+                                  isFullWidth: true,
+                                  type: ButtonType.bordered,
+                                  backgroundColor: AppColors.bgLight,
+                                  textColor: AppColors.primary,
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
+                        ) ??
+                        const SizedBox.shrink(),
+                  ],
                   Expanded(
                     child: communityCardsAsync.when(
                       data: (cards) {
-                        final groupedCards = _groupCards(cards);
-
                         if (cards.isEmpty) {
                           return Center(
                             child: Text(
@@ -115,32 +183,67 @@ class _CoworkingCommunityPageState
                           );
                         }
 
-                        return ListView.builder(
-                          itemCount: groupedCards.length,
-                          itemBuilder: (context, index) {
-                            final letter = groupedCards.keys.elementAt(index);
-                            final users = groupedCards[letter]!;
+                        final groupedCards = _groupCards(cards);
 
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Text(
-                                    letter,
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.textDarkGrey,
-                                    ),
-                                  ),
+                        if (token != null) {
+                          return userCardAsync?.when(
+                                data: (userCard) {
+                                  if (userCard['status'] == 'APPROVED') {
+                                    return SingleChildScrollView(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(12),
+                                            child: Text(
+                                              'community.you'.tr(),
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w500,
+                                                color: AppColors.grey2,
+                                              ),
+                                            ),
+                                          ),
+                                          _CommunityUserCard(
+                                            user: CommunityCard.fromJson(
+                                                userCard),
+                                          ),
+                                          if (cards.isNotEmpty) ...[
+                                            for (var entry
+                                                in groupedCards.entries) ...[
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.all(12),
+                                                child: Text(
+                                                  entry.key,
+                                                  style: const TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: AppColors.grey2,
+                                                  ),
+                                                ),
+                                              ),
+                                              ...entry.value.map((user) =>
+                                                  _CommunityUserCard(
+                                                      user: user)),
+                                            ],
+                                          ],
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                  return _buildCardsList(groupedCards);
+                                },
+                                loading: () => const Center(
+                                  child: CircularProgressIndicator(),
                                 ),
-                                ...users.map(
-                                    (user) => _CommunityUserCard(user: user)),
-                              ],
-                            );
-                          },
-                        );
+                                error: (_, __) => _buildCardsList(groupedCards),
+                              ) ??
+                              _buildCardsList(groupedCards);
+                        }
+
+                        return _buildCardsList(groupedCards);
                       },
                       loading: () => _buildSkeletonLoader(),
                       error: (error, stack) => Center(
@@ -163,6 +266,30 @@ class _CoworkingCommunityPageState
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCardsList(Map<String, List<CommunityCard>> groupedCards) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var entry in groupedCards.entries) ...[
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                entry.key,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.grey2,
+                ),
+              ),
+            ),
+            ...entry.value.map((user) => _CommunityUserCard(user: user)),
+          ],
+        ],
       ),
     );
   }
@@ -271,63 +398,91 @@ class _CommunityUserCard extends StatelessWidget {
     required this.user,
   });
 
+  String _getInitials() {
+    final nameParts = user.name.split(' ');
+    if (nameParts.length > 1) {
+      return '${nameParts[0][0]}${nameParts[1][0]}'.toUpperCase();
+    }
+    return nameParts[0][0].toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
         CommunityDetailsModal.show(context, user: user);
       },
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: Colors.grey[300]!,
-              width: 1,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.grey[300]!,
+                width: 1,
+              ),
             ),
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4),
-                image: DecorationImage(
-                  image: NetworkImage(
-                    user.avatar?.url ??
-                        'https://ionicframework.com/docs/img/demos/avatar.svg',
-                  ),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    user.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
+          child: Row(
+            children: [
+              if (user.avatar?.url != null && user.avatar!.url.isNotEmpty)
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    image: DecorationImage(
+                      image: NetworkImage(user.avatar!.url),
+                      fit: BoxFit.cover,
                     ),
                   ),
-                  if (user.position != null)
-                    Text(
-                      user.position!,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.grey[600],
+                )
+              else
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Center(
+                    child: Text(
+                      _getInitials(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                ],
+                  ),
+                ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    if (user.position != null)
+                      Text(
+                        user.position!,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          color: AppColors.grey2,
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

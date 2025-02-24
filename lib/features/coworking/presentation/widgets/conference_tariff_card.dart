@@ -3,32 +3,42 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/features/coworking/domain/models/coworking_service.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 
 class ConferenceTariffCard extends StatelessWidget {
   final CoworkingTariff tariff;
-  final VoidCallback? onTap;
   final VoidCallback? onDetailsTap;
   final int coworkingId;
+  final int serviceId;
 
   const ConferenceTariffCard({
     super.key,
     required this.tariff,
     required this.coworkingId,
-    this.onTap,
+    required this.serviceId,
     this.onDetailsTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onDetailsTap,
+      onTap: () {
+        context.pushNamed(
+          'conference_room_details',
+          pathParameters: {
+            'id': coworkingId.toString(),
+            'serviceId': serviceId.toString(),
+            'tariffId': tariff.id.toString(),
+          },
+        );
+      },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
+        margin: const EdgeInsets.only(bottom: 24),
         child: Stack(
           children: [
             if (tariff.image?.url != null && tariff.image!.url.isNotEmpty)
               Container(
-                height: 200,
+                height: 240,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                   image: DecorationImage(
@@ -50,7 +60,7 @@ class ConferenceTariffCard extends StatelessWidget {
               )
             else
               Container(
-                height: 200,
+                height: 240,
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(8),

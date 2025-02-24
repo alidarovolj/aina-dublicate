@@ -2,14 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
+import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/features/coworking/domain/models/order_response.dart';
 import 'package:aina_flutter/features/coworking/domain/services/order_service.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/features/coworking/presentation/widgets/qr_modal.dart';
 import 'package:aina_flutter/features/coworking/presentation/widgets/history_modal.dart';
-import 'package:aina_flutter/features/payment/widgets/payment_webview.dart';
-import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
-import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 import 'package:webview_flutter/webview_flutter.dart'
     show
         WebViewController,
@@ -18,7 +16,6 @@ import 'package:webview_flutter/webview_flutter.dart'
         JavaScriptMode,
         NavigationDecision;
 import 'package:shimmer/shimmer.dart';
-import 'package:flutter/foundation.dart';
 import 'package:aina_flutter/features/payment/pages/payment_success_page.dart';
 import 'package:aina_flutter/features/payment/pages/payment_failure_page.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -280,228 +277,462 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
     if (isLoading || order == null) {
       return Scaffold(
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.black,
-          foregroundColor: Colors.white,
-          title: Text('orders.detail.title'.tr()),
-          centerTitle: true,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).pop(),
+        body: Container(
+          color: AppColors.primary,
+          child: SafeArea(
+            child: Stack(
+              children: [
+                Container(
+                  color: AppColors.appBg,
+                  margin: const EdgeInsets.only(top: 64),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (order!.status == 'PENDING' &&
+                                    timerText.isNotEmpty)
+                                  Container(
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.only(bottom: 20),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      '${'orders.status.pending'.tr()} $timerText',
+                                      style: const TextStyle(
+                                        color: Color(0xFFD42525),
+                                        fontSize: 16,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                Container(
+                                  margin: const EdgeInsets.only(bottom: 28),
+                                  child: Column(
+                                    children: [
+                                      _buildInfoRow(
+                                          'orders.detail.profile'.tr(),
+                                          '+7(747)236-75-03'),
+                                      _buildInfoRow(
+                                          'orders.detail.service'.tr(),
+                                          order!.service?.category?.title ??
+                                              ''),
+                                      _buildInfoRow('orders.detail.name'.tr(),
+                                          order!.service?.title ?? ''),
+                                      _buildInfoRow(
+                                          'orders.detail.start_date'.tr(),
+                                          _formatDateTime(order!.startAt)),
+                                      _buildInfoRow(
+                                          'orders.detail.end_date'.tr(),
+                                          _formatDateTime(order!.endAt)),
+                                      if (order!.service?.type !=
+                                          'COWORKING') ...[
+                                        _buildInfoRow(
+                                            'orders.detail.duration'.tr(),
+                                            '${order!.duration} ч.'),
+                                        _buildInfoRow(
+                                            'orders.detail.price_per_hour'.tr(),
+                                            '${order!.service?.price} ₸'),
+                                      ],
+                                      if (order!.appliedQuotaHours > 0)
+                                        _buildInfoRow(
+                                          'Лимитные счета',
+                                          '${order!.appliedQuotaHours.toStringAsFixed(1)} ч.',
+                                        ),
+                                      if (order!.appliedDiscountPercentage > 0)
+                                        _buildInfoRow(
+                                          'Скидка',
+                                          '${order!.appliedDiscountPercentage.toStringAsFixed(0)}%',
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 14),
+                                  margin: const EdgeInsets.only(bottom: 28),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: AppColors.grey2),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'orders.detail.total_price'.tr(),
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          color: Color(0xFF1A1A1A),
+                                        ),
+                                      ),
+                                      Text(
+                                        '${order!.total} ₸',
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          color: Color(0xFF1A1A1A),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text.rich(
+                                  TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text:
+                                            '${'orders.detail.payment_confirmation'.tr()} ',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: Color(0xFF666666),
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: 'orders.detail.rules'.tr(),
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: AppColors.blueGrey,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.only(
+                          left: 12,
+                          right: 12,
+                          top: 28,
+                          bottom: MediaQuery.of(context).padding.bottom + 28,
+                        ),
+                        child: Column(
+                          children: [
+                            if ((order!.history?.isNotEmpty ?? false) &&
+                                order!.status != 'PENDING')
+                              CustomButton(
+                                label: 'orders.detail.history'.tr(),
+                                onPressed: () {
+                                  showHistoryModal(context, order!.history!);
+                                },
+                                isFullWidth: true,
+                                type: ButtonType.normal,
+                              ),
+                            if (order!.status == 'PENDING')
+                              Padding(
+                                padding: const EdgeInsets.only(top: 20),
+                                child: CustomButton(
+                                  label: 'orders.detail.pay'.tr(),
+                                  onPressed: () async {
+                                    try {
+                                      setState(() => isLoading = true);
+                                      await _initiatePayment();
+                                    } catch (e) {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content: Text(
+                                                  'orders.payment.error'.tr())),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  isFullWidth: true,
+                                  type: ButtonType.normal,
+                                ),
+                              ),
+                            if (order!.status == 'PAID' &&
+                                order!.paymentMethod?.type == 'EPAY')
+                              Padding(
+                                padding: const EdgeInsets.only(top: 20),
+                                child: CustomButton(
+                                  label: 'orders.detail.download_fiscal'.tr(),
+                                  onPressed: _downloadFiscal,
+                                  isFullWidth: true,
+                                  type: ButtonType.normal,
+                                ),
+                              ),
+                            if (order!.service?.type != 'COWORKING' &&
+                                order!.status != 'PENDING' &&
+                                order!.status != 'CANCELLED' &&
+                                order!.status == 'PAID')
+                              Padding(
+                                padding: const EdgeInsets.only(top: 20),
+                                child: CustomButton(
+                                  label: 'orders.detail.download_qr'.tr(),
+                                  onPressed: () async {
+                                    try {
+                                      final qrHtml = await widget.orderService
+                                          .getOrderQRHtml(widget.orderId);
+                                      if (mounted) {
+                                        showQRModal(context, qrHtml);
+                                      }
+                                    } catch (e) {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(content: Text('Error: $e')),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  isFullWidth: true,
+                                  type: ButtonType.normal,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                CustomHeader(
+                  title: '${'orders.detail.title'.tr()} №${order!.id}',
+                  type: HeaderType.close,
+                ),
+              ],
+            ),
           ),
         ),
-        body: _buildSkeletonLoader(),
       );
     }
 
     return Scaffold(
       backgroundColor: AppColors.appBg,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text('${'orders.detail.title'.tr()} №${order!.id}'),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
+      body: Container(
+        color: AppColors.primary,
+        child: SafeArea(
+          child: Stack(
+            children: [
+              Container(
+                color: AppColors.appBg,
+                margin: const EdgeInsets.only(top: 64),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (order!.status == 'PENDING' && timerText.isNotEmpty)
-                      Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(bottom: 20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          '${'orders.status.pending'.tr()} $timerText',
-                          style: const TextStyle(
-                            color: Color(0xFFD42525),
-                            fontSize: 16,
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (order!.status == 'PENDING' &&
+                                  timerText.isNotEmpty)
+                                Container(
+                                  width: double.infinity,
+                                  margin: const EdgeInsets.only(bottom: 20),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    '${'orders.status.pending'.tr()} $timerText',
+                                    style: const TextStyle(
+                                      color: Color(0xFFD42525),
+                                      fontSize: 16,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 28),
+                                child: Column(
+                                  children: [
+                                    _buildInfoRow('orders.detail.profile'.tr(),
+                                        '+7(747)236-75-03'),
+                                    _buildInfoRow('orders.detail.service'.tr(),
+                                        order!.service?.category?.title ?? ''),
+                                    _buildInfoRow('orders.detail.name'.tr(),
+                                        order!.service?.title ?? ''),
+                                    _buildInfoRow(
+                                        'orders.detail.start_date'.tr(),
+                                        _formatDateTime(order!.startAt)),
+                                    _buildInfoRow('orders.detail.end_date'.tr(),
+                                        _formatDateTime(order!.endAt)),
+                                    if (order!.service?.type !=
+                                        'COWORKING') ...[
+                                      _buildInfoRow(
+                                          'orders.detail.duration'.tr(),
+                                          '${order!.duration} ч.'),
+                                      _buildInfoRow(
+                                          'orders.detail.price_per_hour'.tr(),
+                                          '${order!.service?.price} ₸'),
+                                    ],
+                                    if (order!.appliedQuotaHours > 0)
+                                      _buildInfoRow(
+                                        'Лимитные счета',
+                                        '${order!.appliedQuotaHours.toStringAsFixed(1)} ч.',
+                                      ),
+                                    if (order!.appliedDiscountPercentage > 0)
+                                      _buildInfoRow(
+                                        'Скидка',
+                                        '${order!.appliedDiscountPercentage.toStringAsFixed(0)}%',
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 14),
+                                margin: const EdgeInsets.only(bottom: 28),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: AppColors.grey2),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'orders.detail.total_price'.tr(),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        color: Color(0xFF1A1A1A),
+                                      ),
+                                    ),
+                                    Text(
+                                      '${order!.total} ₸',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        color: Color(0xFF1A1A1A),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text:
+                                          '${'orders.detail.payment_confirmation'.tr()} ',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Color(0xFF666666),
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: 'orders.detail.rules'.tr(),
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.blueGrey,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                          textAlign: TextAlign.center,
                         ),
                       ),
+                    ),
                     Container(
-                      margin: const EdgeInsets.only(bottom: 28),
+                      padding: EdgeInsets.only(
+                        left: 12,
+                        right: 12,
+                        top: 28,
+                        bottom: MediaQuery.of(context).padding.bottom + 28,
+                      ),
                       child: Column(
                         children: [
-                          _buildInfoRow(
-                              'orders.detail.profile'.tr(), '+7(747)236-75-03'),
-                          _buildInfoRow('orders.detail.service'.tr(),
-                              order!.service?.category?.title ?? ''),
-                          _buildInfoRow('orders.detail.name'.tr(),
-                              order!.service?.title ?? ''),
-                          _buildInfoRow('orders.detail.start_date'.tr(),
-                              _formatDateTime(order!.startAt)),
-                          _buildInfoRow('orders.detail.end_date'.tr(),
-                              _formatDateTime(order!.endAt)),
-                          if (order!.service?.type != 'COWORKING') ...[
-                            _buildInfoRow('orders.detail.duration'.tr(),
-                                '${order!.duration} ч.'),
-                            _buildInfoRow('orders.detail.price_per_hour'.tr(),
-                                '${order!.service?.price} ₸'),
-                          ],
-                          if (order!.appliedQuotaHours > 0)
-                            _buildInfoRow(
-                              'Лимитные счета',
-                              '${order!.appliedQuotaHours.toStringAsFixed(1)} ч.',
+                          if ((order!.history?.isNotEmpty ?? false) &&
+                              order!.status != 'PENDING')
+                            CustomButton(
+                              label: 'orders.detail.history'.tr(),
+                              onPressed: () {
+                                showHistoryModal(context, order!.history!);
+                              },
+                              isFullWidth: true,
+                              type: ButtonType.normal,
                             ),
-                          if (order!.appliedDiscountPercentage > 0)
-                            _buildInfoRow(
-                              'Скидка',
-                              '${order!.appliedDiscountPercentage.toStringAsFixed(0)}%',
+                          if (order!.status == 'PENDING')
+                            Padding(
+                              padding: const EdgeInsets.only(top: 20),
+                              child: CustomButton(
+                                label: 'orders.detail.pay'.tr(),
+                                onPressed: () async {
+                                  try {
+                                    setState(() => isLoading = true);
+                                    await _initiatePayment();
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                'orders.payment.error'.tr())),
+                                      );
+                                    }
+                                  }
+                                },
+                                isFullWidth: true,
+                                type: ButtonType.normal,
+                              ),
                             ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 14),
-                      margin: const EdgeInsets.only(bottom: 28),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFE6E6E6)),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'orders.detail.total_price'.tr(),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Color(0xFF1A1A1A),
+                          if (order!.status == 'PAID' &&
+                              order!.paymentMethod?.type == 'EPAY')
+                            Padding(
+                              padding: const EdgeInsets.only(top: 20),
+                              child: CustomButton(
+                                label: 'orders.detail.download_fiscal'.tr(),
+                                onPressed: _downloadFiscal,
+                                isFullWidth: true,
+                                type: ButtonType.normal,
+                              ),
                             ),
-                          ),
-                          Text(
-                            '${order!.total} ₸',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Color(0xFF1A1A1A),
+                          if (order!.service?.type != 'COWORKING' &&
+                              order!.status != 'PENDING' &&
+                              order!.status != 'CANCELLED' &&
+                              order!.status == 'PAID')
+                            Padding(
+                              padding: const EdgeInsets.only(top: 20),
+                              child: CustomButton(
+                                label: 'orders.detail.download_qr'.tr(),
+                                onPressed: () async {
+                                  try {
+                                    final qrHtml = await widget.orderService
+                                        .getOrderQRHtml(widget.orderId);
+                                    if (mounted) {
+                                      showQRModal(context, qrHtml);
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(content: Text('Error: $e')),
+                                      );
+                                    }
+                                  }
+                                },
+                                isFullWidth: true,
+                                type: ButtonType.normal,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text:
-                                '${'orders.detail.payment_confirmation'.tr()} ',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF666666),
-                            ),
-                          ),
-                          TextSpan(
-                            text: 'orders.detail.rules'.tr(),
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF4D4D4D),
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
                         ],
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
+              CustomHeader(
+                title: '${'orders.detail.title'.tr()} №${order!.id}',
+                type: HeaderType.close,
+              ),
+            ],
           ),
-          Container(
-            padding: EdgeInsets.only(
-              left: 12,
-              right: 12,
-              top: 28,
-              bottom: MediaQuery.of(context).padding.bottom + 28,
-            ),
-            child: Column(
-              children: [
-                if (order!.history?.isNotEmpty ?? false)
-                  CustomButton(
-                    label: 'orders.detail.history'.tr(),
-                    onPressed: () {
-                      showHistoryModal(context, order!.history!);
-                    },
-                    isFullWidth: true,
-                    type: ButtonType.normal,
-                  ),
-                if (order!.status == 'PENDING')
-                  Padding(
-                    padding: const EdgeInsets.only(top: 20),
-                    child: CustomButton(
-                      label: 'orders.detail.pay'.tr(),
-                      onPressed: () async {
-                        try {
-                          setState(() => isLoading = true);
-                          await _initiatePayment();
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text('orders.payment.error'.tr())),
-                            );
-                          }
-                        }
-                      },
-                      isFullWidth: true,
-                      type: ButtonType.normal,
-                    ),
-                  ),
-                if (order!.status == 'PAID' &&
-                    order!.paymentMethod?.type == 'EPAY')
-                  Padding(
-                    padding: const EdgeInsets.only(top: 20),
-                    child: CustomButton(
-                      label: 'orders.detail.download_fiscal'.tr(),
-                      onPressed: _downloadFiscal,
-                      isFullWidth: true,
-                      type: ButtonType.normal,
-                    ),
-                  ),
-                if (order!.service?.type != 'COWORKING' &&
-                    order!.status != 'PENDING' &&
-                    order!.status != 'CANCELLED' &&
-                    order!.status == 'PAID')
-                  Padding(
-                    padding: const EdgeInsets.only(top: 20),
-                    child: CustomButton(
-                      label: 'orders.detail.download_qr'.tr(),
-                      onPressed: () async {
-                        try {
-                          final qrHtml = await widget.orderService
-                              .getOrderQRHtml(widget.orderId);
-                          if (mounted) {
-                            showQRModal(context, qrHtml);
-                          }
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error: $e')),
-                            );
-                          }
-                        }
-                      },
-                      isFullWidth: true,
-                      type: ButtonType.normal,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -633,185 +864,209 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
   }
 
   Widget _buildSkeletonLoader() {
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
+    return Container(
+      color: AppColors.primary,
+      child: SafeArea(
+        child: Stack(
+          children: [
+            Container(
+              color: AppColors.appBg,
+              margin: const EdgeInsets.only(top: 64),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Timer section skeleton
-                  Shimmer.fromColors(
-                    baseColor: Colors.grey[100]!,
-                    highlightColor: Colors.grey[300]!,
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      margin: const EdgeInsets.only(bottom: 20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Container(
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(4),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Timer section skeleton
+                            Shimmer.fromColors(
+                              baseColor: Colors.grey[100]!,
+                              highlightColor: Colors.grey[300]!,
+                              child: Container(
+                                width: double.infinity,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                margin: const EdgeInsets.only(bottom: 20),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Container(
+                                  height: 16,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[300],
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            // Info section skeleton
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 28),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Column(
+                                children: List.generate(
+                                  7, // Количество строк информации
+                                  (index) => Padding(
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 8),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Shimmer.fromColors(
+                                          baseColor: Colors.grey[100]!,
+                                          highlightColor: Colors.grey[300]!,
+                                          child: Container(
+                                            width: 120,
+                                            height: 16,
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey[300],
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                          ),
+                                        ),
+                                        Shimmer.fromColors(
+                                          baseColor: Colors.grey[100]!,
+                                          highlightColor: Colors.grey[300]!,
+                                          child: Container(
+                                            width: 150,
+                                            height: 16,
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey[300],
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            // Total price box skeleton
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 28),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(4),
+                                border:
+                                    Border.all(color: const Color(0xFFE6E6E6)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Shimmer.fromColors(
+                                    baseColor: Colors.grey[100]!,
+                                    highlightColor: Colors.grey[300]!,
+                                    child: Container(
+                                      width: 100,
+                                      height: 16,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[300],
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                    ),
+                                  ),
+                                  Shimmer.fromColors(
+                                    baseColor: Colors.grey[100]!,
+                                    highlightColor: Colors.grey[300]!,
+                                    child: Container(
+                                      width: 80,
+                                      height: 16,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[300],
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Rules text skeleton
+                            Shimmer.fromColors(
+                              baseColor: Colors.grey[100]!,
+                              highlightColor: Colors.grey[300]!,
+                              child: Container(
+                                width: double.infinity,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
 
-                  // Info section skeleton
+                  // Bottom buttons skeleton
                   Container(
-                    margin: const EdgeInsets.only(bottom: 28),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
+                    padding: EdgeInsets.only(
+                      left: 12,
+                      right: 12,
+                      top: 28,
+                      bottom: MediaQuery.of(context).padding.bottom + 28,
+                    ),
+                    decoration: const BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
                     ),
                     child: Column(
-                      children: List.generate(
-                        7, // Количество строк информации
-                        (index) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Shimmer.fromColors(
-                                baseColor: Colors.grey[100]!,
-                                highlightColor: Colors.grey[300]!,
-                                child: Container(
-                                  width: 120,
-                                  height: 16,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[300],
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                ),
-                              ),
-                              Shimmer.fromColors(
-                                baseColor: Colors.grey[100]!,
-                                highlightColor: Colors.grey[300]!,
-                                child: Container(
-                                  width: 150,
-                                  height: 16,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[300],
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Total price box skeleton
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 28),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: const Color(0xFFE6E6E6)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Shimmer.fromColors(
                           baseColor: Colors.grey[100]!,
                           highlightColor: Colors.grey[300]!,
                           child: Container(
-                            width: 100,
-                            height: 16,
+                            width: double.infinity,
+                            height: 48,
                             decoration: BoxDecoration(
                               color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                         ),
+                        const SizedBox(height: 12),
                         Shimmer.fromColors(
                           baseColor: Colors.grey[100]!,
                           highlightColor: Colors.grey[300]!,
                           child: Container(
-                            width: 80,
-                            height: 16,
+                            width: double.infinity,
+                            height: 48,
                             decoration: BoxDecoration(
                               color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-
-                  // Rules text skeleton
-                  Shimmer.fromColors(
-                    baseColor: Colors.grey[100]!,
-                    highlightColor: Colors.grey[300]!,
-                    child: Container(
-                      width: double.infinity,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
-          ),
+            CustomHeader(
+              title: 'orders.detail.title'.tr(),
+              type: HeaderType.close,
+            ),
+          ],
         ),
-
-        // Bottom buttons skeleton
-        Container(
-          padding: EdgeInsets.only(
-            left: 12,
-            right: 12,
-            top: 28,
-            bottom: MediaQuery.of(context).padding.bottom + 28,
-          ),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-          ),
-          child: Column(
-            children: [
-              Shimmer.fromColors(
-                baseColor: Colors.grey[100]!,
-                highlightColor: Colors.grey[300]!,
-                child: Container(
-                  width: double.infinity,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Shimmer.fromColors(
-                baseColor: Colors.grey[100]!,
-                highlightColor: Colors.grey[300]!,
-                child: Container(
-                  width: double.infinity,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

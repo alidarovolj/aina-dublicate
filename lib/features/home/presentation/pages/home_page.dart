@@ -14,6 +14,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:aina_flutter/core/api/api_client.dart';
 import 'package:aina_flutter/core/utils/button_navigation_handler.dart';
 import 'package:aina_flutter/core/types/button_config.dart';
+import 'package:aina_flutter/core/router/route_observer.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -22,36 +23,62 @@ class HomePage extends ConsumerStatefulWidget {
   ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends ConsumerState<HomePage> {
+class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref
-          .read(promotionsProvider.notifier)
-          .fetchPromotions(context, forceRefresh: true);
-      _checkAuthAndFetchProfile();
+      if (mounted) {
+        ref
+            .read(promotionsProvider.notifier)
+            .fetchPromotions(context, forceRefresh: true);
+        ref.read(bannersProvider.notifier).fetchBanners(forceRefresh: true);
+        _checkAuthAndFetchProfile();
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref
+            .read(promotionsProvider.notifier)
+            .fetchPromotions(context, forceRefresh: true);
+        ref.read(bannersProvider.notifier).fetchBanners(forceRefresh: true);
+        _checkAuthAndFetchProfile();
+      }
     });
   }
 
   Future<void> _checkAuthAndFetchProfile() async {
+    if (!mounted) return;
+
     final authState = ref.read(authProvider);
     if (authState.isAuthenticated && authState.token != null) {
       try {
         final response = await ApiClient().dio.get('/api/promenade/profile');
+        if (!mounted) return;
         if (response.data['success'] == true && response.data['data'] != null) {
-          // Update user data in auth state if needed
           ref.read(authProvider.notifier).updateUserData(response.data['data']);
         }
       } catch (error) {
         // print('Error fetching profile: $error');
       }
     }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override

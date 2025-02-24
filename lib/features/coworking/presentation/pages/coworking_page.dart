@@ -190,6 +190,9 @@ class CoworkingPage extends ConsumerWidget {
                           ),
                         ),
                       ),
+                      const SliverToBoxAdapter(
+                        child: SizedBox(height: 30),
+                      ),
                     ],
                   ),
                 ),

@@ -11,8 +11,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/core/providers/requests/auth/profile.dart';
 import 'dart:io';
 import 'package:aina_flutter/core/widgets/avatar_edit_widget.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   final int mallId;
@@ -546,10 +546,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   ),
                 ),
                 if (trailingIcon != null)
-                  Icon(
-                    trailingIcon,
-                    color: Colors.grey,
-                    size: 24,
+                  SvgPicture.asset(
+                    'lib/core/assets/icons/chevron-right.svg',
+                    width: 24,
+                    height: 24,
+                    color: AppColors.almostBlack,
                   ),
               ],
             ),

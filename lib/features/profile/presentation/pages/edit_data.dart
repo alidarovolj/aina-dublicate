@@ -455,8 +455,7 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            SizedBox(
-                              width: 100,
+                            Expanded(
                               child: _buildGenderOption(
                                   'profile.settings.edit.gender.female'.tr(),
                                   ref.read(selectedGenderProvider), (value) {
@@ -466,8 +465,7 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                                 _markDirty();
                               }),
                             ),
-                            SizedBox(
-                              width: 100,
+                            Expanded(
                               child: _buildGenderOption(
                                   'profile.settings.edit.gender.male'.tr(),
                                   ref.read(selectedGenderProvider), (value) {
@@ -668,7 +666,7 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 4),
           Text(
             value,
             style: const TextStyle(fontSize: 16, color: AppColors.textDarkGrey),

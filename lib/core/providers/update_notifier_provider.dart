@@ -143,7 +143,7 @@ class UpdateNotifier extends StateNotifier<UpdateNotifierState> {
           // Для Android мы не можем получить точную версию,
           // поэтому просто увеличиваем текущую версию
           final parts = currentVersion.split('.');
-          if (parts.length > 0) {
+          if (parts.isNotEmpty) {
             final major = int.parse(parts[0]);
             storeVersion = '${major + 1}.0.0';
           }
@@ -166,8 +166,12 @@ class UpdateNotifier extends StateNotifier<UpdateNotifierState> {
       print('   Серверная: $serverParts');
 
       // Добавляем нули, если в какой-то версии меньше частей
-      while (currentParts.length < 3) currentParts.add(0);
-      while (serverParts.length < 3) serverParts.add(0);
+      while (currentParts.length < 3) {
+        currentParts.add(0);
+      }
+      while (serverParts.length < 3) {
+        serverParts.add(0);
+      }
 
       // Определяем тип обновления
       bool isHardUpdate = serverParts[0] > currentParts[0];

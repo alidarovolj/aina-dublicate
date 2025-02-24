@@ -124,6 +124,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           const TextTheme(
             bodyMedium: TextStyle(
               letterSpacing: 0,
+              height: 1.3,
             ),
           ),
         ),

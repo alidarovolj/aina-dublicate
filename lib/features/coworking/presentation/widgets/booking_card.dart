@@ -37,7 +37,7 @@ class _BookingCardState extends State<BookingCard> {
   void _startPaymentTimer() {
     timer?.cancel();
 
-    if (widget.order.createdAt == null || widget.order.status != 'PENDING') {
+    if (widget.order.status != 'PENDING') {
       return;
     }
 

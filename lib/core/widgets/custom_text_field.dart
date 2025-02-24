@@ -97,23 +97,23 @@ class CustomTextField extends StatelessWidget {
           vertical: 10,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-            color: Colors.grey[300]!,
+          borderRadius: BorderRadius.circular(4),
+          borderSide: const BorderSide(
+            color: AppColors.darkGrey,
           ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(4),
           borderSide: BorderSide(
             color: isValid == null
-                ? Colors.grey[300]!
+                ? AppColors.darkGrey
                 : isValid!
                     ? Colors.green
                     : Colors.red,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(4),
           borderSide: BorderSide(
             color: isValid == null
                 ? Colors.blue
@@ -123,21 +123,21 @@ class CustomTextField extends StatelessWidget {
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(4),
           borderSide: const BorderSide(
             color: Colors.red,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(4),
           borderSide: const BorderSide(
             color: Colors.red,
           ),
         ),
         disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-            color: Colors.grey[300]!,
+          borderRadius: BorderRadius.circular(4),
+          borderSide: const BorderSide(
+            color: AppColors.darkGrey,
           ),
         ),
       ),

@@ -5,9 +5,33 @@ import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shimmer/shimmer.dart';
 
 class CoworkingListPage extends ConsumerWidget {
   const CoworkingListPage({super.key});
+
+  Widget _buildSkeletonLoader() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(AppLength.xs),
+      itemCount: 5, // Show 5 skeleton items
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppLength.xs),
+          child: Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -22,7 +46,7 @@ class CoworkingListPage extends ConsumerWidget {
               color: AppColors.appBg,
               margin: const EdgeInsets.only(top: 64), // Height of CustomHeader
               child: buildingsAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => _buildSkeletonLoader(),
                 error: (error, stack) => Center(
                   child: Text('coworking.error'.tr(args: [error.toString()])),
                 ),

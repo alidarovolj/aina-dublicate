@@ -17,7 +17,14 @@ import 'dart:io' show Platform;
 import 'package:dio/dio.dart';
 
 class PhoneNumberInputScreen extends ConsumerStatefulWidget {
-  const PhoneNumberInputScreen({super.key});
+  final String? buildingId;
+  final String? buildingType;
+
+  const PhoneNumberInputScreen({
+    super.key,
+    this.buildingId,
+    this.buildingType,
+  });
 
   @override
   ConsumerState<PhoneNumberInputScreen> createState() =>
@@ -80,14 +87,34 @@ class _PhoneNumberInputScreenState
 
         if (Platform.isAndroid) {
           try {
-            await SmsAutoFill().listenForCode;
+            SmsAutoFill().listenForCode;
           } catch (e) {
             print('Error starting SMS listener: $e');
           }
         }
 
         if (mounted) {
-          context.go('/code', extra: _phoneController.text);
+          final currentRoute = GoRouterState.of(context).uri.toString();
+          String? buildingId;
+          String? buildingType;
+
+          // Extract building info from current route
+          final routeParts = currentRoute.split('/');
+          if (routeParts.length >= 3) {
+            if (routeParts[1] == 'coworking') {
+              buildingType = 'coworking';
+              buildingId = routeParts[2];
+            } else if (routeParts[1] == 'malls') {
+              buildingType = 'mall';
+              buildingId = routeParts[2];
+            }
+          }
+
+          context.go('/code', extra: {
+            'phoneNumber': _phoneController.text,
+            'buildingId': widget.buildingId,
+            'buildingType': widget.buildingType,
+          });
         }
       } catch (e) {
         if (mounted) {
@@ -162,6 +189,7 @@ class _PhoneNumberInputScreenState
                             Row(
                               children: [
                                 Container(
+                                  height: 52,
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 14,
                                     vertical: 12,
@@ -169,18 +197,25 @@ class _PhoneNumberInputScreenState
                                   decoration: BoxDecoration(
                                     color: AppColors.white,
                                     borderRadius: const BorderRadius.all(
-                                        Radius.circular(12)),
+                                        Radius.circular(AppLength.four)),
                                     border: Border.all(
                                       width: 1,
-                                      color: AppColors.lightGrey,
+                                      color: AppColors.darkGrey,
                                     ),
                                   ),
-                                  child: const Text(
-                                    '+7',
-                                    style: TextStyle(
-                                      fontSize: AppLength.lg,
-                                      color: AppColors.textSecondary,
-                                    ),
+                                  child: const Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        '+7',
+                                        style: TextStyle(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -189,10 +224,10 @@ class _PhoneNumberInputScreenState
                                     decoration: BoxDecoration(
                                       color: AppColors.white,
                                       borderRadius:
-                                          BorderRadius.circular(AppLength.xs),
+                                          BorderRadius.circular(AppLength.four),
                                       border: Border.all(
                                         width: 1,
-                                        color: AppColors.lightGrey,
+                                        color: AppColors.darkGrey,
                                       ),
                                     ),
                                     child: TextField(
@@ -207,7 +242,7 @@ class _PhoneNumberInputScreenState
                                         contentPadding:
                                             const EdgeInsets.symmetric(
                                           horizontal: 14,
-                                          vertical: 4,
+                                          vertical: 14,
                                         ),
                                       ),
                                       style: const TextStyle(

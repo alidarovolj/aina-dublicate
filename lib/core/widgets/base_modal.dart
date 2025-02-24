@@ -72,6 +72,7 @@ class BaseModal extends StatelessWidget {
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textDarkGrey,
+                  height: 1.2,
                 ),
               ),
             if (title != null) const SizedBox(height: 8),
@@ -80,9 +81,10 @@ class BaseModal extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 16,
                 color: AppColors.textDarkGrey,
+                height: 1.3,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             if (buttons.length == 1)
               CustomButton(
                 label: buttons[0].label,

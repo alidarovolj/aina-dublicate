@@ -59,7 +59,7 @@ class CustomTabBar extends StatelessWidget {
                     BlendMode.srcIn,
                   ),
                   child: SvgPicture.asset(
-                    "lib/core/assets/icons/tabbar_offers.svg",
+                    "lib/core/assets/icons/sale.svg",
                     width: 28,
                     height: 28,
                   ),

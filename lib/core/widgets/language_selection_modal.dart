@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:aina_flutter/core/styles/constants.dart';
 
 class LanguageSelectionModal extends StatelessWidget {
   const LanguageSelectionModal({super.key});

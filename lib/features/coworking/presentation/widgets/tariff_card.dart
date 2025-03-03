@@ -7,10 +7,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
-import 'package:aina_flutter/app.dart';
 import 'package:aina_flutter/core/providers/requests/auth/profile.dart'
     as profile;
 

@@ -104,7 +104,7 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
             ModalButton(
               label: 'qr.success.to_profile'.tr(),
               onPressed: () async {
-                context.pushNamed('profile',
+                context.pushNamed('mall_profile',
                     pathParameters: {'id': widget.mallId.toString()});
               },
               textColor: AppColors.secondary,
@@ -113,10 +113,7 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
             ModalButton(
               label: 'qr.success.back_to_promotion'.tr(),
               onPressed: () async {
-                context.pushNamed('promotion_details', pathParameters: {
-                  'id': widget.mallId.toString(),
-                  'promotionId': widget.promotionId.toString(),
-                });
+                context.pop();
               },
               type: ButtonType.light,
             ),

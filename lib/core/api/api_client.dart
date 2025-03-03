@@ -5,7 +5,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
 import 'dart:async';
 import 'package:aina_flutter/app.dart';
-import 'package:go_router/go_router.dart';
 
 // Cache entry class to store response with metadata
 class _CacheEntry {

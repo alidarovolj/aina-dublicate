@@ -48,6 +48,7 @@ import 'package:aina_flutter/features/splash/presentation/pages/splash_page.dart
 import 'package:aina_flutter/features/home/presentation/pages/home_promotions_page.dart';
 import 'package:aina_flutter/features/menu/presentation/pages/menu_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/conference_room_details_page.dart';
+import 'package:aina_flutter/features/home/presentation/pages/home_bookings_page.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -113,6 +114,11 @@ class AppRouter {
             path: '/promotions',
             name: 'promotions',
             builder: (context, state) => const HomePromotionsPage(),
+          ),
+          GoRoute(
+            path: '/bookings',
+            name: 'bookings',
+            builder: (context, state) => const HomeBookingsPage(),
           ),
           GoRoute(
             path: '/stores',

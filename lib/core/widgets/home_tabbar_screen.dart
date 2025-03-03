@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
 import 'main_custom_tabbar.dart';
 
@@ -26,14 +25,14 @@ class _HomeTabBarScreenState extends ConsumerState<HomeTabBarScreen>
   final Map<String, int> _routesToTabIndex = {
     '/home': 0,
     '/promotions': 1,
-    '/coworking/*/bookings': 2,
+    '/bookings': 2,
     '/menu': 3,
   };
 
   final Map<int, String> _tabIndexToRoutes = {
     0: '/home',
     1: '/promotions',
-    2: '/coworking/*/bookings',
+    2: '/bookings',
     3: '/menu',
   };
 
@@ -80,25 +79,9 @@ class _HomeTabBarScreenState extends ConsumerState<HomeTabBarScreen>
     final route = _tabIndexToRoutes[index];
     if (route != null && widget.currentRoute != route) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
-        // Handle bookings tab
-        if (index == 2) {
-          final buildingsAsync = ref.read(buildingsProvider);
-          final buildings = buildingsAsync.when(
-            data: (data) => data,
-            loading: () => null,
-            error: (_, __) => null,
-          );
-
-          if (buildings != null && buildings['coworking'] != null) {
-            final coworkings = buildings['coworking'] as List;
-            if (coworkings.isNotEmpty) {
-              final firstCoworkingId = coworkings[0].id;
-              context.go('/coworking/$firstCoworkingId/bookings');
-              return;
-            }
-          }
-          // If no coworkings found, go to coworking list
-          context.go('/coworking');
+        // Handle menu tab
+        if (index == 3) {
+          context.go('/menu');
           return;
         }
 

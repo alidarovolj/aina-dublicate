@@ -5,6 +5,7 @@
     "mall_not_found": "Mall not found"
   },
   "bookings": {
+    "title": "Bookings",
     "active": "Active",
     "history": "History",
     "auth_required": "Sign in to see your bookings",
@@ -140,7 +141,7 @@
     "processing": "Please wait...",
     "success": {
       "title": "Your receipt has been registered. Congratulations!",
-      "message": "Coupon numbers for participation in the draw: ${tickets}\n\nThe number is stored in your profile, in the \"Coupons\" section.",
+      "message": "Coupon numbers for participation in the draw: {tickets}\n\nThe number is stored in your profile, in the \"Coupons\" section.",
       "to_profile": "To profile",
       "back_to_promotion": "Back to promotion"
     },
@@ -482,14 +483,15 @@
   },
   "communication": {
     "modal": {
-      "title": "Request type:",
+      "title": "Contact Us",
       "whatsapp": {
-        "button_text": "App-related questions",
-        "description": "questions about tariffs, payments, booking issues, app functionality, etc."
+        "button_text": "Write to WhatsApp",
+        "description": "Questions about tariffs, payment, booking issues, app functionality, etc.",
+        "error": "Failed to open WhatsApp"
       },
       "create_request": {
-        "button_text": "Create request",
-        "description": "questions about office rental, repairs, cleaning, event organization, etc."
+        "button_text": "Create Request",
+        "description": "Questions about office rental, repairs, cleaning, event organization, etc."
       }
     }
   },
@@ -568,9 +570,9 @@
   },
   "conference_room": {
     "capacity": "Capacity:",
-    "capacity_value": "up to %s people",
+    "capacity_value": "up to {} people",
     "price": "Price:",
-    "price_value": "%s ₸ / hour",
+    "price_value": "{} ₸ / hour",
     "book": "Book now",
     "similar_services": "Similar services:"
   }

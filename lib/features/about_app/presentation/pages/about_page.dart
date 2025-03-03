@@ -12,6 +12,7 @@ import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:aina_flutter/core/api/api_client.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:aina_flutter/core/providers/requests/settings_provider.dart';
 
 class AboutPage extends ConsumerStatefulWidget {
   const AboutPage({super.key});
@@ -23,11 +24,33 @@ class AboutPage extends ConsumerStatefulWidget {
 class _AboutPageState extends ConsumerState<AboutPage> {
   late Future<PackageInfo> _packageInfo;
 
-  Future<void> _launchURL(String urlString) async {
-    final url = Uri.parse(urlString);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    } else {
+  Future<void> _launchURL(String? urlString) async {
+    if (urlString == null || urlString.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('about.url_not_available'.tr()),
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      final url = Uri.parse(urlString);
+      final launched = await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('about.url_error'.tr()),
+          ),
+        );
+      }
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -155,18 +178,35 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                     Column(
                       children: [
                         // Links
-                        _buildLink('about.license_agreement'.tr(), () {
-                          _launchURL(
-                              'https://aina-fashion-products-photos.object.pscloud.io/files/docs/Lic.pdf');
-                        }),
-                        _buildLink('about.public_offer'.tr(), () {
-                          _launchURL(
-                              'https://aina-fashion-products-photos.object.pscloud.io/files/docs/consent.pdf');
-                        }),
-                        _buildLink('about.privacy_policy'.tr(), () {
-                          _launchURL(
-                              'https://aina-fashion-products-photos.object.pscloud.io/files/docs/policy.pdf');
-                        }),
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final settingsAsync = ref.watch(settingsProvider);
+
+                            return settingsAsync.when(
+                              loading: () => const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                              error: (error, stack) => Center(
+                                child: Text('about.settings_error'.tr()),
+                              ),
+                              data: (settings) => Column(
+                                children: [
+                                  _buildLink('about.license_agreement'.tr(),
+                                      () {
+                                    _launchURL(settings.userAgreementFile?.url);
+                                  }),
+                                  _buildLink('about.public_offer'.tr(), () {
+                                    _launchURL(settings.publicOfferFile?.url);
+                                  }),
+                                  _buildLink('about.privacy_policy'.tr(), () {
+                                    _launchURL(settings
+                                        .confidentialityAgreementFile?.url);
+                                  }),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
                     if (ref.watch(authProvider).isAuthenticated)

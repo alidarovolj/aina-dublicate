@@ -102,13 +102,14 @@ class CommunityDetailsModal extends StatelessWidget {
                         ),
                       ),
                       if (user.position != null) const SizedBox(height: 4),
-                      Text(
-                        user.position!,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.grey2,
+                      if (user.position != null)
+                        Text(
+                          user.position!,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppColors.grey2,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),

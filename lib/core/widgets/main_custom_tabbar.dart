@@ -79,7 +79,7 @@ class MainCustomTabBar extends StatelessWidget {
                     height: 28,
                   ),
                 ),
-                text: 'coworking_tabs.bookings'.tr()),
+                text: 'bookings.title'.tr()),
             Tab(
                 icon: ColorFiltered(
                   colorFilter: ColorFilter.mode(

@@ -132,15 +132,16 @@ class CommunicationModal {
             }
           }
         },
-        type: ButtonType.filled,
+        type: ButtonType.bordered,
         isFullWidth: true,
+        backgroundColor: AppColors.appBg,
         icon: Padding(
           padding: const EdgeInsets.only(right: 8),
           child: SvgPicture.asset(
             'lib/core/assets/icons/whatsapp.svg',
             width: 24,
             height: 24,
-            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+            colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
           ),
         ),
       ),

@@ -9,12 +9,13 @@ import 'package:aina_flutter/core/widgets/upper_header.dart';
 import 'package:aina_flutter/core/providers/requests/banners_provider.dart';
 import 'package:aina_flutter/core/widgets/buildings_list.dart';
 import 'package:aina_flutter/core/providers/requests/promotions_provider.dart';
-import 'package:aina_flutter/core/widgets/promotions_block.dart';
+import 'package:aina_flutter/core/widgets/home_promotions_block.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:aina_flutter/core/api/api_client.dart';
 import 'package:aina_flutter/core/utils/button_navigation_handler.dart';
 import 'package:aina_flutter/core/types/button_config.dart';
 import 'package:aina_flutter/core/router/route_observer.dart';
+import 'package:aina_flutter/core/providers/requests/settings_provider.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -33,6 +34,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
             .read(promotionsProvider.notifier)
             .fetchPromotions(context, forceRefresh: true);
         ref.read(bannersProvider.notifier).fetchBanners(forceRefresh: true);
+        ref.refresh(settingsProvider);
         _checkAuthAndFetchProfile();
       }
     });
@@ -59,6 +61,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
             .read(promotionsProvider.notifier)
             .fetchPromotions(context, forceRefresh: true);
         ref.read(bannersProvider.notifier).fetchBanners(forceRefresh: true);
+        ref.refresh(settingsProvider);
         _checkAuthAndFetchProfile();
       }
     });
@@ -161,7 +164,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
                   child: BuildingsList(),
                 ),
                 const SliverToBoxAdapter(
-                  child: PromotionsBlock(
+                  child: HomePromotionsBlock(
                     showTitle: true,
                     showViewAll: false,
                     showDivider: false,

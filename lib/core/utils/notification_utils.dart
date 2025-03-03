@@ -9,7 +9,7 @@ Future<void> setupNotificationListeners() async {
     print('Setting up notification listeners...');
 
     // Ensure Firebase is initialized
-    if (!Firebase.apps.isEmpty) {
+    if (Firebase.apps.isNotEmpty) {
       await Firebase.initializeApp();
       print('Firebase initialized');
     }

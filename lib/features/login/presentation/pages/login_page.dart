@@ -15,6 +15,7 @@ import 'package:sms_autofill/sms_autofill.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io' show Platform;
 import 'package:dio/dio.dart';
+import 'package:aina_flutter/core/providers/requests/settings_provider.dart';
 
 class PhoneNumberInputScreen extends ConsumerStatefulWidget {
   final String? buildingId;
@@ -139,6 +140,43 @@ class _PhoneNumberInputScreenState
             isLoading = false;
           });
         }
+      }
+    }
+  }
+
+  Future<void> _launchURL(String? urlString) async {
+    if (urlString == null || urlString.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('about.url_not_available'.tr()),
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      final url = Uri.parse(urlString);
+      final launched = await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('about.url_error'.tr()),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('about.url_error'.tr()),
+          ),
+        );
       }
     }
   }
@@ -272,52 +310,62 @@ class _PhoneNumberInputScreenState
                             ),
                             const SizedBox(height: AppLength.xxxl),
                             Center(
-                              child: RichText(
-                                textAlign: TextAlign.start,
-                                text: TextSpan(
-                                  style: const TextStyle(
-                                    fontSize: AppLength.sm,
-                                    color: AppColors.textDarkGrey,
-                                  ),
-                                  children: [
-                                    TextSpan(
-                                      text: 'auth.terms_prefix'.tr(),
-                                    ),
-                                    TextSpan(
-                                      text: 'auth.terms_of_service'.tr(),
-                                      style: const TextStyle(
-                                        color: AppColors.textLinkColor,
-                                        decoration: TextDecoration.underline,
+                              child: Consumer(
+                                builder: (context, ref, child) {
+                                  final settingsAsync =
+                                      ref.watch(settingsProvider);
+
+                                  return settingsAsync.when(
+                                    loading: () =>
+                                        const CircularProgressIndicator(),
+                                    error: (error, stack) =>
+                                        Text('about.settings_error'.tr()),
+                                    data: (settings) => RichText(
+                                      textAlign: TextAlign.start,
+                                      text: TextSpan(
+                                        style: const TextStyle(
+                                          fontSize: AppLength.sm,
+                                          color: AppColors.textDarkGrey,
+                                        ),
+                                        children: [
+                                          TextSpan(
+                                            text: 'auth.terms_prefix'.tr(),
+                                          ),
+                                          TextSpan(
+                                            text: 'auth.terms_of_service'.tr(),
+                                            style: const TextStyle(
+                                              color: AppColors.textLinkColor,
+                                              decoration:
+                                                  TextDecoration.underline,
+                                            ),
+                                            recognizer: TapGestureRecognizer()
+                                              ..onTap = () {
+                                                _launchURL(settings
+                                                    .userAgreementFile?.url);
+                                              },
+                                          ),
+                                          TextSpan(
+                                            text: 'auth.terms_and'.tr(),
+                                          ),
+                                          TextSpan(
+                                            text: 'auth.privacy_policy'.tr(),
+                                            style: const TextStyle(
+                                              color: AppColors.textLinkColor,
+                                              decoration:
+                                                  TextDecoration.underline,
+                                            ),
+                                            recognizer: TapGestureRecognizer()
+                                              ..onTap = () {
+                                                _launchURL(settings
+                                                    .confidentialityAgreementFile
+                                                    ?.url);
+                                              },
+                                          ),
+                                        ],
                                       ),
-                                      recognizer: TapGestureRecognizer()
-                                        ..onTap = () async {
-                                          final url = Uri.parse(
-                                              'https://aina-fashion-products-photos.object.pscloud.io/files/docs/Lic.pdf');
-                                          if (await canLaunchUrl(url)) {
-                                            await launchUrl(url);
-                                          }
-                                        },
                                     ),
-                                    TextSpan(
-                                      text: 'auth.terms_and'.tr(),
-                                    ),
-                                    TextSpan(
-                                      text: 'auth.privacy_policy'.tr(),
-                                      style: const TextStyle(
-                                        color: AppColors.textLinkColor,
-                                        decoration: TextDecoration.underline,
-                                      ),
-                                      recognizer: TapGestureRecognizer()
-                                        ..onTap = () async {
-                                          final url = Uri.parse(
-                                              'https://aina-fashion-products-photos.object.pscloud.io/files/docs/policy.pdf');
-                                          if (await canLaunchUrl(url)) {
-                                            await launchUrl(url);
-                                          }
-                                        },
-                                    ),
-                                  ],
-                                ),
+                                  );
+                                },
                               ),
                             ),
                             const SizedBox(height: AppLength.body),

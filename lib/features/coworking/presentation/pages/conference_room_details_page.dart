@@ -8,8 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:aina_flutter/core/widgets/base_slider.dart';
-import 'package:aina_flutter/core/types/slides.dart' as slides;
 import 'package:aina_flutter/features/coworking/providers/coworking_service_provider.dart'
     as service_provider;
 import 'package:aina_flutter/features/coworking/presentation/widgets/conference_tariff_card.dart'

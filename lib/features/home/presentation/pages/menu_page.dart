@@ -199,13 +199,6 @@ class _MenuPageState extends ConsumerState<MenuPage> {
                                       'menu.notifications'.tr(),
                                       () => context.push('/notifications')),
                                 ],
-                                if (!isAuthenticated) ...[
-                                  _buildMenuItem(
-                                    context,
-                                    'menu.contact_us'.tr(),
-                                    () {},
-                                  ),
-                                ],
                                 const SizedBox(height: 32),
                                 _buildMenuItem(
                                   context,

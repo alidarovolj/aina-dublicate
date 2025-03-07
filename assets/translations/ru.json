@@ -511,6 +511,8 @@
   },
   "contact_admin": {
     "title": "Обратная связь",
+    "category_label": "Категория",
+    "category_placeholder": "Выберите категорию",
     "comment_label": "Комментарий",
     "comment_placeholder": "Опишите ваш вопрос",
     "phone_label": "Телефон для связи",

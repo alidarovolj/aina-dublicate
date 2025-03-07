@@ -229,44 +229,76 @@ class _ShopCategoriesGridState extends ConsumerState<ShopCategoriesGrid> {
             final sortedCategories = [...categories]
               ..sort((a, b) => a.order.compareTo(b.order));
 
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
+            return Padding(
               padding: const EdgeInsets.all(AppLength.xs),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.5,
-              ),
-              itemCount:
-                  sortedCategories.length > 6 ? 6 : sortedCategories.length,
-              itemBuilder: (context, index) {
-                final category = sortedCategories[index];
-                return GestureDetector(
-                  onTap: () {
-                    context.goNamed(
-                      'mall_stores',
-                      pathParameters: {'id': currentMallId},
-                      queryParameters: {'category': category.id.toString()},
-                    );
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      category.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  mainAxisExtent: 212,
+                ),
+                itemCount:
+                    sortedCategories.length > 6 ? 6 : sortedCategories.length,
+                itemBuilder: (context, index) {
+                  final category = sortedCategories[index];
+                  return GestureDetector(
+                    onTap: () {
+                      context.goNamed(
+                        'mall_stores',
+                        pathParameters: {'id': currentMallId},
+                        queryParameters: {'category': category.id.toString()},
+                      );
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
                       ),
-                      textAlign: TextAlign.center,
+                      child: Column(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: category.image != null
+                                ? Image.network(
+                                    category.image!.url,
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: 168,
+                                  )
+                                : Container(
+                                    height: 168,
+                                    color: Colors.grey[200],
+                                    child: const Icon(Icons.category),
+                                  ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              top: 8,
+                              bottom: 4,
+                              left: 4,
+                              right: 4,
+                            ),
+                            child: Text(
+                              category.title.toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textDarkGrey,
+                                letterSpacing: 1,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             );
           },
         ),

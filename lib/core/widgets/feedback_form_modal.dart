@@ -40,17 +40,89 @@ class _FeedbackFormModalState extends ConsumerState<FeedbackFormModal> {
 
   Widget _buildSkeletonLoader() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title skeleton
+          // Категория (выпадающий список)
           Shimmer.fromColors(
             baseColor: Colors.grey[300]!,
             highlightColor: Colors.grey[100]!,
             child: Container(
-              height: 24,
-              width: 200,
+              height: 56,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Заголовок комментария
+          Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(
+              height: 20,
+              width: 120,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Поле комментария
+          Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(
+              height: 200,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Заголовок телефона
+          Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(
+              height: 20,
+              width: 150,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Поле телефона
+          Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(
+              height: 56,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Примечание о ответе
+          Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(
+              height: 20,
+              width: double.infinity,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(4),
@@ -58,26 +130,8 @@ class _FeedbackFormModalState extends ConsumerState<FeedbackFormModal> {
             ),
           ),
           const SizedBox(height: 24),
-          // Form fields skeleton
-          ...List.generate(
-            3,
-            (index) => Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Shimmer.fromColors(
-                baseColor: Colors.grey[300]!,
-                highlightColor: Colors.grey[100]!,
-                child: Container(
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Button skeleton
-          const SizedBox(height: 24),
+
+          // Кнопка отправки
           Shimmer.fromColors(
             baseColor: Colors.grey[300]!,
             highlightColor: Colors.grey[100]!,
@@ -172,6 +226,7 @@ class _FeedbackFormModalState extends ConsumerState<FeedbackFormModal> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 12),
             Text(
               'contact_admin.title'.tr(),
               style: const TextStyle(
@@ -184,102 +239,107 @@ class _FeedbackFormModalState extends ConsumerState<FeedbackFormModal> {
             categoriesAsync.when(
               loading: () => _buildSkeletonLoader(),
               error: (_, __) => const Text('Error loading categories'),
-              data: (categories) => Theme(
-                data: Theme.of(context).copyWith(
-                  inputDecorationTheme: const InputDecorationTheme(
-                    border: OutlineInputBorder(),
-                    filled: true,
-                    fillColor: Color(0xFFF5F5F5),
-                  ),
-                ),
-                child: DropdownButtonFormField<int>(
-                  value: _form['category_id'] as int?,
-                  items: categories.map((category) {
-                    return DropdownMenuItem(
-                      value: category.id,
-                      child: Text(
-                        category.title,
-                        style: const TextStyle(color: AppColors.primary),
+              data: (categories) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Theme(
+                    data: Theme.of(context).copyWith(
+                      inputDecorationTheme: const InputDecorationTheme(
+                        border: OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Color(0xFFF5F5F5),
                       ),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _form['category_id'] = value;
-                    });
-                  },
-                  validator: (value) => value == null
-                      ? 'contact_admin.errors.required'.tr()
-                      : null,
-                  decoration: InputDecoration(
-                    labelText: 'contact_admin.category_label'.tr(),
-                    hintText: 'contact_admin.category_placeholder'.tr(),
+                    ),
+                    child: DropdownButtonFormField<int>(
+                      value: _form['category_id'] as int?,
+                      items: categories.map((category) {
+                        return DropdownMenuItem(
+                          value: category.id,
+                          child: Text(
+                            category.title,
+                            style: const TextStyle(color: AppColors.primary),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _form['category_id'] = value;
+                        });
+                      },
+                      validator: (value) => value == null
+                          ? 'contact_admin.errors.required'.tr()
+                          : null,
+                      decoration: InputDecoration(
+                        labelText: 'contact_admin.category_label'.tr(),
+                        hintText: 'contact_admin.category_placeholder'.tr(),
+                      ),
+                      isExpanded: true,
+                    ),
                   ),
-                  isExpanded: true,
-                ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'contact_admin.comment_label'.tr(),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textDarkGrey,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _descriptionController,
+                    maxLines: 10,
+                    validator: (value) => value?.isEmpty ?? true
+                        ? 'contact_admin.errors.required'.tr()
+                        : null,
+                    style: const TextStyle(color: AppColors.primary),
+                    decoration: InputDecoration(
+                      hintText: 'contact_admin.comment_placeholder'.tr(),
+                      border: const OutlineInputBorder(),
+                      filled: true,
+                      fillColor: const Color(0xFFF5F5F5),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'contact_admin.phone_label'.tr(),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textDarkGrey,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    validator: (value) => value?.isEmpty ?? true
+                        ? 'contact_admin.errors.required'.tr()
+                        : null,
+                    style: const TextStyle(color: AppColors.primary),
+                    decoration: InputDecoration(
+                      hintText: 'contact_admin.phone_placeholder'.tr(),
+                      border: const OutlineInputBorder(),
+                      filled: true,
+                      fillColor: const Color(0xFFF5F5F5),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'contact_admin.response_note'.tr(),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textDarkGrey,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  CustomButton(
+                    label: 'contact_admin.submit_button'.tr(),
+                    onPressed: _submitForm,
+                    isLoading: _isLoading,
+                    type: ButtonType.filled,
+                    isFullWidth: true,
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'contact_admin.comment_label'.tr(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textDarkGrey,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _descriptionController,
-              maxLines: 10,
-              validator: (value) => value?.isEmpty ?? true
-                  ? 'contact_admin.errors.required'.tr()
-                  : null,
-              style: const TextStyle(color: AppColors.primary),
-              decoration: InputDecoration(
-                hintText: 'contact_admin.comment_placeholder'.tr(),
-                border: const OutlineInputBorder(),
-                filled: true,
-                fillColor: const Color(0xFFF5F5F5),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'contact_admin.phone_label'.tr(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textDarkGrey,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              validator: (value) => value?.isEmpty ?? true
-                  ? 'contact_admin.errors.required'.tr()
-                  : null,
-              style: const TextStyle(color: AppColors.primary),
-              decoration: InputDecoration(
-                hintText: 'contact_admin.phone_placeholder'.tr(),
-                border: const OutlineInputBorder(),
-                filled: true,
-                fillColor: const Color(0xFFF5F5F5),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'contact_admin.response_note'.tr(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textDarkGrey,
-              ),
-            ),
-            const SizedBox(height: 24),
-            CustomButton(
-              label: 'contact_admin.submit_button'.tr(),
-              onPressed: _submitForm,
-              isLoading: _isLoading,
-              type: ButtonType.filled,
-              isFullWidth: true,
             ),
             SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
           ],

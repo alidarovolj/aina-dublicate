@@ -508,6 +508,8 @@
   },
   "contact_admin": {
     "title": "Feedback",
+    "category_label": "Category",
+    "category_placeholder": "Select a category",
     "comment_label": "Comment",
     "comment_placeholder": "Describe your question",
     "phone_label": "Contact phone",

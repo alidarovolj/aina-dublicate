@@ -46,10 +46,10 @@ final homeOrdersProvider =
   ]);
 
   final Map<String, List<OrderResponse>> newResult = {
-    'active': (results[0] as List<dynamic>)
+    'active': (results[0])
         .map((item) => OrderResponse.fromJson(item as Map<String, dynamic>))
         .toList(),
-    'inactive': (results[1] as List<dynamic>)
+    'inactive': (results[1])
         .map((item) => OrderResponse.fromJson(item as Map<String, dynamic>))
         .toList(),
   };

@@ -30,181 +30,184 @@ class CoworkingPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final buildingsAsync = ref.watch(buildingsProvider);
 
-    return buildingsAsync.when(
-      loading: () => Scaffold(
-        backgroundColor: AppColors.primary,
-        body: SafeArea(
-          child: Stack(
-            children: [
-              _buildSkeletonLoader(),
-              const CustomHeader(
-                title: '',
-                type: HeaderType.close,
-              ),
-            ],
-          ),
-        ),
-      ),
-      error: (error, stack) => Center(child: Text('Error: $error')),
-      data: (buildings) {
-        final coworking = (buildings['coworking'] ?? [])
-            .firstWhere((building) => building.id == coworkingId);
-
-        return Scaffold(
+    return PopScope(
+      canPop: false,
+      child: buildingsAsync.when(
+        loading: () => Scaffold(
           backgroundColor: AppColors.primary,
           body: SafeArea(
             child: Stack(
               children: [
-                Container(
-                  color: AppColors.appBg,
-                  margin:
-                      const EdgeInsets.only(top: 64), // Height of CustomHeader
-                  child: CustomScrollView(
-                    physics: const ClampingScrollPhysics(),
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: DescriptionBlock(
-                          text: coworking.description ?? '',
-                        ),
-                      ),
-                      SliverToBoxAdapter(
-                        child: CarouselWithIndicator(
-                          slideList: (coworking.images)
-                              .map((image) => slides.Slide(
-                                    id: image.id,
-                                    name: coworking.name,
-                                    previewImage: slides.PreviewImage(
-                                      id: image.id,
-                                      uuid: image.uuid,
-                                      url: image.url,
-                                      urlOriginal: image.urlOriginal,
-                                      orderColumn: image.orderColumn,
-                                      collectionName: image.collectionName,
-                                    ),
-                                    order: image.orderColumn,
-                                  ))
-                              .toList(),
-                          showIndicators: true,
-                          showGradient: true,
-                          height: 200,
-                        ),
-                      ),
-                      const SliverToBoxAdapter(
-                        child: SizedBox(height: 20),
-                      ),
-                      // Coworking Info
-                      SliverToBoxAdapter(
-                        child: MallInfoBlock(
-                          workingHours:
-                              coworking.workingHours ?? '10:00 - 22:00',
-                          address: coworking.address ?? '',
-                          onCallTap: () async {
-                            final phoneNumber = coworking.phone;
-                            final uri = Uri.parse('tel:$phoneNumber');
-                            if (await canLaunchUrl(uri)) {
-                              await launchUrl(uri);
-                            }
-                          },
-                          onMapTap: () async {
-                            final lat = coworking.latitude;
-                            final lng = coworking.longitude;
-                            // 2GIS KZ route URL
-                            final uri = Uri.parse(
-                                'https://2gis.kz/almaty/routeSearch/to/$lng,$lat');
-                            if (await canLaunchUrl(uri)) {
-                              await launchUrl(uri,
-                                  mode: LaunchMode.externalApplication);
-                            }
-                          },
-                        ),
-                      ),
-                      const SliverToBoxAdapter(
-                        child: SizedBox(height: 28),
-                      ),
-                      // Services Section
-                      SliverToBoxAdapter(
-                        child: ServiceCard(
-                          coworkingId: coworkingId.toString(),
-                        ),
-                      ),
-                      // Promotions Section
-                      SliverToBoxAdapter(
-                        child: Consumer(
-                          builder: (context, ref, child) {
-                            final newsAsync = ref.watch(newsProvider(
-                              NewsParams(
-                                page: 1,
-                                buildingId: coworkingId.toString(),
-                              ),
-                            ));
-
-                            final hasNews = newsAsync.whenOrNull(
-                                  data: (newsResponse) =>
-                                      newsResponse.data.isNotEmpty,
-                                ) ??
-                                false;
-
-                            return PromotionsBlock(
-                              mallId: coworkingId.toString(),
-                              showTitle: true,
-                              showViewAll: true,
-                              showDivider: hasNews,
-                              cardType: PromotionCardType.medium,
-                              onViewAllTap: () {
-                                context.pushNamed(
-                                  'coworking_promotions',
-                                  pathParameters: {
-                                    'id': coworkingId.toString()
-                                  },
-                                );
-                              },
-                              emptyBuilder: (context) =>
-                                  const SizedBox.shrink(),
-                            );
-                          },
-                        ),
-                      ),
-                      // News Section
-                      SliverToBoxAdapter(
-                        child: NewsBlock(
-                          showTitle: true,
-                          showViewAll: true,
-                          showDivider: false,
-                          showGradient: true,
-                          cardType: NewsCardType.full,
-                          buildingId: coworkingId.toString(),
-                          onViewAllTap: () {
-                            context.pushNamed(
-                              'coworking_news',
-                              pathParameters: {'id': coworkingId.toString()},
-                            );
-                          },
-                          emptyBuilder: (context) => const Center(
-                            child: Text(
-                              'В данный момент нет новостей',
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: AppColors.textDarkGrey,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SliverToBoxAdapter(
-                        child: SizedBox(height: 30),
-                      ),
-                    ],
-                  ),
-                ),
-                CustomHeader(
-                  title: coworking.name,
+                _buildSkeletonLoader(),
+                const CustomHeader(
+                  title: '',
                   type: HeaderType.close,
                 ),
               ],
             ),
           ),
-        );
-      },
+        ),
+        error: (error, stack) => Center(child: Text('Error: $error')),
+        data: (buildings) {
+          final coworking = (buildings['coworking'] ?? [])
+              .firstWhere((building) => building.id == coworkingId);
+
+          return Scaffold(
+            backgroundColor: AppColors.primary,
+            body: SafeArea(
+              child: Stack(
+                children: [
+                  Container(
+                    color: AppColors.appBg,
+                    margin: const EdgeInsets.only(
+                        top: 64), // Height of CustomHeader
+                    child: CustomScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: DescriptionBlock(
+                            text: coworking.description ?? '',
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: CarouselWithIndicator(
+                            slideList: (coworking.images)
+                                .map((image) => slides.Slide(
+                                      id: image.id,
+                                      name: coworking.name,
+                                      previewImage: slides.PreviewImage(
+                                        id: image.id,
+                                        uuid: image.uuid,
+                                        url: image.url,
+                                        urlOriginal: image.urlOriginal,
+                                        orderColumn: image.orderColumn,
+                                        collectionName: image.collectionName,
+                                      ),
+                                      order: image.orderColumn,
+                                    ))
+                                .toList(),
+                            showIndicators: true,
+                            showGradient: true,
+                            height: 200,
+                          ),
+                        ),
+                        const SliverToBoxAdapter(
+                          child: SizedBox(height: 20),
+                        ),
+                        // Coworking Info
+                        SliverToBoxAdapter(
+                          child: MallInfoBlock(
+                            workingHours:
+                                coworking.workingHours ?? '10:00 - 22:00',
+                            address: coworking.address ?? '',
+                            onCallTap: () async {
+                              final phoneNumber = coworking.phone;
+                              final uri = Uri.parse('tel:$phoneNumber');
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri);
+                              }
+                            },
+                            onMapTap: () async {
+                              final lat = coworking.latitude;
+                              final lng = coworking.longitude;
+                              // 2GIS KZ route URL
+                              final uri = Uri.parse(
+                                  'https://2gis.kz/almaty/routeSearch/to/$lng,$lat');
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri,
+                                    mode: LaunchMode.externalApplication);
+                              }
+                            },
+                          ),
+                        ),
+                        const SliverToBoxAdapter(
+                          child: SizedBox(height: 28),
+                        ),
+                        // Services Section
+                        SliverToBoxAdapter(
+                          child: ServiceCard(
+                            coworkingId: coworkingId.toString(),
+                          ),
+                        ),
+                        // Promotions Section
+                        SliverToBoxAdapter(
+                          child: Consumer(
+                            builder: (context, ref, child) {
+                              final newsAsync = ref.watch(newsProvider(
+                                NewsParams(
+                                  page: 1,
+                                  buildingId: coworkingId.toString(),
+                                ),
+                              ));
+
+                              final hasNews = newsAsync.whenOrNull(
+                                    data: (newsResponse) =>
+                                        newsResponse.data.isNotEmpty,
+                                  ) ??
+                                  false;
+
+                              return PromotionsBlock(
+                                mallId: coworkingId.toString(),
+                                showTitle: true,
+                                showViewAll: true,
+                                showDivider: hasNews,
+                                cardType: PromotionCardType.medium,
+                                onViewAllTap: () {
+                                  context.pushNamed(
+                                    'coworking_promotions',
+                                    pathParameters: {
+                                      'id': coworkingId.toString()
+                                    },
+                                  );
+                                },
+                                emptyBuilder: (context) =>
+                                    const SizedBox.shrink(),
+                              );
+                            },
+                          ),
+                        ),
+                        // News Section
+                        SliverToBoxAdapter(
+                          child: NewsBlock(
+                            showTitle: true,
+                            showViewAll: true,
+                            showDivider: false,
+                            showGradient: true,
+                            cardType: NewsCardType.full,
+                            buildingId: coworkingId.toString(),
+                            onViewAllTap: () {
+                              context.pushNamed(
+                                'coworking_news',
+                                pathParameters: {'id': coworkingId.toString()},
+                              );
+                            },
+                            emptyBuilder: (context) => const Center(
+                              child: Text(
+                                'В данный момент нет новостей',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: AppColors.textDarkGrey,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SliverToBoxAdapter(
+                          child: SizedBox(height: 30),
+                        ),
+                      ],
+                    ),
+                  ),
+                  CustomHeader(
+                    title: coworking.name,
+                    type: HeaderType.close,
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 

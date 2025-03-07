@@ -16,13 +16,12 @@ import 'package:webview_flutter/webview_flutter.dart'
         JavaScriptMode,
         NavigationDecision;
 import 'package:shimmer/shimmer.dart';
-import 'package:aina_flutter/features/payment/pages/payment_success_page.dart';
-import 'package:aina_flutter/features/payment/pages/payment_failure_page.dart';
+import 'package:aina_flutter/features/general/payment/pages/payment_success_page.dart';
+import 'package:aina_flutter/features/general/payment/pages/payment_failure_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/app.dart';
 import 'package:flutter/gestures.dart';
-import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/providers/requests/settings_provider.dart';
 
 class OrderDetailsPage extends ConsumerStatefulWidget {

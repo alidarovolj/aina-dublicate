@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'coworking_custom_tabbar.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
+import 'package:aina_flutter/core/services/storage_service.dart';
 
 class CoworkingTabBarScreen extends ConsumerStatefulWidget {
   final String currentRoute;
@@ -106,40 +107,31 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
           return;
         }
 
-        if (index == 4) {
-          // only profile tab requires auth
-          final authState = ref.read(authProvider);
-          if (!authState.isAuthenticated) {
-            context.go('/login');
-            return;
-          }
-        }
-
         final coworkingId = _getCoworkingId();
         if (coworkingId == null) {
-          context.go('/coworking');
+          context.push('/coworking');
           return;
         }
 
         switch (index) {
           case 0:
-            context.goNamed('coworking_details',
+            context.pushNamed('coworking_details',
                 pathParameters: {'id': coworkingId});
             break;
           case 1:
-            context.goNamed('coworking_community',
+            context.pushNamed('coworking_community',
                 pathParameters: {'id': coworkingId});
             break;
           case 2:
-            context.goNamed('coworking_services',
+            context.pushNamed('coworking_services',
                 pathParameters: {'id': coworkingId});
             break;
           case 3:
-            context.goNamed('coworking_bookings',
+            context.pushNamed('coworking_bookings',
                 pathParameters: {'id': coworkingId});
             break;
           case 4:
-            context.goNamed('coworking_profile',
+            context.pushNamed('coworking_profile',
                 pathParameters: {'id': coworkingId});
             break;
         }

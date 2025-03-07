@@ -5,6 +5,8 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/providers/requests/stories_provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class StoryList extends ConsumerStatefulWidget {
   const StoryList({super.key});
@@ -35,107 +37,144 @@ class _StoryListState extends ConsumerState<StoryList> {
 
     return stories.when(
       loading: () => _buildSkeletonLoader(),
-      error: (error, stack) => const SizedBox.shrink(),
-      data: (storiesList) {
-        if (storiesList.isEmpty) {
-          return const SizedBox.shrink();
-        }
+      error: (error, stack) {
+        print('❌ Ошибка при загрузке историй: $error');
+
+        // Проверяем, содержит ли ошибка код 500
+        final is500Error = error.toString().contains('500') ||
+            error.toString().contains('Internal Server Error');
 
         return Container(
           color: AppColors.primary,
+          height: 120,
+          width: double.infinity,
           child: SafeArea(
             child: Container(
-              height: 120,
-              padding: const EdgeInsets.symmetric(
-                  vertical: AppLength.xs, horizontal: AppLength.xs),
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
+              height: 100,
+              margin: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.red.shade100,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red, width: 2),
               ),
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: storiesList.length,
-                itemBuilder: (context, index) {
-                  final story = storiesList[index];
-                  // print(
-                  //     'Story $index: ${story.name}, ${story.previewImage}');
-                  return Container(
-                    width: 80,
-                    margin: const EdgeInsets.only(right: AppLength.four),
-                    child: Column(
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            markStoryAsRead(index);
-                            showGeneralDialog(
-                              context: context,
-                              barrierDismissible: true,
-                              barrierLabel: MaterialLocalizations.of(context)
-                                  .modalBarrierDismissLabel,
-                              barrierColor: AppColors.primary.withOpacity(0.5),
-                              transitionDuration:
-                                  const Duration(milliseconds: 300),
-                              pageBuilder:
-                                  (context, animation, secondaryAnimation) {
-                                return StoryDetailsPage(
-                                  stories: stories.valueOrNull
-                                          ?.map((story) => story)
-                                          .toList() ??
-                                      [],
-                                  initialIndex: index,
-                                  onStoryRead: (readIndex) {
-                                    markStoryAsRead(readIndex);
-                                  },
-                                );
-                              },
-                            );
-                          },
-                          child: Container(
-                            width: 68,
-                            height: 68,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: story.read
-                                    ? AppColors.primary
-                                    : AppColors.secondary,
-                                width: 2,
-                              ),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(2.0),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(100),
-                                child: Image.network(
-                                  story.previewImage ?? '',
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(Icons.error),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          story.name ?? '',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.white,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  );
+              child: ErrorRefreshWidget(
+                onRefresh: () {
+                  print('🔄 Обновление историй...');
+                  ref.refresh(storiesProvider);
                 },
+                errorMessage: is500Error
+                    ? 'stories.error.server'.tr()
+                    : 'stories.error.loading'.tr(),
+                refreshText: 'common.refresh'.tr(),
+                isCompact: true,
+                isServerError: is500Error,
+                backgroundColor: Colors.transparent,
+                textColor: Colors.red.shade900,
+                errorColor: Colors.red,
+                icon: Icons.warning_amber_rounded,
               ),
             ),
           ),
         );
       },
+      data: (storiesList) {
+        if (storiesList.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return _buildStoriesList(storiesList);
+      },
+    );
+  }
+
+  Widget _buildStoriesList(List<Story> stories) {
+    return Container(
+      color: AppColors.primary,
+      child: SafeArea(
+        child: Container(
+          height: 120,
+          padding: const EdgeInsets.symmetric(
+              vertical: AppLength.xs, horizontal: AppLength.xs),
+          decoration: const BoxDecoration(
+            color: AppColors.primary,
+          ),
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: stories.length,
+            itemBuilder: (context, index) {
+              final story = stories[index];
+              return Container(
+                width: 80,
+                margin: const EdgeInsets.only(right: AppLength.four),
+                child: Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        markStoryAsRead(index);
+                        showGeneralDialog(
+                          context: context,
+                          barrierDismissible: true,
+                          barrierLabel: MaterialLocalizations.of(context)
+                              .modalBarrierDismissLabel,
+                          barrierColor: AppColors.primary.withOpacity(0.5),
+                          transitionDuration: const Duration(milliseconds: 300),
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) {
+                            return StoryDetailsPage(
+                              stories: stories.map((story) => story).toList(),
+                              initialIndex: index,
+                              onStoryRead: (readIndex) {
+                                markStoryAsRead(readIndex);
+                              },
+                            );
+                          },
+                        );
+                      },
+                      child: Container(
+                        width: 68,
+                        height: 68,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: story.read
+                                ? AppColors.primary
+                                : AppColors.secondary,
+                            width: 2,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(2.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(100),
+                            child: Image.network(
+                              story.previewImage ?? '',
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.error),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      story.name ?? '',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ),
     );
   }
 

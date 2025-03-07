@@ -9,6 +9,7 @@ import 'package:aina_flutter/core/types/card_type.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
 
 class PromotionsBlock extends ConsumerWidget {
   final String? mallId;
@@ -60,7 +61,7 @@ class PromotionsBlock extends ConsumerWidget {
       loading: () => _buildSkeletonLoader(cardType),
       error: (error, stack) {
         // print('Error in PromotionsBlock: $error');
-        return const SizedBox.shrink();
+        return _buildErrorWidget(context, ref, error);
       },
       data: (promotions) {
         // print('Received promotions: ${promotions.length}');
@@ -139,6 +140,65 @@ class PromotionsBlock extends ConsumerWidget {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildErrorWidget(BuildContext context, WidgetRef ref, Object error) {
+    // Определяем высоту в зависимости от типа карточки
+    double height = cardType == PromotionCardType.medium
+        ? 201
+        : cardType == PromotionCardType.small
+            ? 94
+            : 200;
+
+    // Проверяем, содержит ли ошибка код 500
+    final is500Error = error.toString().contains('500') ||
+        error.toString().contains('Internal Server Error');
+
+    print('❌ Ошибка при загрузке промоакций: $error');
+
+    return Container(
+      height: height,
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppLength.xs,
+        vertical: AppLength.xs,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.red.shade100,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.red, width: 2),
+      ),
+      child: ErrorRefreshWidget(
+        onRefresh: () {
+          print('🔄 Обновление промоакций...');
+          // Используем Future.microtask для асинхронного обновления
+          Future.microtask(() async {
+            try {
+              if (mallId != null) {
+                ref.refresh(mallPromotionsProvider(mallId!));
+              } else {
+                // Используем контекст для загрузки данных
+                await ref
+                    .read(promotionsProvider.notifier)
+                    .fetchPromotions(context, forceRefresh: true);
+              }
+              print('✅ Запрос на обновление промоакций отправлен');
+            } catch (e) {
+              print('❌ Ошибка при обновлении промоакций: $e');
+            }
+          });
+        },
+        errorMessage: is500Error
+            ? 'stories.error.server'.tr()
+            : 'stories.error.loading'.tr(),
+        refreshText: 'common.refresh'.tr(),
+        icon: Icons.warning_amber_rounded,
+        isCompact: cardType == PromotionCardType.small,
+        isServerError: true,
+        errorColor: Colors.red,
+        backgroundColor: Colors.transparent,
+        textColor: Colors.red.shade900,
+      ),
     );
   }
 
@@ -279,28 +339,28 @@ class PromotionsBlock extends ConsumerWidget {
                       height: 24,
                     ),
                   ),
-                Positioned(
-                  top: 16,
-                  left: 16,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppLength.xs,
-                      vertical: AppLength.four,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text(
-                      'Moskva',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
+                // Positioned(
+                //   top: 16,
+                //   left: 16,
+                //   child: Container(
+                //     padding: const EdgeInsets.symmetric(
+                //       horizontal: AppLength.xs,
+                //       vertical: AppLength.four,
+                //     ),
+                //     decoration: BoxDecoration(
+                //       color: Colors.white,
+                //       borderRadius: BorderRadius.circular(4),
+                //     ),
+                //     child: const Text(
+                //       'Moskva',
+                //       style: TextStyle(
+                //         fontSize: 14,
+                //         color: AppColors.primary,
+                //         fontWeight: FontWeight.w500,
+                //       ),
+                //     ),
+                //   ),
+                // ),
                 Positioned(
                   bottom: 16,
                   left: 16,

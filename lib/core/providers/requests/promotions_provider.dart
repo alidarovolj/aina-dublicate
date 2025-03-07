@@ -7,13 +7,26 @@ class PromotionsProvider extends StateNotifier<AsyncValue<List<Promotion>>> {
   PromotionsProvider(this._listService) : super(const AsyncValue.loading());
 
   final RequestPromotionsService _listService;
+  bool _mounted = true;
+
+  @override
+  void dispose() {
+    _mounted = false;
+    super.dispose();
+  }
 
   Future<void> fetchPromotions(BuildContext context,
       {bool forceRefresh = false}) async {
+    if (!_mounted) return;
+
     try {
+      if (!_mounted) return;
       state = const AsyncValue.loading();
+
       final response =
           await _listService.promotions(context, forceRefresh: forceRefresh);
+
+      if (!_mounted) return;
 
       if (!response.data['success']) {
         throw Exception(
@@ -26,8 +39,10 @@ class PromotionsProvider extends StateNotifier<AsyncValue<List<Promotion>>> {
           .where((promotion) => _isValidPromotionData(promotion))
           .toList();
 
+      if (!_mounted) return;
       state = AsyncValue.data(promotions);
     } catch (error, stackTrace) {
+      if (!_mounted) return;
       state = AsyncValue.error(error, stackTrace);
     }
   }

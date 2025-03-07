@@ -4,6 +4,7 @@ import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
 import 'package:aina_flutter/core/types/building.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shimmer/shimmer.dart';
 
 class MallSelector extends ConsumerWidget {
   final String? selectedMallId;
@@ -54,7 +55,12 @@ class MallSelector extends ConsumerWidget {
                   );
                 }),
               ],
-              onChanged: onChanged,
+              onChanged: (String? newValue) {
+                // Use a post-frame callback to avoid setState during build
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  onChanged(newValue);
+                });
+              },
               icon: const Icon(
                 Icons.arrow_drop_down,
                 color: Colors.black,
@@ -67,8 +73,24 @@ class MallSelector extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const Center(
-        child: CircularProgressIndicator(),
+      loading: () => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.lightGrey,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Shimmer.fromColors(
+          baseColor: Colors.grey[100]!,
+          highlightColor: Colors.grey[300]!,
+          child: Container(
+            height: 40,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
       ),
       error: (error, stack) => Center(
         child: Text('mall_selector.error'.tr(args: [error.toString()])),

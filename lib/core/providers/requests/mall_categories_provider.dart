@@ -11,10 +11,15 @@ class MallCategoriesProvider extends StateNotifier<AsyncValue<List<Category>>> {
   final RequestMallCategoriesService _listService;
   final String mallId;
 
-  Future<void> fetchMallCategories() async {
+  Future<void> fetchMallCategories({bool forceRefresh = false}) async {
+    if (forceRefresh) {
+      state = const AsyncValue.loading();
+    }
+
     try {
       // print('Fetching mall categories...');
-      final response = await _listService.mallCategories(mallId);
+      final response =
+          await _listService.mallCategories(mallId, forceRefresh: forceRefresh);
 
       if (response == null || !response.data['success']) {
         throw Exception('Failed to fetch mall categories');

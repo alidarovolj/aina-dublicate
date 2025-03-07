@@ -10,11 +10,13 @@ import 'package:shimmer/shimmer.dart';
 class CategoriesGrid extends ConsumerWidget {
   final String mallId;
   final bool showDivider;
+  final Widget Function(BuildContext)? emptyBuilder;
 
   const CategoriesGrid({
     super.key,
     required this.mallId,
     this.showDivider = false,
+    this.emptyBuilder,
   });
 
   @override
@@ -44,10 +46,84 @@ class CategoriesGrid extends ConsumerWidget {
         ),
         categoriesAsync.when(
           loading: () => _buildSkeletonLoader(aspectRatio),
-          error: (error, stack) => Center(
-            child: Text('categories.error'.tr(args: [error.toString()])),
-          ),
+          error: (error, stack) => emptyBuilder != null
+              ? emptyBuilder!(context)
+              : Center(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: AppLength.xs,
+                      vertical: AppLength.xs,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 24.0, horizontal: 16.0),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFDDDD),
+                      borderRadius: BorderRadius.circular(8),
+                      border:
+                          Border.all(color: const Color(0xFFFF5252), width: 1),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: const Color(0xFFE53935),
+                          size: 32,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'stories.error.loading'.tr(),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFFE53935),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            final provider = ref
+                                .read(mallCategoriesProvider(mallId).notifier);
+                            provider.fetchMallCategories(forceRefresh: true);
+                          },
+                          icon: const Icon(Icons.refresh, color: Colors.white),
+                          label: Text(
+                            'common.refresh'.tr(),
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE53935),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
           data: (categories) {
+            if (categories.isEmpty) {
+              return emptyBuilder != null
+                  ? emptyBuilder!(context)
+                  : Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          'categories.empty'.tr(),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: AppColors.textDarkGrey,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+            }
+
             // Sort categories by order
             final sortedCategories = [...categories]
               ..sort((a, b) => a.order.compareTo(b.order));

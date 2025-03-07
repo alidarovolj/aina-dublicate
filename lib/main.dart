@@ -14,6 +14,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/widgets/restart_widget.dart';
 import 'package:aina_flutter/core/api/firebase_setup.dart';
 import 'package:aina_flutter/core/utils/notification_utils.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'firebase_options.dart';
+import 'package:aina_flutter/core/providers/update_notifier_provider.dart';
 
 Future<void> main() async {
   // Ensure Flutter bindings are initialized
@@ -47,7 +51,9 @@ Future<void> main() async {
   );
 
   // Initialize Firebase
-  await initializeFirebase();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // Request notification permissions
   await requestNotificationPermissions();
@@ -55,9 +61,7 @@ Future<void> main() async {
   // Set up notification listeners
   setupNotificationListeners();
 
-  // Check if user has seen onboarding
-  // final hasSeenOnboarding = await StorageService.hasSeenOnboarding();
-
+  // Запускаем приложение
   runApp(
     EasyLocalization(
       supportedLocales: const [
@@ -75,6 +79,49 @@ Future<void> main() async {
       ),
     ),
   );
+
+  // Инициализация Remote Config перенесена в _MyAppState._initializeRemoteConfigAndCheckUpdates()
+}
+
+// Отдельная функция для инициализации Remote Config
+Future<void> initializeRemoteConfig() async {
+  try {
+    // Добавляем небольшую задержку, чтобы убедиться, что Firebase полностью инициализирован
+    await Future.delayed(const Duration(seconds: 1));
+
+    final remoteConfig = FirebaseRemoteConfig.instance;
+
+    // Устанавливаем значения по умолчанию
+    await remoteConfig.setDefaults({
+      'current_ios_version': '1.0.0',
+      'current_android_version': '1.0.0',
+      'min_ios_version': '1.0.0',
+      'min_android_version': '1.0.0',
+      'force_update_message':
+          'Пожалуйста, обновите приложение для продолжения работы.'
+    });
+
+    // Получение значений при запуске
+    await remoteConfig.fetchAndActivate();
+
+    print('✅ Remote Config успешно инициализирован');
+
+    // Выводим полученные значения для проверки
+    print(
+        '📱 current_ios_version: ${remoteConfig.getString('current_ios_version')}');
+    print(
+        '📱 current_android_version: ${remoteConfig.getString('current_android_version')}');
+    print('📱 min_ios_version: ${remoteConfig.getString('min_ios_version')}');
+    print(
+        '📱 min_android_version: ${remoteConfig.getString('min_android_version')}');
+
+    // Вместо создания нового ProviderContainer, используем существующий
+    // Это предотвратит создание нового экземпляра UpdateNotifier
+    // и использование его после dispose
+  } catch (e) {
+    print('❌ Ошибка при инициализации Remote Config: $e');
+    // Продолжаем работу приложения даже при ошибке Remote Config
+  }
 }
 
 class StorageService {

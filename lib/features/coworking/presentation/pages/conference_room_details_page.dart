@@ -14,6 +14,8 @@ import 'package:aina_flutter/features/coworking/presentation/widgets/conference_
     as conference;
 import 'package:shimmer/shimmer.dart';
 import 'package:aina_flutter/features/coworking/presentation/widgets/tariff_card.dart';
+import 'package:aina_flutter/core/widgets/base_modal.dart';
+import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 
 class ConferenceRoomDetailsPage extends ConsumerWidget with AuthCheckMixin {
   final CoworkingTariff tariff;
@@ -24,6 +26,31 @@ class ConferenceRoomDetailsPage extends ConsumerWidget with AuthCheckMixin {
     required this.tariff,
     required this.coworkingId,
   });
+
+  // Check only authentication without biometric verification
+  Future<bool> checkAuth(BuildContext context, WidgetRef ref) async {
+    final authState = ref.read(authProvider);
+    final isAuthorized = authState.isAuthenticated;
+
+    if (!isAuthorized) {
+      BaseModal.show(
+        context,
+        message: 'auth.service_auth_required'.tr(),
+        buttons: [
+          ModalButton(
+            label: 'auth.register'.tr(),
+            onPressed: () {
+              context.pop();
+              context.pushNamed('login');
+            },
+          ),
+        ],
+      );
+      return false;
+    }
+
+    return true;
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -157,8 +184,7 @@ class ConferenceRoomDetailsPage extends ConsumerWidget with AuthCheckMixin {
                                       children: [
                                         CustomButton(
                                           onPressed: () async {
-                                            if (await checkAuthAndBiometric(
-                                                context, ref, coworkingId)) {
+                                            if (await checkAuth(context, ref)) {
                                               context.pushNamed(
                                                 'coworking_calendar',
                                                 pathParameters: {

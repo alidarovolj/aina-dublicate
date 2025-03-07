@@ -217,7 +217,7 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
   void _showTariffDetails(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -264,7 +264,9 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
                       child: InkWell(
                         onTap: () async {
                           if (await checkAuthAndBiometric(
-                              context, ref, coworkingId)) {
+                              dialogContext, ref, coworkingId)) {
+                            // Закрываем диалог перед навигацией
+                            Navigator.of(dialogContext).pop();
                             _navigateToCalendar(context, ref);
                           }
                         },
@@ -292,7 +294,9 @@ class TariffCard extends ConsumerWidget with AuthCheckMixin {
                     InkWell(
                       onTap: () async {
                         if (await checkAuthAndBiometric(
-                            context, ref, coworkingId)) {
+                            dialogContext, ref, coworkingId)) {
+                          // Закрываем диалог перед навигацией
+                          Navigator.of(dialogContext).pop();
                           _navigateToCalendar(context, ref);
                         }
                       },

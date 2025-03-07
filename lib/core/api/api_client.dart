@@ -1,10 +1,16 @@
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
 import 'dart:async';
 import 'package:aina_flutter/app.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:aina_flutter/core/providers/auth/auth_state.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:aina_flutter/core/services/storage_service.dart';
 
 // Cache entry class to store response with metadata
 class _CacheEntry {
@@ -74,7 +80,6 @@ class ApiClient {
   }
 
   void _updateHeaders() {
-    // print('Updating headers with locale: $_currentLocale'); // Debug print
     dio.options.headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -103,25 +108,45 @@ class ApiClient {
   void _addInterceptors() {
     // Add error interceptor for 401 responses
     dio.interceptors.add(InterceptorsWrapper(
-      onError: (error, handler) {
+      onError: (error, handler) async {
         if (error.response?.statusCode == 401) {
-          // print('Received 401 response, clearing token and redirecting...');
+          print(
+              '🔒 Получена ошибка 401 Unauthorized: ${error.requestOptions.path}');
+
           // Clear token and cache
           _token = null;
           clearCache();
           _updateHeaders();
 
+          // Очищаем все данные авторизации через StorageService
+          await StorageService.clearAuthData();
+
           // Get the navigator key to access navigation
           final context = navigatorKey.currentContext;
           if (context != null && context.mounted) {
-            // print('Context available, scheduling navigation...');
-            // Schedule navigation for next frame
-            // WidgetsBinding.instance.addPostFrameCallback((_) {
-            //   // print('Executing navigation to /login');
-            //   context.go('/home');
-            // });
-          } else {
-            // print('No valid context available for navigation');
+            // Logout user using the auth provider
+            try {
+              final container = ProviderScope.containerOf(context);
+              await container.read(authProvider.notifier).logout();
+              print('✅ Успешно выполнен logout через authProvider');
+            } catch (e) {
+              print('❌ Ошибка при вызове logout через authProvider: $e');
+            }
+
+            // Если это не запрос к профилю, то показываем сообщение и перенаправляем
+            // Запросы к профилю обрабатываются на страницах профиля
+            if (!error.requestOptions.path.contains('/api/promenade/profile')) {
+              // Show error message
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('errors.unauthorized'.tr()),
+                    behavior: SnackBarBehavior.floating,
+                    duration: const Duration(seconds: 3),
+                  ),
+                );
+              });
+            }
           }
         }
         return handler.next(error);
@@ -159,7 +184,6 @@ class ApiClient {
           final cachedEntry = _requestCache[cacheKey];
 
           if (cachedEntry != null && !cachedEntry.isExpired) {
-            // print('Returning cached response for $cacheKey');
             return handler.resolve(cachedEntry.response);
           }
         }

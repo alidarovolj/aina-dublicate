@@ -14,6 +14,8 @@ import 'package:dio/dio.dart';
 import 'core/services/deep_link_service.dart';
 import 'package:aina_flutter/core/providers/update_notifier_provider.dart';
 import 'package:aina_flutter/core/widgets/update_modal.dart';
+import 'package:aina_flutter/core/widgets/update_overlay.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 
 // Global navigator key for accessing navigation from anywhere
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -65,19 +67,53 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     // Update API client locale on initial load
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
       ApiClient().updateLocaleFromContext(context);
       // Initialize deep link service
       _deepLinkService = DeepLinkService(context);
+
       // Fetch promenade profile if user is authenticated
-      final container = ProviderScope.containerOf(context);
-      final authState = container.read(authProvider);
-      if (authState.isAuthenticated) {
-        container.read(promenadeProfileProvider);
+      try {
+        final container = ProviderScope.containerOf(context);
+        final authState = container.read(authProvider);
+        if (authState.isAuthenticated && mounted) {
+          container.read(promenadeProfileProvider);
+        }
+      } catch (e) {
+        print('❌ Ошибка при доступе к authProvider: $e');
       }
-      // Check for updates
-      print('🚀 Инициализация проверки обновлений...');
-      container.read(updateNotifierProvider.notifier).checkForUpdates();
+
+      // Инициализируем Remote Config и проверяем обновления
+      _initializeRemoteConfigAndCheckUpdates();
     });
+  }
+
+  // Новый метод для инициализации Remote Config и проверки обновлений
+  Future<void> _initializeRemoteConfigAndCheckUpdates() async {
+    try {
+      print('🚀 Инициализация Remote Config и проверка обновлений...');
+
+      // Добавляем небольшую задержку, чтобы убедиться, что Firebase полностью инициализирован
+      await Future.delayed(const Duration(seconds: 2));
+
+      if (!mounted) return;
+
+      final remoteConfig = FirebaseRemoteConfig.instance;
+      await remoteConfig.fetchAndActivate();
+
+      if (!mounted) return;
+
+      // Проверяем обновления
+      try {
+        final container = ProviderScope.containerOf(context);
+        await container.read(updateNotifierProvider.notifier).checkForUpdates();
+      } catch (e) {
+        print('❌ Ошибка при проверке обновлений: $e');
+      }
+    } catch (e) {
+      print('❌ Ошибка при инициализации Remote Config: $e');
+    }
   }
 
   @override
@@ -139,24 +175,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         ),
       ),
       builder: (context, child) {
-        return Consumer(
-          builder: (context, ref, _) {
-            final updateState = ref.watch(updateNotifierProvider);
-            if (updateState.type != UpdateType.none) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (navigatorKey.currentContext != null &&
-                    Navigator.canPop(navigatorKey.currentContext!)) {
-                  return;
-                }
-                showDialog(
-                  context: navigatorKey.currentContext!,
-                  barrierDismissible: updateState.type != UpdateType.hard,
-                  builder: (context) => const UpdateModal(),
-                );
-              });
-            }
-            return child ?? const SizedBox.shrink();
-          },
+        // Оборачиваем все приложение в UpdateOverlay
+        return UpdateOverlay(
+          child: child ?? const SizedBox.shrink(),
         );
       },
       routerConfig: AppRouter.router,

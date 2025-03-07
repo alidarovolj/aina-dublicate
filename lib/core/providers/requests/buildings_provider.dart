@@ -9,11 +9,22 @@ class BuildingsProvider
   }
 
   final RequestBuildingsService _listService;
+  bool _mounted = true;
+
+  @override
+  void dispose() {
+    _mounted = false;
+    super.dispose();
+  }
 
   Future<void> fetchBuildings() async {
+    if (!_mounted) return;
+
     try {
       // print('Fetching buildings...');
       final response = await _listService.buildings();
+
+      if (!_mounted) return;
 
       if (response == null || !response.data['success']) {
         throw Exception('Failed to fetch buildings');
@@ -29,10 +40,12 @@ class BuildingsProvider
         'coworking': allBuildings.where((b) => b.type == 'coworking').toList(),
       };
 
+      if (!_mounted) return;
       state = AsyncValue.data(filteredBuildings);
       // print('Buildings fetched and filtered successfully.');
     } catch (error, stackTrace) {
       // print('Error fetching buildings: $error');
+      if (!_mounted) return;
       state = AsyncValue.error(error, stackTrace);
     }
   }

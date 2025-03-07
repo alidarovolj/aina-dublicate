@@ -4,8 +4,11 @@ import 'package:aina_flutter/features/coworking/domain/models/coworking_service.
 import 'package:easy_localization/easy_localization.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:aina_flutter/core/providers/auth/auth_state.dart';
+import 'package:aina_flutter/core/widgets/base_modal.dart';
 
-class ConferenceTariffCard extends StatelessWidget {
+class ConferenceTariffCard extends ConsumerWidget {
   final CoworkingTariff tariff;
   final VoidCallback? onDetailsTap;
   final int coworkingId;
@@ -19,18 +22,46 @@ class ConferenceTariffCard extends StatelessWidget {
     this.onDetailsTap,
   });
 
+  // Check only authentication without biometric verification
+  Future<bool> checkAuth(BuildContext context, WidgetRef ref) async {
+    final authState = ref.read(authProvider);
+    final isAuthorized = authState.isAuthenticated;
+
+    if (!isAuthorized) {
+      BaseModal.show(
+        context,
+        message: 'auth.service_auth_required'.tr(),
+        buttons: [
+          ModalButton(
+            label: 'auth.register'.tr(),
+            onPressed: () {
+              context.pop();
+              context.pushNamed('login');
+            },
+          ),
+        ],
+      );
+      return false;
+    }
+
+    return true;
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
-      onTap: () {
-        context.pushNamed(
-          'conference_room_details',
-          pathParameters: {
-            'id': coworkingId.toString(),
-            'serviceId': serviceId.toString(),
-            'tariffId': tariff.id.toString(),
-          },
-        );
+      onTap: () async {
+        // Only check authentication, not biometric
+        if (await checkAuth(context, ref)) {
+          context.pushNamed(
+            'conference_room_details',
+            pathParameters: {
+              'id': coworkingId.toString(),
+              'serviceId': serviceId.toString(),
+              'tariffId': tariff.id.toString(),
+            },
+          );
+        }
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 24),

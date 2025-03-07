@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/providers/requests/auth/login.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:aina_flutter/core/services/storage_service.dart';
 import 'package:aina_flutter/core/api/api_client.dart';
 
 const String _tokenKey = 'auth_token';
@@ -48,27 +48,71 @@ class AuthNotifier extends StateNotifier<AuthState> {
     _initializeAuth();
   }
 
+  @override
+  void dispose() {
+    // Clean up any resources here
+    print('🧹 AuthNotifier disposed');
+    super.dispose();
+  }
+
   Future<void> _initializeAuth() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(_tokenKey);
-
-    if (token != null) {
-      ApiClient().token = token;
-      state = state.copyWith(
-        isAuthenticated: true,
-        token: token,
-      );
-
-      // Fetch user profile
-      final requestService = ref.read(requestCodeProvider);
-      final response = await requestService.userProfile();
-
-      if (response?.statusCode == 200 && response?.data != null) {
-        state = state.copyWith(userData: response?.data);
-      } else {
-        // If profile fetch fails, log out
-        await logout();
+    try {
+      // Проверяем авторизацию через StorageService
+      final isAuthenticated = await StorageService.isAuthenticated();
+      if (!isAuthenticated) {
+        return;
       }
+
+      // Получаем токен
+      final token = await StorageService.getToken();
+      if (token == null) {
+        return;
+      }
+
+      // Устанавливаем токен в ApiClient
+      ApiClient().token = token;
+
+      // Получаем данные пользователя из локального хранилища
+      final userData = await StorageService.getUserData();
+
+      // Проверяем, что нотифаер все еще активен перед обновлением состояния
+      try {
+        state = state.copyWith(
+          isAuthenticated: true,
+          token: token,
+          userData: userData,
+        );
+      } catch (e) {
+        print('❌ Ошибка при обновлении состояния AuthNotifier: $e');
+        return;
+      }
+
+      // Если данных пользователя нет в локальном хранилище, запрашиваем их с сервера
+      if (userData == null) {
+        try {
+          final requestService = ref.read(requestCodeProvider);
+          final response = await requestService.userProfile();
+
+          // Еще раз проверяем, что нотифаер активен
+          try {
+            if (response?.statusCode == 200 && response?.data != null) {
+              // Сохраняем данные пользователя в локальном хранилище
+              await StorageService.saveUserData(response?.data);
+              state = state.copyWith(userData: response?.data);
+            } else {
+              // If profile fetch fails, log out
+              await logout();
+            }
+          } catch (e) {
+            print(
+                '❌ Ошибка при обновлении состояния после получения профиля: $e');
+          }
+        } catch (e) {
+          print('❌ Ошибка при получении профиля пользователя: $e');
+        }
+      }
+    } catch (e) {
+      print('❌ Ошибка в _initializeAuth: $e');
     }
   }
 
@@ -77,42 +121,92 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> setToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    // Clear cache before setting new token
-    ApiClient().clearCache();
-    await prefs.setString(_tokenKey, token);
-    ApiClient().token = token;
-    state = state.copyWith(
-      isAuthenticated: true,
-      token: token,
-    );
+    try {
+      // Clear cache before setting new token
+      ApiClient().clearCache();
 
-    // Fetch user profile after setting token
-    final requestService = ref.read(requestCodeProvider);
-    final response = await requestService.userProfile();
+      // Сохраняем токен в локальном хранилище
+      await StorageService.saveToken(token);
 
-    if (response?.statusCode == 200 && response?.data != null) {
-      state = state.copyWith(userData: response?.data);
-    } else {
-      // If profile fetch fails, log out
-      await logout();
+      // Устанавливаем токен в ApiClient
+      ApiClient().token = token;
+
+      try {
+        state = state.copyWith(
+          isAuthenticated: true,
+          token: token,
+        );
+      } catch (e) {
+        print('❌ Ошибка при обновлении состояния в setToken: $e');
+        return;
+      }
+
+      // Fetch user profile after setting token
+      try {
+        final requestService = ref.read(requestCodeProvider);
+        final response = await requestService.userProfile();
+
+        try {
+          if (response?.statusCode == 200 && response?.data != null) {
+            // Сохраняем данные пользователя в локальном хранилище
+            await StorageService.saveUserData(response?.data);
+            state = state.copyWith(userData: response?.data);
+          } else {
+            // If profile fetch fails, log out
+            await logout();
+          }
+        } catch (e) {
+          print(
+              '❌ Ошибка при обновлении состояния после получения профиля в setToken: $e');
+        }
+      } catch (e) {
+        print('❌ Ошибка при получении профиля пользователя в setToken: $e');
+      }
+    } catch (e) {
+      print('❌ Ошибка в методе setToken: $e');
     }
   }
 
   Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    ApiClient().token = null;
-    // Clear API client's cache
-    ApiClient().clearCache();
-    state = AuthState(isAuthenticated: false);
+    try {
+      // Очищаем все данные авторизации через StorageService
+      await StorageService.clearAuthData();
+
+      // Очищаем токен в ApiClient
+      ApiClient().token = null;
+
+      // Clear API client's cache
+      ApiClient().clearCache();
+
+      try {
+        state = AuthState(isAuthenticated: false);
+      } catch (e) {
+        print('❌ Ошибка при сбросе состояния в logout: $e');
+      }
+    } catch (e) {
+      print('❌ Ошибка в методе logout: $e');
+    }
   }
 
   void updateUserData(Map<String, dynamic> userData) {
-    state = state.copyWith(userData: userData);
+    try {
+      // Сохраняем данные пользователя в локальном хранилище
+      StorageService.saveUserData(userData);
+      state = state.copyWith(userData: userData);
+    } catch (e) {
+      print('❌ Ошибка при обновлении данных пользователя: $e');
+    }
   }
 }
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(ref);
+  print('🔄 Создание нового экземпляра AuthNotifier');
+  final notifier = AuthNotifier(ref);
+
+  // Добавляем обработчик для автоматического удаления
+  ref.onDispose(() {
+    print('🧹 Провайдер authProvider удален');
+  });
+
+  return notifier;
 });

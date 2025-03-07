@@ -7,12 +7,23 @@ class RequestMallCategoriesService {
 
   RequestMallCategoriesService(this._dio);
 
-  Future<Response?> mallCategories(String mallId) async {
+  Future<Response?> mallCategories(String mallId,
+      {bool forceRefresh = false}) async {
     try {
-      return await _dio.get('/api/aina/categories', queryParameters: {
-        'building_id': mallId,
-        'type': 'ORGANIZATION_MAIN_CATEGORIES',
-      });
+      return await _dio.get(
+        '/api/aina/categories',
+        queryParameters: {
+          'building_id': mallId,
+          'type': 'ORGANIZATION_MAIN_CATEGORIES',
+        },
+        options: forceRefresh
+            ? Options(
+                headers: {
+                  'force-refresh': 'true',
+                },
+              )
+            : null,
+      );
     } catch (e) {
       // print('Error in mall categories request: $e');
       return null;

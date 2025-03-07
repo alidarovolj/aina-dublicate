@@ -32,16 +32,19 @@ class _StoresListState extends ConsumerState<StoresList> {
   void didUpdateWidget(StoresList oldWidget) {
     super.didUpdateWidget(oldWidget);
 
+    // Check if any of the parameters changed
     if (oldWidget.mallId != widget.mallId ||
         oldWidget.categoryId != widget.categoryId ||
         oldWidget.searchQuery != widget.searchQuery) {
-      // print(
-      // 'Mall ID, Category ID or Search Query changed. Reloading stores...');
+      // Use post-frame callback to avoid setState during build
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(storesProvider(widget.mallId).notifier).loadInitialStores(
-              categoryId: widget.categoryId,
-              searchQuery: widget.searchQuery,
-            );
+        if (mounted) {
+          // Always load stores, even if mallId is empty (for "All Malls" option)
+          ref.read(storesProvider(widget.mallId).notifier).loadInitialStores(
+                categoryId: widget.categoryId,
+                searchQuery: widget.searchQuery,
+              );
+        }
       });
     }
   }
@@ -50,11 +53,15 @@ class _StoresListState extends ConsumerState<StoresList> {
   void initState() {
     super.initState();
     _previousMallId = widget.mallId;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(storesProvider(widget.mallId).notifier).loadInitialStores(
-            categoryId: widget.categoryId,
-            searchQuery: widget.searchQuery,
-          );
+      if (mounted) {
+        // Always load stores, even if mallId is empty (for "All Malls" option)
+        ref.read(storesProvider(widget.mallId).notifier).loadInitialStores(
+              categoryId: widget.categoryId,
+              searchQuery: widget.searchQuery,
+            );
+      }
     });
   }
 
@@ -80,99 +87,164 @@ class _StoresListState extends ConsumerState<StoresList> {
         grouped.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
   }
 
-  Future<void> _loadMoreStores() async {
-    if (_isLoadingMore) return;
-
-    setState(() => _isLoadingMore = true);
-    await ref.read(storesProvider(widget.mallId).notifier).loadMoreStores(
-          categoryId: widget.categoryId,
-          searchQuery: widget.searchQuery,
-        );
-    if (mounted) {
-      setState(() => _isLoadingMore = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    // We'll always load stores, even if mallId is empty (for "All Malls" option)
     final storesAsync = ref.watch(storesProvider(widget.mallId));
     final hasMorePages =
         ref.read(storesProvider(widget.mallId).notifier).hasMorePages;
 
     return storesAsync.when(
-      data: (stores) {
-        if (stores.isEmpty) {
-          return SliverFillRemaining(
-            child: Center(
-              child: Text('stores.no_stores'.tr()),
-            ),
-          );
-        }
-        final groupedStores = _groupStoresByLetter(stores);
-        final letters = groupedStores.keys.toList();
+      loading: () => _buildLoadingState(),
+      error: (error, stack) => _buildErrorState(error),
+      data: (stores) => _buildStoresList(stores, hasMorePages),
+    );
+  }
 
-        return SliverPadding(
-          padding: widget.padding ?? EdgeInsets.zero,
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                // Check if we need to load more
-                if (index == letters.length - 1) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (hasMorePages && !_isLoadingMore) {
-                      _loadMoreStores();
-                    }
-                  });
-                }
+  Widget _buildLoadingState() {
+    return SliverToBoxAdapter(
+      child: _buildSkeletonLoader(),
+    );
+  }
 
-                if (index >= letters.length) {
-                  if (_isLoadingMore) {
-                    return const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  }
-                  return null;
-                }
-
-                final letter = letters[index];
-                final letterStores = groupedStores[letter]!;
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        left: 16,
-                        top: 16,
-                        bottom: 8,
-                      ),
-                      child: Text(
-                        letter,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.grey2,
-                        ),
-                      ),
-                    ),
-                    ...letterStores.map((store) => StoreListItem(store: store)),
-                  ],
-                );
-              },
-              childCount: letters.length + (hasMorePages ? 1 : 0),
-            ),
+  Widget _buildErrorState(Object error) {
+    return SliverFillRemaining(
+      child: Center(
+        child: Container(
+          margin: const EdgeInsets.symmetric(
+            horizontal: AppLength.xs,
+            vertical: AppLength.xs,
           ),
-        );
-      },
-      loading: () => SliverFillRemaining(
-        child: Center(
-          child: Text('stores.loading'.tr()),
+          padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFDDDD),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFFF5252), width: 1),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: Color(0xFFE53935),
+                size: 32,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'stories.error.loading'.tr(),
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFFE53935),
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  ref
+                      .read(storesProvider(widget.mallId).notifier)
+                      .loadInitialStores(
+                        categoryId: widget.categoryId,
+                        searchQuery: widget.searchQuery,
+                        forceRefresh: true,
+                      );
+                },
+                icon: const Icon(Icons.refresh, color: Colors.white),
+                label: Text(
+                  'common.refresh'.tr(),
+                  style: const TextStyle(color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE53935),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      error: (error, stack) => SliverFillRemaining(
+    );
+  }
+
+  Widget _buildStoresList(
+      List<Map<String, dynamic>> stores, bool hasMorePages) {
+    if (stores.isEmpty) {
+      return SliverFillRemaining(
         child: Center(
-          child: Text('stores.error'.tr(args: [error.toString()])),
+          child: Text('stores.empty'.tr()),
+        ),
+      );
+    }
+
+    // Group stores by first letter
+    final Map<String, List<Map<String, dynamic>>> storesByLetter = {};
+    for (final store in stores) {
+      final name = store['name'] as String;
+      if (name.isNotEmpty) {
+        final firstLetter = name[0].toUpperCase();
+        if (!storesByLetter.containsKey(firstLetter)) {
+          storesByLetter[firstLetter] = [];
+        }
+        storesByLetter[firstLetter]!.add(store);
+      }
+    }
+
+    // Sort letters alphabetically
+    final letters = storesByLetter.keys.toList()..sort();
+
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            // Check if we need to load more when approaching the end
+            if (index == letters.length - 1) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (hasMorePages && !_isLoadingMore) {
+                  _loadMoreStores();
+                }
+              });
+            }
+
+            if (index < letters.length) {
+              final letter = letters[index];
+              final storesForLetter = storesByLetter[letter]!;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8, top: 16),
+                    child: Text(
+                      letter,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.grey2,
+                      ),
+                    ),
+                  ),
+                  ...storesForLetter.map((store) => _buildStoreItem(store)),
+                ],
+              );
+            } else {
+              // Loading indicator at the end
+              return _isLoadingMore
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  : const SizedBox.shrink();
+            }
+          },
+          childCount: letters.length + (hasMorePages ? 1 : 0),
         ),
       ),
     );
@@ -264,18 +336,8 @@ class _StoresListState extends ConsumerState<StoresList> {
       ],
     );
   }
-}
 
-class StoreListItem extends StatelessWidget {
-  final Map<String, dynamic> store;
-
-  const StoreListItem({
-    super.key,
-    required this.store,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildStoreItem(Map<String, dynamic> store) {
     final shortDescription = store['short_description'] as String?;
 
     return Column(
@@ -291,7 +353,7 @@ class StoreListItem extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(
               vertical: 12,
-              horizontal: 12,
+              horizontal: 0,
             ),
             alignment: Alignment.centerLeft,
             child: Column(
@@ -321,11 +383,31 @@ class StoreListItem extends StatelessWidget {
             ),
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.only(left: 16),
-          child: Divider(height: 1),
-        ),
+        const Divider(height: 1),
       ],
     );
+  }
+
+  void _loadMoreStores() {
+    if (_isLoadingMore) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    // Always load more stores, even if mallId is empty (for "All Malls" option)
+    ref
+        .read(storesProvider(widget.mallId).notifier)
+        .loadMoreStores(
+          categoryId: widget.categoryId,
+          searchQuery: widget.searchQuery,
+        )
+        .then((_) {
+      if (mounted) {
+        setState(() {
+          _isLoadingMore = false;
+        });
+      }
+    });
   }
 }

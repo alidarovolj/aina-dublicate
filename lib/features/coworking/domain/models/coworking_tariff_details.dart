@@ -3,7 +3,7 @@ import 'package:aina_flutter/features/coworking/domain/models/coworking_service_
 class CoworkingTariffDetails {
   final int id;
   final String type;
-  final int categoryId;
+  final int? categoryId;
   final String title;
   final String subtitle;
   final int price;
@@ -25,7 +25,7 @@ class CoworkingTariffDetails {
   CoworkingTariffDetails({
     required this.id,
     required this.type,
-    required this.categoryId,
+    this.categoryId,
     required this.title,
     required this.subtitle,
     required this.price,
@@ -49,7 +49,7 @@ class CoworkingTariffDetails {
     return CoworkingTariffDetails(
       id: json['id'] as int,
       type: json['type'] as String,
-      categoryId: json['category_id'] as int,
+      categoryId: json['category_id'] as int?,
       title: json['title'] as String,
       subtitle: json['subtitle'] as String,
       price: json['price'] as int,

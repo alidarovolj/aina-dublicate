@@ -8,12 +8,20 @@ class RequestStoresService {
   RequestStoresService(this._dio);
 
   Future<Response?> stores(String mallId,
-      {int? page, String? categoryId, String? searchQuery}) async {
+      {int? page,
+      String? categoryId,
+      String? searchQuery,
+      bool forceRefresh = false}) async {
     try {
       final Map<String, dynamic> queryParams = {};
-      if (mallId != "0") {
+
+      // Only add building_id if mallId is not empty
+      // This ensures that when "All Malls" is selected (mallId is empty),
+      // no building_id parameter is included in the request
+      if (mallId.isNotEmpty) {
         queryParams['building_id'] = mallId;
       }
+
       if (page != null) {
         queryParams['page'] = page;
       }
@@ -24,12 +32,22 @@ class RequestStoresService {
         queryParams['search'] = searchQuery;
       }
 
+      // Debug log to see what parameters are being sent
+      print('API Request to /api/aina/organizations with params: $queryParams');
+
       return await _dio.get(
         '/api/aina/organizations',
         queryParameters: queryParams,
+        options: forceRefresh
+            ? Options(
+                headers: {
+                  'force-refresh': 'true',
+                },
+              )
+            : null,
       );
     } catch (e) {
-      // print('Error in stores request: $e');
+      print('Error in stores request: $e');
       return null;
     }
   }
@@ -56,7 +74,9 @@ class StoresNotifier
   }
 
   Future<void> loadInitialStores(
-      {String? categoryId, String? searchQuery}) async {
+      {String? categoryId,
+      String? searchQuery,
+      bool forceRefresh = false}) async {
     _currentPage = 1;
     state = const AsyncValue.loading();
     try {
@@ -65,6 +85,7 @@ class StoresNotifier
             page: _currentPage,
             categoryId: categoryId,
             searchQuery: searchQuery,
+            forceRefresh: forceRefresh,
           );
 
       if (response == null) {

@@ -74,7 +74,11 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
         selectedGender = userData['gender'] ?? 'NONE';
 
         // Update user data in auth state
-        ref.read(authProvider.notifier).updateUserData(userData);
+        try {
+          ref.read(authProvider.notifier).updateUserData(userData);
+        } catch (authError) {
+          print('❌ Ошибка при обновлении данных пользователя: $authError');
+        }
 
         // Update cache key to refresh the UI
         ref.read(profileCacheKeyProvider.notifier).state =
@@ -174,7 +178,11 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
           );
 
       // Update user data in auth state
-      ref.read(authProvider.notifier).updateUserData(userData);
+      try {
+        ref.read(authProvider.notifier).updateUserData(userData);
+      } catch (authError) {
+        print('❌ Ошибка при обновлении данных пользователя: $authError');
+      }
 
       // Update cache key to refresh the UI
       ref.read(profileCacheKeyProvider.notifier).state =
@@ -334,7 +342,15 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
           backgroundColor: AppColors.appBg,
           textColor: Colors.red,
           onPressed: () {
-            ref.read(authProvider.notifier).logout();
+            try {
+              ref.read(authProvider.notifier).logout();
+            } catch (e) {
+              print('❌ Ошибка при вызове logout через authProvider: $e');
+              // Если не удалось выйти через провайдер, очищаем токен локально
+              SharedPreferences.getInstance().then((prefs) {
+                prefs.remove('auth_token');
+              });
+            }
             context.go('/home');
           },
         ),

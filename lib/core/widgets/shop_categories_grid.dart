@@ -7,17 +7,97 @@ import 'package:aina_flutter/core/providers/requests/mall_shop_categories_provid
 import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-class ShopCategoriesGrid extends ConsumerWidget {
+class ShopCategoriesGrid extends ConsumerStatefulWidget {
   final String mallId;
+  final Widget Function(BuildContext)? emptyBuilder;
 
   const ShopCategoriesGrid({
     super.key,
     required this.mallId,
+    this.emptyBuilder,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final categoriesAsync = ref.watch(mallShopCategoriesProvider(mallId));
+  ConsumerState<ShopCategoriesGrid> createState() => _ShopCategoriesGridState();
+}
+
+class _ShopCategoriesGridState extends ConsumerState<ShopCategoriesGrid> {
+  String? _previousMallId;
+  AsyncValue<List<dynamic>>? _cachedCategories;
+
+  @override
+  void initState() {
+    super.initState();
+    _previousMallId = widget.mallId;
+  }
+
+  @override
+  void didUpdateWidget(ShopCategoriesGrid oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Check if mallId changed
+    if (oldWidget.mallId != widget.mallId) {
+      _previousMallId = oldWidget.mallId;
+
+      // Use post-frame callback to avoid updating state during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          // Invalidate the categories provider to force a refresh
+          if (widget.mallId.isNotEmpty) {
+            ref.invalidate(mallShopCategoriesProvider(widget.mallId));
+          }
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Skip loading categories if mallId is empty
+    if (widget.mallId.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(
+              left: AppLength.xs,
+              right: AppLength.xs,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'shops.title'.tr(),
+                  style: GoogleFonts.lora(
+                    fontSize: 22,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppLength.xs),
+            child: Center(
+              child: Text('shops.select_mall'.tr()),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Use a local variable to capture the current mallId to avoid race conditions
+    final currentMallId = widget.mallId;
+
+    // Only watch the provider if we have a valid mallId
+    final categoriesAsync = currentMallId.isNotEmpty
+        ? ref.watch(mallShopCategoriesProvider(currentMallId))
+        : const AsyncValue<List<dynamic>>.data([]);
+
+    // Cache the categories if they're available
+    if (categoriesAsync is AsyncData) {
+      _cachedCategories = categoriesAsync;
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -39,10 +119,12 @@ class ShopCategoriesGrid extends ConsumerWidget {
               ),
               TextButton(
                 onPressed: () {
-                  context.goNamed(
-                    'mall_shop_categories',
-                    pathParameters: {'id': mallId},
-                  );
+                  if (currentMallId.isNotEmpty) {
+                    context.goNamed(
+                      'mall_shop_categories',
+                      pathParameters: {'id': currentMallId},
+                    );
+                  }
                 },
                 child: Row(
                   children: [
@@ -65,82 +147,126 @@ class ShopCategoriesGrid extends ConsumerWidget {
         ),
         categoriesAsync.when(
           loading: () => _buildSkeletonLoader(),
-          error: (error, stack) => Center(
-            child: Text('shops.error'.tr(args: [error.toString()])),
-          ),
+          error: (error, stack) => widget.emptyBuilder != null
+              ? widget.emptyBuilder!(context)
+              : Center(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: AppLength.xs,
+                      vertical: AppLength.xs,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 24.0, horizontal: 16.0),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFDDDD),
+                      borderRadius: BorderRadius.circular(8),
+                      border:
+                          Border.all(color: const Color(0xFFFF5252), width: 1),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: const Color(0xFFE53935),
+                          size: 32,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'stories.error.loading'.tr(),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFFE53935),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            final provider = ref.read(
+                                mallShopCategoriesProvider(currentMallId)
+                                    .notifier);
+                            provider.fetchShopCategories(forceRefresh: true);
+                          },
+                          icon: const Icon(Icons.refresh, color: Colors.white),
+                          label: Text(
+                            'common.refresh'.tr(),
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE53935),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
           data: (categories) {
+            if (categories.isEmpty) {
+              return widget.emptyBuilder != null
+                  ? widget.emptyBuilder!(context)
+                  : Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          'shops.empty'.tr(),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: AppColors.textDarkGrey,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+            }
+
             final sortedCategories = [...categories]
               ..sort((a, b) => a.order.compareTo(b.order));
 
-            return Padding(
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               padding: const EdgeInsets.all(AppLength.xs),
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  mainAxisExtent: 212,
-                ),
-                itemCount: sortedCategories.length,
-                itemBuilder: (context, index) {
-                  final category = sortedCategories[index];
-                  return GestureDetector(
-                    onTap: () {
-                      context.goNamed(
-                        'mall_stores',
-                        pathParameters: {'id': mallId},
-                        queryParameters: {'category': category.id.toString()},
-                      );
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Column(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: category.image != null
-                                ? Image.network(
-                                    category.image!.url,
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                    height: 168,
-                                  )
-                                : Container(
-                                    height: 168,
-                                    color: Colors.grey[200],
-                                    child: const Icon(Icons.category),
-                                  ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              top: 8,
-                              bottom: 4,
-                              left: 4,
-                              right: 4,
-                            ),
-                            child: Text(
-                              category.title.toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.textDarkGrey,
-                                letterSpacing: 1,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.5,
               ),
+              itemCount:
+                  sortedCategories.length > 6 ? 6 : sortedCategories.length,
+              itemBuilder: (context, index) {
+                final category = sortedCategories[index];
+                return GestureDetector(
+                  onTap: () {
+                    context.goNamed(
+                      'mall_stores',
+                      pathParameters: {'id': currentMallId},
+                      queryParameters: {'category': category.id.toString()},
+                    );
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      category.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              },
             );
           },
         ),

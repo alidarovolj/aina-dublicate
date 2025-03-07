@@ -9,6 +9,8 @@ import 'package:shimmer/shimmer.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart'
     show CustomButton, ButtonType;
 import 'package:aina_flutter/core/utils/button_navigation_handler.dart';
+import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class StoryList extends ConsumerStatefulWidget {
   const StoryList({super.key});
@@ -45,46 +47,63 @@ class _StoryListState extends ConsumerState<StoryList>
   }
 
   void markStoryAsRead(int index) {
-    final stories = ref.read(storiesProvider).valueOrNull;
-    if (stories != null) {
-      setState(() {
-        stories[index].read = true;
-        // print("Story ${index + 1} marked as read");
-      });
+    if (!mounted) return;
+
+    try {
+      final stories = ref.read(storiesProvider).valueOrNull;
+      if (stories != null && index < stories.length) {
+        setState(() {
+          stories[index].read = true;
+          // print("Story ${index + 1} marked as read");
+        });
+      }
+    } catch (e) {
+      print('❌ Ошибка при отметке истории как прочитанной: $e');
     }
   }
 
   void _handleStoryTap(int index, List<Story> storiesList) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    if (!mounted) return;
 
-    _animationController.forward().then((_) {
-      markStoryAsRead(index);
-      showGeneralDialog(
-        context: context,
-        barrierDismissible: true,
-        barrierLabel:
-            MaterialLocalizations.of(context).modalBarrierDismissLabel,
-        barrierColor: AppColors.primary.withOpacity(0.5),
-        transitionDuration: const Duration(milliseconds: 300),
-        pageBuilder: (context, animation, secondaryAnimation) {
-          return StoryDetailsPage(
-            stories: storiesList,
-            initialIndex: index,
-            onStoryRead: (readIndex) {
-              markStoryAsRead(readIndex);
-            },
-          );
-        },
-      ).then((_) {
-        // Reset animation when story view is closed
-        setState(() {
-          _selectedIndex = null;
-        });
-        _animationController.reverse();
+    try {
+      setState(() {
+        _selectedIndex = index;
       });
-    });
+
+      _animationController.forward().then((_) {
+        if (!mounted) return;
+
+        markStoryAsRead(index);
+        showGeneralDialog(
+          context: context,
+          barrierDismissible: true,
+          barrierLabel:
+              MaterialLocalizations.of(context).modalBarrierDismissLabel,
+          barrierColor: AppColors.primary.withOpacity(0.5),
+          transitionDuration: const Duration(milliseconds: 300),
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return StoryDetailsPage(
+              stories: storiesList,
+              initialIndex: index,
+              onStoryRead: (readIndex) {
+                if (!mounted) return;
+                markStoryAsRead(readIndex);
+              },
+            );
+          },
+        ).then((_) {
+          // Reset animation when story view is closed
+          if (!mounted) return;
+
+          setState(() {
+            _selectedIndex = null;
+          });
+          _animationController.reverse();
+        });
+      });
+    } catch (e) {
+      print('❌ Ошибка при открытии истории: $e');
+    }
   }
 
   @override
@@ -93,7 +112,53 @@ class _StoryListState extends ConsumerState<StoryList>
 
     return stories.when(
       loading: () => _buildSkeletonLoader(),
-      error: (error, stack) => const SizedBox.shrink(),
+      error: (error, stack) {
+        print('❌ Ошибка при загрузке историй: $error');
+
+        // Проверяем, содержит ли ошибка код 500
+        final is500Error = error.toString().contains('500') ||
+            error.toString().contains('Internal Server Error');
+
+        return Container(
+          color: AppColors.primary,
+          height: 120,
+          width: double.infinity,
+          child: SafeArea(
+            child: Container(
+              height: 100,
+              margin: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.red.shade100,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red, width: 2),
+              ),
+              child: ErrorRefreshWidget(
+                onRefresh: () {
+                  print('🔄 Обновление историй...');
+                  // Используем Future.microtask для асинхронного обновления
+                  Future.microtask(() async {
+                    try {
+                      ref.refresh(storiesProvider);
+                    } catch (e) {
+                      print('❌ Ошибка при обновлении историй: $e');
+                    }
+                  });
+                },
+                errorMessage: is500Error
+                    ? 'stories.error.server'.tr()
+                    : 'stories.error.loading'.tr(),
+                refreshText: 'common.refresh'.tr(),
+                isCompact: true,
+                isServerError: true,
+                backgroundColor: Colors.transparent,
+                textColor: Colors.red.shade900,
+                errorColor: Colors.red,
+                icon: Icons.warning_amber_rounded,
+              ),
+            ),
+          ),
+        );
+      },
       data: (storiesList) {
         if (storiesList.isEmpty) {
           return const SizedBox.shrink();

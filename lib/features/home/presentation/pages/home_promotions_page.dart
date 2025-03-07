@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
+import 'package:aina_flutter/core/providers/requests/promotions_provider.dart';
 
 class HomePromotionsPage extends ConsumerStatefulWidget {
   const HomePromotionsPage({super.key});
@@ -21,6 +22,28 @@ class _HomePromotionsPageState extends ConsumerState<HomePromotionsPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+
+    // Добавляем инициализацию загрузки акций после построения виджета
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadPromotions();
+      }
+    });
+  }
+
+  // Метод для загрузки акций
+  Future<void> _loadPromotions() async {
+    if (!mounted) return;
+
+    try {
+      print('🔄 Загрузка акций на странице HomePromotionsPage');
+      await ref
+          .read(promotionsProvider.notifier)
+          .fetchPromotions(context, forceRefresh: true);
+      print('✅ Акции успешно загружены на странице HomePromotionsPage');
+    } catch (e) {
+      print('❌ Ошибка при загрузке акций на странице HomePromotionsPage: $e');
+    }
   }
 
   @override
@@ -103,22 +126,26 @@ class _HomePromotionsPageState extends ConsumerState<HomePromotionsPage>
                       children: [
                         Container(
                           color: AppColors.appBg,
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.only(top: 28, bottom: 28),
-                            child: PromotionsBlock(
-                              onViewAllTap: () {},
-                              showTitle: false,
-                              showViewAll: false,
-                              showDivider: false,
-                              cardType: PromotionCardType.full,
-                              showGradient: true,
-                              emptyBuilder: (context) => Text(
-                                'promotions.no_active_promotions'.tr(),
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  color: AppColors.textDarkGrey,
+                          child: RefreshIndicator(
+                            onRefresh: _loadPromotions,
+                            child: SingleChildScrollView(
+                              padding:
+                                  const EdgeInsets.only(top: 28, bottom: 28),
+                              child: PromotionsBlock(
+                                onViewAllTap: () {},
+                                showTitle: false,
+                                showViewAll: false,
+                                showDivider: false,
+                                cardType: PromotionCardType.full,
+                                showGradient: true,
+                                emptyBuilder: (context) => Text(
+                                  'promotions.no_active_promotions'.tr(),
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    color: AppColors.textDarkGrey,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                textAlign: TextAlign.center,
                               ),
                             ),
                           ),

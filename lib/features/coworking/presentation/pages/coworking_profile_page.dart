@@ -12,6 +12,9 @@ import 'dart:io';
 import 'package:aina_flutter/core/widgets/avatar_edit_widget.dart';
 import 'package:aina_flutter/core/widgets/communication_modal.dart';
 import 'package:aina_flutter/core/providers/requests/auth/user.dart';
+import 'package:aina_flutter/core/providers/auth/auth_state.dart';
+import 'package:dio/dio.dart';
+import 'package:aina_flutter/core/router/route_observer.dart';
 
 class CoworkingProfilePage extends ConsumerStatefulWidget {
   final int coworkingId;
@@ -26,14 +29,26 @@ class CoworkingProfilePage extends ConsumerStatefulWidget {
       _CoworkingProfilePageState();
 }
 
-class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage> {
+class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
+    with RouteAware {
   File? _temporaryAvatar;
   bool _isLoading = false;
   bool _isInitialized = false;
+  bool _isCheckingAuth = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Проверяем авторизацию сразу при создании виджета
+    _checkAuthAndLoadProfile();
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // Подписываемся на события навигации
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+
     if (!_isInitialized) {
       _isInitialized = true;
       Future(() {
@@ -44,19 +59,89 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage> {
     }
   }
 
+  @override
+  void dispose() {
+    // Отписываемся от событий навигации
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  // Вызывается, когда пользователь возвращается на эту страницу
+  @override
+  void didPopNext() {
+    super.didPopNext();
+    print('🔄 Возврат на страницу профиля коворкинга');
+    // Повторно проверяем авторизацию при возврате на страницу
+    _checkAuthAndLoadProfile();
+  }
+
+  Future<void> _checkAuthAndLoadProfile() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isCheckingAuth = true;
+    });
+
+    try {
+      // Выполняем прямой запрос к API для проверки авторизации
+      if (!mounted) return;
+      final profileService = ref.read(promenadeProfileProvider);
+
+      // Выполняем запрос на получение профиля
+      final result = await profileService.getProfile(forceRefresh: true);
+
+      // Если запрос успешен, обновляем данные профиля
+      if (mounted) {
+        await _refreshProfileData();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      print('❌ Ошибка при проверке авторизации в коворкинге: $e');
+
+      // Если ошибка 401, перенаправляем на страницу авторизации
+      if (e is DioException && e.response?.statusCode == 401) {
+        try {
+          if (!mounted) return;
+          // Очищаем данные авторизации
+          await ref.read(authProvider.notifier).logout();
+        } catch (logoutError) {
+          print('❌ Ошибка при выходе из аккаунта: $logoutError');
+        }
+
+        if (mounted) {
+          // Перенаправляем на страницу авторизации с параметрами для возврата в коворкинг
+          context.go('/login');
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCheckingAuth = false;
+        });
+      }
+    }
+  }
+
   Future<void> _refreshProfileData() async {
     if (!mounted) return;
 
-    ref.invalidate(userProvider);
-    ref.invalidate(userTicketsProvider);
-    ref.invalidate(promenadeProfileProvider);
-    ref.invalidate(profileCacheKeyProvider);
+    try {
+      ref.invalidate(userProvider);
+      ref.invalidate(userTicketsProvider);
+      ref.invalidate(promenadeProfileProvider);
+      ref.invalidate(profileCacheKeyProvider);
 
-    Future(() {
-      if (mounted) {
-        ref.read(profileCacheKeyProvider.notifier).state++;
-      }
-    });
+      await Future(() {
+        if (!mounted) return;
+        try {
+          ref.read(profileCacheKeyProvider.notifier).state++;
+        } catch (e) {
+          print('❌ Ошибка при обновлении profileCacheKeyProvider: $e');
+        }
+      });
+    } catch (e) {
+      print('❌ Ошибка при обновлении данных профиля: $e');
+    }
   }
 
   Future<void> _handleAvatarPicked(File photo) async {
@@ -101,36 +186,51 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage> {
     final userAsync = ref.watch(userProvider);
     final ticketsAsync = ref.watch(userTicketsProvider);
 
+    // Показываем индикатор загрузки во время проверки авторизации
+    if (_isCheckingAuth) {
+      return _buildSkeletonLoader();
+    }
+
     return userAsync.when(
       loading: () => _buildSkeletonLoader(),
-      error: (error, stack) => Scaffold(
-        body: Container(
-          color: AppColors.primary,
-          child: SafeArea(
-            child: Stack(
-              children: [
-                Container(
-                  color: AppColors.white,
-                  margin: const EdgeInsets.only(top: 64),
-                  child: Center(
-                    child: Text(
-                      'profile.load_error'.tr(),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.black87,
+      error: (error, stack) {
+        if (error.toString().contains('401') ||
+            error.toString().contains('Unauthorized')) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.go('/login');
+          });
+          return const SizedBox.shrink();
+        }
+
+        return Scaffold(
+          body: Container(
+            color: AppColors.primary,
+            child: SafeArea(
+              child: Stack(
+                children: [
+                  Container(
+                    color: AppColors.white,
+                    margin: const EdgeInsets.only(top: 64),
+                    child: Center(
+                      child: Text(
+                        'profile.load_error'.tr(),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                CustomHeader(
-                  title: 'coworking.profile.title'.tr(),
-                  type: HeaderType.close,
-                ),
-              ],
+                  CustomHeader(
+                    title: 'coworking.profile.title'.tr(),
+                    type: HeaderType.close,
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
       data: (userData) => Scaffold(
         backgroundColor: AppColors.primary,
         body: Container(

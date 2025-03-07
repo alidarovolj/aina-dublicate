@@ -58,18 +58,30 @@ class PromenadeProfileService {
 
   Future<Map<String, dynamic>> getProfile({bool forceRefresh = true}) async {
     try {
+      print('🔍 Запрос на получение профиля (forceRefresh: $forceRefresh)');
+
       final response = await _dio.get(
         '/api/promenade/profile',
         options: Options(
-          headers: {'force-refresh': 'true'},
+          headers: {'force-refresh': forceRefresh.toString()},
         ),
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
+        print('✅ Профиль успешно получен');
         return response.data['data'];
       }
-      throw Exception('Failed to fetch profile data');
+
+      print('❌ Ошибка при получении профиля: неверный формат ответа');
+      throw Exception('Failed to fetch profile data: Invalid response format');
     } catch (e) {
+      print('❌ Ошибка при получении профиля: $e');
+
+      // Проверяем, является ли ошибка 401 Unauthorized
+      if (e is DioException && e.response?.statusCode == 401) {
+        print('🔒 Ошибка авторизации (401) при получении профиля');
+      }
+
       rethrow;
     }
   }

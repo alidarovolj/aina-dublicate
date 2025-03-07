@@ -6,7 +6,7 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/requests/mall_shop_categories_provider.dart';
 import 'package:shimmer/shimmer.dart';
 
-class ShopCategoriesGrid extends ConsumerWidget {
+class ShopCategoriesGrid extends ConsumerStatefulWidget {
   final String mallId;
 
   const ShopCategoriesGrid({
@@ -15,8 +15,80 @@ class ShopCategoriesGrid extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final categoriesAsync = ref.watch(mallShopCategoriesProvider(mallId));
+  ConsumerState<ShopCategoriesGrid> createState() => _ShopCategoriesGridState();
+}
+
+class _ShopCategoriesGridState extends ConsumerState<ShopCategoriesGrid> {
+  String? _previousMallId;
+  AsyncValue<List<dynamic>>? _cachedCategories;
+
+  @override
+  void initState() {
+    super.initState();
+    _previousMallId = widget.mallId;
+  }
+
+  @override
+  void didUpdateWidget(ShopCategoriesGrid oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Check if mallId changed
+    if (oldWidget.mallId != widget.mallId) {
+      _previousMallId = oldWidget.mallId;
+
+      // Use post-frame callback to avoid updating state during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          // Invalidate the categories provider to force a refresh
+          if (widget.mallId.isNotEmpty) {
+            ref.invalidate(mallShopCategoriesProvider(widget.mallId));
+          }
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Skip loading categories if mallId is empty
+    if (widget.mallId.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(AppLength.xs),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Магазины',
+                  style: GoogleFonts.lora(fontSize: 22, color: Colors.black),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppLength.xs),
+            child: Center(
+              child: Text('Выберите ТРЦ для просмотра магазинов'),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Use a local variable to capture the current mallId to avoid race conditions
+    final currentMallId = widget.mallId;
+
+    // Only watch the provider if we have a valid mallId
+    final categoriesAsync = currentMallId.isNotEmpty
+        ? ref.watch(mallShopCategoriesProvider(currentMallId))
+        : const AsyncValue<List<dynamic>>.data([]);
+
+    // Cache the categories if they're available
+    if (categoriesAsync is AsyncData) {
+      _cachedCategories = categoriesAsync;
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -32,10 +104,12 @@ class ShopCategoriesGrid extends ConsumerWidget {
               ),
               TextButton(
                 onPressed: () {
-                  context.goNamed(
-                    'mall_shop_categories',
-                    pathParameters: {'id': mallId},
-                  );
+                  if (currentMallId.isNotEmpty) {
+                    context.goNamed(
+                      'mall_shop_categories',
+                      pathParameters: {'id': currentMallId},
+                    );
+                  }
                 },
                 child: Row(
                   children: [
@@ -81,7 +155,7 @@ class ShopCategoriesGrid extends ConsumerWidget {
                     onTap: () {
                       context.goNamed(
                         'mall_stores',
-                        pathParameters: {'id': mallId},
+                        pathParameters: {'id': currentMallId},
                         queryParameters: {'category': category.id.toString()},
                       );
                     },

@@ -66,7 +66,9 @@
       },
       "image": {
         "title": "Image",
-        "add": "Add image"
+        "add": "Add image",
+        "select": "Click to select an image",
+        "error_picking": "Error picking image: {}"
       },
       "button": {
         "title": "Button",
@@ -88,6 +90,11 @@
           "message": "After submission, the card will be reviewed by a moderator before publication in the community",
           "cancel": "Cancel",
           "confirm": "Send"
+        },
+        "errors": {
+          "loading": "Error loading data: {}",
+          "visibility": "Error updating visibility settings: {}",
+          "saving": "Error saving data: {}"
         }
       }
     }
@@ -445,14 +452,18 @@
   "common": {
     "currency": "₸",
     "close": "Close",
-    "ok": "Back to biometry",
+    "ok": "Back to biometrics",
     "cancel": "Cancel",
     "settings": "Settings",
     "confirm": "Confirm",
     "save": "Save",
     "discard": "Discard",
     "logout": "Logout",
-    "delete": "Delete"
+    "delete": "Delete",
+    "support": "Support",
+    "refresh": "Refresh",
+    "tap_to_refresh": "Tap to refresh",
+    "error_loading_data": "Error loading data"
   },
   "limits": {
     "title": "Limit Accounts",
@@ -545,7 +556,8 @@
     "new_version": "New version available",
     "description": "To access all features, please update the app",
     "skip": "Skip",
-    "update": "Update"
+    "update": "Update",
+    "close": "Close"
   },
   "payment": {
     "connecting": "Connecting to payment service...",
@@ -555,14 +567,24 @@
   },
   "language": "Language Selection",
   "errors": {
-    "delete_profile": "Error deleting profile"
+    "delete_profile": "Error deleting profile",
+    "unauthorized": "Session expired. Please log in again."
   },
   "menu": {
     "title": "Menu",
     "join_aina": "Join AINA",
-    "authorize": "Authorize",
-    "contact_us": "Contact Us",
-    "about": "About App"
+    "authorize": "Log in",
+    "contact_us": "Contact us",
+    "about": "About app",
+    "notifications": "Notifications"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "You have no notifications yet",
+    "error": "Error loading notifications",
+    "retry": "Retry",
+    "today": "Today",
+    "yesterday": "Yesterday"
   },
   "categories": {
     "title": "Categories",
@@ -575,5 +597,11 @@
     "price_value": "{} ₸ / hour",
     "book": "Book now",
     "similar_services": "Similar services:"
+  },
+  "stories": {
+    "error": {
+      "server": "Failed to load data. Please try again later",
+      "loading": "Failed to load data. Please try again later"
+    }
   }
 }

@@ -250,23 +250,29 @@ class _BookingCardState extends State<BookingCard> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.access_time,
-                                size: 16,
-                                color: Color(0xFF666666),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${DateFormat('HH:mm').format(DateTime.parse(widget.order.startAt))} - '
-                                '${DateFormat('HH:mm').format(DateTime.parse(widget.order.endAt))}',
-                                style: const TextStyle(
-                                  fontSize: 14,
+                          Expanded(
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.access_time,
+                                  size: 16,
                                   color: Color(0xFF666666),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    '${DateFormat('dd.MM.yyyy').format(DateTime.parse(widget.order.endAt))}, '
+                                    '${DateFormat('HH:mm').format(DateTime.parse(widget.order.startAt))} - '
+                                    '${DateFormat('HH:mm').format(DateTime.parse(widget.order.endAt))}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Color(0xFF666666),
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           Text(
                             '${NumberFormat('#,###', 'ru-RU').format(widget.order.total)} ${'common.currency'.tr()}',

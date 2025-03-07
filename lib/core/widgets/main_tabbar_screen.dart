@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
+import 'package:aina_flutter/core/services/storage_service.dart';
 import 'custom_tabbar.dart';
 
 class MainTabBarScreen extends ConsumerStatefulWidget {
@@ -88,13 +89,9 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
     if (route != null && widget.currentRoute != route) {
       // Schedule navigation for next frame
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // Handle profile tab navigation with auth check
+        // Handle profile tab navigation
         if (index == 3) {
-          final authState = ref.read(authProvider.notifier);
-          if (!authState.canAccessProfile) {
-            context.go('/login');
-            return;
-          }
+          // Переходим в профиль без проверки авторизации
           // Extract current mall ID if we're in a mall route
           final parts = widget.currentRoute.split('/');
           if (parts.length >= 3 && parts[1] == 'malls') {
@@ -152,11 +149,8 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
         }
 
         if (index == 4) {
-          final authState = ref.read(authProvider);
-          if (!authState.isAuthenticated) {
-            context.go('/login');
-            return;
-          }
+          context.go(route);
+          return;
         }
         context.go(route);
       });

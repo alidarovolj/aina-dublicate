@@ -1,31 +1,31 @@
-import 'package:aina_flutter/features/about_app/presentation/pages/about_page.dart';
-import 'package:aina_flutter/features/login/presentation/pages/login_page.dart';
+import 'package:aina_flutter/features/general/about_app/presentation/pages/about_page.dart';
+import 'package:aina_flutter/features/general/login/presentation/pages/login_page.dart';
 import 'package:aina_flutter/features/malls/presentation/pages/main_page.dart';
-import 'package:aina_flutter/features/profile/presentation/pages/edit_data.dart';
-import 'package:aina_flutter/features/profile/presentation/pages/profile_page.dart';
-import 'package:aina_flutter/features/profile/presentation/pages/tickets_page.dart';
-import 'package:aina_flutter/features/promotions/presentation/pages/promotion_details_page.dart';
-import 'package:aina_flutter/features/stores/presentation/pages/store_details_page.dart';
-import 'package:aina_flutter/features/stores/presentation/pages/category_stores_page.dart';
-import 'package:aina_flutter/features/news/presentation/pages/news_details_page.dart';
-import 'package:aina_flutter/features/news/presentation/pages/news_list_page.dart';
+import 'package:aina_flutter/features/general/profile/presentation/pages/edit_data.dart';
+import 'package:aina_flutter/features/general/profile/presentation/pages/profile_page.dart';
+import 'package:aina_flutter/features/general/profile/presentation/pages/tickets_page.dart';
+import 'package:aina_flutter/features/general/promotions/presentation/pages/promotion_details_page.dart';
+import 'package:aina_flutter/features/malls/stores/presentation/pages/store_details_page.dart';
+import 'package:aina_flutter/features/malls/stores/presentation/pages/category_stores_page.dart';
+import 'package:aina_flutter/features/general/news/presentation/pages/news_details_page.dart';
+import 'package:aina_flutter/features/general/news/presentation/pages/news_list_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/features/home/presentation/pages/home_page.dart';
 import 'package:aina_flutter/features/storybook/presentation/pages/storybook.dart';
 import 'package:aina_flutter/core/widgets/home_tabbar_screen.dart';
 import 'package:aina_flutter/core/widgets/main_tabbar_screen.dart';
-import 'package:aina_flutter/features/login/presentation/pages/code_page.dart';
+import 'package:aina_flutter/features/general/login/presentation/pages/code_page.dart';
 import 'package:aina_flutter/features/malls/presentation/pages/mall_details_page.dart';
-import 'package:aina_flutter/features/promotions/presentation/pages/promotions_page.dart';
-import 'package:aina_flutter/features/stores/presentation/pages/stores_page.dart';
-import 'package:aina_flutter/features/promotions/presentation/pages/promotion_qr_page.dart';
+import 'package:aina_flutter/features/malls/presentation/pages/promotions_page.dart';
+import 'package:aina_flutter/features/malls/stores/presentation/pages/stores_page.dart';
+import 'package:aina_flutter/features/malls/presentation/pages/promotion_qr_page.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_bookings_page.dart';
 import 'package:aina_flutter/core/widgets/coworking_tabbar_screen.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_list_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_promotions_page.dart';
-import 'package:aina_flutter/features/services/presentation/pages/services_page.dart';
+import 'package:aina_flutter/features/coworking/presentation/pages/services_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:aina_flutter/features/coworking/providers/coworking_service_provider.dart'
@@ -39,16 +39,17 @@ import 'package:aina_flutter/features/coworking/presentation/pages/coworking_cam
 import 'package:aina_flutter/features/coworking/presentation/pages/order_details_page.dart';
 import 'package:aina_flutter/features/coworking/domain/services/order_service.dart';
 import 'package:aina_flutter/core/providers/api_client_provider.dart';
-import 'package:aina_flutter/features/profile/presentation/pages/community_card_page.dart';
+import 'package:aina_flutter/features/general/profile/presentation/pages/community_card_page.dart';
 import 'package:aina_flutter/app.dart' as app;
 import 'package:aina_flutter/features/coworking/presentation/pages/limit_accounts_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_edit_data_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_conference_service_page.dart';
-import 'package:aina_flutter/features/splash/presentation/pages/splash_page.dart';
+import 'package:aina_flutter/features/general/splash/presentation/pages/splash_page.dart';
 import 'package:aina_flutter/features/home/presentation/pages/home_promotions_page.dart';
-import 'package:aina_flutter/features/menu/presentation/pages/menu_page.dart';
+import 'package:aina_flutter/features/home/presentation/pages/menu_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/conference_room_details_page.dart';
 import 'package:aina_flutter/features/home/presentation/pages/home_bookings_page.dart';
+import 'package:aina_flutter/features/general/notifications/presentation/pages/notifications_page.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -567,6 +568,11 @@ class AppRouter {
         path: '/about',
         name: 'about',
         builder: (context, state) => const AboutPage(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        builder: (context, state) => const NotificationsPage(),
       ),
       GoRoute(
         path: '/tickets/:id',

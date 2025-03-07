@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
 
 class BuildingsList extends ConsumerWidget {
   const BuildingsList({super.key});
@@ -39,10 +40,7 @@ class BuildingsList extends ConsumerWidget {
                 .entries
                 .map((entry) => GestureDetector(
                       onTap: () {
-                        context.pushNamed(
-                          'mall_details',
-                          pathParameters: {'id': entry.value.id.toString()},
-                        );
+                        context.go('/malls/${entry.value.id}');
                       },
                       child: Container(
                         width: (MediaQuery.of(context).size.width -
@@ -96,10 +94,7 @@ class BuildingsList extends ConsumerWidget {
               children: [
                 ...buildings.asMap().entries.map((entry) => GestureDetector(
                       onTap: () {
-                        context.pushNamed(
-                          'coworking_details',
-                          pathParameters: {'id': entry.value.id.toString()},
-                        );
+                        context.go('/coworking/${entry.value.id}');
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width * 0.5 -
@@ -120,10 +115,7 @@ class BuildingsList extends ConsumerWidget {
                 GestureDetector(
                   onTap: () {
                     if (buildings.isNotEmpty) {
-                      context.pushNamed(
-                        'coworking_services',
-                        pathParameters: {'id': buildings[0].id.toString()},
-                      );
+                      context.go('/coworking/${buildings[0].id}/services');
                     }
                   },
                   child: Container(
@@ -191,7 +183,37 @@ class BuildingsList extends ConsumerWidget {
 
     return buildingsAsync.when(
       loading: () => _buildSkeletonLoader(context),
-      error: (error, stack) => Center(child: Text('Error: $error')),
+      error: (error, stack) {
+        print('❌ Ошибка при загрузке зданий: $error');
+        return Container(
+          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.red.shade100,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.red, width: 2),
+          ),
+          child: ErrorRefreshWidget(
+            onRefresh: () {
+              print('🔄 Обновление списка зданий...');
+              Future.microtask(() async {
+                try {
+                  ref.refresh(buildingsProvider);
+                } catch (e) {
+                  print('❌ Ошибка при обновлении списка зданий: $e');
+                }
+              });
+            },
+            errorMessage: 'stories.error.loading'.tr(),
+            refreshText: 'common.refresh'.tr(),
+            icon: Icons.warning_amber_rounded,
+            isServerError: true,
+            backgroundColor: Colors.transparent,
+            textColor: Colors.red.shade900,
+            errorColor: Colors.red,
+          ),
+        );
+      },
       data: (buildings) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

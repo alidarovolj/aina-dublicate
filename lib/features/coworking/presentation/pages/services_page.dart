@@ -244,9 +244,7 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
 
           if (service.type == 'DEFAULT') {
             // Для услуг типа DEFAULT переходим сразу на страницу календаря с валидацией
-            if (await checkAuthAndBiometric(context, ref, coworkingId)) {
-              _navigateToCalendar(context, service, coworkingId);
-            }
+            _navigateToCalendar(context, service, coworkingId);
           } else if (service.subtype == 'COWORKING') {
             print('Routing to coworking service details');
             context.push(

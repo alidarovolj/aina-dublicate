@@ -166,6 +166,7 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
                     return ReservedDateRange(
                       startAt: order['start_at'].toString(),
                       endAt: order['end_at'].toString(),
+                      orderData: order,
                     );
                   }
                 } catch (e) {
@@ -298,6 +299,12 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
     final rangeEnd = DateTime(end.year, end.month, end.day);
 
     return reservedDates.any((range) {
+      // Проверяем тип сервиса в заказе
+      final orderData = range.orderData;
+      if (orderData == null || orderData['service']?['type'] != 'COWORKING') {
+        return false;
+      }
+
       final reservedStart = DateTime.parse(range.startAt).toLocal();
       final reservedEnd = DateTime.parse(range.endAt).toLocal();
 
@@ -358,13 +365,12 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
         selectedDate = date;
         endDate = calculatedEndDate;
         final startTimeAt = tariffDetails.startTimeAt ?? '00:00:00';
-        var endTimeAt = tariffDetails.endTimeAt ?? '23:59:59';
 
         // Set the form values with proper time formatting
         formData['start_at'] =
             '${DateFormat('yyyy-MM-dd').format(date)} $startTimeAt';
         formData['end_at'] =
-            '${DateFormat('yyyy-MM-dd').format(calculatedEndDate)} $endTimeAt';
+            '${DateFormat('yyyy-MM-dd').format(calculatedEndDate)} 21:59:59';
         total = tariffDetails.price;
       });
     } catch (e) {
@@ -377,18 +383,22 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
     final timeUnit = tariffDetails.timeUnit.toLowerCase();
     final duration = tariffDetails.duration ?? 1;
 
+    DateTime endDate;
     switch (timeUnit) {
       case 'hour':
         // Для почасовой брони оставляем тот же день
-        return DateTime(
+        endDate = DateTime(
           startDate.year,
           startDate.month,
           startDate.day,
         );
+        break;
       case 'day':
-        return startDate.add(Duration(days: duration - 1));
+        endDate = startDate.add(Duration(days: duration));
+        break;
       case 'week':
-        return startDate.add(Duration(days: (duration * 7) - 1));
+        endDate = startDate.add(Duration(days: duration * 7));
+        break;
       case 'month':
         // Add months by calculating the target month and year
         int targetMonth = startDate.month + duration;
@@ -397,24 +407,38 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
           targetMonth -= 12;
           targetYear++;
         }
-        return DateTime(targetYear, targetMonth, startDate.day);
+        endDate = DateTime(targetYear, targetMonth, startDate.day);
+        break;
       case 'year':
         // Для годовой подписки добавляем указанное количество лет
-        return DateTime(
+        endDate = DateTime(
           startDate.year + duration,
           startDate.month,
           startDate.day,
-        ).subtract(
-            const Duration(days: 1)); // Вычитаем 1 день для включительной даты
+        );
+        break;
       default:
-        return startDate;
+        endDate = startDate;
     }
+
+    // Устанавливаем время на 23:59:59 предыдущего дня
+    return DateTime(
+      endDate.year,
+      endDate.month,
+      endDate.day,
+    ).subtract(const Duration(seconds: 1));
   }
 
   bool _isDateReserved(DateTime date) {
     final current = DateTime(date.year, date.month, date.day);
 
     return reservedDates.any((range) {
+      // Проверяем тип сервиса в заказе
+      final orderData = range.orderData;
+      if (orderData == null || orderData['service']?['type'] != 'COWORKING') {
+        return false;
+      }
+
       final startDate = DateTime.parse(range.startAt).toLocal();
       final endDate = DateTime.parse(range.endAt).toLocal();
       final rangeStart =
@@ -1125,10 +1149,12 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
 class ReservedDateRange {
   final String startAt;
   final String endAt;
+  final Map<String, dynamic>? orderData;
 
   ReservedDateRange({
     required this.startAt,
     required this.endAt,
+    this.orderData,
   });
 
   @override

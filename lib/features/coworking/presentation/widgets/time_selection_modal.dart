@@ -88,45 +88,76 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
 
     final slotDateTime =
         DateTime.parse('${DateFormat('yyyy-MM-dd').format(date)} $time:00');
+    final timeStep = widget.tariffDetails.timeStep ?? 0.5;
+    final stepDuration = Duration(minutes: (timeStep * 60).toInt());
 
     // Если выбираем начальное время
     if (selectingStartTime) {
-      // Проверяем, не попадает ли время в занятый промежуток
+      // Проверяем, не попадает ли время в занятый промежуток или следующий шаг после него
       for (final range in busyTimeRanges) {
-        final rangeStart = DateTime.parse(range.startAt).toLocal();
+        final rangeStart = DateTime.parse(range.startAt)
+            .toLocal()
+            .subtract(const Duration(seconds: 1));
         final rangeEnd = DateTime.parse(range.endAt).toLocal();
+        final nextStepAfterRange = rangeEnd.add(stepDuration);
+
         if (slotDateTime.isAtSameMomentAs(rangeStart) ||
+            slotDateTime.isAtSameMomentAs(rangeEnd) ||
+            slotDateTime.isAtSameMomentAs(nextStepAfterRange) ||
             (slotDateTime.isAfter(rangeStart) &&
-                slotDateTime.isBefore(rangeEnd))) {
+                slotDateTime.isBefore(nextStepAfterRange))) {
           return false;
         }
       }
+
+      // Проверяем, есть ли достаточно времени до конца последнего дня
+      final lastDay = timeSlotsByDay.keys.last;
+      final endOfLastDay =
+          DateTime(lastDay.year, lastDay.month, lastDay.day, 23, 59, 59);
+      final minDuration = widget.tariffDetails.minDuration ?? 2;
+      final minDurationInMinutes = (minDuration * 60).toInt();
+
+      final minutesUntilEnd = endOfLastDay.difference(slotDateTime).inMinutes;
+      if (minutesUntilEnd < minDurationInMinutes) {
+        return false;
+      }
+
       return true;
     }
     // Если выбираем конечное время
     else if (selectedStartTime != null) {
-      final startDateTime = DateTime.parse(
-          '${DateFormat('yyyy-MM-dd').format(date)} ${selectedStartTime!.split(' ')[1]}:00');
+      // Правильно парсим дату и время начала
+      final startTimeParts = selectedStartTime!.split(' ');
+      final startDate = startTimeParts[0];
+      final startTime = startTimeParts[1];
+      final startDateTime = DateTime.parse('$startDate $startTime:00');
+
       final minDuration = widget.tariffDetails.minDuration ?? 2;
-      final difference = slotDateTime.difference(startDateTime).inHours;
+      // Проверяем разницу в минутах вместо часов
+      final differenceInMinutes =
+          slotDateTime.difference(startDateTime).inMinutes;
+      final minDurationInMinutes = (minDuration * 60).toInt();
 
       // Проверяем минимальную длительность
-      if (difference < minDuration) {
+      if (differenceInMinutes < minDurationInMinutes) {
         return false;
       }
 
       // Проверяем пересечение с занятыми промежутками
       for (final range in busyTimeRanges) {
-        final rangeStart = DateTime.parse(range.startAt).toLocal();
+        final rangeStart = DateTime.parse(range.startAt)
+            .toLocal()
+            .subtract(const Duration(seconds: 1));
         final rangeEnd = DateTime.parse(range.endAt).toLocal();
+        final nextStepAfterRange = rangeEnd.add(stepDuration);
 
         // Проверяем, не пересекается ли выбранный промежуток с занятым
         if (startDateTime.isBefore(rangeStart) &&
-            slotDateTime.isAfter(rangeEnd)) {
+            slotDateTime.isAfter(nextStepAfterRange)) {
           continue; // Если наш интервал полностью охватывает занятый - это недопустимо
         }
 
-        if (startDateTime.isAfter(rangeEnd) ||
+        if (startDateTime.isAfter(nextStepAfterRange) ||
             slotDateTime.isBefore(rangeStart)) {
           continue; // Если наш интервал полностью до или после занятого - это допустимо
         }
@@ -161,15 +192,25 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
     } else {
       final fullDateTime =
           '${DateFormat('yyyy-MM-dd').format(date)} ${time.substring(0, 5)}';
-      final start = DateTime.parse('$selectedStartTime:00');
-      final end = DateTime.parse('$fullDateTime:00');
+
+      // Извлекаем дату и время из selectedStartTime
+      final startTimeParts = selectedStartTime!.split(' ');
+      final startDate = startTimeParts[0];
+      final startTime = startTimeParts[1];
+      final start = DateTime.parse('$startDate $startTime:00');
+
+      final tempEnd = DateTime.parse('$fullDateTime:00');
 
       final minDuration = widget.tariffDetails.minDuration ?? 2;
-      final difference = end.difference(start).inHours;
+      // Проверяем разницу в минутах вместо часов
+      final differenceInMinutes = tempEnd.difference(start).inMinutes;
+      final minDurationInMinutes = (minDuration * 60).toInt();
 
-      if (difference < minDuration) {
+      if (differenceInMinutes < minDurationInMinutes) {
         return;
       }
+
+      final end = tempEnd.subtract(const Duration(seconds: 1));
 
       // Проверяем пересечение с занятыми промежутками
       bool hasIntersection = false;
@@ -222,8 +263,10 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
         return;
       }
 
+      final endTimeWithoutLastSecond =
+          DateFormat('yyyy-MM-dd HH:mm:ss').format(end);
       setState(() {
-        selectedEndTime = fullDateTime;
+        selectedEndTime = endTimeWithoutLastSecond.substring(0, 16);
         isLoading = true;
       });
 
@@ -232,7 +275,7 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
           .preCalculateOrder(
         serviceId: widget.tariffDetails.id,
         startAt: '$selectedStartTime:00',
-        endAt: '$fullDateTime:00',
+        endAt: endTimeWithoutLastSecond,
       )
           .then((response) {
         setState(() {
@@ -492,8 +535,25 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                         final time = slots[index];
                         final fullDateTime =
                             '${DateFormat('yyyy-MM-dd').format(date)} $time';
-                        final isSelected = fullDateTime == selectedStartTime ||
-                            fullDateTime == selectedEndTime;
+
+                        // Проверяем совпадение с начальным временем или с конечным временем (с учетом -1 секунды)
+                        bool isSelected = false;
+                        if (selectedStartTime == fullDateTime) {
+                          isSelected = true;
+                        } else if (selectedEndTime != null) {
+                          // Для конечного времени сравниваем без учета секунд
+                          final selectedEndDateTime =
+                              DateTime.parse('$selectedEndTime:00');
+                          final currentSlotDateTime =
+                              DateTime.parse('$fullDateTime:00');
+                          final currentSlotEndDateTime = currentSlotDateTime
+                              .subtract(const Duration(seconds: 1));
+                          isSelected = DateFormat('yyyy-MM-dd HH:mm')
+                                  .format(selectedEndDateTime) ==
+                              DateFormat('yyyy-MM-dd HH:mm')
+                                  .format(currentSlotEndDateTime);
+                        }
+
                         final isSelectable = _isTimeSlotSelectable(date, time);
 
                         // Check if this time slot is in the selected range

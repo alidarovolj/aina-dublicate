@@ -252,6 +252,8 @@ class _BookingCardState extends State<BookingCard> {
                         children: [
                           Expanded(
                             child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Icon(
                                   Icons.access_time,
@@ -261,14 +263,12 @@ class _BookingCardState extends State<BookingCard> {
                                 const SizedBox(width: 4),
                                 Flexible(
                                   child: Text(
-                                    '${DateFormat('dd.MM.yyyy').format(DateTime.parse(widget.order.endAt))}, '
-                                    '${DateFormat('HH:mm').format(DateTime.parse(widget.order.startAt))} - '
-                                    '${DateFormat('HH:mm').format(DateTime.parse(widget.order.endAt))}',
+                                    '${DateFormat('dd.MM.yyyy HH:mm').format(DateTime.parse(widget.order.startAt).toLocal())} - \n${DateFormat('dd.MM.yyyy HH:mm').format(DateTime.parse(widget.order.endAt).toLocal())}',
                                     style: const TextStyle(
-                                      fontSize: 14,
+                                      fontSize: 13,
                                       color: Color(0xFF666666),
+                                      height: 1.5,
                                     ),
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ],

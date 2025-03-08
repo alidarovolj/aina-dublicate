@@ -410,7 +410,10 @@
     "permission_title": "Camera Access Required",
     "permission_denied": "Camera access is required. Please enable camera access in device settings.",
     "permission_required": "Please allow camera access to take a photo. You can enable it in Settings.",
-    "initialization_error": "Failed to initialize camera"
+    "initialization_error": "Failed to initialize camera",
+    "initialization": {
+      "error": "Camera initialization error"
+    }
   },
   "orders": {
     "detail": {

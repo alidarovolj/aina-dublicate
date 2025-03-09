@@ -141,8 +141,10 @@
 			<string>remote-notification</string>
 		</array>
 		<key>UIStatusBarHidden</key>
-		<true/>
+		<false/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
+		<key>UIStatusBarStyle</key>
+		<string>UIStatusBarStyleLightContent</string>
 	</dict>
 </plist>

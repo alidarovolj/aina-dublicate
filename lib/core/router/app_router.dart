@@ -50,6 +50,7 @@ import 'package:aina_flutter/features/home/presentation/pages/menu_page.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/conference_room_details_page.dart';
 import 'package:aina_flutter/features/home/presentation/pages/home_bookings_page.dart';
 import 'package:aina_flutter/features/general/notifications/presentation/pages/notifications_page.dart';
+import 'package:aina_flutter/features/general/no_internet/presentation/pages/no_internet_page.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -626,6 +627,11 @@ class AppRouter {
             },
           );
         },
+      ),
+      GoRoute(
+        path: '/no-internet',
+        name: 'no_internet',
+        builder: (context, state) => const NoInternetPage(),
       ),
     ],
   );

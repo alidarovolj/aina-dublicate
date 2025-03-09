@@ -15,12 +15,13 @@ import 'core/services/deep_link_service.dart';
 import 'package:aina_flutter/core/providers/update_notifier_provider.dart';
 import 'package:aina_flutter/core/widgets/update_overlay.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:aina_flutter/core/widgets/connectivity_wrapper.dart';
 
 // Global navigator key for accessing navigation from anywhere
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+final navigatorKey = GlobalKey<NavigatorState>();
 
 // Global route observer for navigation events
-final routeObserver = RouteObserver<ModalRoute>();
+final routeObserver = RouteObserver<ModalRoute<void>>();
 
 // Create the promenade profile provider
 final promenadeProfileProvider = FutureProvider<PromenadeProfile>((ref) async {
@@ -153,22 +154,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           ],
       supportedLocales: context.supportedLocales,
       locale: context.locale,
-      theme: AppTheme.theme.copyWith(
-        scaffoldBackgroundColor: AppColors.primary,
-        appBarTheme: const AppBarTheme(
-          systemOverlayStyle: SystemUiOverlayStyle(
-            statusBarColor: Colors.transparent,
-            statusBarIconBrightness: Brightness.dark,
-            statusBarBrightness: Brightness.dark,
-            systemNavigationBarColor: AppColors.primary,
-            systemNavigationBarIconBrightness: Brightness.light,
-          ),
-        ),
-      ),
+      theme: AppTheme.theme,
       builder: (context, child) {
-        // Оборачиваем все приложение в UpdateOverlay
+        // Оборачиваем все приложение в UpdateOverlay и ConnectivityWrapper
         return UpdateOverlay(
-          child: child ?? const SizedBox.shrink(),
+          child: ConnectivityWrapper(
+            child: child ?? const SizedBox.shrink(),
+          ),
         );
       },
       routerConfig: AppRouter.router,

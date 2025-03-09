@@ -23,6 +23,17 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
+  // Set system UI overlay style
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.black,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
+
   // Initialize Chucker
   ChuckerFlutter.showOnRelease = false;
   ChuckerFlutter.isDebugMode = true; // Disable debug mode
@@ -37,17 +48,6 @@ Future<void> main() async {
       prefs.getString('selected_locale') ?? prefs.getString('locale');
   final initialLocale =
       savedLocale != null ? Locale(savedLocale) : const Locale('ru');
-
-  // Set system UI overlay style
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarBrightness: Brightness.dark,
-      statusBarIconBrightness: Brightness.light,
-      statusBarColor: Colors.transparent,
-      systemNavigationBarColor: Colors.white,
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ),
-  );
 
   // Initialize Firebase
   await Firebase.initializeApp(

@@ -13,6 +13,7 @@ import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/providers/requests/auth/profile.dart'
     as profile;
 import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
+import 'package:aina_flutter/core/widgets/price_text.dart';
 
 // Определяем миксин прямо в этом файле
 mixin AuthCheckMixin {
@@ -126,10 +127,10 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
                 },
                 data: (services) {
                   print('✅ Категории услуг загружены: ${services.length}');
-                  services.forEach((service) {
+                  for (var service in services) {
                     print(
                         '  - Категория: ${service.title}, ID: ${service.id}, Type: ${service.type}');
-                  });
+                  }
 
                   return defaultServicesAsync.when(
                     loading: () => _buildSkeletonLoader(),
@@ -163,10 +164,10 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
                     data: (defaultServices) {
                       print(
                           '✅ Услуги типа DEFAULT загружены: ${defaultServices.length}');
-                      defaultServices.forEach((service) {
+                      for (var service in defaultServices) {
                         print(
                             '  - Услуга: ${service.title}, ID: ${service.id}, Type: ${service.type}');
-                      });
+                      }
 
                       // Изменяем порядок: сначала услуги, потом категории
                       final allServices = [...defaultServices, ...services];
@@ -326,12 +327,11 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
                     if (service.price != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
-                        child: Text(
-                          '${service.price} ₸/час',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.black54,
-                          ),
+                        child: PriceText(
+                          price: service.price.toString(),
+                          fontSize: 13,
+                          color: Colors.black54,
+                          withPerHour: true,
                         ),
                       ),
                   ],

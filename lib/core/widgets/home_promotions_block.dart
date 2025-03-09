@@ -562,7 +562,7 @@ class HomePromotionsBlock extends ConsumerWidget {
       const double itemHeight = 94.0;
       const double itemSpacing = 12.0;
 
-      return Container(
+      return SizedBox(
         height: itemHeight,
         width: double.infinity,
         child: ListView.separated(

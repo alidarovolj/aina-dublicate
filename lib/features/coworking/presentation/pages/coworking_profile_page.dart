@@ -466,14 +466,13 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
 
   Widget _buildSkeletonLoader() {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Container(
         color: AppColors.primary,
         child: SafeArea(
           child: Stack(
             children: [
               Container(
-                color: Colors.white,
+                color: AppColors.white,
                 margin: const EdgeInsets.only(top: 64),
                 child: SingleChildScrollView(
                   child: ConstrainedBox(
@@ -485,18 +484,19 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
                         mainAxisSize: MainAxisSize.max,
                         children: [
                           Container(
+                            color: AppColors.primary,
                             padding: const EdgeInsets.all(12),
-                            margin: const EdgeInsets.only(bottom: 30),
+                            margin: const EdgeInsets.only(bottom: 0),
                             child: Row(
                               children: [
                                 Shimmer.fromColors(
-                                  baseColor: Colors.grey[300]!,
-                                  highlightColor: Colors.grey[100]!,
+                                  baseColor: Colors.white.withOpacity(0.1),
+                                  highlightColor: Colors.white.withOpacity(0.2),
                                   child: Container(
                                     width: 80,
                                     height: 80,
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color: Colors.white.withOpacity(0.2),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                   ),
@@ -508,13 +508,16 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
                                         CrossAxisAlignment.start,
                                     children: [
                                       Shimmer.fromColors(
-                                        baseColor: Colors.grey[300]!,
-                                        highlightColor: Colors.grey[100]!,
+                                        baseColor:
+                                            Colors.white.withOpacity(0.1),
+                                        highlightColor:
+                                            Colors.white.withOpacity(0.2),
                                         child: Container(
                                           height: 20,
                                           width: 150,
                                           decoration: BoxDecoration(
-                                            color: Colors.white,
+                                            color:
+                                                Colors.white.withOpacity(0.2),
                                             borderRadius:
                                                 BorderRadius.circular(4),
                                           ),
@@ -522,13 +525,16 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
                                       ),
                                       const SizedBox(height: 8),
                                       Shimmer.fromColors(
-                                        baseColor: Colors.grey[300]!,
-                                        highlightColor: Colors.grey[100]!,
+                                        baseColor:
+                                            Colors.white.withOpacity(0.1),
+                                        highlightColor:
+                                            Colors.white.withOpacity(0.2),
                                         child: Container(
                                           height: 16,
                                           width: 100,
                                           decoration: BoxDecoration(
-                                            color: Colors.white,
+                                            color:
+                                                Colors.white.withOpacity(0.2),
                                             borderRadius:
                                                 BorderRadius.circular(4),
                                           ),
@@ -538,6 +544,29 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
                                   ),
                                 ),
                               ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 24, horizontal: 12),
+                            child: Column(
+                              children: List.generate(
+                                5,
+                                (index) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Shimmer.fromColors(
+                                    baseColor: Colors.grey[200]!,
+                                    highlightColor: Colors.grey[100]!,
+                                    child: Container(
+                                      height: 56,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[200],
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ],

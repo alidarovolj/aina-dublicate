@@ -70,7 +70,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
       // Обновляем настройки
       if (mounted) {
         try {
-          await ref.refresh(settingsProvider);
+          ref.refresh(settingsProvider);
           print('✅ Настройки обновлены');
         } catch (e) {
           print('❌ Ошибка при обновлении настроек: $e');

@@ -14,7 +14,7 @@ class ErrorRefreshWidget extends StatelessWidget {
   final Color? errorColor;
 
   const ErrorRefreshWidget({
-    Key? key,
+    super.key,
     required this.onRefresh,
     this.errorMessage,
     this.refreshText,
@@ -24,7 +24,7 @@ class ErrorRefreshWidget extends StatelessWidget {
     this.textColor,
     this.isServerError = false,
     this.errorColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

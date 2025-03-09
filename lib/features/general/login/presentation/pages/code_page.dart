@@ -232,7 +232,7 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
       }
 
       // Добавляем задержку, чтобы состояние авторизации успело обновиться
-      await Future.delayed(Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 500));
 
       // Проверяем, что состояние авторизации обновилось
       final authState = ref.read(authProvider);
@@ -240,7 +240,7 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
         print('⚠️ Состояние авторизации не обновилось после установки токена');
         // Если состояние не обновилось, пробуем еще раз
         await ref.read(authProvider.notifier).setToken(token);
-        await Future.delayed(Duration(milliseconds: 300));
+        await Future.delayed(const Duration(milliseconds: 300));
       }
     } catch (e) {
       print('❌ Ошибка при установке токена: $e');
@@ -263,7 +263,7 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
         '🔍 Финальное состояние авторизации: ${finalAuthState.isAuthenticated}');
 
     // Добавляем дополнительную задержку перед навигацией
-    await Future.delayed(Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 300));
 
     if (widget.buildingType == 'coworking' && widget.buildingId != null) {
       print('Debug: redirecting to coworking profile');

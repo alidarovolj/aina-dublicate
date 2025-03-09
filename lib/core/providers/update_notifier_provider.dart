@@ -302,8 +302,12 @@ class UpdateNotifier extends StateNotifier<UpdateNotifierState> {
       final targetParts = targetVersion.split('.').map(int.parse).toList();
 
       // Добавляем нули, если в какой-то версии меньше частей
-      while (currentParts.length < 3) currentParts.add(0);
-      while (targetParts.length < 3) targetParts.add(0);
+      while (currentParts.length < 3) {
+        currentParts.add(0);
+      }
+      while (targetParts.length < 3) {
+        targetParts.add(0);
+      }
 
       print('🔢 Разбор версий: текущая $currentParts, целевая $targetParts');
 

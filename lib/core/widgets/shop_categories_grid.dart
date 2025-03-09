@@ -166,9 +166,9 @@ class _ShopCategoriesGridState extends ConsumerState<ShopCategoriesGrid> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.warning_amber_rounded,
-                          color: const Color(0xFFE53935),
+                          color: Color(0xFFE53935),
                           size: 32,
                         ),
                         const SizedBox(height: 12),

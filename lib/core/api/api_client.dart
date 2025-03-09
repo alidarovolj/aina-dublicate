@@ -1,15 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
 import 'dart:async';
 import 'package:aina_flutter/app.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:aina_flutter/core/services/storage_service.dart';
 
 // Cache entry class to store response with metadata

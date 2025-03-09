@@ -278,7 +278,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
           onPressed: () async {
             Navigator.of(context).pop();
             // Открываем WhatsApp
-            final whatsappUrl =
+            const whatsappUrl =
                 'https://wa.me/77777777777'; // Замените на реальный номер
             try {
               await launchUrl(Uri.parse(whatsappUrl));
@@ -415,7 +415,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
                     children: [
                       Text(
                         tr('common.support'),
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppColors.primary,
                           fontSize: 14,
                         ),
@@ -438,7 +438,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
               const SizedBox(height: 8),
               Text(
                 'Причина: $_reviewComment',
-                style: TextStyle(fontSize: 14),
+                style: const TextStyle(fontSize: 14),
               ),
               const SizedBox(height: 8),
             ],

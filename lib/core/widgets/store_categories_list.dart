@@ -131,7 +131,7 @@ class _StoreCategoriesListState extends ConsumerState<StoreCategoriesList> {
               ..sort((a, b) => a.order.compareTo(b.order));
 
             if (sortedCategories.isEmpty) {
-              return Center(
+              return const Center(
                 child: Text('No categories available'),
               );
             }

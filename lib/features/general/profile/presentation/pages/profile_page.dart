@@ -13,7 +13,6 @@ import 'dart:io';
 import 'package:aina_flutter/core/widgets/avatar_edit_widget.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:aina_flutter/core/api/api_client.dart';
 import 'package:dio/dio.dart';
 import 'package:aina_flutter/core/router/route_observer.dart';
 

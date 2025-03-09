@@ -54,7 +54,7 @@ import 'package:aina_flutter/features/general/notifications/presentation/pages/n
 class AppRouter {
   static final router = GoRouter(
     navigatorKey: app.navigatorKey,
-    initialLocation: '/',
+    initialLocation: '/home',
     observers: [
       ChuckerFlutter.navigatorObserver,
       app.routeObserver,

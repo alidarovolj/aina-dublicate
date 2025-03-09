@@ -143,9 +143,9 @@ class StorybookApp extends StatelessWidget {
                   label: 'Button Type',
                   initial: ButtonType.filled,
                   options: [
-                    Option(label: 'Filled', value: ButtonType.filled),
-                    Option(label: 'Bordered', value: ButtonType.bordered),
-                    Option(label: 'Light', value: ButtonType.light),
+                    const Option(label: 'Filled', value: ButtonType.filled),
+                    const Option(label: 'Bordered', value: ButtonType.bordered),
+                    const Option(label: 'Light', value: ButtonType.light),
                   ],
                 );
 
@@ -289,9 +289,9 @@ class StorybookApp extends StatelessWidget {
                   label: 'Validation State',
                   initial: 'neutral',
                   options: [
-                    Option(label: 'Neutral', value: 'neutral'),
-                    Option(label: 'Valid', value: 'valid'),
-                    Option(label: 'Invalid', value: 'invalid'),
+                    const Option(label: 'Neutral', value: 'neutral'),
+                    const Option(label: 'Valid', value: 'valid'),
+                    const Option(label: 'Invalid', value: 'invalid'),
                   ],
                 );
 
@@ -466,7 +466,7 @@ class StorybookApp extends StatelessWidget {
                               ),
                             ),
                           ),
-                        LanguageSwitcher(),
+                        const LanguageSwitcher(),
                       ],
                     ),
                   ),
@@ -562,8 +562,8 @@ class StorybookApp extends StatelessWidget {
               description: 'Блок с описанием',
               builder: (context) => Scaffold(
                 appBar: AppBar(title: const Text('Description Block')),
-                body: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                body: const Padding(
+                  padding: EdgeInsets.all(16.0),
                   child: DescriptionBlock(
                     text:
                         'Это подробное описание блока. Здесь может быть размещен любой текст, который нужно показать пользователю.',
@@ -706,15 +706,15 @@ class StorybookApp extends StatelessWidget {
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: Text('QR Scanner'),
-                          content: Text(
+                          title: const Text('QR Scanner'),
+                          content: const Text(
                               'В storybook невозможно показать полноценный QR сканер из-за зависимостей от аутентификации и других сервисов.'),
                           actions: [
                             TextButton(
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },
-                              child: Text('Закрыть'),
+                              child: const Text('Закрыть'),
                             ),
                           ],
                         ),
@@ -870,7 +870,7 @@ class StorybookApp extends StatelessWidget {
                           Expanded(
                             child: TabBarView(
                               controller: tabController,
-                              children: [
+                              children: const [
                                 Center(
                                     child: Text('Главная',
                                         style: TextStyle(fontSize: 24))),
@@ -1094,10 +1094,10 @@ class StorybookApp extends StatelessWidget {
                       total: 5000,
                       duration: 2.0,
                       startAt: DateTime.now()
-                          .add(Duration(hours: 24))
+                          .add(const Duration(hours: 24))
                           .toIso8601String(),
                       endAt: DateTime.now()
-                          .add(Duration(hours: 26))
+                          .add(const Duration(hours: 26))
                           .toIso8601String(),
                       createdAt: DateTime.now().toIso8601String(),
                       serviceId: 1,
@@ -1265,9 +1265,9 @@ class StorybookApp extends StatelessWidget {
             Story(
               name: 'features/home/widgets/Main TabBar Screen',
               description: 'Основной экран с табами',
-              builder: (context) => MainTabBarScreen(
+              builder: (context) => const MainTabBarScreen(
                 currentRoute: '/malls',
-                child: const Center(
+                child: Center(
                   child: Text('Содержимое текущего таба'),
                 ),
               ),
@@ -1281,10 +1281,10 @@ class StorybookApp extends StatelessWidget {
                   label: 'Current Route',
                   initial: '/malls',
                   options: [
-                    Option(label: 'Malls', value: '/malls'),
-                    Option(label: 'Home', value: '/home'),
-                    Option(label: 'Profile', value: '/profile'),
-                    Option(label: 'Promotions', value: '/promotions'),
+                    const Option(label: 'Malls', value: '/malls'),
+                    const Option(label: 'Home', value: '/home'),
+                    const Option(label: 'Profile', value: '/profile'),
+                    const Option(label: 'Promotions', value: '/promotions'),
                   ],
                 );
 
@@ -1309,7 +1309,7 @@ class StorybookApp extends StatelessWidget {
               description: 'Сетка категорий магазинов',
               builder: (context) => Scaffold(
                 appBar: AppBar(title: const Text('Shop Categories Grid')),
-                body: ShopCategoriesGrid(mallId: '1'),
+                body: const ShopCategoriesGrid(mallId: '1'),
               ),
             ),
             Story(
@@ -1319,7 +1319,7 @@ class StorybookApp extends StatelessWidget {
               builder: (context) => Scaffold(
                 appBar: AppBar(
                     title: const Text('Shop Categories Grid with Knobs')),
-                body: ShopCategoriesGrid(mallId: '1'),
+                body: const ShopCategoriesGrid(mallId: '1'),
               ),
             ),
             Story(
@@ -1327,7 +1327,7 @@ class StorybookApp extends StatelessWidget {
               description: 'Сетка категорий',
               builder: (context) => Scaffold(
                 appBar: AppBar(title: const Text('Categories Grid')),
-                body: CategoriesGrid(mallId: '1'),
+                body: const CategoriesGrid(mallId: '1'),
               ),
             ),
             Story(
@@ -1656,6 +1656,8 @@ class StorybookConferenceTariffCard extends StatelessWidget {
 
 // Специальная версия модального окна для связи для Storybook
 class StorybookCommunicationModal extends StatelessWidget {
+  const StorybookCommunicationModal({super.key});
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;

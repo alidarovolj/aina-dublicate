@@ -9,31 +9,21 @@ class DefaultService extends Service {
   final String? capacity;
 
   DefaultService({
-    required int id,
-    required String title,
-    String? description,
-    required String type,
-    String? subtype,
-    int? parentId,
-    int? categoryId,
-    ServiceImage? image,
-    List<ServiceImage>? gallery,
-    int? price,
+    required super.id,
+    required super.title,
+    super.description,
+    required super.type,
+    super.subtype,
+    super.parentId,
+    super.categoryId,
+    super.image,
+    super.gallery,
+    super.price,
     this.timeUnit,
     this.isFixed,
     this.capacity,
   }) : super(
-          id: id,
-          title: title,
-          description: description,
-          type: type,
-          subtype: subtype,
-          parentId: parentId,
-          sort: 0, // Значение по умолчанию
-          image: image,
-          gallery: gallery,
-          price: price,
-          categoryId: categoryId,
+          sort: 0,
         );
 
   factory DefaultService.fromJson(Map<String, dynamic> json) {

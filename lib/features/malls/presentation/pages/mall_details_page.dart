@@ -17,7 +17,6 @@ import 'package:aina_flutter/core/widgets/shop_categories_grid.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
 import 'package:aina_flutter/core/providers/requests/mall_categories_provider.dart';
 import 'package:aina_flutter/core/providers/requests/mall_shop_categories_provider.dart';
 

@@ -13,7 +13,6 @@ import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:dio/dio.dart';
 import 'core/services/deep_link_service.dart';
 import 'package:aina_flutter/core/providers/update_notifier_provider.dart';
-import 'package:aina_flutter/core/widgets/update_modal.dart';
 import 'package:aina_flutter/core/widgets/update_overlay.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 
@@ -154,16 +153,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           ],
       supportedLocales: context.supportedLocales,
       locale: context.locale,
-      theme: appTheme.copyWith(
+      theme: AppTheme.theme.copyWith(
         scaffoldBackgroundColor: AppColors.primary,
-        textTheme: GoogleFonts.latoTextTheme(
-          const TextTheme(
-            bodyMedium: TextStyle(
-              letterSpacing: 0,
-              height: 1.3,
-            ),
-          ),
-        ),
         appBarTheme: const AppBarTheme(
           systemOverlayStyle: SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,

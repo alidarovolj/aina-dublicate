@@ -57,8 +57,7 @@ class NotificationsPage extends ConsumerWidget {
           List? notifications;
 
           try {
-            if (notificationsResponse is Map &&
-                notificationsResponse.containsKey('data')) {
+            if (notificationsResponse.containsKey('data')) {
               final dataValue = notificationsResponse['data'];
               if (dataValue is List) {
                 // Прямой список уведомлений

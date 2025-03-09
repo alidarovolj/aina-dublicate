@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
+import 'package:aina_flutter/core/widgets/price_text.dart';
 import 'package:aina_flutter/features/coworking/domain/models/coworking_tariff_details.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -631,15 +632,20 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
                         color: AppColors.primary,
                       ),
                     ),
-                    Text(
-                      calculatedTotal != null
-                          ? '$calculatedTotal ₸'
-                          : 'coworking.time_selection.specify_time'.tr(),
-                      style: const TextStyle(
+                    if (calculatedTotal != null)
+                      PriceText(
+                        price: calculatedTotal.toString(),
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,
+                      )
+                    else
+                      Text(
+                        'coworking.time_selection.specify_time'.tr(),
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 8),

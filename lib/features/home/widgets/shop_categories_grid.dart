@@ -67,8 +67,8 @@ class _ShopCategoriesGridState extends ConsumerState<ShopCategoriesGrid> {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(AppLength.xs),
+          const Padding(
+            padding: EdgeInsets.all(AppLength.xs),
             child: Center(
               child: Text('Выберите ТРЦ для просмотра магазинов'),
             ),

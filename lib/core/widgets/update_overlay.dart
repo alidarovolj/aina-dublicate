@@ -86,8 +86,8 @@ class _UpdateOverlayState extends ConsumerState<UpdateOverlay> {
               color: Colors.black.withOpacity(0.5),
               width: double.infinity,
               height: double.infinity,
-              child: Center(
-                child: const UpdateModal(),
+              child: const Center(
+                child: UpdateModal(),
               ),
             ),
           ),

@@ -17,7 +17,6 @@ import 'package:aina_flutter/core/utils/notification_utils.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'firebase_options.dart';
-import 'package:aina_flutter/core/providers/update_notifier_provider.dart';
 
 Future<void> main() async {
   // Ensure Flutter bindings are initialized

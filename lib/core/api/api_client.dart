@@ -8,6 +8,7 @@ import 'package:aina_flutter/app.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/services/storage_service.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 
 // Cache entry class to store response with metadata
 class _CacheEntry {
@@ -135,12 +136,10 @@ class ApiClient {
             if (!error.requestOptions.path.contains('/api/promenade/profile')) {
               // Show error message
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('errors.unauthorized'.tr()),
-                    behavior: SnackBarBehavior.floating,
-                    duration: const Duration(seconds: 3),
-                  ),
+                BaseSnackBar.show(
+                  context,
+                  message: 'errors.unauthorized'.tr(),
+                  type: SnackBarType.error,
                 );
               });
             }

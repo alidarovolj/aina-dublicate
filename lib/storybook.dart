@@ -36,6 +36,24 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:aina_flutter/features/general/payment/widgets/payment_webview.dart';
+import 'package:aina_flutter/core/widgets/price_text.dart';
+import 'package:aina_flutter/core/widgets/gender_selector.dart';
+import 'package:aina_flutter/core/widgets/base_input.dart';
+import 'package:aina_flutter/core/widgets/base_radio.dart';
+import 'package:aina_flutter/core/widgets/base_textarea.dart';
+import 'package:aina_flutter/core/widgets/no_internet_widget.dart';
+import 'package:aina_flutter/core/widgets/service_card.dart';
+import 'package:aina_flutter/core/widgets/upper_header.dart';
+import 'package:aina_flutter/features/general/scanner/widgets/auth_warning_modal.dart';
+import 'package:aina_flutter/core/services/amplitude_service.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
+import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
+import 'package:aina_flutter/core/widgets/main_custom_tabbar.dart';
+import 'package:aina_flutter/core/widgets/coworking_custom_tabbar.dart';
+import 'package:aina_flutter/features/general/scanner/widgets/receipt_success_modal.dart';
+import 'package:aina_flutter/features/general/scanner/widgets/receipt_error_modal.dart';
+import 'package:aina_flutter/features/general/scanner/widgets/qr_response_modal.dart';
+import 'package:aina_flutter/features/general/scanner/widgets/qr_processing_loader.dart';
 
 class StorybookApp extends StatelessWidget {
   const StorybookApp({super.key});
@@ -1069,10 +1087,11 @@ class StorybookApp extends StatelessWidget {
                       ),
                     ),
                     onTimerExpired: (orderId) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text(
-                                'Время бронирования истекло для заказа #$orderId')),
+                      BaseSnackBar.show(
+                        context,
+                        message:
+                            'Время бронирования истекло для заказа #$orderId',
+                        type: SnackBarType.error,
                       );
                     },
                   ),
@@ -1112,10 +1131,11 @@ class StorybookApp extends StatelessWidget {
                       ),
                     ),
                     onTimerExpired: (orderId) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text(
-                                'Время бронирования истекло для заказа #$orderId')),
+                      BaseSnackBar.show(
+                        context,
+                        message:
+                            'Время бронирования истекло для заказа #$orderId',
+                        type: SnackBarType.error,
                       );
                     },
                   ),
@@ -1132,8 +1152,20 @@ class StorybookApp extends StatelessWidget {
                   child: MallInfoBlock(
                     workingHours: '10:00 - 22:00',
                     address: 'г. Алматы, ул. Примерная, 123',
-                    onCallTap: () {},
-                    onMapTap: () {},
+                    onCallTap: () {
+                      BaseSnackBar.show(
+                        context,
+                        message: 'Нажата кнопка звонка',
+                        type: SnackBarType.neutral,
+                      );
+                    },
+                    onMapTap: () {
+                      BaseSnackBar.show(
+                        context,
+                        message: 'Нажата кнопка карты',
+                        type: SnackBarType.neutral,
+                      );
+                    },
                   ),
                 ),
               ),
@@ -1161,13 +1193,17 @@ class StorybookApp extends StatelessWidget {
                       workingHours: workingHours,
                       address: address,
                       onCallTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Нажата кнопка звонка')),
+                        BaseSnackBar.show(
+                          context,
+                          message: 'Нажата кнопка звонка',
+                          type: SnackBarType.neutral,
                         );
                       },
                       onMapTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Нажата кнопка карты')),
+                        BaseSnackBar.show(
+                          context,
+                          message: 'Нажата кнопка карты',
+                          type: SnackBarType.neutral,
                         );
                       },
                     ),
@@ -1178,33 +1214,30 @@ class StorybookApp extends StatelessWidget {
             Story(
               name: 'features/malls/widgets/Mall Details Header with Knobs',
               description: 'Заголовок деталей ТРЦ с настраиваемыми свойствами',
-              builder: (context) {
-                final title = context.knobs.text(
-                  label: 'Title',
-                  initial: 'Название ТРЦ',
-                );
-
-                return Scaffold(
-                  body: Column(
-                    children: [
-                      MallDetailsHeader(
-                        title: title,
-                        onClose: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Нажата кнопка закрытия')),
-                          );
-                        },
+              builder: (context) => Scaffold(
+                body: Column(
+                  children: [
+                    MallDetailsHeader(
+                      title: context.knobs.text(
+                        label: 'Title',
+                        initial: 'Название ТРЦ',
                       ),
-                      const Expanded(
-                        child: Center(
-                          child: Text('Содержимое страницы'),
-                        ),
+                      onClose: () {
+                        BaseSnackBar.show(
+                          context,
+                          message: 'Нажата кнопка закрытия',
+                          type: SnackBarType.neutral,
+                        );
+                      },
+                    ),
+                    const Expanded(
+                      child: Center(
+                        child: Text('Содержимое страницы'),
                       ),
-                    ],
-                  ),
-                );
-              },
+                    ),
+                  ],
+                ),
+              ),
             ),
             Story(
               name: 'features/malls/widgets/Mall Selector',
@@ -1223,10 +1256,10 @@ class StorybookApp extends StatelessWidget {
                           setState(() {
                             selectedMallId = newValue;
                           });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text(
-                                    'Выбран ТРЦ с ID: ${newValue ?? "Все"}')),
+                          BaseSnackBar.show(
+                            context,
+                            message: 'Выбран ТРЦ с ID: ${newValue ?? "Все"}',
+                            type: SnackBarType.neutral,
                           );
                         },
                       );
@@ -1374,11 +1407,516 @@ class StorybookApp extends StatelessWidget {
                     Navigator.of(context).pop();
                   },
                   onNavigationRequest: (url) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Навигация по URL: $url')),
+                    BaseSnackBar.show(
+                      context,
+                      message: 'Навигация по URL: $url',
+                      type: SnackBarType.neutral,
                     );
                     return url;
                   },
+                ),
+              ),
+            ),
+            Story(
+              name: 'core/services/Amplitude Service',
+              description: 'Тестирование отправки событий в Amplitude',
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text('Amplitude Service')),
+                body: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Тестирование отправки событий в Amplitude',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          )),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Нажмите на кнопки ниже, чтобы отправить тестовые события в Amplitude. '
+                        'Проверьте консоль для просмотра логов и панель Amplitude для проверки получения событий.',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                      const SizedBox(height: 24),
+                      CustomButton(
+                        label: 'Проверить инициализацию Amplitude',
+                        onPressed: () async {
+                          await AmplitudeService().init();
+                        },
+                        type: ButtonType.filled,
+                        isFullWidth: true,
+                      ),
+                      const SizedBox(height: 16),
+                      CustomButton(
+                        label: 'Отправить тестовое событие',
+                        onPressed: () async {
+                          await AmplitudeService().logEvent(
+                            'test_event_from_storybook',
+                            eventProperties: {
+                              'source': 'storybook',
+                              'timestamp': DateTime.now().toString(),
+                            },
+                          );
+                        },
+                        type: ButtonType.filled,
+                        isFullWidth: true,
+                      ),
+                      const SizedBox(height: 16),
+                      CustomButton(
+                        label: 'Отправить событие с user_id',
+                        onPressed: () async {
+                          final testUserId =
+                              'test_user_${DateTime.now().millisecondsSinceEpoch}';
+                          await AmplitudeService().logEventWithUserId(
+                            'test_user_id_event',
+                            userId: testUserId,
+                            eventProperties: {
+                              'source': 'storybook',
+                              'timestamp': DateTime.now().toString(),
+                            },
+                          );
+                        },
+                        type: ButtonType.filled,
+                        isFullWidth: true,
+                      ),
+                      const SizedBox(height: 16),
+                      CustomButton(
+                        label: 'Проверить отправку событий',
+                        onPressed: () async {
+                          await AmplitudeService().validateEventSending();
+                        },
+                        type: ButtonType.filled,
+                        isFullWidth: true,
+                      ),
+                      const SizedBox(height: 16),
+                      CustomButton(
+                        label: 'Получить текущий user_id',
+                        onPressed: () async {
+                          final userId =
+                              await AmplitudeService().getCurrentUserId();
+                          BaseSnackBar.show(
+                            context,
+                            message: 'Текущий user_id: $userId',
+                            type: SnackBarType.neutral,
+                          );
+                        },
+                        type: ButtonType.bordered,
+                        isFullWidth: true,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Story(
+              name: 'core/widgets/text/Price Text',
+              description: 'Виджет для отображения цены',
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text('Price Text')),
+                body: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Basic Price Text',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      PriceText(
+                        price: '5000',
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('Price Text with Custom Style',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      PriceText(
+                        price: '15000',
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Story(
+              name: 'core/widgets/inputs/Gender Selector',
+              description: 'Селектор пола',
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text('Gender Selector')),
+                body: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Basic Gender Selector',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      StatefulBuilder(
+                        builder: (context, setState) {
+                          String selectedGender = 'male';
+                          return GenderSelector(
+                            selectedGender: selectedGender,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedGender = value;
+                              });
+                              BaseSnackBar.show(
+                                context,
+                                message: 'Выбран пол: $value',
+                                type: SnackBarType.neutral,
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Story(
+              name: 'core/widgets/inputs/Base Input',
+              description: 'Базовое поле ввода',
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text('Base Input')),
+                body: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Basic Base Input',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      BaseInput(
+                        controller: TextEditingController(),
+                        hintText: 'Введите текст',
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('Base Input with Label',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      BaseInput(
+                        controller: TextEditingController(),
+                        hintText: 'Введите имя',
+                        label: 'Имя',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Story(
+              name: 'core/widgets/inputs/Base Textarea',
+              description: 'Базовое многострочное поле ввода',
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text('Base Textarea')),
+                body: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Basic Base Textarea',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      BaseTextarea(
+                        controller: TextEditingController(),
+                        hintText: 'Введите текст',
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('Base Textarea with Label',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      BaseTextarea(
+                        controller: TextEditingController(),
+                        hintText: 'Введите комментарий',
+                        label: 'Комментарий',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Story(
+              name: 'core/widgets/layout/Upper Header',
+              description: 'Верхний заголовок',
+              builder: (context) => Scaffold(
+                body: Column(
+                  children: [
+                    const UpperHeader(),
+                    const Expanded(
+                      child: Center(
+                        child: Text('Содержимое страницы'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Story(
+              name: 'core/widgets/feedback/No Internet Widget',
+              description: 'Виджет отсутствия интернета',
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text('No Internet Widget')),
+                body: Center(
+                  child: NoInternetWidget(
+                    onRefresh: () {
+                      BaseSnackBar.show(
+                        context,
+                        message: 'Попытка переподключения...',
+                        type: SnackBarType.neutral,
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+            Story(
+              name: 'core/widgets/cards/Service Card',
+              description: 'Карточка услуги',
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text('Service Card')),
+                body: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ServiceCard(
+                    coworkingId: '1',
+                  ),
+                ),
+              ),
+            ),
+            Story(
+              name: 'features/general/scanner/widgets/Auth Warning Modal',
+              description: 'Модальное окно предупреждения об авторизации',
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text('Auth Warning Modal')),
+                body: Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      AuthWarningModal.show(
+                        context,
+                        mallId: '1',
+                        promotionId: '1',
+                      );
+                    },
+                    child: const Text('Показать предупреждение об авторизации'),
+                  ),
+                ),
+              ),
+            ),
+            Story(
+              name: 'core/widgets/feedback/Base Snack Bar',
+              description: 'Базовый снэк-бар',
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text('Base Snack Bar')),
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          BaseSnackBar.show(
+                            context,
+                            message: 'Это информационное сообщение',
+                            type: SnackBarType.neutral,
+                          );
+                        },
+                        child: const Text('Показать информационный снэк-бар'),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          BaseSnackBar.show(
+                            context,
+                            message: 'Это сообщение об успехе',
+                            type: SnackBarType.success,
+                          );
+                        },
+                        child: const Text('Показать снэк-бар успеха'),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          BaseSnackBar.show(
+                            context,
+                            message: 'Это сообщение об ошибке',
+                            type: SnackBarType.error,
+                          );
+                        },
+                        child: const Text('Показать снэк-бар ошибки'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Story(
+              name: 'core/widgets/feedback/Error Refresh Widget',
+              description: 'Виджет ошибки с возможностью обновления',
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text('Error Refresh Widget')),
+                body: Center(
+                  child: ErrorRefreshWidget(
+                    errorMessage: 'Произошла ошибка при загрузке данных',
+                    onRefresh: () {
+                      BaseSnackBar.show(
+                        context,
+                        message: 'Попытка обновления...',
+                        type: SnackBarType.neutral,
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+            Story(
+              name: 'core/widgets/navigation/Main Custom Tabbar',
+              description: 'Основной пользовательский таббар',
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text('Main Custom Tabbar')),
+                body: DefaultTabController(
+                  length: 4,
+                  child: Builder(
+                    builder: (context) {
+                      final TabController tabController =
+                          DefaultTabController.of(context);
+                      return Column(
+                        children: [
+                          MainCustomTabBar(
+                            tabController: tabController,
+                          ),
+                          Expanded(
+                            child: TabBarView(
+                              controller: tabController,
+                              children: [
+                                const Center(child: Text('Главная')),
+                                const Center(child: Text('Акции')),
+                                const Center(child: Text('Бронирования')),
+                                const Center(child: Text('Меню')),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+            Story(
+              name: 'core/widgets/navigation/Coworking Custom Tabbar',
+              description: 'Пользовательский таббар для коворкинга',
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text('Coworking Custom Tabbar')),
+                body: DefaultTabController(
+                  length: 5,
+                  child: Builder(
+                    builder: (context) {
+                      final TabController tabController =
+                          DefaultTabController.of(context);
+                      return Column(
+                        children: [
+                          CoworkingCustomTabBar(
+                            tabController: tabController,
+                          ),
+                          Expanded(
+                            child: TabBarView(
+                              controller: tabController,
+                              children: [
+                                const Center(child: Text('Променад')),
+                                const Center(child: Text('Сообщество')),
+                                const Center(child: Text('Услуги')),
+                                const Center(child: Text('Бронирования')),
+                                const Center(child: Text('Профиль')),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+            Story(
+              name: 'features/general/scanner/widgets/Receipt Success Modal',
+              description: 'Модальное окно успешного получения чека',
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text('Receipt Success Modal')),
+                body: Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      ReceiptSuccessModal.show(
+                        context,
+                        amount: 5000,
+                        tickets: [123, 456],
+                        mallId: '1',
+                      );
+                    },
+                    child: const Text('Показать модальное окно успеха'),
+                  ),
+                ),
+              ),
+            ),
+            Story(
+              name: 'features/general/scanner/widgets/Receipt Error Modal',
+              description: 'Модальное окно ошибки получения чека',
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text('Receipt Error Modal')),
+                body: Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      ReceiptErrorModal.show(
+                        context,
+                        message: 'Произошла ошибка при получении чека',
+                        mallId: '1',
+                      );
+                    },
+                    child: const Text('Показать модальное окно ошибки'),
+                  ),
+                ),
+              ),
+            ),
+            Story(
+              name: 'features/general/scanner/widgets/QR Response Modal',
+              description: 'Модальное окно ответа QR',
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text('QR Response Modal')),
+                body: Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      QrResponseModal.show(
+                        context,
+                        isSuccess: true,
+                        message: 'QR-код успешно отсканирован',
+                        status: 'Активен',
+                      );
+                    },
+                    child: const Text('Показать модальное окно ответа QR'),
+                  ),
+                ),
+              ),
+            ),
+            Story(
+              name: 'features/general/scanner/widgets/QR Processing Loader',
+              description: 'Загрузчик обработки QR',
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text('QR Processing Loader')),
+                body: Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => const QrProcessingLoader(),
+                      );
+
+                      // Автоматически закрыть через 3 секунды
+                      Future.delayed(const Duration(seconds: 3), () {
+                        Navigator.of(context).pop();
+                      });
+                    },
+                    child: const Text('Показать загрузчик обработки QR'),
+                  ),
                 ),
               ),
             ),

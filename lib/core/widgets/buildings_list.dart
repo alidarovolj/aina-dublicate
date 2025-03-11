@@ -56,7 +56,7 @@ class BuildingsList extends ConsumerWidget {
                 .map((entry) => GestureDetector(
                       onTap: () {
                         _logShoppingMallClick(entry.value);
-                        context.go('/malls/${entry.value.id}');
+                        context.push('/malls/${entry.value.id}');
                       },
                       child: Container(
                         width: (MediaQuery.of(context).size.width -
@@ -110,7 +110,7 @@ class BuildingsList extends ConsumerWidget {
               children: [
                 ...buildings.asMap().entries.map((entry) => GestureDetector(
                       onTap: () {
-                        context.go('/coworking/${entry.value.id}');
+                        context.push('/coworking/${entry.value.id}');
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width * 0.5 -

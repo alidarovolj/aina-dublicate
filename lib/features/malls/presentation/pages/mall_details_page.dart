@@ -33,7 +33,7 @@ class MallDetailsPage extends ConsumerWidget {
     final buildingsAsync = ref.watch(buildingsProvider);
 
     return PopScope(
-      canPop: false,
+      canPop: true,
       child: buildingsAsync.when(
         loading: () => _buildSkeletonLoader(),
         error: (error, stack) => Scaffold(

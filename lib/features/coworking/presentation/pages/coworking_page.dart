@@ -31,7 +31,7 @@ class CoworkingPage extends ConsumerWidget {
     final buildingsAsync = ref.watch(buildingsProvider);
 
     return PopScope(
-      canPop: false,
+      canPop: true,
       child: buildingsAsync.when(
         loading: () => Scaffold(
           backgroundColor: AppColors.primary,

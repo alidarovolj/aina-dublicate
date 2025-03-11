@@ -110,11 +110,11 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
             print('🏢 Mall ID found: $mallId, navigating to profile');
-            context.go('/malls/$mallId/profile');
+            context.push('/malls/$mallId/profile');
             return;
           }
           print('⚠️ No mall ID found, going to malls');
-          context.go('/malls');
+          context.push('/malls');
           return;
         }
 
@@ -124,11 +124,11 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
             print('🏢 Mall ID found: $mallId, navigating to stores');
-            context.go('/malls/$mallId/stores');
+            context.push('/malls/$mallId/stores');
             return;
           }
           print('🏪 No mall ID found, going to general stores');
-          context.go('/stores');
+          context.push('/stores');
           return;
         }
 
@@ -138,11 +138,11 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
             print('🏢 Mall ID found: $mallId, navigating to mall details');
-            context.go('/malls/$mallId');
+            context.push('/malls/$mallId');
             return;
           }
           print('🏢 No mall ID found, going to malls list');
-          context.go('/malls');
+          context.push('/malls');
           return;
         }
 
@@ -152,16 +152,16 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
             print('🏢 Mall ID found: $mallId, navigating to promotions');
-            context.go('/malls/$mallId/promotions');
+            context.push('/malls/$mallId/promotions');
             return;
           }
           print('⚠️ No mall ID found, going to malls');
-          context.go('/malls');
+          context.push('/malls');
           return;
         }
 
         print('🔄 Default navigation to route: $route');
-        context.go(route);
+        context.push(route);
       });
     } else {
       print('⚠️ Navigation skipped: same route or null');

@@ -15,6 +15,8 @@ import 'package:aina_flutter/core/providers/requests/auth/user.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:dio/dio.dart';
 import 'package:aina_flutter/core/router/route_observer.dart';
+import 'package:aina_flutter/core/services/amplitude_service.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class CoworkingProfilePage extends ConsumerStatefulWidget {
   final int coworkingId;
@@ -181,6 +183,18 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
     }
   }
 
+  void _logPersonalInfoClick() {
+    String platform = kIsWeb ? 'web' : (Platform.isIOS ? 'ios' : 'android');
+
+    AmplitudeService().logEvent(
+      'personal_info_click',
+      eventProperties: {
+        'source': 'profile',
+        'Platform': platform,
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final userAsync = ref.watch(userProvider);
@@ -339,6 +353,7 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
                                     Icons.chevron_right,
                                     backgroundColor: Colors.grey[200],
                                     onTap: () {
+                                      _logPersonalInfoClick();
                                       context.pushNamed(
                                         'coworking_edit_data',
                                         pathParameters: {

@@ -101,9 +101,12 @@ class AppRouter {
       // Main routes with new tabbar
       ShellRoute(
         builder: (context, state, child) {
-          return HomeTabBarScreen(
-            currentRoute: state.uri.toString(),
-            child: child,
+          return Container(
+            color: Colors.black,
+            child: HomeTabBarScreen(
+              currentRoute: state.uri.toString(),
+              child: child,
+            ),
           );
         },
         routes: [

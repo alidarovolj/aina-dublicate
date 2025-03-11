@@ -197,10 +197,10 @@ class ApiClient {
 
     dio.interceptors.add(ChuckerDioInterceptor());
     dio.interceptors.add(LogInterceptor(
-      request: true,
-      requestBody: true,
-      requestHeader: true,
-      responseBody: true,
+      request: false,
+      requestBody: false,
+      requestHeader: false,
+      responseBody: false,
       responseHeader: false,
       error: true,
     ));

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/providers/connectivity_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class NoInternetPage extends ConsumerWidget {
   const NoInternetPage({super.key});
@@ -65,7 +65,7 @@ class NoInternetPage extends ConsumerWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Кажется что-то пошло не так!',
+                                  tr('no_internet.title'),
                                   style: GoogleFonts.lora(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w500,
@@ -74,9 +74,9 @@ class NoInternetPage extends ConsumerWidget {
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 8),
-                                const Text(
-                                  'Проверьте соединение с интернетом, либо попробуйте позже.',
-                                  style: TextStyle(
+                                Text(
+                                  tr('no_internet.description'),
+                                  style: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.black54,
                                     height: 1.4,
@@ -88,7 +88,7 @@ class NoInternetPage extends ConsumerWidget {
                                   padding:
                                       const EdgeInsets.symmetric(horizontal: 0),
                                   child: CustomButton(
-                                    label: 'Перезагрузить',
+                                    label: tr('no_internet.reload'),
                                     onPressed: () async {
                                       ref.invalidate(connectivityProvider);
                                       // Wait for the state to update

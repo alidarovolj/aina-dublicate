@@ -4,10 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/widgets/store_categories_list.dart';
 import 'package:aina_flutter/core/widgets/stores_list.dart';
-import 'package:aina_flutter/core/widgets/mall_selector.dart';
+import 'package:aina_flutter/core/widgets/custom_dropdown.dart';
+import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
+import 'package:aina_flutter/core/types/building.dart';
 import 'dart:async';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shimmer/shimmer.dart';
 
 class StoresPage extends ConsumerStatefulWidget {
   final int mallId;
@@ -66,10 +69,8 @@ class _StoresPageState extends ConsumerState<StoresPage> {
   @override
   Widget build(BuildContext context) {
     final bool isFromMall = widget.mallId != 0;
-
-    // When "All Malls" is selected, selectedMallId will be null
-    // In this case, we should pass an empty string to ensure no building_id is sent in the API request
     final String effectiveMallId = selectedMallId ?? "";
+    final buildingsState = ref.watch(buildingsProvider);
 
     return Scaffold(
       body: Container(
@@ -92,18 +93,38 @@ class _StoresPageState extends ConsumerState<StoresPage> {
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: TextField(
                               controller: _searchController,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                color: Colors.black,
+                              ),
                               decoration: InputDecoration(
                                 hintText: 'stores.search_placeholder'.tr(),
-                                prefixIcon: const Icon(Icons.search),
+                                hintStyle: const TextStyle(
+                                  fontSize: 15,
+                                  color: AppColors.darkGrey,
+                                ),
+                                prefixIcon: const Icon(
+                                  Icons.search,
+                                  color: AppColors.grey2,
+                                  size: 24,
+                                ),
                                 filled: true,
-                                fillColor: AppColors.white,
+                                fillColor: Colors.white,
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(4),
+                                  borderSide: BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                  borderSide: BorderSide.none,
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(4),
                                   borderSide: BorderSide.none,
                                 ),
                                 contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 8,
+                                  horizontal: 12,
+                                  vertical: 12,
                                 ),
                               ),
                               onChanged: _onSearchChanged,
@@ -115,18 +136,79 @@ class _StoresPageState extends ConsumerState<StoresPage> {
                               right: 12.0,
                               top: 12,
                             ),
-                            child: MallSelector(
-                              selectedMallId: selectedMallId,
-                              isFromMall: isFromMall,
-                              onChanged: (String? newValue) {
-                                WidgetsBinding.instance
-                                    .addPostFrameCallback((_) {
-                                  if (mounted) {
-                                    setState(() {
-                                      selectedMallId = newValue;
+                            child: buildingsState.when(
+                              loading: () => Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.lightGrey,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Shimmer.fromColors(
+                                  baseColor: Colors.grey[100]!,
+                                  highlightColor: Colors.grey[300]!,
+                                  child: Container(
+                                    height: 40,
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[300],
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              error: (error, stack) => Center(
+                                child: Text('mall_selector.error'
+                                    .tr(args: [error.toString()])),
+                              ),
+                              data: (buildings) {
+                                final malls = buildings['mall'] ?? [];
+                                final allMalls = [
+                                  Building(
+                                    id: 0,
+                                    name: 'mall_selector.all_malls'.tr(),
+                                    type: 'mall',
+                                    previewImage: PreviewImage(
+                                      id: 0,
+                                      uuid: '',
+                                      url: '',
+                                      urlOriginal: '',
+                                      orderColumn: 0,
+                                      collectionName: '',
+                                    ),
+                                    phone: '',
+                                    latitude: '',
+                                    longitude: '',
+                                    description: '',
+                                    workingHours: '',
+                                    address: '',
+                                    createdAt: '',
+                                    images: [],
+                                  ),
+                                  ...malls,
+                                ];
+
+                                return CustomDropdown<Building>(
+                                  items: allMalls,
+                                  value: allMalls.firstWhere(
+                                    (mall) =>
+                                        mall.id.toString() == selectedMallId,
+                                    orElse: () => allMalls.first,
+                                  ),
+                                  labelBuilder: (mall) => mall.name,
+                                  onChanged: (mall) {
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
+                                      if (mounted) {
+                                        setState(() {
+                                          selectedMallId = mall.id == 0
+                                              ? null
+                                              : mall.id.toString();
+                                        });
+                                      }
                                     });
-                                  }
-                                });
+                                  },
+                                );
                               },
                             ),
                           ),

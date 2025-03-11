@@ -5,7 +5,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:aina_flutter/core/providers/requests/notifications/notifications_provider.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:intl/intl.dart';
 
 class NotificationsPage extends ConsumerWidget {
   const NotificationsPage({super.key});

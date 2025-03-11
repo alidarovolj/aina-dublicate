@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
+import 'package:aina_flutter/core/widgets/custom_dropdown.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/feedback_provider.dart';
 import 'package:aina_flutter/core/providers/requests/auth/user.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:aina_flutter/core/widgets/base_input.dart';
+import 'package:aina_flutter/core/widgets/base_textarea.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 
 class FeedbackFormModal extends ConsumerStatefulWidget {
   const FeedbackFormModal({super.key});
@@ -189,8 +193,10 @@ class _FeedbackFormModalState extends ConsumerState<FeedbackFormModal> {
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('contact_admin.errors.required'.tr())),
+      BaseSnackBar.show(
+        context,
+        message: 'contact_admin.errors.required'.tr(),
+        type: SnackBarType.error,
       );
       return;
     }
@@ -205,9 +211,16 @@ class _FeedbackFormModalState extends ConsumerState<FeedbackFormModal> {
         description: _descriptionController.text,
       );
       Navigator.of(context).pop();
+      BaseSnackBar.show(
+        context,
+        message: 'contact_admin.success'.tr(),
+        type: SnackBarType.success,
+      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+      BaseSnackBar.show(
+        context,
+        message: e.toString(),
+        type: SnackBarType.error,
       );
     } finally {
       setState(() => _isLoading = false);
@@ -242,85 +255,42 @@ class _FeedbackFormModalState extends ConsumerState<FeedbackFormModal> {
               data: (categories) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Theme(
-                    data: Theme.of(context).copyWith(
-                      inputDecorationTheme: const InputDecorationTheme(
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Color(0xFFF5F5F5),
-                      ),
+                  CustomDropdown<dynamic>(
+                    items: categories,
+                    value: categories.firstWhere(
+                      (category) => category.id == _form['category_id'],
+                      orElse: () => categories.first,
                     ),
-                    child: DropdownButtonFormField<int>(
-                      value: _form['category_id'] as int?,
-                      items: categories.map((category) {
-                        return DropdownMenuItem(
-                          value: category.id,
-                          child: Text(
-                            category.title,
-                            style: const TextStyle(color: AppColors.primary),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _form['category_id'] = value;
-                        });
-                      },
-                      validator: (value) => value == null
-                          ? 'contact_admin.errors.required'.tr()
-                          : null,
-                      decoration: InputDecoration(
-                        labelText: 'contact_admin.category_label'.tr(),
-                        hintText: 'contact_admin.category_placeholder'.tr(),
-                      ),
-                      isExpanded: true,
-                    ),
+                    labelBuilder: (category) => category.title,
+                    onChanged: (category) {
+                      setState(() {
+                        _form['category_id'] = category.id;
+                      });
+                    },
+                    label: 'contact_admin.category_label'.tr(),
+                    errorText: _form['category_id'] == null
+                        ? 'contact_admin.errors.required'.tr()
+                        : null,
                   ),
                   const SizedBox(height: 24),
-                  Text(
-                    'contact_admin.comment_label'.tr(),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textDarkGrey,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
+                  BaseTextarea(
                     controller: _descriptionController,
-                    maxLines: 10,
+                    label: 'contact_admin.comment_label'.tr(),
+                    hintText: 'contact_admin.comment_placeholder'.tr(),
                     validator: (value) => value?.isEmpty ?? true
                         ? 'contact_admin.errors.required'.tr()
                         : null,
-                    style: const TextStyle(color: AppColors.primary),
-                    decoration: InputDecoration(
-                      hintText: 'contact_admin.comment_placeholder'.tr(),
-                      border: const OutlineInputBorder(),
-                      filled: true,
-                      fillColor: const Color(0xFFF5F5F5),
-                    ),
+                    maxLines: 10,
                   ),
                   const SizedBox(height: 24),
-                  Text(
-                    'contact_admin.phone_label'.tr(),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textDarkGrey,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
+                  BaseInput(
                     controller: _phoneController,
+                    label: 'contact_admin.phone_label'.tr(),
+                    hintText: 'contact_admin.phone_placeholder'.tr(),
                     keyboardType: TextInputType.phone,
                     validator: (value) => value?.isEmpty ?? true
                         ? 'contact_admin.errors.required'.tr()
                         : null,
-                    style: const TextStyle(color: AppColors.primary),
-                    decoration: InputDecoration(
-                      hintText: 'contact_admin.phone_placeholder'.tr(),
-                      border: const OutlineInputBorder(),
-                      filled: true,
-                      fillColor: const Color(0xFFF5F5F5),
-                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(

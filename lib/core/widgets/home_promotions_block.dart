@@ -10,6 +10,9 @@ import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
+import 'package:aina_flutter/core/services/amplitude_service.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class HomePromotionsBlock extends ConsumerWidget {
   final String? mallId;
@@ -39,6 +42,17 @@ class HomePromotionsBlock extends ConsumerWidget {
     this.showArrow = false,
   });
 
+  void _logPromotionClick(BuildContext context, dynamic promotion) {
+    String platform = kIsWeb ? 'web' : (Platform.isIOS ? 'ios' : 'android');
+
+    AmplitudeService().logEvent(
+      'promotion_click',
+      eventProperties: {
+        'Platform': platform,
+      },
+    );
+  }
+
   List<dynamic> _sortPromotions(List<dynamic> promotions) {
     if (!sortByQr) return promotions;
 
@@ -47,154 +61,6 @@ class HomePromotionsBlock extends ConsumerWidget {
         if (a.isQr == b.isQr) return 0;
         return a.isQr ? -1 : 1;
       });
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final promotionsAsync = mallId != null
-        ? ref.watch(mallPromotionsProvider(mallId!))
-        : ref.watch(promotionsProvider);
-
-    // Добавляем логирование для отладки
-    print(
-        '🔍 HomePromotionsBlock: состояние промоакций: ${promotionsAsync.toString()}');
-    if (promotionsAsync.hasValue) {
-      print(
-          '✅ HomePromotionsBlock: количество акций: ${promotionsAsync.value?.length ?? 0}');
-    }
-    if (promotionsAsync.hasError) {
-      print('❌ HomePromotionsBlock: ошибка: ${promotionsAsync.error}');
-    }
-
-    // Всегда показываем скелетон при загрузке
-    if (promotionsAsync.isLoading) {
-      return _buildSkeletonLoader(cardType);
-    }
-
-    // В случае ошибки показываем ErrorRefreshWidget
-    if (promotionsAsync.hasError) {
-      print('❌ Ошибка при загрузке промоакций: ${promotionsAsync.error}');
-
-      // Определяем высоту в зависимости от типа карточки
-      double height = cardType == PromotionCardType.medium
-          ? 201
-          : cardType == PromotionCardType.small
-              ? 94
-              : 200;
-
-      return Container(
-        height: height,
-        margin: const EdgeInsets.symmetric(
-          horizontal: AppLength.xs,
-          vertical: AppLength.xs,
-        ),
-        decoration: BoxDecoration(
-          color: Colors.red.shade100,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.red, width: 2),
-        ),
-        child: ErrorRefreshWidget(
-          onRefresh: () {
-            print('🔄 Обновление промоакций...');
-            // Используем Future.microtask для асинхронного обновления
-            Future.microtask(() {
-              try {
-                if (mallId != null) {
-                  ref.refresh(mallPromotionsProvider(mallId!));
-                } else {
-                  ref.refresh(promotionsProvider);
-                }
-              } catch (e) {
-                print('❌ Ошибка при обновлении промоакций: $e');
-              }
-            });
-          },
-          errorMessage: 'stories.error.loading'.tr(),
-          refreshText: 'common.refresh'.tr(),
-          icon: Icons.warning_amber_rounded,
-          isCompact: cardType == PromotionCardType.small,
-          isServerError: true,
-          backgroundColor: Colors.transparent,
-          textColor: Colors.red.shade900,
-          errorColor: Colors.red,
-        ),
-      );
-    }
-
-    // Получаем данные
-    final promotions = promotionsAsync.value ?? [];
-    if (promotions.isEmpty) {
-      return emptyBuilder?.call(context) ?? const SizedBox.shrink();
-    }
-
-    final sortedPromotions = _sortPromotions(promotions);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (showTitle || showViewAll)
-          Padding(
-            padding: const EdgeInsets.only(
-                left: AppLength.xs, bottom: AppLength.xs, top: AppLength.xs),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                if (showTitle)
-                  Row(
-                    children: [
-                      Text(
-                        'promotions.title'.tr(),
-                        style: GoogleFonts.lora(
-                          fontSize: 22,
-                          color: Colors.black,
-                        ),
-                      )
-                    ],
-                  ),
-                if (showViewAll && onViewAllTap != null)
-                  TextButton(
-                    onPressed: onViewAllTap,
-                    child: Row(
-                      children: [
-                        Text(
-                          'promotions.view_all'.tr(),
-                          style: const TextStyle(
-                            fontSize: 15,
-                            color: AppColors.textDarkGrey,
-                          ),
-                        ),
-                        SvgPicture.asset(
-                          'lib/core/assets/icons/chevron-right.svg',
-                          width: 24,
-                          height: 24,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.textDarkGrey,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        if (cardType == PromotionCardType.medium)
-          _buildMediumCardList(context, sortedPromotions)
-        else if (cardType == PromotionCardType.small)
-          _buildSmallCardGrid(context, sortedPromotions)
-        else
-          _buildFullCardList(context, sortedPromotions),
-        if (showDivider)
-          const Padding(
-            padding: EdgeInsets.symmetric(
-                vertical: AppLength.xs, horizontal: AppLength.xs),
-            child: Divider(
-              color: Colors.black12,
-              thickness: 1,
-            ),
-          ),
-      ],
-    );
   }
 
   Widget _buildImageWithGradient(String imageUrl,
@@ -240,15 +106,13 @@ class HomePromotionsBlock extends ConsumerWidget {
         itemCount: limitedPromotions.length,
         itemBuilder: (context, index) {
           final promotion = limitedPromotions[index];
-
-          // Используем Material виджет для лучшего отклика на нажатие
           return Material(
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(4),
               onTap: () {
+                _logPromotionClick(context, promotion);
                 print('🔍 Нажатие на акцию с ID: ${promotion.id}');
-                // Используем Future.delayed для гарантированного выполнения навигации
                 Future.delayed(Duration.zero, () {
                   if (context.mounted) {
                     context.pushNamed(
@@ -322,6 +186,7 @@ class HomePromotionsBlock extends ConsumerWidget {
         final promotion = limitedPromotions[index];
         return GestureDetector(
           onTap: () {
+            _logPromotionClick(context, promotion);
             context.pushNamed(
               'promotion_details',
               pathParameters: {'id': promotion.id.toString()},
@@ -346,28 +211,6 @@ class HomePromotionsBlock extends ConsumerWidget {
                       height: 24,
                     ),
                   ),
-                Positioned(
-                  top: 16,
-                  left: 16,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppLength.xs,
-                      vertical: AppLength.four,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text(
-                      'Moskva',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -377,7 +220,6 @@ class HomePromotionsBlock extends ConsumerWidget {
   }
 
   Widget _buildSmallCardGrid(BuildContext context, List<dynamic> promotions) {
-    // Защита от пустого списка
     if (promotions.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -386,7 +228,6 @@ class HomePromotionsBlock extends ConsumerWidget {
         ? promotions.take(maxElements!).toList()
         : promotions;
 
-    // Еще одна проверка после ограничения
     if (limitedPromotions.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -404,15 +245,13 @@ class HomePromotionsBlock extends ConsumerWidget {
         separatorBuilder: (context, index) =>
             const SizedBox(width: itemSpacing),
         itemBuilder: (context, index) {
-          // Защита от выхода за границы массива
           if (index >= limitedPromotions.length) {
             return const SizedBox.shrink();
           }
 
           final promotion = limitedPromotions[index];
-
-          // Проверка на наличие URL изображения
           final imageUrl = promotion.previewImage?.url ?? '';
+
           if (imageUrl.isEmpty) {
             return Container(
               width: itemWidth,
@@ -427,14 +266,13 @@ class HomePromotionsBlock extends ConsumerWidget {
             );
           }
 
-          // Используем Material виджет для лучшего отклика на нажатие
           return Material(
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(4),
               onTap: () {
+                _logPromotionClick(context, promotion);
                 print('🔍 Нажатие на акцию с ID: ${promotion.id}');
-                // Используем Future.delayed для гарантированного выполнения навигации
                 Future.delayed(Duration.zero, () {
                   if (context.mounted) {
                     context.pushNamed(
@@ -608,5 +446,133 @@ class HomePromotionsBlock extends ConsumerWidget {
         }),
       );
     }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final promotionsAsync = mallId != null
+        ? ref.watch(mallPromotionsProvider(mallId!))
+        : ref.watch(promotionsProvider);
+
+    print(
+        '🔍 HomePromotionsBlock: состояние промоакций: ${promotionsAsync.toString()}');
+    if (promotionsAsync.hasValue) {
+      print(
+          '✅ HomePromotionsBlock: количество акций: ${promotionsAsync.value?.length ?? 0}');
+    }
+    if (promotionsAsync.hasError) {
+      print('❌ HomePromotionsBlock: ошибка: ${promotionsAsync.error}');
+    }
+
+    if (promotionsAsync.isLoading) {
+      return _buildSkeletonLoader(cardType);
+    }
+
+    if (promotionsAsync.hasError) {
+      print('❌ Ошибка при загрузке промоакций: ${promotionsAsync.error}');
+
+      double height = cardType == PromotionCardType.medium
+          ? 201
+          : cardType == PromotionCardType.small
+              ? 94
+              : 200;
+
+      return ErrorRefreshWidget(
+        height: height,
+        onRefresh: () {
+          print('🔄 Обновление промоакций...');
+          Future.microtask(() {
+            try {
+              if (mallId != null) {
+                ref.refresh(mallPromotionsProvider(mallId!));
+              } else {
+                ref.refresh(promotionsProvider);
+              }
+            } catch (e) {
+              print('❌ Ошибка при обновлении промоакций: $e');
+            }
+          });
+        },
+        errorMessage: 'stories.error.loading'.tr(),
+        refreshText: 'common.refresh'.tr(),
+        icon: Icons.warning_amber_rounded,
+        isCompact: cardType == PromotionCardType.small,
+        isServerError: true,
+      );
+    }
+
+    final promotions = promotionsAsync.value ?? [];
+    if (promotions.isEmpty) {
+      return emptyBuilder?.call(context) ?? const SizedBox.shrink();
+    }
+
+    final sortedPromotions = _sortPromotions(promotions);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (showTitle || showViewAll)
+          Padding(
+            padding: const EdgeInsets.only(
+                left: AppLength.xs, bottom: AppLength.xs, top: AppLength.xs),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                if (showTitle)
+                  Row(
+                    children: [
+                      Text(
+                        'promotions.title'.tr(),
+                        style: GoogleFonts.lora(
+                          fontSize: 22,
+                          color: Colors.black,
+                        ),
+                      )
+                    ],
+                  ),
+                if (showViewAll && onViewAllTap != null)
+                  TextButton(
+                    onPressed: onViewAllTap,
+                    child: Row(
+                      children: [
+                        Text(
+                          'promotions.view_all'.tr(),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: AppColors.textDarkGrey,
+                          ),
+                        ),
+                        SvgPicture.asset(
+                          'lib/core/assets/icons/chevron-right.svg',
+                          width: 24,
+                          height: 24,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.textDarkGrey,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        if (cardType == PromotionCardType.medium)
+          _buildMediumCardList(context, sortedPromotions)
+        else if (cardType == PromotionCardType.small)
+          _buildSmallCardGrid(context, sortedPromotions)
+        else
+          _buildFullCardList(context, sortedPromotions),
+        if (showDivider)
+          const Padding(
+            padding: EdgeInsets.symmetric(
+                vertical: AppLength.xs, horizontal: AppLength.xs),
+            child: Divider(
+              color: Colors.black12,
+              thickness: 1,
+            ),
+          ),
+      ],
+    );
   }
 }

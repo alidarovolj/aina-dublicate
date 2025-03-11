@@ -13,6 +13,7 @@ import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:aina_flutter/features/coworking/presentation/pages/coworking_camera_page.dart';
 import 'package:go_router/go_router.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 
 class CoworkingBiometricPage extends ConsumerStatefulWidget {
   final int coworkingId;
@@ -154,8 +155,10 @@ class _CoworkingBiometricPageState
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+        BaseSnackBar.show(
+          context,
+          message: e.toString(),
+          type: SnackBarType.error,
         );
       }
     } finally {
@@ -202,15 +205,10 @@ class _CoworkingBiometricPageState
             : 'Unknown error';
 
         if (mounted) {
-          BaseModal.show(
+          BaseSnackBar.show(
             context,
             message: errorMessage,
-            buttons: [
-              ModalButton(
-                label: 'common.ok'.tr(),
-                type: ButtonType.filled,
-              ),
-            ],
+            type: SnackBarType.error,
           );
         }
       } else {
@@ -300,8 +298,7 @@ class _CoworkingBiometricPageState
                                     CustomTextField(
                                       controller: _firstnameController,
                                       hintText:
-                                          'profile.settings.firstname_placeholder'
-                                              .tr(),
+                                          'coworking.edit_data.firstname'.tr(),
                                       enabled: data.biometricStatus != 'VALID',
                                       onChanged: (_) => _saveInfo(),
                                       isValid:
@@ -311,8 +308,7 @@ class _CoworkingBiometricPageState
                                     CustomTextField(
                                       controller: _lastnameController,
                                       hintText:
-                                          'profile.settings.lastname_placeholder'
-                                              .tr(),
+                                          'coworking.edit_data.lastname'.tr(),
                                       enabled: data.biometricStatus != 'VALID',
                                       onChanged: (_) => _saveInfo(),
                                       isValid:

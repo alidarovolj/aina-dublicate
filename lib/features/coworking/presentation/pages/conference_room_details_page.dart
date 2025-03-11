@@ -211,15 +211,6 @@ class ConferenceRoomDetailsPage extends ConsumerWidget with AuthCheckMixin {
                                           ),
                                         ),
                                         const SizedBox(height: 24),
-                                        Text(
-                                          'conference_room.similar_services'
-                                              .tr(),
-                                          style: GoogleFonts.lora(
-                                            fontSize: 22,
-                                            color: AppColors.primary,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
                                         similarTariffsAsync.when(
                                           loading: () => Column(
                                             children: List.generate(
@@ -257,21 +248,44 @@ class ConferenceRoomDetailsPage extends ConsumerWidget with AuthCheckMixin {
                                                 .where((t) => t.id != tariff.id)
                                                 .take(2)
                                                 .toList();
-                                            return ListView.builder(
-                                              shrinkWrap: true,
-                                              physics:
-                                                  const NeverScrollableScrollPhysics(),
-                                              itemCount: similarTariffs.length,
-                                              itemBuilder: (context, index) {
-                                                final similarTariff =
-                                                    similarTariffs[index];
-                                                return conference
-                                                    .ConferenceTariffCard(
-                                                  tariff: similarTariff,
-                                                  coworkingId: coworkingId,
-                                                  serviceId: tariff.categoryId,
-                                                );
-                                              },
+
+                                            if (similarTariffs.isEmpty) {
+                                              return const SizedBox.shrink();
+                                            }
+
+                                            return Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'conference_room.similar_services'
+                                                      .tr(),
+                                                  style: GoogleFonts.lora(
+                                                    fontSize: 22,
+                                                    color: AppColors.primary,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 16),
+                                                ListView.builder(
+                                                  shrinkWrap: true,
+                                                  physics:
+                                                      const NeverScrollableScrollPhysics(),
+                                                  itemCount:
+                                                      similarTariffs.length,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    final similarTariff =
+                                                        similarTariffs[index];
+                                                    return conference
+                                                        .ConferenceTariffCard(
+                                                      tariff: similarTariff,
+                                                      coworkingId: coworkingId,
+                                                      serviceId:
+                                                          tariff.categoryId,
+                                                    );
+                                                  },
+                                                ),
+                                              ],
                                             );
                                           },
                                         ),

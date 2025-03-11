@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'main_custom_tabbar.dart';
+import 'package:aina_flutter/core/services/amplitude_service.dart';
+import 'package:aina_flutter/core/services/storage_service.dart';
 
 class HomeTabBarScreen extends ConsumerStatefulWidget {
   final Widget child;
@@ -84,6 +86,27 @@ class _HomeTabBarScreenState extends ConsumerState<HomeTabBarScreen>
           return;
         }
 
+        // Track main_click event when navigating to home tab
+        if (index == 0) {
+          final userData = await StorageService.getUserData();
+          print('📱 Available user data fields:');
+          print('   ${userData?.keys.join(', ')}');
+
+          final userId = userData?['id'] ?? 0;
+          final deviceId = userData?['device_id'] ?? 0;
+
+          print('📱 Tracking main_click event:');
+          print('   - User ID: $userId');
+          print('   - Device ID: $deviceId');
+          print('   - Source: main');
+
+          await AmplitudeService().trackMainClick(
+            userId: userId,
+            deviceId: deviceId,
+            source: 'main',
+          );
+        }
+
         context.go(route);
       });
     }
@@ -91,10 +114,22 @@ class _HomeTabBarScreenState extends ConsumerState<HomeTabBarScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: widget.child,
-      bottomNavigationBar: MainCustomTabBar(tabController: _tabController),
-      extendBody: true,
+    return WillPopScope(
+      onWillPop: () async {
+        final normalizedRoute = _normalizeRoute(widget.currentRoute);
+        final currentIndex = _routesToTabIndex[normalizedRoute] ?? 0;
+
+        if (currentIndex != 0) {
+          _navigateToTab(0);
+          return false;
+        }
+        return true;
+      },
+      child: Scaffold(
+        body: widget.child,
+        bottomNavigationBar: MainCustomTabBar(tabController: _tabController),
+        extendBody: true,
+      ),
     );
   }
 

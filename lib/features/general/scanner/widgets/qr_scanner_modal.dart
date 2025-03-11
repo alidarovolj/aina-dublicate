@@ -68,7 +68,7 @@ class _QrScannerModalState extends ConsumerState<QrScannerModal> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Сканировать QR',
+            'Сканировать QR ВЫФВФВФЫВ',
             style: GoogleFonts.lora(
               fontSize: 18,
               color: Colors.white,

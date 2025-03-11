@@ -10,6 +10,9 @@ import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
+import 'package:aina_flutter/core/services/amplitude_service.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class PromotionsBlock extends ConsumerWidget {
   final String? mallId;
@@ -47,6 +50,17 @@ class PromotionsBlock extends ConsumerWidget {
         if (a.isQr == b.isQr) return 0;
         return a.isQr ? -1 : 1;
       });
+  }
+
+  void _logPromotionClick(BuildContext context, dynamic promotion) {
+    String platform = kIsWeb ? 'web' : (Platform.isIOS ? 'ios' : 'android');
+
+    AmplitudeService().logEvent(
+      'promotion_click',
+      eventProperties: {
+        'Platform': platform,
+      },
+    );
   }
 
   @override
@@ -157,48 +171,32 @@ class PromotionsBlock extends ConsumerWidget {
 
     print('❌ Ошибка при загрузке промоакций: $error');
 
-    return Container(
+    return ErrorRefreshWidget(
       height: height,
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppLength.xs,
-        vertical: AppLength.xs,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.red.shade100,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.red, width: 2),
-      ),
-      child: ErrorRefreshWidget(
-        onRefresh: () {
-          print('🔄 Обновление промоакций...');
-          // Используем Future.microtask для асинхронного обновления
-          Future.microtask(() async {
-            try {
-              if (mallId != null) {
-                ref.refresh(mallPromotionsProvider(mallId!));
-              } else {
-                // Используем контекст для загрузки данных
-                await ref
-                    .read(promotionsProvider.notifier)
-                    .fetchPromotions(context, forceRefresh: true);
-              }
-              print('✅ Запрос на обновление промоакций отправлен');
-            } catch (e) {
-              print('❌ Ошибка при обновлении промоакций: $e');
+      onRefresh: () {
+        print('🔄 Обновление промоакций...');
+        Future.microtask(() async {
+          try {
+            if (mallId != null) {
+              ref.refresh(mallPromotionsProvider(mallId!));
+            } else {
+              await ref
+                  .read(promotionsProvider.notifier)
+                  .fetchPromotions(context, forceRefresh: true);
             }
-          });
-        },
-        errorMessage: is500Error
-            ? 'stories.error.server'.tr()
-            : 'stories.error.loading'.tr(),
-        refreshText: 'common.refresh'.tr(),
-        icon: Icons.warning_amber_rounded,
-        isCompact: cardType == PromotionCardType.small,
-        isServerError: true,
-        errorColor: Colors.red,
-        backgroundColor: Colors.transparent,
-        textColor: Colors.red.shade900,
-      ),
+            print('✅ Запрос на обновление промоакций отправлен');
+          } catch (e) {
+            print('❌ Ошибка при обновлении промоакций: $e');
+          }
+        });
+      },
+      errorMessage: is500Error
+          ? 'stories.error.server'.tr()
+          : 'stories.error.loading'.tr(),
+      refreshText: 'common.refresh'.tr(),
+      icon: Icons.warning_amber_rounded,
+      isCompact: cardType == PromotionCardType.small,
+      isServerError: true,
     );
   }
 
@@ -247,6 +245,7 @@ class PromotionsBlock extends ConsumerWidget {
           final promotion = limitedPromotions[index];
           return GestureDetector(
             onTap: () {
+              _logPromotionClick(context, promotion);
               context.pushNamed(
                 'promotion_details',
                 pathParameters: {'id': promotion.id.toString()},
@@ -315,6 +314,7 @@ class PromotionsBlock extends ConsumerWidget {
         final promotion = limitedPromotions[index];
         return GestureDetector(
           onTap: () {
+            _logPromotionClick(context, promotion);
             context.pushNamed(
               'promotion_details',
               pathParameters: {'id': promotion.id.toString()},
@@ -418,6 +418,7 @@ class PromotionsBlock extends ConsumerWidget {
           final promotion = limitedPromotions[index];
           return GestureDetector(
             onTap: () {
+              _logPromotionClick(context, promotion);
               context.pushNamed(
                 'promotion_details',
                 pathParameters: {'id': promotion.id.toString()},

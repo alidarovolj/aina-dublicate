@@ -59,7 +59,6 @@ class _StoryListState extends ConsumerState<StoryList> {
               ),
               child: ErrorRefreshWidget(
                 onRefresh: () {
-                  print('🔄 Обновление историй...');
                   ref.refresh(storiesProvider);
                 },
                 errorMessage: is500Error
@@ -68,9 +67,6 @@ class _StoryListState extends ConsumerState<StoryList> {
                 refreshText: 'common.refresh'.tr(),
                 isCompact: true,
                 isServerError: is500Error,
-                backgroundColor: Colors.transparent,
-                textColor: Colors.red.shade900,
-                errorColor: Colors.red,
                 icon: Icons.warning_amber_rounded,
               ),
             ),

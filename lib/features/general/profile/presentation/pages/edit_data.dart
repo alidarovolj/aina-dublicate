@@ -16,6 +16,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:aina_flutter/core/providers/requests/auth/profile.dart';
 import 'package:aina_flutter/core/widgets/avatar_edit_widget.dart';
+import 'package:aina_flutter/core/widgets/base_radio.dart';
 
 final selectedGenderProvider = StateProvider<String>((ref) => 'Не указывать');
 
@@ -69,8 +70,15 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
     patronymicController.text = userData.patronymic ?? '';
     emailController.text = userData.email ?? '';
     licensePlateController.text = userData.licensePlate ?? '';
-    ref.read(selectedGenderProvider.notifier).state =
-        userData.gender ?? 'Не указывать';
+
+    // Convert API gender value to translation key
+    final gender = switch (userData.gender?.toUpperCase()) {
+      'MALE' => 'profile.settings.edit.gender.male'.tr(),
+      'FEMALE' => 'profile.settings.edit.gender.female'.tr(),
+      _ => 'profile.settings.edit.gender.not_specified'.tr(),
+    };
+
+    ref.read(selectedGenderProvider.notifier).state = gender;
 
     // Add listeners to track changes
     firstNameController.addListener(_onFieldChanged);
@@ -164,13 +172,20 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
     try {
       setState(() => _isLoading = true);
 
+      // Convert translation key back to API gender value
+      final gender = switch (ref.read(selectedGenderProvider)) {
+        var g when g == 'profile.settings.edit.gender.male'.tr() => 'MALE',
+        var g when g == 'profile.settings.edit.gender.female'.tr() => 'FEMALE',
+        _ => 'NONE',
+      };
+
       final success = await ref.read(profileProvider).updateProfile(
             firstName: firstNameController.text,
             lastName: lastNameController.text,
             patronymic: patronymicController.text,
             email: emailController.text,
             licensePlate: licensePlateController.text,
-            gender: ref.read(selectedGenderProvider),
+            gender: gender,
           );
 
       if (!mounted) return;
@@ -444,52 +459,20 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                         const SizedBox(height: 16),
 
                         // Gender selection
-                        Text(
-                          'profile.settings.edit.gender.title'.tr(),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: AppColors.textDarkGrey,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: _buildGenderOption(
-                                  'profile.settings.edit.gender.female'.tr(),
-                                  ref.read(selectedGenderProvider), (value) {
-                                ref
-                                    .read(selectedGenderProvider.notifier)
-                                    .state = value;
-                                _markDirty();
-                              }),
-                            ),
-                            Expanded(
-                              child: _buildGenderOption(
-                                  'profile.settings.edit.gender.male'.tr(),
-                                  ref.read(selectedGenderProvider), (value) {
-                                ref
-                                    .read(selectedGenderProvider.notifier)
-                                    .state = value;
-                                _markDirty();
-                              }),
-                            ),
-                            Expanded(
-                              child: _buildGenderOption(
-                                  'profile.settings.edit.gender.not_specified'
-                                      .tr(),
-                                  ref.read(selectedGenderProvider), (value) {
-                                ref
-                                    .read(selectedGenderProvider.notifier)
-                                    .state = value;
-                                _markDirty();
-                              }),
-                            ),
+                        BaseRadio(
+                          title: 'profile.settings.edit.gender.title'.tr(),
+                          selectedValue: ref.watch(selectedGenderProvider),
+                          options: [
+                            'profile.settings.edit.gender.female'.tr(),
+                            'profile.settings.edit.gender.male'.tr(),
+                            'profile.settings.edit.gender.not_specified'.tr(),
                           ],
+                          onChanged: (value) {
+                            ref.read(selectedGenderProvider.notifier).state =
+                                value;
+                            _markDirty();
+                          },
                         ),
-                        const SizedBox(height: 16),
-
                         const SizedBox(height: 32),
 
                         Text(
@@ -644,58 +627,6 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
         ),
       ),
     );
-  }
-
-  Widget _buildGenderOption(
-      String value, String groupValue, Function(String) onChanged) {
-    return InkWell(
-      onTap: () {
-        onChanged(value);
-      },
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 24,
-            height: 24,
-            child: Radio<String>(
-              value: value,
-              groupValue: groupValue,
-              onChanged: (value) => onChanged(value!),
-              activeColor: AppColors.secondary,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 16, color: AppColors.textDarkGrey),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String getInitialGender(String? apiGender) {
-    switch (apiGender?.toUpperCase()) {
-      case 'FEMALE':
-        return 'profile.settings.edit.gender.female'.tr();
-      case 'MALE':
-        return 'profile.settings.edit.gender.male'.tr();
-      case 'NONE':
-      default:
-        return 'profile.settings.edit.gender.not_specified'.tr();
-    }
-  }
-
-  String getApiGender(String displayGender) {
-    if (displayGender == 'profile.settings.edit.gender.female'.tr()) {
-      return 'FEMALE';
-    } else if (displayGender == 'profile.settings.edit.gender.male'.tr()) {
-      return 'MALE';
-    } else {
-      return 'NONE';
-    }
   }
 
   bool _validateFields() {

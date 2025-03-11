@@ -42,7 +42,7 @@ class PriceText extends StatelessWidget {
               fontSize: fontSize,
               color: color,
               fontWeight: fontWeight,
-              fontFamilyFallback: ['Noto Sans'],
+              fontFamilyFallback: const ['Noto Sans'],
             ),
           ),
           if (withPerHour)

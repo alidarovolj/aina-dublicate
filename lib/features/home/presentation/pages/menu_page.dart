@@ -9,6 +9,7 @@ import 'package:aina_flutter/core/providers/requests/auth/profile.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
+import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
 
 class MenuPage extends ConsumerStatefulWidget {
   const MenuPage({super.key});
@@ -63,7 +64,32 @@ class _MenuPageState extends ConsumerState<MenuPage> {
                 color: Colors.white,
                 child: buildingsAsync.when(
                   loading: () => _buildSkeletonLoader(),
-                  error: (error, stack) => Center(child: Text('Error: $error')),
+                  error: (error, stack) {
+                    print('❌ Ошибка при загрузке меню: $error');
+                    final is500Error = error.toString().contains('500') ||
+                        error.toString().contains('Internal Server Error');
+
+                    return ErrorRefreshWidget(
+                      height: 200,
+                      onRefresh: () {
+                        print('🔄 Обновление меню...');
+                        Future.microtask(() async {
+                          try {
+                            ref.refresh(buildingsProvider);
+                          } catch (e) {
+                            print('❌ Ошибка при обновлении меню: $e');
+                          }
+                        });
+                      },
+                      errorMessage: is500Error
+                          ? 'stories.error.server'.tr()
+                          : 'stories.error.loading'.tr(),
+                      refreshText: 'common.refresh'.tr(),
+                      isCompact: true,
+                      isServerError: true,
+                      icon: Icons.warning_amber_rounded,
+                    );
+                  },
                   data: (buildings) {
                     if (isAuthenticated && profileAsync?.isLoading == true) {
                       return _buildSkeletonLoader();

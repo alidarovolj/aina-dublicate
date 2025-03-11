@@ -5,8 +5,19 @@ import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
+import 'package:aina_flutter/core/services/amplitude_service.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:easy_localization/easy_localization.dart';
 
 class AuthWarningModal {
+  static String _getPlatform() {
+    if (kIsWeb) return 'web';
+    if (Platform.isIOS) return 'ios';
+    if (Platform.isAndroid) return 'android';
+    return 'unknown';
+  }
+
   static Future<void> show(
     BuildContext context, {
     bool isProfileIncomplete = false,
@@ -22,15 +33,15 @@ class AuthWarningModal {
     return BaseModal.show(
       context,
       message: isProfileIncomplete
-          ? 'Перед сканированием чека, пожалуйста, убедитесь в правильности имени и фамилии в профиле. Это обязательное условие участия в акции.'
-          : 'Для участия в акции необходимо авторизоваться',
+          ? 'auth.warning.profile_incomplete_message'.tr()
+          : 'auth.warning.auth_required_message'.tr(),
       buttons: isProfileIncomplete
           ? [
               ModalButton(
-                label: 'В профиль',
+                label: 'auth.warning.to_profile'.tr(),
                 onPressed: () async {
                   if (mallId == null || mallId.isEmpty) {
-                    showError(context, 'Ошибка: ID здания не найден');
+                    showError(context, 'errors.mall_id_not_found'.tr());
                     return;
                   }
 
@@ -39,7 +50,8 @@ class AuthWarningModal {
 
                   final buildingsData = buildingsAsync.value;
                   if (buildingsData == null) {
-                    showError(context, 'Ошибка: Данные зданий недоступны');
+                    showError(
+                        context, 'errors.buildings_data_unavailable'.tr());
                     return;
                   }
 
@@ -64,16 +76,23 @@ class AuthWarningModal {
                 backgroundColor: Colors.white,
               ),
               ModalButton(
-                label: 'Сканировать',
+                label: 'auth.warning.scan'.tr(),
                 type: ButtonType.light,
                 onPressed: () async {
+                  AmplitudeService().logEvent(
+                    'scan_verification_click',
+                    eventProperties: {
+                      'Platform': _getPlatform(),
+                    },
+                  );
+
                   if (mallId == null || mallId.isEmpty) {
-                    showError(context, 'Ошибка: ID здания не найден');
+                    showError(context, 'errors.mall_id_not_found'.tr());
                     return;
                   }
 
                   if (promotionId == null || promotionId.isEmpty) {
-                    showError(context, 'Ошибка: ID акции не найден');
+                    showError(context, 'errors.promotion_id_not_found'.tr());
                     return;
                   }
 
@@ -82,7 +101,8 @@ class AuthWarningModal {
 
                   final buildingsData = buildingsAsync.value;
                   if (buildingsData == null) {
-                    showError(context, 'Ошибка: Данные зданий недоступны');
+                    showError(
+                        context, 'errors.buildings_data_unavailable'.tr());
                     return;
                   }
 
@@ -110,7 +130,7 @@ class AuthWarningModal {
             ]
           : [
               ModalButton(
-                label: 'Авторизоваться',
+                label: 'auth.warning.login'.tr(),
                 type: ButtonType.light,
                 onPressed: () {
                   context.go('/login');

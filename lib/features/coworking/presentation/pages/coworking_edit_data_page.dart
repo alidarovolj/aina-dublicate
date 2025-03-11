@@ -15,6 +15,8 @@ import 'package:aina_flutter/core/widgets/restart_widget.dart';
 import 'dart:io';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:aina_flutter/core/widgets/avatar_edit_widget.dart';
+import 'package:aina_flutter/core/widgets/base_radio.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 
 // Добавляем провайдер для кэш-ключа
 final profileCacheKeyProvider = StateProvider<int>((ref) => 0);
@@ -160,6 +162,16 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
     return true;
   }
 
+  void _showSnackBar(String message, {bool isError = false}) {
+    if (!mounted) return;
+
+    BaseSnackBar.show(
+      context,
+      message: message,
+      type: isError ? SnackBarType.error : SnackBarType.success,
+    );
+  }
+
   Future<bool> _saveChanges() async {
     if (!_isDirty) return true;
 
@@ -194,12 +206,7 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
       if (mounted) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('profile.settings.edit.save_success'.tr()),
-                backgroundColor: Colors.green,
-              ),
-            );
+            _showSnackBar('profile.settings.edit.save_success'.tr());
           }
         });
       }
@@ -369,24 +376,15 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
       await profileService.uploadAvatar(photo);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('profile.settings.edit.avatar_updated'.tr()),
-          backgroundColor: Colors.green,
-        ),
-      );
+      _showSnackBar('profile.settings.edit.avatar_updated'.tr());
     } catch (e) {
       setState(() {
         _temporaryAvatar = null;
       });
       if (!mounted) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('profile.settings.edit.avatar_error'.tr()),
-          backgroundColor: Colors.red,
-        ),
+      _showSnackBar(
+        'profile.settings.edit.avatar_error'.tr(),
+        isError: true,
       );
     } finally {
       if (mounted) {
@@ -406,21 +404,12 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
       await profileService.removeAvatar();
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('profile.settings.edit.avatar_removed'.tr()),
-          backgroundColor: Colors.green,
-        ),
-      );
+      _showSnackBar('profile.settings.edit.avatar_removed'.tr());
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('profile.settings.edit.avatar_error'.tr()),
-          backgroundColor: Colors.red,
-        ),
+      _showSnackBar(
+        'profile.settings.edit.avatar_error'.tr(),
+        isError: true,
       );
     } finally {
       if (mounted) {
@@ -574,32 +563,20 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
                           const SizedBox(height: 24),
 
                           // Gender selector
-                          Text(
-                            'profile.settings.edit.gender.title'.tr(),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: AppColors.textDarkGrey,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: _buildGenderOption('FEMALE',
-                                    'profile.settings.edit.gender.female'.tr()),
-                              ),
-                              Expanded(
-                                child: _buildGenderOption('MALE',
-                                    'profile.settings.edit.gender.male'.tr()),
-                              ),
-                              Expanded(
-                                child: _buildGenderOption(
-                                    'NONE',
-                                    'profile.settings.edit.gender.not_specified'
-                                        .tr()),
-                              ),
+                          BaseRadio(
+                            title: 'profile.settings.edit.gender.title'.tr(),
+                            selectedValue: selectedGender,
+                            options: const [
+                              'MALE',
+                              'FEMALE',
+                              'NONE',
                             ],
+                            onChanged: (value) {
+                              setState(() {
+                                selectedGender = value;
+                              });
+                              _markDirty();
+                            },
                           ),
                           const SizedBox(height: 32),
 
@@ -896,48 +873,6 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildGenderOption(String value, String label) {
-    final isSelected = selectedGender == value;
-
-    return InkWell(
-      onTap: () {
-        setState(() {
-          selectedGender = value;
-        });
-        _markDirty();
-      },
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 24,
-            height: 24,
-            child: Radio<String>(
-              value: value,
-              groupValue: selectedGender,
-              onChanged: (value) {
-                setState(() {
-                  selectedGender = value!;
-                });
-                _markDirty();
-              },
-              activeColor: AppColors.secondary,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 16,
-              color: isSelected ? AppColors.primary : AppColors.textDarkGrey,
-            ),
-          ),
-        ],
       ),
     );
   }

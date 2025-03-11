@@ -223,8 +223,8 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                   ],
                 ),
               ),
-              const CustomHeader(
-                title: "О приложении",
+              CustomHeader(
+                title: 'about.title'.tr(),
                 type: HeaderType.pop,
               ),
             ],

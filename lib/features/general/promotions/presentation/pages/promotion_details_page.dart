@@ -12,6 +12,10 @@ import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:aina_flutter/core/services/amplitude_service.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class PromotionDetailsPage extends ConsumerWidget {
   final int id;
@@ -20,6 +24,20 @@ class PromotionDetailsPage extends ConsumerWidget {
     super.key,
     required this.id,
   });
+
+  String _getPlatform() {
+    if (kIsWeb) return 'web';
+    if (Platform.isIOS) return 'ios';
+    if (Platform.isAndroid) return 'android';
+    return 'unknown';
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
 
   Widget _buildSkeleton() {
     return Container(
@@ -210,6 +228,13 @@ class PromotionDetailsPage extends ConsumerWidget {
                                     padding: HtmlPaddings.zero,
                                     color: AppColors.textDarkGrey,
                                   ),
+                                  "a": Style(
+                                    color: Colors.blue,
+                                    textDecoration: TextDecoration.underline,
+                                  ),
+                                },
+                                onLinkTap: (url, context, attributes) {
+                                  if (url != null) _launchUrl(url);
                                 },
                               ),
                               const SizedBox(height: AppLength.sm),
@@ -219,6 +244,13 @@ class PromotionDetailsPage extends ConsumerWidget {
                                   isFullWidth: true,
                                   backgroundColor: AppColors.primary,
                                   onPressed: () {
+                                    AmplitudeService().logEvent(
+                                      'scan_pageinfo_click',
+                                      eventProperties: {
+                                        'Platform': _getPlatform(),
+                                      },
+                                    );
+
                                     final authState = ref.read(authProvider);
                                     final mallId =
                                         promotion.building?.id.toString();
@@ -272,6 +304,13 @@ class PromotionDetailsPage extends ConsumerWidget {
                                     padding: HtmlPaddings.zero,
                                     color: AppColors.textDarkGrey,
                                   ),
+                                  "a": Style(
+                                    color: Colors.blue,
+                                    textDecoration: TextDecoration.underline,
+                                  ),
+                                },
+                                onLinkTap: (url, context, attributes) {
+                                  if (url != null) _launchUrl(url);
                                 },
                               ),
                               CustomButton(
@@ -292,6 +331,13 @@ class PromotionDetailsPage extends ConsumerWidget {
                                       margin: Margins.zero,
                                       padding: HtmlPaddings.zero,
                                     ),
+                                    "a": Style(
+                                      color: Colors.blue,
+                                      textDecoration: TextDecoration.underline,
+                                    ),
+                                  },
+                                  onLinkTap: (url, context, attributes) {
+                                    if (url != null) _launchUrl(url);
                                   },
                                 ),
                               ],

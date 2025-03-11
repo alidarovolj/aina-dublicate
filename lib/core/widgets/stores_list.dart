@@ -223,8 +223,8 @@ class _StoresListState extends ConsumerState<StoresList> {
                     child: Text(
                       letter,
                       style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
                         color: AppColors.grey2,
                       ),
                     ),
@@ -331,7 +331,10 @@ class _StoresListState extends ConsumerState<StoresList> {
         ),
         const Padding(
           padding: EdgeInsets.only(left: 16),
-          child: Divider(height: 1),
+          child: Divider(
+            height: 1,
+            color: AppColors.lightGrey,
+          ),
         ),
       ],
     );
@@ -383,7 +386,10 @@ class _StoresListState extends ConsumerState<StoresList> {
             ),
           ),
         ),
-        const Divider(height: 1),
+        const Divider(
+          height: 1,
+          color: AppColors.lightGrey,
+        ),
       ],
     );
   }

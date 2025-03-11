@@ -6,6 +6,8 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/providers/requests/promotions_provider.dart';
+import 'package:aina_flutter/core/providers/requests/events_provider.dart';
+import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
 
 class HomePromotionsPage extends ConsumerStatefulWidget {
   const HomePromotionsPage({super.key});
@@ -23,26 +25,30 @@ class _HomePromotionsPageState extends ConsumerState<HomePromotionsPage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
 
-    // Добавляем инициализацию загрузки акций после построения виджета
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _loadPromotions();
+        _loadData();
       }
     });
   }
 
-  // Метод для загрузки акций
-  Future<void> _loadPromotions() async {
+  Future<void> _loadData() async {
     if (!mounted) return;
 
     try {
-      print('🔄 Загрузка акций на странице HomePromotionsPage');
-      await ref
-          .read(promotionsProvider.notifier)
-          .fetchPromotions(context, forceRefresh: true);
-      print('✅ Акции успешно загружены на странице HomePromotionsPage');
+      print('🔄 Загрузка акций и событий на странице HomePromotionsPage');
+      await Future.wait([
+        ref
+            .read(promotionsProvider.notifier)
+            .fetchPromotions(context, forceRefresh: true),
+        ref
+            .read(eventsProvider.notifier)
+            .fetchEvents(context, forceRefresh: true),
+      ]);
+      print(
+          '✅ Акции и события успешно загружены на странице HomePromotionsPage');
     } catch (e) {
-      print('❌ Ошибка при загрузке акций на странице HomePromotionsPage: $e');
+      print('❌ Ошибка при загрузке данных на странице HomePromotionsPage: $e');
     }
   }
 
@@ -127,7 +133,7 @@ class _HomePromotionsPageState extends ConsumerState<HomePromotionsPage>
                         Container(
                           color: AppColors.appBg,
                           child: RefreshIndicator(
-                            onRefresh: _loadPromotions,
+                            onRefresh: _loadData,
                             child: SingleChildScrollView(
                               padding:
                                   const EdgeInsets.only(top: 28, bottom: 28),
@@ -152,14 +158,77 @@ class _HomePromotionsPageState extends ConsumerState<HomePromotionsPage>
                         ),
                         Container(
                           color: AppColors.appBg,
-                          child: Center(
-                            child: Text(
-                              'events.no_active_events'.tr(),
-                              style: const TextStyle(
-                                fontSize: 15,
-                                color: AppColors.textDarkGrey,
+                          child: RefreshIndicator(
+                            onRefresh: _loadData,
+                            child: SingleChildScrollView(
+                              padding:
+                                  const EdgeInsets.only(top: 28, bottom: 28),
+                              child: Consumer(
+                                builder: (context, ref, child) {
+                                  final eventsAsync = ref.watch(eventsProvider);
+
+                                  return eventsAsync.when(
+                                    loading: () => const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                    error: (error, stack) {
+                                      print(
+                                          '❌ Ошибка при загрузке событий: $error');
+
+                                      final is500Error =
+                                          error.toString().contains('500') ||
+                                              error.toString().contains(
+                                                  'Internal Server Error');
+
+                                      return ErrorRefreshWidget(
+                                        onRefresh: () {
+                                          print('🔄 Обновление событий...');
+                                          Future.microtask(() async {
+                                            try {
+                                              ref
+                                                  .read(eventsProvider.notifier)
+                                                  .fetchEvents(context,
+                                                      forceRefresh: true);
+                                            } catch (e) {
+                                              print(
+                                                  '❌ Ошибка при обновлении событий: $e');
+                                            }
+                                          });
+                                        },
+                                        errorMessage: is500Error
+                                            ? 'stories.error.server'.tr()
+                                            : 'stories.error.loading'.tr(),
+                                        refreshText: 'common.refresh'.tr(),
+                                        icon: Icons.warning_amber_rounded,
+                                        isServerError: true,
+                                      );
+                                    },
+                                    data: (events) {
+                                      if (events.isEmpty) {
+                                        return Center(
+                                          child: Text(
+                                            'events.no_active_events'.tr(),
+                                            style: const TextStyle(
+                                              fontSize: 15,
+                                              color: AppColors.textDarkGrey,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        );
+                                      }
+
+                                      return PromotionsBlock(
+                                        onViewAllTap: () {},
+                                        showTitle: false,
+                                        showViewAll: false,
+                                        showDivider: false,
+                                        cardType: PromotionCardType.full,
+                                        showGradient: true,
+                                      );
+                                    },
+                                  );
+                                },
                               ),
-                              textAlign: TextAlign.center,
                             ),
                           ),
                         ),

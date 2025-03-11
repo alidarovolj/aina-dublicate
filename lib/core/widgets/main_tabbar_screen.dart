@@ -70,96 +70,127 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
   void didUpdateWidget(MainTabBarScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentRoute != widget.currentRoute) {
+      print(
+          '🔄 Route changed from ${oldWidget.currentRoute} to ${widget.currentRoute}');
       _updateTabIndex();
     }
   }
 
   void _updateTabIndex() {
-    final normalizedRoute = _normalizeRoute(widget.currentRoute);
+    // Clean query parameters from route before normalization
+    final routeWithoutQuery = widget.currentRoute.split('?')[0];
+    final normalizedRoute = _normalizeRoute(routeWithoutQuery);
     final index = _routesToTabIndex[normalizedRoute] ?? 0;
+    print('📊 Updating tab index for route: $normalizedRoute');
+    print('📊 New index: $index, Current index: ${_tabController.index}');
     if (_tabController.index != index) {
+      print('📊 Setting new tab index: $index');
       _tabController.index = index;
+    } else {
+      print('📊 Tab index unchanged');
     }
   }
 
   void _navigateToTab(int index) {
     final route = _tabIndexToRoutes[index];
+    print('🔄 Attempting to navigate to tab $index (route: $route)');
+    print('📍 Current route: ${widget.currentRoute}');
+
     if (route != null && widget.currentRoute != route) {
-      // Schedule navigation for next frame
+      print('✅ Navigation needed: current route differs from target');
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // Handle profile tab navigation
+        // Clean query parameters from current route
+        final currentRouteBase = widget.currentRoute.split('?')[0];
+        final parts = currentRouteBase.split('/');
+
         if (index == 3) {
-          // Переходим в профиль без проверки авторизации
-          // Extract current mall ID if we're in a mall route
-          final parts = widget.currentRoute.split('/');
+          // Profile tab
+          print('👤 Handling profile tab navigation');
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
+            print('🏢 Mall ID found: $mallId, navigating to profile');
             context.go('/malls/$mallId/profile');
             return;
           }
-          // If not in mall route, go to malls first
+          print('⚠️ No mall ID found, going to malls');
           context.go('/malls');
           return;
         }
 
-        // Special handling for stores tab
         if (index == 2) {
-          // Extract current mall ID if we're in a mall route
-          final parts = widget.currentRoute.split('/');
+          // Stores tab
+          print('🏪 Handling stores tab navigation');
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
-            if (!widget.currentRoute.endsWith('/stores')) {
-              context.go('/malls/$mallId/stores');
-            }
+            print('🏢 Mall ID found: $mallId, navigating to stores');
+            context.go('/malls/$mallId/stores');
             return;
           }
-          // If not in a mall route, go to stores
+          print('🏪 No mall ID found, going to general stores');
           context.go('/stores');
           return;
         }
 
-        // Special handling for malls tab when in stores or profile
         if (index == 0) {
-          final parts = widget.currentRoute.split('/');
+          // Malls tab
+          print('🏢 Handling malls tab navigation');
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
+            print('🏢 Mall ID found: $mallId, navigating to mall details');
             context.go('/malls/$mallId');
             return;
           }
+          print('🏢 No mall ID found, going to malls list');
           context.go('/malls');
           return;
         }
 
-        // Special handling for promotions tab
         if (index == 1) {
-          // Extract current mall ID if we're in a mall route
-          final parts = widget.currentRoute.split('/');
+          // Promotions tab
+          print('🎯 Handling promotions tab navigation');
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
-            if (!widget.currentRoute.endsWith('/promotions')) {
-              context.go('/malls/$mallId/promotions');
-            }
+            print('🏢 Mall ID found: $mallId, navigating to promotions');
+            context.go('/malls/$mallId/promotions');
             return;
           }
-          // If not in a mall route, go to malls first
+          print('⚠️ No mall ID found, going to malls');
           context.go('/malls');
           return;
         }
 
-        if (index == 4) {
-          context.go(route);
-          return;
-        }
+        print('🔄 Default navigation to route: $route');
         context.go(route);
       });
+    } else {
+      print('⚠️ Navigation skipped: same route or null');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: widget.child,
-      bottomNavigationBar: CustomTabBar(tabController: _tabController),
+    return WillPopScope(
+      onWillPop: () async {
+        final normalizedRoute = _normalizeRoute(widget.currentRoute);
+        final currentIndex = _routesToTabIndex[normalizedRoute] ?? 0;
+
+        print('🔙 Back button pressed');
+        print('📍 Current route: $normalizedRoute');
+        print('📊 Current tab index: $currentIndex');
+
+        if (currentIndex != 0) {
+          print('↩️ Not on first tab, navigating to malls');
+          _navigateToTab(0);
+          return false;
+        }
+        print('✅ On first tab, allowing default back behavior');
+        return true;
+      },
+      child: Scaffold(
+        body: widget.child,
+        bottomNavigationBar: CustomTabBar(tabController: _tabController),
+      ),
     );
   }
 

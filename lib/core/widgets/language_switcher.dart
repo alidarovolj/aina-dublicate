@@ -3,15 +3,37 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/restart_widget.dart';
+import 'package:aina_flutter/core/services/amplitude_service.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 final localeChangeProvider = StateProvider<int>((ref) => 0);
 final isLanguageExpandedProvider = StateProvider<bool>((ref) => false);
 
 class LanguageSwitcher extends ConsumerWidget {
-  const LanguageSwitcher({super.key});
+  final String source;
+
+  const LanguageSwitcher({
+    super.key,
+    this.source = 'main',
+  });
+
+  void _logLanguageChange(String languageCode, String source) {
+    String platform = kIsWeb ? 'web' : (Platform.isIOS ? 'ios' : 'android');
+
+    AmplitudeService().logEvent(
+      'change_lang_click',
+      eventProperties: {
+        'lang': languageCode,
+        'source': source,
+      },
+    );
+  }
 
   Future<void> _changeLanguage(
       BuildContext context, WidgetRef ref, String value) async {
+    _logLanguageChange(value, source);
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('selected_locale', value);
     await prefs.setString('locale', value);

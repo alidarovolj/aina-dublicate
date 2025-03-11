@@ -11,6 +11,9 @@ import 'package:aina_flutter/core/providers/requests/promotions/details.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:aina_flutter/core/services/amplitude_service.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class PromotionQrPage extends ConsumerStatefulWidget {
   final int promotionId;
@@ -32,6 +35,13 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
   bool _isProcessing = false;
   String? _lastScannedCode;
 
+  String _getPlatform() {
+    if (kIsWeb) return 'web';
+    if (Platform.isIOS) return 'ios';
+    if (Platform.isAndroid) return 'android';
+    return 'unknown';
+  }
+
   @override
   void reassemble() {
     super.reassemble();
@@ -43,6 +53,14 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
 
   Future<void> _handleQrCode(String? code) async {
     if (code == null || _isProcessing || code == _lastScannedCode) return;
+
+    // Логируем событие сканирования
+    AmplitudeService().logEvent(
+      'scan_receipt',
+      eventProperties: {
+        'Platform': _getPlatform(),
+      },
+    );
 
     setState(() {
       _isProcessing = true;

@@ -27,7 +27,7 @@ class FeedbackService {
   }) async {
     try {
       final response = await _apiClient.dio.post(
-        '/api/promenade/feedback',
+        '/api/promenade/feedbacks/send',
         data: {
           'category_id': categoryId,
           'phone': phone,

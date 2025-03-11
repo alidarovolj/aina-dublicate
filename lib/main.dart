@@ -17,6 +17,7 @@ import 'package:aina_flutter/core/utils/notification_utils.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'firebase_options.dart';
+import 'core/services/amplitude_service.dart';
 
 Future<void> main() async {
   // Ensure Flutter bindings are initialized
@@ -41,6 +42,9 @@ Future<void> main() async {
   // Load environment variables and other initializations
   await dotenv.load();
   await initializeDateFormatting('ru', null);
+
+  // Initialize Amplitude
+  await AmplitudeService().init();
 
   // Load saved locale
   final prefs = await SharedPreferences.getInstance();

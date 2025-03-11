@@ -1,7 +1,6 @@
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/types/card_type.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/stories_list.dart';
@@ -16,16 +15,10 @@ import 'package:aina_flutter/core/utils/button_navigation_handler.dart';
 import 'package:aina_flutter/core/types/button_config.dart';
 import 'package:aina_flutter/core/router/route_observer.dart';
 import 'package:aina_flutter/core/providers/requests/settings_provider.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
-import 'package:aina_flutter/core/types/promotion.dart';
 import 'package:aina_flutter/core/widgets/home_promotions_block.dart';
-import 'dart:convert';
 import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
-import 'package:aina_flutter/core/providers/requests/stories_provider.dart';
-import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -48,6 +41,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   @override
   void initState() {
     super.initState();
+    _initialDataFetched = false;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _fetchData(forceRefresh: true);
@@ -57,15 +51,13 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
 
   // Метод для загрузки всех данных
   Future<void> _fetchData({bool forceRefresh = false}) async {
-    if (!mounted) return;
-
-    // Устанавливаем флаг, что данные были загружены
-    _initialDataFetched = true;
+    if (!mounted || _initialDataFetched && !forceRefresh) return;
 
     try {
-      // Инвалидируем провайдеры для обновления данных
       if (!mounted) return;
-      print('🔄 Инвалидация провайдеров для обновления данных');
+      print('🔄 Обновление данных на главной странице');
+
+      _initialDataFetched = true;
 
       // Обновляем настройки
       if (mounted) {
@@ -80,11 +72,8 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
       // Обновляем акции
       if (mounted) {
         try {
-          // Инвалидируем провайдер акций
           ref.invalidate(promotionsProvider);
           print('✅ Провайдер акций инвалидирован');
-
-          // Загружаем акции
           await ref
               .read(promotionsProvider.notifier)
               .fetchPromotions(context, forceRefresh: forceRefresh);
@@ -94,14 +83,17 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
         }
       }
 
-      // Обновляем баннеры
-      if (mounted) {
+      // Обновляем баннеры только если forceRefresh = true
+      if (mounted && forceRefresh) {
         try {
-          // Инвалидируем провайдер баннеров
           ref.invalidate(bannersProvider);
           print('✅ Провайдер баннеров инвалидирован');
+          await ref
+              .read(bannersProvider.notifier)
+              .fetchBanners(forceRefresh: true);
+          print('✅ Баннеры загружены');
         } catch (e) {
-          print('❌ Ошибка при инвалидации провайдера баннеров: $e');
+          print('❌ Ошибка при загрузке баннеров: $e');
         }
       }
 
@@ -113,20 +105,20 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
           print('❌ Ошибка при проверке аутентификации: $e');
         }
       }
+
+      // Обновляем время последнего обновления и счетчик для пересоздания виджетов
+      if (mounted) {
+        setState(() {
+          _rebuildCounter++;
+          _lastUpdateTime = DateTime.now();
+          print(
+              '✅ Обновление завершено. Счетчик: $_rebuildCounter, Время: $_lastUpdateTime');
+        });
+      }
     } catch (e) {
       if (mounted) {
         print('❌ Ошибка при загрузке данных: $e');
       }
-    }
-
-    // Обновляем время последнего обновления и счетчик для пересоздания виджетов
-    if (mounted) {
-      setState(() {
-        _rebuildCounter++;
-        _lastUpdateTime = DateTime.now();
-        print(
-            '✅ Обновление завершено. Счетчик: $_rebuildCounter, Время: $_lastUpdateTime');
-      });
     }
   }
 
@@ -142,68 +134,18 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     super.dispose();
   }
 
-  // Метод для обновления данных при возврате на страницу
-  Future<void> _refreshDataOnReturn() async {
-    if (!mounted) return;
-
-    try {
-      // Инвалидируем провайдеры для обновления данных
-      if (!mounted) return;
-
-      // Инвалидируем провайдер акций
-      try {
-        ref.invalidate(promotionsProvider);
-        print('✅ Провайдер акций инвалидирован при возврате на страницу');
-      } catch (e) {
-        print('❌ Ошибка при инвалидации провайдера акций: $e');
-      }
-
-      // Инвалидируем провайдер баннеров
-      if (!mounted) return;
-      try {
-        ref.invalidate(bannersProvider);
-        print('✅ Провайдер баннеров инвалидирован при возврате на страницу');
-      } catch (e) {
-        print('❌ Ошибка при инвалидации провайдера баннеров: $e');
-      }
-
-      // Увеличиваем счетчик для создания нового ключа и обновляем время
-      if (!mounted) return;
-      setState(() {
-        _rebuildCounter++;
-        _lastUpdateTime = DateTime.now();
-      });
-
-      // Загружаем данные
-      if (!mounted) return;
-      await _fetchData(forceRefresh: true);
-
-      // Добавляем еще одну задержку для гарантированного обновления после загрузки данных
-      if (!mounted) return;
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (!mounted) return;
-        setState(() {
-          // Обновляем только счетчик, чтобы пересоздать виджет
-          _rebuildCounter++;
-        });
-      });
-    } catch (e) {
-      if (mounted) {
-        print('❌ Ошибка при обновлении данных при возврате на страницу: $e');
-      }
-    }
-  }
-
   @override
   void didPopNext() {
     if (!mounted) return;
-
     print('🔄 Возврат на главную страницу через didPopNext');
-    // Запускаем обновление данных в отдельном Future, чтобы не блокировать UI
-    Future.microtask(() async {
-      if (!mounted) return;
-      await _refreshDataOnReturn();
-    });
+    // Обновляем только если прошло достаточно времени с последнего обновления
+    if (DateTime.now().difference(_lastUpdateTime) >
+        const Duration(seconds: 5)) {
+      Future.microtask(() async {
+        if (!mounted) return;
+        await _fetchData(forceRefresh: true);
+      });
+    }
   }
 
   Future<void> _checkAuthAndFetchProfile() async {
@@ -243,28 +185,10 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   Widget build(BuildContext context) {
     final bannersAsync = ref.watch(bannersProvider);
 
-    // Если данные еще не были загружены, загружаем их
-    if (!_initialDataFetched) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-
-        _fetchData(forceRefresh: true);
-      });
-    }
-
     return PopScope(
-      // Обрабатываем системную кнопку "Назад" и свайп
       onPopInvoked: (didPop) {
-        if (didPop && mounted) {
-          // Если мы действительно вернулись на эту страницу
-          print(
-              '🔄 Возврат на главную страницу через системную кнопку или свайп');
-          // Запускаем обновление данных в отдельном Future, чтобы не блокировать UI
-          Future.microtask(() async {
-            if (!mounted) return;
-            await _refreshDataOnReturn();
-          });
-        }
+        // Убираем обновление при возврате через системную кнопку, так как у нас есть didPopNext
+        return;
       },
       child: Scaffold(
         body: Container(
@@ -309,42 +233,33 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
                         ),
                         error: (error, stack) {
                           print('❌ Ошибка при загрузке баннеров: $error');
-                          return Container(
+
+                          final is500Error = error.toString().contains('500') ||
+                              error
+                                  .toString()
+                                  .contains('Internal Server Error');
+
+                          return ErrorRefreshWidget(
                             height: 200,
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: AppLength.xs,
-                              vertical: AppLength.xs,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red.shade100,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.red, width: 2),
-                            ),
-                            child: ErrorRefreshWidget(
-                              onRefresh: () {
-                                if (!mounted) return;
-                                // Используем Future.microtask для асинхронного обновления
-                                Future.microtask(() {
-                                  if (!mounted) return;
-                                  try {
-                                    ref.invalidate(bannersProvider);
-                                  } catch (e) {
-                                    print(
-                                        '❌ Ошибка при обновлении баннеров: $e');
-                                  }
-                                });
-                              },
-                              errorMessage: 'stories.error.loading'.tr(),
-                              isCompact: true,
-                              isServerError: true,
-                              backgroundColor: Colors.transparent,
-                              textColor: Colors.red.shade900,
-                              errorColor: Colors.red,
-                              icon: Icons.warning_amber_rounded,
-                            ),
+                            onRefresh: () {
+                              if (!mounted) return;
+                              ref
+                                  .read(bannersProvider.notifier)
+                                  .fetchBanners(forceRefresh: true);
+                            },
+                            errorMessage: is500Error
+                                ? 'stories.error.server'.tr()
+                                : 'stories.error.loading'.tr(),
+                            refreshText: 'common.refresh'.tr(),
+                            isCompact: true,
+                            isServerError: true,
+                            icon: Icons.warning_amber_rounded,
                           );
                         },
                         data: (banners) {
+                          if (banners.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
                           return CarouselWithIndicator(
                             slideList: banners,
                             showIndicators: true,

@@ -1,15 +1,36 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:aina_flutter/core/types/event.dart';
-import 'package:aina_flutter/core/services/api_service.dart';
+import 'package:aina_flutter/core/api/api_client.dart';
+import 'package:aina_flutter/core/types/promotion.dart';
 
-final eventsProvider = FutureProvider<List<Event>>((ref) async {
-  final apiService = ref.watch(apiServiceProvider);
-  final response = await apiService.get('/api/aina/events');
+class EventsNotifier extends StateNotifier<AsyncValue<List<Promotion>>> {
+  EventsNotifier() : super(const AsyncValue.loading());
 
-  if (response.statusCode == 200 && response.data['success'] == true) {
-    final List<dynamic> data = response.data['data']['data'];
-    return data.map((json) => Event.fromJson(json)).toList();
+  Future<void> fetchEvents(BuildContext context,
+      {bool forceRefresh = false}) async {
+    try {
+      state = const AsyncValue.loading();
+      final response = await ApiClient().dio.get('/api/aina/events');
+
+      if (response.data['success'] == true && response.data['data'] != null) {
+        final List<dynamic> eventsData = response.data['data'];
+        final events =
+            eventsData.map((data) => Promotion.fromJson(data)).toList();
+        state = AsyncValue.data(events);
+      } else {
+        state = AsyncValue.error(
+          'Failed to load events',
+          StackTrace.current,
+        );
+      }
+    } catch (error, stack) {
+      print('❌ Ошибка при загрузке событий: $error');
+      state = AsyncValue.error(error, stack);
+    }
   }
+}
 
-  throw Exception(response.data['message'] ?? 'Failed to load events');
-});
+final eventsProvider =
+    StateNotifierProvider<EventsNotifier, AsyncValue<List<Promotion>>>(
+  (ref) => EventsNotifier(),
+);

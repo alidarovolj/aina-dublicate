@@ -8,10 +8,8 @@ class ErrorRefreshWidget extends StatelessWidget {
   final String? refreshText;
   final IconData? icon;
   final bool isCompact;
-  final Color? backgroundColor;
-  final Color? textColor;
   final bool isServerError;
-  final Color? errorColor;
+  final double? height;
 
   const ErrorRefreshWidget({
     super.key,
@@ -20,24 +18,28 @@ class ErrorRefreshWidget extends StatelessWidget {
     this.refreshText,
     this.icon,
     this.isCompact = false,
-    this.backgroundColor,
-    this.textColor,
     this.isServerError = false,
-    this.errorColor,
+    this.height,
   });
 
   @override
   Widget build(BuildContext context) {
-    return isCompact ? _buildCompactLayout() : _buildFullLayout();
+    return Container(
+      height: height,
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppLength.xs,
+        vertical: AppLength.xs,
+      ),
+      decoration: BoxDecoration(
+          color: Colors.red.shade100, borderRadius: BorderRadius.circular(4)),
+      child: isCompact ? _buildCompactLayout() : _buildFullLayout(),
+    );
   }
 
   Widget _buildFullLayout() {
-    final Color iconColor =
-        isServerError ? (errorColor ?? Colors.red[300]!) : Colors.grey[400]!;
-
-    final Color messageColor = isServerError
-        ? (errorColor ?? Colors.red[200]!)
-        : (textColor ?? AppColors.textDarkGrey);
+    const Color iconColor = Colors.red;
+    final Color messageColor = Colors.red.shade900;
+    const Color buttonColor = Colors.red;
 
     // Получаем текст кнопки и текст подсказки
     final buttonText = 'common.refresh'.tr();
@@ -55,8 +57,8 @@ class ErrorRefreshWidget extends StatelessWidget {
           children: [
             // Иконка ошибки
             Icon(
-              icon ?? (isServerError ? Icons.error : Icons.error_outline),
-              size: 64,
+              icon ?? Icons.warning_amber_rounded,
+              size: 32,
               color: iconColor,
             ),
             const SizedBox(height: 16),
@@ -66,12 +68,12 @@ class ErrorRefreshWidget extends StatelessWidget {
               errorMessage ?? 'common.error_loading_data'.tr(),
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 14,
                 color: messageColor,
-                fontWeight: isServerError ? FontWeight.bold : FontWeight.normal,
+                fontWeight: FontWeight.normal,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
 
             // Кнопка обновления
             ElevatedButton.icon(
@@ -79,16 +81,17 @@ class ErrorRefreshWidget extends StatelessWidget {
               icon: const Icon(Icons.refresh, color: Colors.white),
               label: Text(
                 buttonText,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.normal,
+                ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: isServerError
-                    ? (errorColor ?? Colors.red[600])
-                    : AppColors.primary,
+                backgroundColor: buttonColor,
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(4),
                 ),
               ),
             ),
@@ -101,9 +104,7 @@ class ErrorRefreshWidget extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
-                  color: textColor != null
-                      ? textColor!.withOpacity(0.7)
-                      : Colors.grey[600],
+                  color: messageColor.withOpacity(0.7),
                   fontStyle: FontStyle.italic,
                 ),
               ),
@@ -115,30 +116,21 @@ class ErrorRefreshWidget extends StatelessWidget {
   }
 
   Widget _buildCompactLayout() {
-    final Color iconColor = isServerError
-        ? (errorColor ?? Colors.red[300]!)
-        : (textColor ?? Colors.grey[400]!);
-
-    final Color messageColor = isServerError
-        ? (errorColor ?? Colors.red[700]!)
-        : (textColor ?? AppColors.textDarkGrey);
-
-    final Color buttonColor = isServerError
-        ? (errorColor ?? Colors.red[600]!)
-        : (textColor ?? AppColors.primary);
+    const Color iconColor = Colors.red;
+    final Color messageColor = Colors.red.shade900;
+    const Color buttonColor = Colors.red;
 
     // Получаем текст кнопки
     final buttonText = refreshText ?? 'common.refresh'.tr();
 
-    return Container(
-      color: backgroundColor,
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Иконка ошибки
           Icon(
-            icon ?? (isServerError ? Icons.error : Icons.error_outline),
+            icon ?? Icons.warning_amber_rounded,
             size: 32,
             color: iconColor,
           ),
@@ -151,7 +143,7 @@ class ErrorRefreshWidget extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 color: messageColor,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.normal,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -160,20 +152,21 @@ class ErrorRefreshWidget extends StatelessWidget {
           const SizedBox(width: 16),
 
           // Кнопка обновления
-          ElevatedButton(
+          ElevatedButton.icon(
             onPressed: onRefresh,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: buttonColor,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              minimumSize: const Size(100, 40),
-              elevation: 4,
-            ),
-            child: Text(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            label: Text(
               buttonText,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: buttonColor,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
               ),
             ),
           ),

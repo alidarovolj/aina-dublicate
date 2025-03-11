@@ -19,13 +19,12 @@ class BannersProvider extends StateNotifier<AsyncValue<List<Slide>>> {
   Future<void> fetchBanners({bool forceRefresh = false}) async {
     if (!_mounted) return;
 
-    if (forceRefresh) {
-      if (!_mounted) return;
-      state = const AsyncValue.loading();
-    }
-
     try {
-      // print('Fetching banners...');
+      if (forceRefresh || state is AsyncLoading) {
+        if (!_mounted) return;
+        state = const AsyncValue.loading();
+      }
+
       final response = await _listService.banners();
 
       if (!_mounted) return;
@@ -40,11 +39,14 @@ class BannersProvider extends StateNotifier<AsyncValue<List<Slide>>> {
 
       if (!_mounted) return;
       state = AsyncValue.data(banners);
-      // print('Banners fetched successfully.');
     } catch (error, stackTrace) {
-      // print('Error fetching banners: $error');
       if (!_mounted) return;
       state = AsyncValue.error(error, stackTrace);
+      // Retry after 3 seconds on error
+      await Future.delayed(const Duration(seconds: 3));
+      if (_mounted) {
+        fetchBanners();
+      }
     }
   }
 }

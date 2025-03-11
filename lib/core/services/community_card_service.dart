@@ -41,7 +41,7 @@ class CommunityCardService {
   Future<void> updateVisibility(Map<String, dynamic> data) async {
     try {
       await _apiClient.dio.post(
-        '/api/promenade/community-card/visibility',
+        '/api/promenade/community-card/update-visibility',
         data: data,
       );
     } catch (e) {

@@ -6,6 +6,9 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/requests/mall_shop_categories_provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:aina_flutter/core/services/amplitude_service.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ShopCategoriesGrid extends ConsumerStatefulWidget {
   final String mallId;
@@ -24,6 +27,20 @@ class ShopCategoriesGrid extends ConsumerStatefulWidget {
 class _ShopCategoriesGridState extends ConsumerState<ShopCategoriesGrid> {
   String? _previousMallId;
   AsyncValue<List<dynamic>>? _cachedCategories;
+
+  void _logSubcategoryClick(int categoryId, String categoryName) {
+    String platform = kIsWeb ? 'web' : (Platform.isIOS ? 'ios' : 'android');
+
+    AmplitudeService().logEvent(
+      'subcategory_click',
+      eventProperties: {
+        'Platform': platform,
+        'subcategory_id': categoryId,
+        'name_subcategory': categoryName,
+        'source': 'main',
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -246,6 +263,7 @@ class _ShopCategoriesGridState extends ConsumerState<ShopCategoriesGrid> {
                   final category = sortedCategories[index];
                   return GestureDetector(
                     onTap: () {
+                      _logSubcategoryClick(category.id, category.title);
                       context.goNamed(
                         'mall_stores',
                         pathParameters: {'id': currentMallId},

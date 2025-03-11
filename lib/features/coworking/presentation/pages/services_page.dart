@@ -100,29 +100,15 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
                 loading: () => _buildSkeletonLoader(),
                 error: (error, stack) {
                   print('❌ Ошибка при загрузке категорий услуг: $error');
-                  final is500Error = error.toString().contains('500') ||
-                      error.toString().contains('Internal Server Error');
-
-                  return Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red, width: 2),
-                    ),
-                    child: ErrorRefreshWidget(
-                      onRefresh: () {
-                        print('🔄 Обновление категорий услуг...');
-                        ref.refresh(servicesProvider);
-                      },
-                      errorMessage: 'stories.error.loading'.tr(),
-                      refreshText: 'common.refresh'.tr(),
-                      icon: Icons.warning_amber_rounded,
-                      isServerError: true,
-                      errorColor: Colors.red,
-                      backgroundColor: Colors.transparent,
-                      textColor: Colors.red.shade900,
-                    ),
+                  return ErrorRefreshWidget(
+                    onRefresh: () {
+                      print('🔄 Обновление категорий услуг...');
+                      ref.refresh(servicesProvider);
+                    },
+                    errorMessage: 'stories.error.loading'.tr(),
+                    refreshText: 'common.refresh'.tr(),
+                    icon: Icons.warning_amber_rounded,
+                    isServerError: true,
                   );
                 },
                 data: (services) {
@@ -139,26 +125,15 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
                       final is500Error = error.toString().contains('500') ||
                           error.toString().contains('Internal Server Error');
 
-                      return Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red, width: 2),
-                        ),
-                        child: ErrorRefreshWidget(
-                          onRefresh: () {
-                            print('🔄 Обновление услуг типа DEFAULT...');
-                            ref.refresh(defaultServicesProvider);
-                          },
-                          errorMessage: 'stories.error.loading'.tr(),
-                          refreshText: 'common.refresh'.tr(),
-                          icon: Icons.warning_amber_rounded,
-                          isServerError: true,
-                          errorColor: Colors.red,
-                          backgroundColor: Colors.transparent,
-                          textColor: Colors.red.shade900,
-                        ),
+                      return ErrorRefreshWidget(
+                        onRefresh: () {
+                          print('🔄 Обновление услуг типа DEFAULT...');
+                          ref.refresh(defaultServicesProvider);
+                        },
+                        errorMessage: 'stories.error.loading'.tr(),
+                        refreshText: 'common.refresh'.tr(),
+                        icon: Icons.warning_amber_rounded,
+                        isServerError: true,
                       );
                     },
                     data: (defaultServices) {
@@ -174,26 +149,13 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
                       print('📋 Общее количество услуг: ${allServices.length}');
 
                       if (allServices.isEmpty) {
-                        return Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.red.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.red, width: 2),
-                          ),
-                          child: ErrorRefreshWidget(
-                            onRefresh: () {
-                              print('🔄 Обновление всех услуг...');
-                              ref.refresh(servicesProvider);
-                              ref.refresh(defaultServicesProvider);
-                            },
-                            errorMessage: 'services.no_services'.tr(),
-                            refreshText: 'common.refresh'.tr(),
-                            icon: Icons.warning_amber_rounded,
-                            isServerError: true,
-                            errorColor: Colors.red,
-                            backgroundColor: Colors.transparent,
-                            textColor: Colors.red.shade900,
+                        return Center(
+                          child: Text(
+                            'services.no_services'.tr(),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black54,
+                            ),
                           ),
                         );
                       }
@@ -214,8 +176,8 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
                 },
               ),
             ),
-            const CustomHeader(
-              title: 'Услуги',
+            CustomHeader(
+              title: 'coworking_tabs.services'.tr(),
               type: HeaderType.close,
             ),
           ],

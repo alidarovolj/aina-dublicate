@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'core/router/app_router.dart';
 import 'core/styles/theme.dart';
-import 'package:aina_flutter/core/styles/constants.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:aina_flutter/core/api/api_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/types/promenade_profile.dart';
@@ -146,6 +143,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'AINA',
+      debugShowCheckedModeBanner: false,
       localizationsDelegates: context.localizationDelegates +
           [
             GlobalMaterialLocalizations.delegate,

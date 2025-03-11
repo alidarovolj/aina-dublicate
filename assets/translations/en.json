@@ -41,10 +41,11 @@
         "unapproved": "Your card is not approved"
       },
       "visibility": {
-        "title": "Visibility settings",
+        "title": "Visibility Settings",
         "show_card": "Show my card in community",
         "show_phone": "Show my phone number",
-        "apply": "Apply"
+        "apply": "Apply",
+        "success": "Visibility settings updated"
       },
       "main": {
         "title": "Basic information",
@@ -68,7 +69,8 @@
         "title": "Image",
         "add": "Add image",
         "select": "Click to select an image",
-        "error_picking": "Error picking image: {}"
+        "error_picking": "Error picking image: {}",
+        "added": "Photo added"
       },
       "button": {
         "title": "Button",
@@ -95,7 +97,8 @@
           "loading": "Error loading data: {}",
           "visibility": "Error updating visibility settings: {}",
           "saving": "Error saving data: {}"
-        }
+        },
+        "update_success": "Changes saved"
       }
     }
   },
@@ -197,7 +200,14 @@
     "service_auth_required": "To order a service, please register in the app",
     "service_biometric_required": "To order a service, you need to pass biometric verification",
     "register": "Register",
-    "verify_biometric": "Pass verification"
+    "verify_biometric": "Pass verification",
+    "warning": {
+      "profile_incomplete_message": "Before scanning the receipt, please make sure your first and last name in your profile are correct. This is a mandatory requirement for participating in the promotion.",
+      "auth_required_message": "Authorization is required to participate in the promotion",
+      "to_profile": "To Profile",
+      "scan": "Scan",
+      "login": "Login"
+    }
   },
   "about": {
     "title": "About",
@@ -252,7 +262,8 @@
           "confirmation": "Log out from account\n{}?",
           "cancel": "Cancel",
           "confirm": "Log out"
-        }
+        },
+        "update_success": "Changes saved"
       }
     }
   },
@@ -304,7 +315,7 @@
       "order_error": "Error creating order"
     },
     "profile": {
-      "title": "Profile",
+      "title": "Coworking Profile",
       "personal_info": "Personal data",
       "biometric": "Biometric",
       "community_card": "Community Card",
@@ -352,7 +363,8 @@
       "account": "Account",
       "logout": "Log out",
       "logout_title": "Log out",
-      "logout_message": "Are you sure you want to log out?"
+      "logout_message": "Are you sure you want to log out?",
+      "update_success": "Changes saved"
     }
   },
   "scanner": {
@@ -510,15 +522,16 @@
     }
   },
   "contact_admin": {
-    "title": "Feedback",
+    "title": "Contact Us",
     "category_label": "Category",
-    "category_placeholder": "Select a category",
+    "category_placeholder": "Select category",
     "comment_label": "Comment",
     "comment_placeholder": "Describe your question",
     "phone_label": "Contact phone",
     "phone_placeholder": "Enter phone number",
-    "response_note": "We will contact you shortly",
+    "response_note": "We will contact you soon",
     "submit_button": "Submit",
+    "success": "Your message has been successfully sent",
     "errors": {
       "required": "Required field"
     }
@@ -573,7 +586,10 @@
   "language": "Language Selection",
   "errors": {
     "delete_profile": "Error deleting profile",
-    "unauthorized": "Session expired. Please log in again."
+    "unauthorized": "Session expired. Please log in again.",
+    "mall_id_not_found": "Error: Building ID not found",
+    "promotion_id_not_found": "Error: Promotion ID not found",
+    "buildings_data_unavailable": "Error: Buildings data unavailable"
   },
   "menu": {
     "title": "Menu",
@@ -608,5 +624,10 @@
       "server": "Failed to load data. Please try again later",
       "loading": "Failed to load data. Please try again later"
     }
+  },
+  "no_internet": {
+    "title": "Something went wrong!",
+    "description": "Please check your internet connection or try again later.",
+    "reload": "Reload"
   }
 }

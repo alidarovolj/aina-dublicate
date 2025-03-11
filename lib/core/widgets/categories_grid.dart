@@ -6,6 +6,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/requests/mall_categories_provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:aina_flutter/core/services/amplitude_service.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class CategoriesGrid extends ConsumerWidget {
   final String mallId;
@@ -18,6 +21,20 @@ class CategoriesGrid extends ConsumerWidget {
     this.showDivider = false,
     this.emptyBuilder,
   });
+
+  void _logContentTypeClick(int categoryId, String categoryName) {
+    String platform = kIsWeb ? 'web' : (Platform.isIOS ? 'ios' : 'android');
+
+    AmplitudeService().logEvent(
+      'content_type',
+      eventProperties: {
+        'Platform': platform,
+        'category_id': categoryId,
+        'name_category': categoryName,
+        'source': 'mall',
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -148,6 +165,7 @@ class CategoriesGrid extends ConsumerWidget {
                   final category = sortedCategories[index];
                   return GestureDetector(
                     onTap: () {
+                      _logContentTypeClick(category.id, category.title);
                       context.pushNamed(
                         'category_stores',
                         pathParameters: {

@@ -289,6 +289,7 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
       body: Container(
         color: AppColors.primary,
         child: SafeArea(
+          bottom: false,
           child: Stack(
             children: [
               Container(
@@ -570,11 +571,21 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
           ),
         ),
         Container(
-          padding: EdgeInsets.only(
+          padding: const EdgeInsets.only(
             left: 12,
             right: 12,
-            top: 28,
-            bottom: MediaQuery.of(context).padding.bottom + 28,
+            top: 12,
+            bottom: 28,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Color.fromRGBO(0, 0, 0, 0.04),
+                offset: Offset(0, -2),
+                blurRadius: 4,
+              ),
+            ],
           ),
           child: Column(
             children: [
@@ -590,7 +601,7 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
                 ),
               if (order!.status == 'PENDING')
                 Padding(
-                  padding: const EdgeInsets.only(top: 20),
+                  padding: const EdgeInsets.only(top: 10),
                   child: CustomButton(
                     label: 'orders.detail.pay'.tr(),
                     onPressed: () async {
@@ -610,23 +621,12 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
                     type: ButtonType.normal,
                   ),
                 ),
-              if (order!.status == 'PAID' &&
-                  order!.paymentMethod?.type == 'EPAY')
-                Padding(
-                  padding: const EdgeInsets.only(top: 20),
-                  child: CustomButton(
-                    label: 'orders.detail.download_fiscal'.tr(),
-                    onPressed: _downloadFiscal,
-                    isFullWidth: true,
-                    type: ButtonType.normal,
-                  ),
-                ),
               if (order!.service?.type != 'COWORKING' &&
                   order!.status != 'PENDING' &&
                   order!.status != 'CANCELLED' &&
                   order!.status == 'PAID')
                 Padding(
-                  padding: const EdgeInsets.only(top: 20),
+                  padding: const EdgeInsets.only(top: 10),
                   child: CustomButton(
                     label: 'orders.detail.download_qr'.tr(),
                     onPressed: () async {

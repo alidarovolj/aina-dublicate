@@ -35,18 +35,19 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
   void didChangeDependencies() {
     super.didChangeDependencies();
     routeObserver.subscribe(this, ModalRoute.of(context)!);
-
-    if (!_isInitialized) {
-      _isInitialized = true;
-      _refreshData();
-    }
   }
-
-  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
+    // Используем Future.microtask чтобы избежать setState во время build
+    Future.microtask(() {
+      final token = ref.read(authProvider).token;
+      if (token != null) {
+        ref.invalidate(communityCardsProvider);
+        ref.invalidate(communityCardProvider);
+      }
+    });
   }
 
   @override
@@ -58,10 +59,6 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
 
   @override
   void didPopNext() {
-    _refreshData();
-  }
-
-  void _refreshData() {
     final token = ref.read(authProvider).token;
     if (token != null) {
       ref.invalidate(communityCardsProvider);
@@ -97,17 +94,17 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
         child: Stack(
           children: [
             Container(
-              color: AppColors.bgLight,
+              color: AppColors.appBg,
               margin: const EdgeInsets.only(top: 64),
               child: Column(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.bgLight,
+                    decoration: const BoxDecoration(
+                      color: AppColors.appBg,
                       border: Border(
                         bottom: BorderSide(
-                          color: Colors.grey[300]!,
+                          color: Color(0xFFEEEEEE),
                           width: 1,
                         ),
                       ),
@@ -115,17 +112,34 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
                     child: TextField(
                       controller: _searchController,
                       style: const TextStyle(
-                        color: AppColors.darkGrey,
+                        fontSize: 15,
+                        color: Colors.black,
                       ),
                       decoration: InputDecoration(
                         hintText: 'community.search'.tr(),
+                        hintStyle: const TextStyle(
+                          fontSize: 15,
+                          color: AppColors.darkGrey,
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
                           borderSide: BorderSide.none,
                         ),
-                        prefixIcon: const Icon(Icons.search),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide: BorderSide.none,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: AppColors.grey2,
+                          size: 24,
+                        ),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 12,

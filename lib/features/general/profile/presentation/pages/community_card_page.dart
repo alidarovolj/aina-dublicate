@@ -14,6 +14,7 @@ import 'package:dio/dio.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 
 class CommunityCardPage extends ConsumerStatefulWidget {
   const CommunityCardPage({super.key});
@@ -132,10 +133,10 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content:
-                Text('community.card.errors.loading'.tr(args: [e.toString()]))),
+      BaseSnackBar.show(
+        context,
+        message: 'community.card.errors.loading'.tr(args: [e.toString()]),
+        type: SnackBarType.error,
       );
     }
   }
@@ -148,12 +149,18 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
         'image_visible': _imageVisible,
       });
       await _loadData();
+      if (!mounted) return;
+      BaseSnackBar.show(
+        context,
+        message: 'community.card.visibility.success'.tr(),
+        type: SnackBarType.success,
+      );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                'community.card.errors.visibility'.tr(args: [e.toString()]))),
+      BaseSnackBar.show(
+        context,
+        message: 'community.card.errors.visibility'.tr(args: [e.toString()]),
+        type: SnackBarType.error,
       );
     }
   }
@@ -189,8 +196,10 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
 
   Future<void> _saveData() async {
     if (_nameController.text.isEmpty || _positionController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in required fields')),
+      BaseSnackBar.show(
+        context,
+        message: 'Please fill in required fields',
+        type: SnackBarType.error,
       );
       return;
     }
@@ -251,10 +260,10 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
       await _loadData();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content:
-                Text('community.card.errors.saving'.tr(args: [e.toString()]))),
+      BaseSnackBar.show(
+        context,
+        message: 'community.card.errors.saving'.tr(args: [e.toString()]),
+        type: SnackBarType.error,
       );
     } finally {
       if (mounted) {
@@ -284,9 +293,10 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
               await launchUrl(Uri.parse(whatsappUrl));
             } catch (e) {
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text(tr('communication.modal.whatsapp.error'))),
+                BaseSnackBar.show(
+                  context,
+                  message: tr('communication.modal.whatsapp.error'),
+                  type: SnackBarType.error,
                 );
               }
             }
@@ -316,13 +326,19 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
           // Clear the URL since we have a local file
           _avatarUrl = null;
         });
+        if (!mounted) return;
+        BaseSnackBar.show(
+          context,
+          message: 'community.card.image.added'.tr(),
+          type: SnackBarType.success,
+        );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                'community.card.image.error_picking'.tr(args: [e.toString()]))),
+      BaseSnackBar.show(
+        context,
+        message: 'community.card.image.error_picking'.tr(args: [e.toString()]),
+        type: SnackBarType.error,
       );
     }
   }
@@ -344,11 +360,19 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
           // Clear the URL since we have a local file
           _imageUrl = null;
         });
+        if (!mounted) return;
+        BaseSnackBar.show(
+          context,
+          message: 'community.card.image.added'.tr(),
+          type: SnackBarType.success,
+        );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: $e')),
+      BaseSnackBar.show(
+        context,
+        message: 'community.card.image.error_picking'.tr(args: [e.toString()]),
+        type: SnackBarType.error,
       );
     }
   }

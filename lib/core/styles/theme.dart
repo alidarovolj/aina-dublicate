@@ -25,10 +25,9 @@ class AppTheme {
           fontFamilyFallback: ['Roboto', 'Noto Sans'],
         ),
       ),
-      colorScheme: ColorScheme.dark(
+      colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
         surface: AppColors.primary,
-        background: AppColors.primary,
       ),
       appBarTheme: const AppBarTheme(
         systemOverlayStyle: SystemUiOverlayStyle(

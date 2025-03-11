@@ -191,15 +191,18 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(
+          message,
+          style: const TextStyle(
+            color: Colors.white,
+          ),
+        ),
         backgroundColor: Colors.red,
       ),
     );
   }
 
   Future<void> _handleSuccessfulLogin(String token) async {
-    print('🔑 Успешная авторизация, токен: ${token.substring(0, 10)}...');
-
     try {
       // Сохраняем токен в локальном хранилище
       await StorageService.saveToken(token);
@@ -219,15 +222,19 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
       // Получаем данные пользователя и сохраняем их локально
       try {
         final response = await ApiClient().dio.get('/api/promenade/profile');
+        print('📱 Received user data from server:');
+        print('   ${response.data}');
+
         if (response.data['success'] == true && response.data['data'] != null) {
           // Сохраняем данные пользователя в локальном хранилище
           await StorageService.saveUserData(response.data['data']);
+          print('📱 Saved user data to storage');
 
           // Обновляем данные пользователя в провайдере
           ref.read(authProvider.notifier).updateUserData(response.data['data']);
         }
       } catch (e) {
-        print('⚠️ Ошибка при получении данных пользователя: $e');
+        print('❌ Error getting user data: $e');
         // Продолжаем выполнение, даже если не удалось получить данные пользователя
       }
 
@@ -237,13 +244,11 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
       // Проверяем, что состояние авторизации обновилось
       final authState = ref.read(authProvider);
       if (!authState.isAuthenticated) {
-        print('⚠️ Состояние авторизации не обновилось после установки токена');
         // Если состояние не обновилось, пробуем еще раз
         await ref.read(authProvider.notifier).setToken(token);
         await Future.delayed(const Duration(milliseconds: 300));
       }
     } catch (e) {
-      print('❌ Ошибка при установке токена: $e');
       // Если не удалось установить токен через провайдер, перезагружаем приложение
       if (mounted) {
         RestartWidget.restartApp(context);
@@ -252,42 +257,29 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
     }
     if (!mounted) return;
 
-    print(
-        'Debug: buildingType = ${widget.buildingType}, buildingId = ${widget.buildingId}');
-    print('Debug: current route = ${GoRouterState.of(context).uri.toString()}');
-    print('Debug: state.extra = ${GoRouterState.of(context).extra}');
-
     // Добавляем еще одну проверку состояния авторизации перед навигацией
     final finalAuthState = ref.read(authProvider);
-    print(
-        '🔍 Финальное состояние авторизации: ${finalAuthState.isAuthenticated}');
 
     // Добавляем дополнительную задержку перед навигацией
     await Future.delayed(const Duration(milliseconds: 300));
 
     if (widget.buildingType == 'coworking' && widget.buildingId != null) {
-      print('Debug: redirecting to coworking profile');
       context.go('/coworking/${widget.buildingId}/profile');
     } else if (widget.buildingType == 'mall' && widget.buildingId != null) {
-      print('Debug: redirecting to mall profile');
       context.go('/malls/${widget.buildingId}/profile');
     } else {
       final currentRoute = GoRouterState.of(context).uri.toString();
       final routeParts = currentRoute.split('/');
-      print('Debug: fallback route parts = $routeParts');
 
       if (routeParts.length >= 3) {
         if (routeParts[1] == 'coworking') {
-          print('Debug: redirecting to coworking from route');
           context.go('/coworking/${routeParts[2]}/profile');
           return;
         } else if (routeParts[1] == 'malls') {
-          print('Debug: redirecting to mall from route');
           context.go('/malls/${routeParts[2]}/profile');
           return;
         }
       }
-      print('Debug: fallback to home');
       context.go('/home');
     }
   }
@@ -340,7 +332,12 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(
+              e.toString(),
+              style: const TextStyle(
+                color: Colors.white,
+              ),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -448,6 +445,24 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
                                       );
                                     }),
                                   ),
+                                  if (isLoading)
+                                    Positioned.fill(
+                                      child: Container(
+                                        color: Colors.white.withOpacity(0.8),
+                                        child: const Center(
+                                          child: SizedBox(
+                                            width: 24,
+                                            height: 24,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                      AppColors.primary),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   Positioned.fill(
                                     child: TextField(
                                       controller: _codeController,

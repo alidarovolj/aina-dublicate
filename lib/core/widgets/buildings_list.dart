@@ -9,9 +9,24 @@ import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
+import 'package:aina_flutter/core/services/amplitude_service.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class BuildingsList extends ConsumerWidget {
   const BuildingsList({super.key});
+
+  void _logShoppingMallClick(Building mall) {
+    String platform = kIsWeb ? 'web' : (Platform.isIOS ? 'ios' : 'android');
+
+    AmplitudeService().logEvent(
+      'shopping_mall_click',
+      eventProperties: {
+        'Platform': platform,
+        'mall_name': mall.name,
+      },
+    );
+  }
 
   Widget _buildMallRow(List<Building> buildings, BuildContext context) {
     if (buildings.isEmpty) return const SizedBox.shrink();
@@ -40,6 +55,7 @@ class BuildingsList extends ConsumerWidget {
                 .entries
                 .map((entry) => GestureDetector(
                       onTap: () {
+                        _logShoppingMallClick(entry.value);
                         context.go('/malls/${entry.value.id}');
                       },
                       child: Container(
@@ -185,33 +201,27 @@ class BuildingsList extends ConsumerWidget {
       loading: () => _buildSkeletonLoader(context),
       error: (error, stack) {
         print('❌ Ошибка при загрузке зданий: $error');
-        return Container(
-          padding: const EdgeInsets.all(16),
-          margin: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.red.shade100,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.red, width: 2),
-          ),
-          child: ErrorRefreshWidget(
-            onRefresh: () {
-              print('🔄 Обновление списка зданий...');
-              Future.microtask(() async {
-                try {
-                  ref.refresh(buildingsProvider);
-                } catch (e) {
-                  print('❌ Ошибка при обновлении списка зданий: $e');
-                }
-              });
-            },
-            errorMessage: 'stories.error.loading'.tr(),
-            refreshText: 'common.refresh'.tr(),
-            icon: Icons.warning_amber_rounded,
-            isServerError: true,
-            backgroundColor: Colors.transparent,
-            textColor: Colors.red.shade900,
-            errorColor: Colors.red,
-          ),
+
+        final is500Error = error.toString().contains('500') ||
+            error.toString().contains('Internal Server Error');
+
+        return ErrorRefreshWidget(
+          onRefresh: () {
+            print('🔄 Обновление списка зданий...');
+            Future.microtask(() async {
+              try {
+                ref.refresh(buildingsProvider);
+              } catch (e) {
+                print('❌ Ошибка при обновлении списка зданий: $e');
+              }
+            });
+          },
+          errorMessage: is500Error
+              ? 'stories.error.server'.tr()
+              : 'stories.error.loading'.tr(),
+          refreshText: 'common.refresh'.tr(),
+          icon: Icons.warning_amber_rounded,
+          isServerError: true,
         );
       },
       data: (buildings) => Column(

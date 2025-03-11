@@ -15,6 +15,8 @@ import 'package:shimmer/shimmer.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:dio/dio.dart';
 import 'package:aina_flutter/core/router/route_observer.dart';
+import 'package:aina_flutter/core/services/amplitude_service.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ProfilePage extends ConsumerStatefulWidget {
   final int mallId;
@@ -211,6 +213,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with RouteAware {
     }
   }
 
+  void _logPersonalInfoClick() {
+    String platform = kIsWeb ? 'web' : (Platform.isIOS ? 'ios' : 'android');
+
+    AmplitudeService().logEvent(
+      'personal_info_click',
+      eventProperties: {
+        'source': 'profile',
+        'Platform': platform,
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final userAsync = ref.watch(userProvider);
@@ -331,6 +345,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with RouteAware {
                               Icons.chevron_right,
                               backgroundColor: Colors.grey[200],
                               onTap: () async {
+                                _logPersonalInfoClick();
                                 // Navigate and wait for result
                                 final result = await context.pushNamed(
                                   'mall_edit',

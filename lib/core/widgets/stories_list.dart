@@ -11,6 +11,9 @@ import 'package:aina_flutter/core/widgets/custom_button.dart'
 import 'package:aina_flutter/core/utils/button_navigation_handler.dart';
 import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:aina_flutter/core/services/amplitude_service.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class StoryList extends ConsumerStatefulWidget {
   const StoryList({super.key});
@@ -46,6 +49,17 @@ class _StoryListState extends ConsumerState<StoryList>
     super.dispose();
   }
 
+  void _logStoryClick() {
+    String platform = kIsWeb ? 'web' : (Platform.isIOS ? 'ios' : 'android');
+
+    AmplitudeService().logEvent(
+      'story_click',
+      eventProperties: {
+        'Platform': platform,
+      },
+    );
+  }
+
   void markStoryAsRead(int index) {
     if (!mounted) return;
 
@@ -66,6 +80,7 @@ class _StoryListState extends ConsumerState<StoryList>
     if (!mounted) return;
 
     try {
+      _logStoryClick();
       setState(() {
         _selectedIndex = index;
       });
@@ -115,48 +130,28 @@ class _StoryListState extends ConsumerState<StoryList>
       error: (error, stack) {
         print('❌ Ошибка при загрузке историй: $error');
 
-        // Проверяем, содержит ли ошибка код 500
         final is500Error = error.toString().contains('500') ||
             error.toString().contains('Internal Server Error');
 
-        return Container(
-          color: AppColors.primary,
+        return ErrorRefreshWidget(
           height: 120,
-          width: double.infinity,
-          child: SafeArea(
-            child: Container(
-              height: 100,
-              margin: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.red.shade100,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red, width: 2),
-              ),
-              child: ErrorRefreshWidget(
-                onRefresh: () {
-                  print('🔄 Обновление историй...');
-                  // Используем Future.microtask для асинхронного обновления
-                  Future.microtask(() async {
-                    try {
-                      ref.refresh(storiesProvider);
-                    } catch (e) {
-                      print('❌ Ошибка при обновлении историй: $e');
-                    }
-                  });
-                },
-                errorMessage: is500Error
-                    ? 'stories.error.server'.tr()
-                    : 'stories.error.loading'.tr(),
-                refreshText: 'common.refresh'.tr(),
-                isCompact: true,
-                isServerError: true,
-                backgroundColor: Colors.transparent,
-                textColor: Colors.red.shade900,
-                errorColor: Colors.red,
-                icon: Icons.warning_amber_rounded,
-              ),
-            ),
-          ),
+          onRefresh: () {
+            print('🔄 Обновление историй...');
+            Future.microtask(() async {
+              try {
+                ref.refresh(storiesProvider);
+              } catch (e) {
+                print('❌ Ошибка при обновлении историй: $e');
+              }
+            });
+          },
+          errorMessage: is500Error
+              ? 'stories.error.server'.tr()
+              : 'stories.error.loading'.tr(),
+          refreshText: 'common.refresh'.tr(),
+          isCompact: true,
+          isServerError: true,
+          icon: Icons.warning_amber_rounded,
         );
       },
       data: (storiesList) {

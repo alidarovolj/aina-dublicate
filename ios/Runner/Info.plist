@@ -83,10 +83,10 @@
 		</dict>
 		<key>NSCameraUsageDescription</key>
 		<string>Camera access is required for biometric verification to ensure secure access to coworking spaces</string>
-		<key>NSLocationAlwaysUsageDescription</key>
-		<string>Приложению требуется доступ к геолокации для отображения вашего местоположения на карте</string>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>Приложение использует геолокацию для отображения ближайших торговых центров и коворкингов, а также для построения маршрутов к ним</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>Приложению требуется доступ к геолокации для отображения вашего местоположения на карте</string>
+		<string>Приложение использует геолокацию для отображения ближайших торговых центров и коворкингов, а также для построения маршрутов к ним</string>
 		<key>NSMicrophoneUsageDescription</key>
 		<string>We need access to your microphone for biometric verification</string>
 		<key>NSPhotoLibraryUsageDescription</key>

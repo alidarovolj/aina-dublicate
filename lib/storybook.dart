@@ -1442,7 +1442,24 @@ class StorybookApp extends StatelessWidget {
                       CustomButton(
                         label: 'Проверить инициализацию Amplitude',
                         onPressed: () async {
-                          await AmplitudeService().init();
+                          try {
+                            await AmplitudeService().init();
+                            if (context.mounted) {
+                              BaseSnackBar.show(
+                                context,
+                                message: 'Amplitude успешно инициализирован',
+                                type: SnackBarType.success,
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              BaseSnackBar.show(
+                                context,
+                                message: 'Ошибка инициализации Amplitude: $e',
+                                type: SnackBarType.error,
+                              );
+                            }
+                          }
                         },
                         type: ButtonType.filled,
                         isFullWidth: true,
@@ -1451,13 +1468,30 @@ class StorybookApp extends StatelessWidget {
                       CustomButton(
                         label: 'Отправить тестовое событие',
                         onPressed: () async {
-                          await AmplitudeService().logEvent(
-                            'test_event_from_storybook',
-                            eventProperties: {
-                              'source': 'storybook',
-                              'timestamp': DateTime.now().toString(),
-                            },
-                          );
+                          try {
+                            await AmplitudeService().logEvent(
+                              'test_event_from_storybook',
+                              eventProperties: {
+                                'source': 'storybook',
+                                'timestamp': DateTime.now().toString(),
+                              },
+                            );
+                            if (context.mounted) {
+                              BaseSnackBar.show(
+                                context,
+                                message: 'Тестовое событие успешно отправлено',
+                                type: SnackBarType.success,
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              BaseSnackBar.show(
+                                context,
+                                message: 'Ошибка отправки события: $e',
+                                type: SnackBarType.error,
+                              );
+                            }
+                          }
                         },
                         type: ButtonType.filled,
                         isFullWidth: true,
@@ -1466,16 +1500,34 @@ class StorybookApp extends StatelessWidget {
                       CustomButton(
                         label: 'Отправить событие с user_id',
                         onPressed: () async {
-                          final testUserId =
-                              'test_user_${DateTime.now().millisecondsSinceEpoch}';
-                          await AmplitudeService().logEventWithUserId(
-                            'test_user_id_event',
-                            userId: testUserId,
-                            eventProperties: {
-                              'source': 'storybook',
-                              'timestamp': DateTime.now().toString(),
-                            },
-                          );
+                          try {
+                            final testUserId =
+                                'test_user_${DateTime.now().millisecondsSinceEpoch}';
+                            await AmplitudeService().logEventWithUserId(
+                              'test_user_id_event',
+                              userId: testUserId,
+                              eventProperties: {
+                                'source': 'storybook',
+                                'timestamp': DateTime.now().toString(),
+                              },
+                            );
+                            if (context.mounted) {
+                              BaseSnackBar.show(
+                                context,
+                                message: 'Событие с user_id успешно отправлено',
+                                type: SnackBarType.success,
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              BaseSnackBar.show(
+                                context,
+                                message:
+                                    'Ошибка отправки события с user_id: $e',
+                                type: SnackBarType.error,
+                              );
+                            }
+                          }
                         },
                         type: ButtonType.filled,
                         isFullWidth: true,
@@ -1484,7 +1536,26 @@ class StorybookApp extends StatelessWidget {
                       CustomButton(
                         label: 'Проверить отправку событий',
                         onPressed: () async {
-                          await AmplitudeService().validateEventSending();
+                          try {
+                            await AmplitudeService().validateEventSending();
+                            if (context.mounted) {
+                              BaseSnackBar.show(
+                                context,
+                                message:
+                                    'Проверка отправки событий успешно выполнена',
+                                type: SnackBarType.success,
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              BaseSnackBar.show(
+                                context,
+                                message:
+                                    'Ошибка при проверке отправки событий: $e',
+                                type: SnackBarType.error,
+                              );
+                            }
+                          }
                         },
                         type: ButtonType.filled,
                         isFullWidth: true,
@@ -1493,13 +1564,26 @@ class StorybookApp extends StatelessWidget {
                       CustomButton(
                         label: 'Получить текущий user_id',
                         onPressed: () async {
-                          final userId =
-                              await AmplitudeService().getCurrentUserId();
-                          BaseSnackBar.show(
-                            context,
-                            message: 'Текущий user_id: $userId',
-                            type: SnackBarType.neutral,
-                          );
+                          try {
+                            final userId =
+                                await AmplitudeService().getCurrentUserId();
+                            if (context.mounted) {
+                              BaseSnackBar.show(
+                                context,
+                                message:
+                                    'Текущий user_id: ${userId ?? "не установлен"}',
+                                type: SnackBarType.neutral,
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              BaseSnackBar.show(
+                                context,
+                                message: 'Ошибка получения user_id: $e',
+                                type: SnackBarType.error,
+                              );
+                            }
+                          }
                         },
                         type: ButtonType.bordered,
                         isFullWidth: true,

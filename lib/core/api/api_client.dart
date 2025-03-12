@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/services/storage_service.dart';
 import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 // Cache entry class to store response with metadata
 class _CacheEntry {
@@ -107,6 +108,18 @@ class ApiClient {
     // Add error interceptor for 401 responses
     dio.interceptors.add(InterceptorsWrapper(
       onError: (error, handler) async {
+        // Capture all API errors in Sentry with request details
+        await Sentry.captureException(
+          error.error,
+          stackTrace: error.stackTrace,
+          hint: Hint.withMap({
+            'path': error.requestOptions.path,
+            'method': error.requestOptions.method,
+            'statusCode': error.response?.statusCode,
+            'responseData': error.response?.data,
+          }),
+        );
+
         if (error.response?.statusCode == 401) {
           print(
               '🔒 Получена ошибка 401 Unauthorized: ${error.requestOptions.path}');
@@ -128,13 +141,19 @@ class ApiClient {
               await container.read(authProvider.notifier).logout();
               print('✅ Успешно выполнен logout через authProvider');
             } catch (e) {
+              // Capture authentication-related errors
+              await Sentry.captureException(
+                e,
+                hint: Hint.withMap({
+                  'action': 'logout',
+                  'context': 'auth_provider',
+                }),
+              );
               print('❌ Ошибка при вызове logout через authProvider: $e');
             }
 
             // Если это не запрос к профилю, то показываем сообщение и перенаправляем
-            // Запросы к профилю обрабатываются на страницах профиля
             if (!error.requestOptions.path.contains('/api/promenade/profile')) {
-              // Show error message
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 BaseSnackBar.show(
                   context,
@@ -147,50 +166,99 @@ class ApiClient {
         }
         return handler.next(error);
       },
-    ));
+      onRequest: (options, handler) async {
+        try {
+          // Clean expired cache entries
+          _cleanExpiredCache();
 
-    // Add caching interceptor
-    dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) {
-        // Clean expired cache entries
-        _cleanExpiredCache();
+          // Check for force refresh header
+          final forceRefresh = options.headers['force-refresh'] == 'true';
+          if (forceRefresh) {
+            options.headers.remove('force-refresh');
+            final cacheKey = '${options.uri}_$_currentLocale';
+            _requestCache.remove(cacheKey);
+            return handler.next(options);
+          }
 
-        // Check for force refresh header
-        final forceRefresh = options.headers['force-refresh'] == 'true';
-        if (forceRefresh) {
-          // Remove force-refresh header before sending request
-          options.headers.remove('force-refresh');
-          // Clear cache for this specific endpoint
-          final cacheKey = '${options.uri}_$_currentLocale';
-          _requestCache.remove(cacheKey);
+          // Clear cache for specific endpoints when POST requests are made
+          if (options.method == 'POST') {
+            if (options.path.contains('/api/promenade/profile/biometric')) {
+              _clearBiometricCache();
+            }
+          }
+
+          // Only cache GET requests
+          if (options.method == 'GET') {
+            final cacheKey = '${options.uri}_$_currentLocale';
+            final cachedEntry = _requestCache[cacheKey];
+
+            if (cachedEntry != null && !cachedEntry.isExpired) {
+              return handler.resolve(cachedEntry.response);
+            }
+          }
+
+          // Add request to Sentry breadcrumbs
+          Sentry.addBreadcrumb(
+            Breadcrumb(
+              category: 'http',
+              type: 'http',
+              level: SentryLevel.info,
+              data: {
+                'url': options.uri.toString(),
+                'method': options.method,
+                'headers': options.headers,
+              },
+            ),
+          );
+
+          return handler.next(options);
+        } catch (e, stackTrace) {
+          await Sentry.captureException(
+            e,
+            stackTrace: stackTrace,
+            hint: Hint.withMap({
+              'stage': 'request_interceptor',
+              'url': options.uri.toString(),
+              'method': options.method,
+            }),
+          );
           return handler.next(options);
         }
-
-        // Clear cache for specific endpoints when POST requests are made
-        if (options.method == 'POST') {
-          if (options.path.contains('/api/promenade/profile/biometric')) {
-            // Clear all cached entries related to biometric profile
-            _clearBiometricCache();
-          }
-        }
-
-        // Only cache GET requests
-        if (options.method == 'GET') {
-          final cacheKey = '${options.uri}_$_currentLocale';
-          final cachedEntry = _requestCache[cacheKey];
-
-          if (cachedEntry != null && !cachedEntry.isExpired) {
-            return handler.resolve(cachedEntry.response);
-          }
-        }
-        return handler.next(options);
       },
-      onResponse: (response, handler) {
-        // Only cache GET responses
-        if (response.requestOptions.method == 'GET') {
-          _cacheResponse(response);
+      onResponse: (response, handler) async {
+        try {
+          // Only cache GET responses
+          if (response.requestOptions.method == 'GET') {
+            _cacheResponse(response);
+          }
+
+          // Add successful response to Sentry breadcrumbs
+          Sentry.addBreadcrumb(
+            Breadcrumb(
+              category: 'http',
+              type: 'http',
+              level: SentryLevel.info,
+              data: {
+                'url': response.requestOptions.uri.toString(),
+                'status_code': response.statusCode,
+                'method': response.requestOptions.method,
+              },
+            ),
+          );
+
+          return handler.next(response);
+        } catch (e, stackTrace) {
+          await Sentry.captureException(
+            e,
+            stackTrace: stackTrace,
+            hint: Hint.withMap({
+              'stage': 'response_interceptor',
+              'url': response.requestOptions.uri.toString(),
+              'status_code': response.statusCode,
+            }),
+          );
+          return handler.next(response);
         }
-        return handler.next(response);
       },
     ));
 

@@ -23,6 +23,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/app.dart';
 import 'package:flutter/gestures.dart';
 import 'package:aina_flutter/core/providers/requests/settings_provider.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 
 class OrderDetailsPage extends ConsumerStatefulWidget {
   final String orderId;
@@ -71,7 +72,11 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
       }
     } catch (e) {
       if (mounted) {
-        // Handle error appropriately
+        BaseSnackBar.show(
+          context,
+          message: 'common.error.general'.tr(),
+          type: SnackBarType.error,
+        );
         debugPrint('Error loading order details: $e');
       }
     }
@@ -268,15 +273,19 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
         await launchUrl(uri);
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('orders.fiscal.error_download'.tr())),
+          BaseSnackBar.show(
+            context,
+            message: 'orders.fiscal.error_download'.tr(),
+            type: SnackBarType.error,
           );
         }
       }
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('orders.fiscal.error_no_url'.tr())),
+        BaseSnackBar.show(
+          context,
+          message: 'orders.fiscal.error_no_url'.tr(),
+          type: SnackBarType.error,
         );
       }
     }
@@ -495,19 +504,20 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
                                 final settings = settingsAsync.when(
                                   data: (data) => data,
                                   loading: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Загрузка правил...'),
-                                      ),
+                                    BaseSnackBar.show(
+                                      context,
+                                      message: 'orders.rules.loading'.tr(),
+                                      type: SnackBarType.neutral,
                                     );
                                     return null;
                                   },
                                   error: (error, stack) {
                                     debugPrint('Settings error: $error');
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Ошибка загрузки правил'),
-                                      ),
+                                    BaseSnackBar.show(
+                                      context,
+                                      message:
+                                          'orders.rules.error_loading'.tr(),
+                                      type: SnackBarType.error,
                                     );
                                     return null;
                                   },
@@ -521,11 +531,11 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
 
                                 if (fileUrl == null || fileUrl.isEmpty) {
                                   if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                            'Правила пользования недоступны'),
-                                      ),
+                                    BaseSnackBar.show(
+                                      context,
+                                      message:
+                                          'orders.rules.not_available'.tr(),
+                                      type: SnackBarType.error,
                                     );
                                   }
                                   return;
@@ -542,21 +552,19 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
                                 debugPrint('URL launch result: $launched');
 
                                 if (!launched && mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                          'Не удалось открыть правила пользования'),
-                                    ),
+                                  BaseSnackBar.show(
+                                    context,
+                                    message: 'common.error.general'.tr(),
+                                    type: SnackBarType.error,
                                   );
                                 }
                               } catch (e) {
                                 debugPrint('Error opening rules: $e');
                                 if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                          'Ошибка при открытии правил пользования'),
-                                    ),
+                                  BaseSnackBar.show(
+                                    context,
+                                    message: 'common.error.general'.tr(),
+                                    type: SnackBarType.error,
                                   );
                                 }
                               }
@@ -610,9 +618,10 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
                         await _initiatePayment();
                       } catch (e) {
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text('orders.payment.error'.tr())),
+                          BaseSnackBar.show(
+                            context,
+                            message: 'orders.payment.error'.tr(),
+                            type: SnackBarType.error,
                           );
                         }
                       }
@@ -638,8 +647,10 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
                         }
                       } catch (e) {
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error: $e')),
+                          BaseSnackBar.show(
+                            context,
+                            message: 'common.error.general'.tr(),
+                            type: SnackBarType.error,
                           );
                         }
                       }

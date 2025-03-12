@@ -241,6 +241,100 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
     super.dispose();
   }
 
+  Future<void> _changeLanguage(String code) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selected_locale', code);
+    await prefs.setString('locale', code);
+    await context.setLocale(Locale(code));
+    await Future.delayed(const Duration(milliseconds: 50));
+
+    if (context.mounted) {
+      context.pop();
+      RestartWidget.restartApp(context);
+    }
+  }
+
+  void _showLanguageDialog() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const SizedBox(width: 40),
+                Text(
+                  'language'.tr(),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.black),
+                  onPressed: () => context.pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildLanguageOption('Қазақша', 'kk'),
+            _buildLanguageOption('Русский', 'ru'),
+            _buildLanguageOption('English', 'en'),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageOption(String title, String code) {
+    final isSelected = context.locale.languageCode == code;
+
+    return InkWell(
+      onTap: () => _changeLanguage(code),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFF5F5F5) : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? Colors.black : const Color(0xFFE6E6E6),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                color: isSelected ? Colors.black : const Color(0xFF666666),
+                fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+              ),
+            ),
+            if (isSelected)
+              const Icon(
+                Icons.check,
+                color: Colors.black,
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final userAsync = ref.watch(userProvider);
@@ -497,112 +591,7 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                               style: const TextStyle(fontSize: 14),
                             ),
                             onTap: () async {
-                              final userAsync = ref.read(userProvider);
-
-                              final phone = userAsync.when(
-                                data: (userData) => userData.maskedPhone,
-                                loading: () => '',
-                                error: (_, __) => '',
-                              );
-
-                              // Show confirmation modal
-                              await BaseModal.show(
-                                context,
-                                message:
-                                    'profile.settings.edit.logout.confirmation'
-                                        .tr()
-                                        .replaceAll('{}', phone),
-                                buttons: [
-                                  ModalButton(
-                                    label: 'profile.settings.edit.logout.cancel'
-                                        .tr(),
-                                    type: ButtonType.normal,
-                                    textColor: AppColors.primary,
-                                    backgroundColor: AppColors.lightGrey,
-                                  ),
-                                  ModalButton(
-                                    label:
-                                        'profile.settings.edit.logout.confirm'
-                                            .tr(),
-                                    type: ButtonType.normal,
-                                    textColor: Colors.red,
-                                    backgroundColor: Colors.white,
-                                    onPressed: () async {
-                                      print('Logout: Starting logout process');
-                                      Navigator.of(context).pop();
-
-                                      // Clear API client token and force new instance first
-                                      print(
-                                          'Logout: Clearing API client token');
-                                      ApiClient().token = null;
-                                      ApiClient()
-                                          .dispose(); // Force new instance on next use
-
-                                      // Clear all storage and state
-                                      print(
-                                          'Logout: Clearing SharedPreferences');
-                                      final prefs =
-                                          await SharedPreferences.getInstance();
-                                      await prefs
-                                          .clear(); // Clear all stored data
-
-                                      // Perform logout
-                                      print(
-                                          'Logout: Calling auth provider logout');
-                                      await ref
-                                          .read(authProvider.notifier)
-                                          .logout();
-
-                                      // Clear all providers
-                                      print(
-                                          'Logout: Invalidating all providers');
-                                      ref.invalidate(userProvider);
-                                      ref.invalidate(authProvider);
-
-                                      // Force dispose providers
-                                      ref.refresh(userProvider);
-                                      ref.refresh(authProvider);
-
-                                      if (!context.mounted) return;
-
-                                      // Navigate to home and wait for navigation to complete
-                                      print('Logout: Navigating to home');
-                                      context.push('/home');
-
-                                      // Wait for navigation and state cleanup
-                                      print('Logout: Waiting before restart');
-                                      await Future.delayed(
-                                          const Duration(milliseconds: 1000));
-
-                                      if (context.mounted) {
-                                        print(
-                                            'Logout: Attempting to restart app');
-
-                                        // Force a complete rebuild of the widget tree
-                                        RestartWidget.restartApp(context);
-
-                                        // Additional cleanup after restart
-                                        WidgetsBinding.instance
-                                            .addPostFrameCallback((_) {
-                                          if (context.mounted) {
-                                            // Create a new API client instance
-                                            ApiClient().dispose();
-                                            ApiClient().token = null;
-
-                                            // Reinitialize providers with fresh state
-                                            ref.invalidate(userProvider);
-                                            ref.invalidate(authProvider);
-                                            ref.refresh(userProvider);
-                                            ref.refresh(authProvider);
-                                          }
-                                        });
-
-                                        print('Logout: Process complete');
-                                      }
-                                    },
-                                  ),
-                                ],
-                              );
+                              await _handleLogout();
                             },
                           ),
                         ),
@@ -615,7 +604,7 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                     onBack: () async {
                       if (await _onWillPop()) {
                         if (context.mounted) {
-                          Navigator.of(context).pop();
+                          context.pop();
                         }
                       }
                     },
@@ -706,5 +695,68 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
       return true;
     }
     return true;
+  }
+
+  Future<void> _handleLogout() async {
+    await BaseModal.show(
+      context,
+      message: 'profile.settings.edit.logout.confirmation'.tr(),
+      buttons: [
+        ModalButton(
+          label: 'profile.settings.edit.logout.cancel'.tr(),
+          type: ButtonType.normal,
+          textColor: AppColors.primary,
+          backgroundColor: AppColors.lightGrey,
+          onPressed: () => context.pop(),
+        ),
+        ModalButton(
+          label: 'profile.settings.edit.logout.confirm'.tr(),
+          type: ButtonType.normal,
+          textColor: Colors.red,
+          backgroundColor: Colors.white,
+          onPressed: () async {
+            context.pop(); // Закрываем модальное окно
+
+            print('Logout: Starting logout process');
+
+            // Clear API client token and force new instance first
+            print('Logout: Clearing API client token');
+            ApiClient().token = null;
+            ApiClient().dispose(); // Force new instance on next use
+
+            // Clear all storage and state
+            print('Logout: Clearing SharedPreferences');
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.clear(); // Clear all stored data
+
+            // Perform logout
+            print('Logout: Calling auth provider logout');
+            await ref.read(authProvider.notifier).logout();
+
+            // Clear all providers
+            print('Logout: Invalidating all providers');
+            ref.invalidate(userProvider);
+            ref.invalidate(authProvider);
+            ref.refresh(userProvider);
+            ref.refresh(authProvider);
+
+            if (!context.mounted) return;
+
+            // Navigate to home with stack replacement
+            print('Logout: Navigating to home');
+            context.go('/home');
+
+            // Wait for navigation and state cleanup
+            print('Logout: Waiting before restart');
+            await Future.delayed(const Duration(milliseconds: 100));
+
+            if (context.mounted) {
+              print('Logout: Attempting to restart app');
+              RestartWidget.restartApp(context);
+            }
+          },
+        ),
+      ],
+    );
   }
 }

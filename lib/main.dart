@@ -18,6 +18,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'firebase_options.dart';
 import 'core/services/amplitude_service.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:aina_flutter/core/api/api_client.dart';
+import 'package:aina_flutter/core/services/storage_service.dart';
+import 'dart:io' show Platform;
+import 'dart:convert';
 
 Future<void> main() async {
   // Ensure Flutter bindings are initialized
@@ -64,20 +69,104 @@ Future<void> main() async {
   // Set up notification listeners
   setupNotificationListeners();
 
-  // Запускаем приложение
-  runApp(
-    EasyLocalization(
-      supportedLocales: const [
-        Locale('ru'),
-        Locale('kk'),
-        Locale('en'),
-      ],
-      path: 'assets/translations',
-      fallbackLocale: const Locale('ru'),
-      startLocale: initialLocale,
-      child: const RestartWidget(
-        child: ProviderScope(
-          child: MyApp(initialRoute: '/'),
+  // Check auth and fetch profile before initializing Sentry
+  String? token = await StorageService.getToken();
+  print('🔍 Token: $token');
+
+  // Try to get saved user data first
+  String? savedUserDataStr = prefs.getString('user_data');
+  int userId = 0;
+  int deviceId = 0;
+
+  if (savedUserDataStr != null) {
+    try {
+      final savedUserData =
+          jsonDecode(savedUserDataStr) as Map<String, dynamic>;
+      userId = savedUserData['id'] ?? 0;
+      deviceId = savedUserData['device_id'] ?? 0;
+      print('📱 Found saved user data - userId: $userId, deviceId: $deviceId');
+    } catch (e) {
+      print('⚠️ Error parsing saved user data: $e');
+    }
+  }
+
+  // Ensure we have time to initialize everything
+  await Future.delayed(const Duration(milliseconds: 500));
+
+  if (token != null) {
+    try {
+      print('🔍 Token found, fetching profile...');
+      final response = await ApiClient().dio.get('/api/promenade/profile');
+      print('📡 API Response: ${response.data}');
+
+      if (response.data['success'] == true && response.data['data'] != null) {
+        final userData = response.data['data'] as Map<String, dynamic>;
+        print('👤 User data received: $userData');
+
+        // Update IDs from fresh data
+        userId = userData['id'] ?? userId;
+        deviceId = userData['device_id'] ?? deviceId;
+        print('📊 Updated IDs - userId: $userId, deviceId: $deviceId');
+
+        // Save fresh user data
+        await prefs.setString('user_data', jsonEncode(userData));
+        print('💾 Fresh user data saved to preferences');
+      }
+    } catch (e) {
+      print('❌ Error loading profile: $e');
+    }
+  } else {
+    print('⚠️ No token found');
+  }
+
+  // Send event if we have valid user data
+  if (userId != 0 && deviceId != 0) {
+    String platform = 'web';
+    if (Platform.isIOS) {
+      platform = 'ios';
+    } else if (Platform.isAndroid) {
+      platform = 'android';
+    }
+
+    print('📤 Sending Amplitude event with data:');
+    print('   - user_id: $userId');
+    print('   - device_id: $deviceId');
+    print('   - platform: $platform');
+    print('   - source: main');
+
+    await AmplitudeService().logEvent(
+      'main_click',
+      eventProperties: {
+        'user_id': userId,
+        'device_id': deviceId,
+        'source': 'main',
+        'Platform': platform,
+      },
+    );
+  } else {
+    print('⚠️ Skipping Amplitude event - no valid user data');
+  }
+
+  // Initialize Sentry and run the app
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = 'http://01f6f7ad077e199227439ee9bc1032d1@192.168.0.93/17';
+      options.tracesSampleRate = 1.0;
+    },
+    appRunner: () => runApp(
+      EasyLocalization(
+        supportedLocales: const [
+          Locale('ru'),
+          Locale('kk'),
+          Locale('en'),
+        ],
+        path: 'assets/translations',
+        fallbackLocale: const Locale('ru'),
+        startLocale: initialLocale,
+        child: const RestartWidget(
+          child: ProviderScope(
+            child: MyApp(initialRoute: '/'),
+          ),
         ),
       ),
     ),

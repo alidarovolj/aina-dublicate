@@ -81,16 +81,19 @@ class _CarouselWithIndicatorState extends State<CarouselWithIndicator> {
                 bottom: 0,
                 left: 0,
                 right: 0,
-                child: Container(
-                  height: 80,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [
-                        Colors.black.withOpacity(0.6),
-                        Colors.transparent,
-                      ],
+                child: IgnorePointer(
+                  ignoring: true,
+                  child: Container(
+                    height: 80,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.6),
+                          Colors.transparent,
+                        ],
+                      ),
                     ),
                   ),
                 ),

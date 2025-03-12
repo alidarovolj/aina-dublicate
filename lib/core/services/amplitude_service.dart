@@ -42,61 +42,8 @@ class AmplitudeService {
 
       _isInitialized = true;
       debugPrint('Amplitude initialized successfully');
-
-      // Проверяем инициализацию с тестовым событием
-      await _sendTestEvent();
     } catch (e) {
       debugPrint('ERROR initializing Amplitude: $e');
-    }
-  }
-
-  // Метод для отправки тестового события напрямую через HTTP API
-  Future<void> _sendTestEvent() async {
-    try {
-      final apiKey = dotenv.env['AMPLITUDE_API_KEY'] ?? '';
-      final deviceId =
-          'test_device_id_${DateTime.now().millisecondsSinceEpoch}';
-      final userId = 'test_user_id_${DateTime.now().millisecondsSinceEpoch}';
-
-      // Устанавливаем userId в Amplitude SDK
-      await _amplitude.setUserId(userId);
-
-      final payload = {
-        'api_key': apiKey,
-        'events': [
-          {
-            'user_id': userId,
-            'device_id': deviceId,
-            'event_type': 'test_event',
-            'time': DateTime.now().millisecondsSinceEpoch,
-            'platform': Platform.isIOS
-                ? 'ios'
-                : Platform.isAndroid
-                    ? 'android'
-                    : 'web',
-            'event_properties': {
-              'test_property': 'test_value',
-              'source': 'initialization'
-            }
-          }
-        ]
-      };
-
-      debugPrint('Sending test event via HTTP API: ${jsonEncode(payload)}');
-
-      final response = await http.post(Uri.parse(_apiEndpoint),
-          headers: {'Content-Type': 'application/json', 'Accept': '*/*'},
-          body: jsonEncode(payload));
-
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        debugPrint('Test event sent successfully: ${response.body}');
-      } else {
-        debugPrint(
-            'Failed to send test event: ${response.statusCode} - ${response.body}');
-      }
-    } catch (e) {
-      debugPrint('Error sending test event: $e');
     }
   }
 
@@ -320,121 +267,6 @@ class AmplitudeService {
     );
   }
 
-  // Метод для проверки статуса отправки событий
-  Future<bool> checkEventSendingStatus() async {
-    try {
-      debugPrint('Checking Amplitude event sending status...');
-
-      // Создаем уникальный user_id для тестового события
-      final testUserId =
-          'test_user_id_${DateTime.now().millisecondsSinceEpoch}';
-
-      // Устанавливаем user_id в Amplitude SDK
-      await setUserId(testUserId);
-
-      // Отправляем тестовое событие
-      final testEventName =
-          'test_event_${DateTime.now().millisecondsSinceEpoch}';
-      final testProperties = {
-        'test_id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'source': 'status_check'
-      };
-
-      // Отправляем через SDK
-      await _amplitude.logEvent(testEventName, eventProperties: testProperties);
-      debugPrint('Test event sent via SDK with user_id: $testUserId');
-
-      // Отправляем напрямую через HTTP API
-      final apiKey = dotenv.env['AMPLITUDE_API_KEY'] ?? '';
-      final deviceId = 'test_device_${DateTime.now().millisecondsSinceEpoch}';
-
-      final payload = {
-        'api_key': apiKey,
-        'events': [
-          {
-            'user_id': testUserId,
-            'device_id': deviceId,
-            'event_type': testEventName,
-            'time': DateTime.now().millisecondsSinceEpoch,
-            'platform': Platform.isIOS
-                ? 'ios'
-                : Platform.isAndroid
-                    ? 'android'
-                    : 'web',
-            'event_properties': testProperties
-          }
-        ]
-      };
-
-      debugPrint('Sending test event via HTTP API: ${jsonEncode(payload)}');
-
-      final response = await http.post(Uri.parse(_apiEndpoint),
-          headers: {'Content-Type': 'application/json', 'Accept': '*/*'},
-          body: jsonEncode(payload));
-
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        debugPrint('Status check event sent successfully: ${response.body}');
-        return true;
-      } else {
-        debugPrint(
-            'Failed to send status check event: ${response.statusCode} - ${response.body}');
-        return false;
-      }
-    } catch (e) {
-      debugPrint('Error checking event sending status: $e');
-      return false;
-    }
-  }
-
-  // Публичный метод для проверки отправки событий
-  Future<void> validateEventSending() async {
-    debugPrint('Validating Amplitude event sending...');
-
-    if (!_isInitialized) {
-      debugPrint('WARNING: Amplitude not initialized. Initializing now...');
-      await init();
-    }
-
-    // Проверяем текущий user_id
-    final currentUserId = await getCurrentUserId();
-    debugPrint('Current user_id before test: $currentUserId');
-
-    // Устанавливаем тестовый user_id
-    final testUserId = 'test_user_id_${DateTime.now().millisecondsSinceEpoch}';
-    await setUserId(testUserId);
-
-    // Проверяем, что user_id установлен
-    final newUserId = await getCurrentUserId();
-    debugPrint('User_id after setting: $newUserId');
-
-    // Проверяем отправку события
-    final status = await checkEventSendingStatus();
-    if (status) {
-      debugPrint('✅ Amplitude event sending is working correctly!');
-    } else {
-      debugPrint('❌ Amplitude event sending is NOT working!');
-    }
-
-    // Восстанавливаем исходный user_id, если он был
-    if (currentUserId != null) {
-      await setUserId(currentUserId);
-      debugPrint('Restored original user_id: $currentUserId');
-    }
-  }
-
-  // Метод для проверки текущего user_id в Amplitude
-  Future<String?> getCurrentUserId() async {
-    if (!_isInitialized) {
-      debugPrint('WARNING: Amplitude not initialized when getting user ID');
-      return null;
-    }
-
-    final userId = await _amplitude.getUserId();
-    debugPrint('Current Amplitude user_id: $userId');
-    return userId;
-  }
-
   // Метод для отправки события с правильной установкой user_id
   Future<void> logEventWithUserId(
     String eventName, {
@@ -468,40 +300,46 @@ class AmplitudeService {
     await _amplitude.logEvent(eventName, eventProperties: cleanProperties);
   }
 
-  // Метод для тестирования отправки событий с user_id
-  Future<void> testUserIdSending() async {
-    debugPrint('Testing user_id sending in Amplitude...');
-
+  // Метод для проверки отправки событий
+  Future<void> validateEventSending() async {
     if (!_isInitialized) {
-      debugPrint('WARNING: Amplitude not initialized. Initializing now...');
+      debugPrint(
+          'WARNING: Amplitude not initialized when validating event sending');
       await init();
     }
 
-    // Генерируем уникальный user_id для теста
-    final testUserId = 'test_user_id_${DateTime.now().millisecondsSinceEpoch}';
+    try {
+      // Отправляем тестовое событие
+      await logEvent(
+        'test_validation_event',
+        eventProperties: {
+          'timestamp': DateTime.now().toString(),
+          'platform': Platform.isIOS
+              ? 'ios'
+              : Platform.isAndroid
+                  ? 'android'
+                  : 'web',
+        },
+      );
+      debugPrint('Test validation event sent successfully');
+    } catch (e) {
+      debugPrint('Error sending test validation event: $e');
+    }
+  }
 
-    // Отправляем тестовое событие с использованием нового метода
-    await logEventWithUserId(
-      'test_user_id_event',
-      userId: testUserId,
-      eventProperties: {
-        'test_property': 'test_value',
-        'timestamp': DateTime.now().toString(),
-      },
-    );
-
-    // Проверяем, что user_id установлен
-    final currentUserId = await getCurrentUserId();
-    debugPrint('Current user_id after test: $currentUserId');
-
-    if (currentUserId == testUserId) {
-      debugPrint('✅ User ID successfully set in Amplitude!');
-    } else {
-      debugPrint('❌ User ID not set correctly in Amplitude!');
+  // Метод для получения текущего user_id
+  Future<String?> getCurrentUserId() async {
+    if (!_isInitialized) {
+      debugPrint(
+          'WARNING: Amplitude not initialized when getting current user ID');
+      await init();
     }
 
-    // Отправляем еще одно событие для проверки
-    await _amplitude.logEvent('test_follow_up_event');
-    debugPrint('Follow-up event sent with user_id: $currentUserId');
+    try {
+      return await _amplitude.getUserId();
+    } catch (e) {
+      debugPrint('Error getting current user ID: $e');
+      return null;
+    }
   }
 }

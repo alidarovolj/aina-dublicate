@@ -475,14 +475,30 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
               return GestureDetector(
                 onTapDown: (details) {
                   _progressController.stop();
+                },
+                onTapUp: (details) {
+                  // Переключаем историю только при коротком нажатии
                   if (details.globalPosition.dx < screenWidth / 2) {
                     handlePreviousStory();
                   } else {
                     handleNextStory();
                   }
-                },
-                onTapUp: (details) {
                   _progressController.forward();
+                },
+                onTapCancel: () {
+                  _progressController.forward();
+                },
+                onLongPressStart: (_) {
+                  // Только пауза при длительном нажатии
+                  _progressController.stop();
+                },
+                onLongPressEnd: (_) {
+                  // Продолжение при отпускании без переключения истории
+                  _progressController.forward();
+                },
+                onLongPressMoveUpdate: (_) {
+                  // Поддерживаем паузу при движении пальца
+                  _progressController.stop();
                 },
                 child: Container(
                   color: Colors.black,

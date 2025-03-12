@@ -5,6 +5,7 @@ import 'custom_tabbar.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:aina_flutter/core/router/route_observer.dart';
 
 class MainTabBarScreen extends ConsumerStatefulWidget {
   final Widget child;
@@ -21,7 +22,7 @@ class MainTabBarScreen extends ConsumerStatefulWidget {
 }
 
 class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, RouteAware {
   late TabController _tabController;
 
   final Map<String, int> _routesToTabIndex = {
@@ -75,8 +76,25 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
     if (oldWidget.currentRoute != widget.currentRoute) {
       print(
           '🔄 Route changed from ${oldWidget.currentRoute} to ${widget.currentRoute}');
-      _updateTabIndex();
+
+      // Clean query parameters from route before normalization
+      final routeWithoutQuery = widget.currentRoute.split('?')[0];
+      final normalizedRoute = _normalizeRoute(routeWithoutQuery);
+      final index = _routesToTabIndex[normalizedRoute] ?? 0;
+
+      // Обновляем индекс таба только если он отличается от текущего
+      if (_tabController.index != index) {
+        setState(() {
+          _tabController.index = index;
+        });
+      }
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
   }
 
   void _updateTabIndex() {
@@ -208,7 +226,22 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
 
   @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _tabController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Обновляем индекс при возврате на эту страницу
+    final routeWithoutQuery = widget.currentRoute.split('?')[0];
+    final normalizedRoute = _normalizeRoute(routeWithoutQuery);
+    final index = _routesToTabIndex[normalizedRoute] ?? 0;
+
+    if (_tabController.index != index) {
+      setState(() {
+        _tabController.index = index;
+      });
+    }
   }
 }

@@ -380,7 +380,7 @@ class _PhoneNumberInputScreenState
                 title: 'auth.title'.tr(),
                 type: HeaderType.pop,
                 onBack: () {
-                  Navigator.of(context).pop();
+                  context.pop();
                 },
               ),
             ],

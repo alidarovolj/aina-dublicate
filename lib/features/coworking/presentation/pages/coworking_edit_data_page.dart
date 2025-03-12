@@ -238,17 +238,55 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
     });
   }
 
-  Future<void> _changeLanguage(String code) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('selected_locale', code);
-    await prefs.setString('locale', code);
-    await context.setLocale(Locale(code));
-    await Future.delayed(const Duration(milliseconds: 50));
+  void _handleLogout() {
+    BaseModal.show(
+      context,
+      title: 'modals.logout.title'.tr(),
+      message: 'modals.logout.message'.tr(),
+      buttons: [
+        ModalButton(
+          label: 'common.cancel'.tr(),
+          type: ButtonType.light,
+          backgroundColor: AppColors.backgroundLight,
+          onPressed: () => context.pop(),
+        ),
+        ModalButton(
+          label: 'common.logout'.tr(),
+          type: ButtonType.normal,
+          backgroundColor: AppColors.appBg,
+          textColor: Colors.red,
+          onPressed: () async {
+            context.pop(); // Закрываем модальное окно
+            try {
+              await ref.read(authProvider.notifier).logout();
+              // Очищаем все провайдеры
+              ref.invalidate(authProvider);
+              ref.refresh(authProvider);
 
-    if (context.mounted) {
-      Navigator.of(context).pop();
-      RestartWidget.restartApp(context);
-    }
+              if (!context.mounted) return;
+
+              // Переходим на домашнюю страницу с заменой всего стека
+              context.go('/home');
+
+              // Принудительно перезапускаем приложение после небольшой задержки
+              await Future.delayed(const Duration(milliseconds: 100));
+              if (context.mounted) {
+                RestartWidget.restartApp(context);
+              }
+            } catch (e) {
+              print('❌ Ошибка при вызове logout через authProvider: $e');
+              // Если не удалось выйти через провайдер, очищаем токен локально
+              SharedPreferences.getInstance().then((prefs) {
+                prefs.remove('auth_token');
+              });
+              if (context.mounted) {
+                context.go('/home');
+              }
+            }
+          },
+        ),
+      ],
+    );
   }
 
   void _showLanguageDialog() {
@@ -279,7 +317,7 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, color: Colors.black),
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => context.pop(),
                 ),
               ],
             ),
@@ -292,6 +330,19 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _changeLanguage(String code) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selected_locale', code);
+    await prefs.setString('locale', code);
+    await context.setLocale(Locale(code));
+    await Future.delayed(const Duration(milliseconds: 50));
+
+    if (context.mounted) {
+      context.pop();
+      RestartWidget.restartApp(context);
+    }
   }
 
   Widget _buildLanguageOption(String title, String code) {
@@ -329,39 +380,6 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
           ],
         ),
       ),
-    );
-  }
-
-  void _handleLogout() {
-    BaseModal.show(
-      context,
-      title: 'modals.logout.title'.tr(),
-      message: 'modals.logout.message'.tr(),
-      buttons: [
-        ModalButton(
-          label: 'common.cancel'.tr(),
-          type: ButtonType.light,
-          backgroundColor: AppColors.backgroundLight,
-        ),
-        ModalButton(
-          label: 'common.logout'.tr(),
-          type: ButtonType.normal,
-          backgroundColor: AppColors.appBg,
-          textColor: Colors.red,
-          onPressed: () {
-            try {
-              ref.read(authProvider.notifier).logout();
-            } catch (e) {
-              print('❌ Ошибка при вызове logout через authProvider: $e');
-              // Если не удалось выйти через провайдер, очищаем токен локально
-              SharedPreferences.getInstance().then((prefs) {
-                prefs.remove('auth_token');
-              });
-            }
-            context.push('/home');
-          },
-        ),
-      ],
     );
   }
 

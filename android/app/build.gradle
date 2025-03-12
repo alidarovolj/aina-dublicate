@@ -8,6 +8,7 @@ plugins {
 dependencies {
   implementation platform('com.google.firebase:firebase-bom:33.7.0')
   implementation 'com.google.firebase:firebase-analytics'
+  implementation 'org.conscrypt:conscrypt-android:2.5.2'
 }
 
 android {
@@ -32,9 +33,27 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        debug {
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+            storeFile file('debug.keystore')
+            storePassword 'android'
+        }
+        release {
+            keyAlias 'release'
+            keyPassword 'your_key_password'
+            storeFile file('release.keystore')
+            storePassword 'your_store_password'
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.debug
+            signingConfig signingConfigs.debug
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }

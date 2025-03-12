@@ -144,7 +144,7 @@ class StoreDetailsPage extends ConsumerWidget {
                                             ['longitude'];
                                         if (lat != null && lng != null) {
                                           final uri = Uri.parse(
-                                              'https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+                                              'https://2gis.kz/almaty/routeSearch/to/$lng,$lat');
                                           launchUrl(uri,
                                               mode: LaunchMode
                                                   .externalApplication);

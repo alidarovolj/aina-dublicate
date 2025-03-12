@@ -5,6 +5,7 @@ import 'coworking_custom_tabbar.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:aina_flutter/core/router/route_observer.dart';
 
 class CoworkingTabBarScreen extends ConsumerStatefulWidget {
   final String currentRoute;
@@ -22,11 +23,12 @@ class CoworkingTabBarScreen extends ConsumerStatefulWidget {
 }
 
 class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, RouteAware {
   late TabController _tabController;
 
   final Map<String, int> _routesToTabIndex = {
     '/coworking': 0,
+    '/coworking/*/details': 0,
     '/coworking/*/community': 1,
     '/coworking/*/services': 2,
     '/coworking/*/bookings': 3,
@@ -52,6 +54,9 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
   String _normalizeRoute(String route) {
     final parts = route.split('/');
     if (parts.length >= 3 && parts[1] == 'coworking' && parts.length > 3) {
+      if (parts.length == 3) {
+        return '/coworking/*/details';
+      }
       if (parts[3] == 'community') {
         return '/coworking/*/community';
       }
@@ -67,6 +72,7 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
       if (parts[3] == 'profile') {
         return '/coworking/*/profile';
       }
+      return '/coworking/*/details';
     }
     return route;
   }
@@ -85,18 +91,77 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void didPopNext() {
+    // Обновляем индекс при возврате на эту страницу
+    final routeWithoutQuery = widget.currentRoute.split('?')[0];
+    final normalizedRoute = _normalizeRoute(routeWithoutQuery);
+    final index = _routesToTabIndex[normalizedRoute] ?? 0;
+
+    if (_tabController.index != index) {
+      setState(() {
+        _tabController.index = index;
+      });
+    }
+  }
+
+  @override
   void didUpdateWidget(CoworkingTabBarScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+
     if (oldWidget.currentRoute != widget.currentRoute) {
-      _updateTabIndex();
+      print(
+          '🔄 Route changed from ${oldWidget.currentRoute} to ${widget.currentRoute}');
+
+      // Очищаем query параметры
+      final routeWithoutQuery = widget.currentRoute.split('?')[0];
+      final normalizedRoute = _normalizeRoute(routeWithoutQuery);
+      final index = _routesToTabIndex[normalizedRoute] ?? 0;
+
+      print('📍 Normalized route: $normalizedRoute');
+      print('📊 Current tab index: ${_tabController.index}, New index: $index');
+
+      // Проверяем, находимся ли мы на странице деталей коворкинга
+      final parts = routeWithoutQuery.split('/');
+      final isDetailsPage = parts.length >= 3 &&
+          parts[1] == 'coworking' &&
+          (parts.length == 3 || parts[3] == 'details');
+
+      print('🏢 Is details page: $isDetailsPage');
+
+      if (_tabController.index != index) {
+        print('✅ Updating tab index to: $index');
+        setState(() {
+          _tabController.index = index;
+        });
+      } else {
+        print('⚠️ Tab index unchanged');
+      }
     }
   }
 
   void _updateTabIndex() {
-    final normalizedRoute = _normalizeRoute(widget.currentRoute);
+    final routeWithoutQuery = widget.currentRoute.split('?')[0];
+    final normalizedRoute = _normalizeRoute(routeWithoutQuery);
     final index = _routesToTabIndex[normalizedRoute] ?? 0;
+
+    print('📊 Updating tab index');
+    print('📍 Current route: ${widget.currentRoute}');
+    print('📍 Normalized route: $normalizedRoute');
+    print('📊 Current index: ${_tabController.index}, New index: $index');
+
     if (_tabController.index != index) {
-      _tabController.index = index;
+      print('✅ Setting new tab index: $index');
+      setState(() {
+        _tabController.index = index;
+      });
+    } else {
+      print('⚠️ Tab index unchanged');
     }
   }
 
@@ -104,41 +169,49 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
     final route = _tabIndexToRoutes[index];
     if (route != null && widget.currentRoute != route) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Если мы на странице логина, не выполняем навигацию
         if (widget.currentRoute.startsWith('/login')) {
           return;
         }
 
         final coworkingId = _getCoworkingId();
         if (coworkingId == null) {
+          // Если нет ID коворкинга, переходим на список коворкингов
           context.go('/coworking');
           return;
         }
 
+        // Получаем текущий маршрут без query параметров
+        final currentRouteBase = widget.currentRoute.split('?')[0];
+
         switch (index) {
           case 0:
-            context.pushNamed('coworking_details',
-                pathParameters: {'id': coworkingId});
+            // Если мы уже на странице деталей, не выполняем навигацию
+            if (currentRouteBase == '/coworking/$coworkingId') return;
+            context.go('/coworking/$coworkingId');
             break;
           case 1:
-            context.pushNamed('coworking_community',
-                pathParameters: {'id': coworkingId});
+            if (currentRouteBase == '/coworking/$coworkingId/community') return;
+            context.go('/coworking/$coworkingId/community');
             break;
           case 2:
-            context.pushNamed('coworking_services',
-                pathParameters: {'id': coworkingId});
+            if (currentRouteBase == '/coworking/$coworkingId/services') return;
+            context.go('/coworking/$coworkingId/services');
             break;
           case 3:
-            context.pushNamed('coworking_bookings',
-                pathParameters: {'id': coworkingId});
+            if (currentRouteBase == '/coworking/$coworkingId/bookings') return;
+            context.go('/coworking/$coworkingId/bookings');
             break;
           case 4:
             final authState = ref.read(authProvider);
             if (!authState.isAuthenticated) {
-              context.pushNamed('login');
+              // Сохраняем текущий маршрут для возврата после авторизации
+              context.push(
+                  '/login?redirect=${Uri.encodeComponent(currentRouteBase)}');
               return;
             }
-            context.pushNamed('coworking_profile',
-                pathParameters: {'id': coworkingId});
+            if (currentRouteBase == '/coworking/$coworkingId/profile') return;
+            context.go('/coworking/$coworkingId/profile');
             break;
         }
       });
@@ -157,17 +230,19 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
         if (didPop) return;
 
         final coworkingId = _getCoworkingId();
+        final currentRouteBase = widget.currentRoute.split('?')[0];
 
         if (currentIndex != 0) {
           if (coworkingId != null) {
-            context.pushNamed('coworking_details',
-                pathParameters: {'id': coworkingId});
+            if (currentRouteBase != '/coworking/$coworkingId') {
+              context.go('/coworking/$coworkingId');
+            }
           } else {
-            context.push('/coworking');
+            context.go('/coworking');
           }
         } else {
-          if (widget.currentRoute == '/coworking') {
-            context.push('/home');
+          if (currentRouteBase == '/coworking') {
+            context.go('/home');
           } else {
             context.pop();
           }
@@ -186,6 +261,7 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
 
   @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _tabController.dispose();
     super.dispose();
   }

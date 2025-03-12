@@ -17,6 +17,8 @@ Future<void> setupNotificationListeners() async {
     FirebaseMessaging messaging = FirebaseMessaging.instance;
 
     if (Platform.isIOS) {
+      print('iOS platform detected, starting iOS-specific setup...');
+
       // Configure presentation options first
       await messaging.setForegroundNotificationPresentationOptions(
         alert: true,
@@ -38,13 +40,32 @@ Future<void> setupNotificationListeners() async {
 
       print('iOS Authorization status: ${settings.authorizationStatus}');
 
-      // Force refresh APNS token
-      await messaging.deleteToken();
-      print('Existing tokens cleared');
+      // Try to get APNS token but don't block on failure
+      try {
+        String? apnsToken = await messaging.getAPNSToken();
+        if (apnsToken != null) {
+          print('Successfully obtained APNS token');
+        } else {
+          print('APNS token not available (possibly running in simulator)');
+        }
+      } catch (e) {
+        print('Error getting APNS token (possibly running in simulator): $e');
+      }
     }
 
-    // Get initial token
-    await getDeviceToken();
+    // Get initial token (will work on Android and iOS devices, might fail on simulator)
+    try {
+      String? fcmToken = await messaging.getToken();
+      if (fcmToken != null) {
+        print(
+            'Successfully obtained FCM token: ${fcmToken.substring(0, 8)}...');
+        await sendFCMToken(fcmToken);
+      } else {
+        print('FCM token is null (possibly running in simulator)');
+      }
+    } catch (e) {
+      print('Error getting FCM token: $e');
+    }
 
     // Listen for token refresh
     messaging.onTokenRefresh.listen((newToken) {
@@ -105,47 +126,19 @@ Future<void> getDeviceToken() async {
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional) {
-        // Try to get APNS token with increased timeout
-        print('Permissions granted, attempting to get APNS token...');
-        int maxAttempts = 5;
-        int delaySeconds = 2;
-
-        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-          try {
-            print('APNS token attempt $attempt of $maxAttempts');
-            String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-
-            if (apnsToken != null) {
-              print(
-                  'Successfully obtained APNS token: ${apnsToken.substring(0, 8)}...');
-
-              // Now try to get FCM token
-              print(
-                  'Attempting to get FCM token after successful APNS token retrieval...');
-              String? fcmToken = await FirebaseMessaging.instance.getToken();
-
-              if (fcmToken != null) {
-                print(
-                    'Successfully obtained FCM token: ${fcmToken.substring(0, 8)}...');
-                await sendFCMToken(fcmToken);
-                return;
-              }
-            } else {
-              print('APNS token is null on attempt $attempt');
-            }
-
-            if (attempt < maxAttempts) {
-              print('Waiting ${delaySeconds}s before next attempt...');
-              await Future.delayed(Duration(seconds: delaySeconds));
-              delaySeconds *= 2;
-            }
-          } catch (e) {
-            print('Error during iOS token retrieval attempt $attempt: $e');
-            if (attempt < maxAttempts) {
-              await Future.delayed(Duration(seconds: delaySeconds));
-              delaySeconds *= 2;
-            }
+        // Try to get FCM token directly
+        try {
+          String? fcmToken = await FirebaseMessaging.instance.getToken();
+          if (fcmToken != null) {
+            print(
+                'Successfully obtained FCM token: ${fcmToken.substring(0, 8)}...');
+            await sendFCMToken(fcmToken);
+            return;
+          } else {
+            print('FCM token is null (possibly running in simulator)');
           }
+        } catch (e) {
+          print('Error getting FCM token: $e');
         }
       } else {
         print(

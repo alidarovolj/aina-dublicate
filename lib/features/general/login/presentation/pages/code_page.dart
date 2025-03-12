@@ -14,6 +14,8 @@ import 'dart:async';
 import 'package:sms_autofill/sms_autofill.dart';
 import 'package:aina_flutter/core/widgets/restart_widget.dart';
 import 'package:aina_flutter/core/api/api_client.dart';
+import 'package:aina_flutter/core/services/amplitude_service.dart';
+import 'dart:io' show Platform;
 
 class CodeInputScreen extends ConsumerStatefulWidget {
   final String phoneNumber;
@@ -232,6 +234,30 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
 
           // Обновляем данные пользователя в провайдере
           ref.read(authProvider.notifier).updateUserData(response.data['data']);
+
+          // Get user data for Amplitude event
+          final userData = response.data['data'] as Map<String, dynamic>;
+          final userId = userData['id'] ?? 0;
+          final deviceId = userData['device_id'] ?? 0;
+
+          // Determine platform
+          String platform = 'web';
+          if (Platform.isIOS) {
+            platform = 'ios';
+          } else if (Platform.isAndroid) {
+            platform = 'android';
+          }
+
+          // Track main_click event after successful login
+          await AmplitudeService().logEvent(
+            'main_click',
+            eventProperties: {
+              'user_id': userId,
+              'device_id': deviceId,
+              'source': 'main',
+              'Platform': platform,
+            },
+          );
         }
       } catch (e) {
         print('❌ Error getting user data: $e');
@@ -264,23 +290,23 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
     await Future.delayed(const Duration(milliseconds: 300));
 
     if (widget.buildingType == 'coworking' && widget.buildingId != null) {
-      context.push('/coworking/${widget.buildingId}/profile');
+      context.go('/coworking/${widget.buildingId}/profile');
     } else if (widget.buildingType == 'mall' && widget.buildingId != null) {
-      context.push('/malls/${widget.buildingId}/profile');
+      context.go('/malls/${widget.buildingId}/profile');
     } else {
       final currentRoute = GoRouterState.of(context).uri.toString();
       final routeParts = currentRoute.split('/');
 
       if (routeParts.length >= 3) {
         if (routeParts[1] == 'coworking') {
-          context.push('/coworking/${routeParts[2]}/profile');
+          context.go('/coworking/${routeParts[2]}/profile');
           return;
         } else if (routeParts[1] == 'malls') {
-          context.push('/malls/${routeParts[2]}/profile');
+          context.go('/malls/${routeParts[2]}/profile');
           return;
         }
       }
-      context.push('/home');
+      context.go('/home');
     }
   }
 
@@ -532,7 +558,7 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
               ),
               CustomHeader(
                 title: 'auth.confirmation'.tr(),
-                type: HeaderType.close,
+                type: HeaderType.pop,
               ),
             ],
           ),

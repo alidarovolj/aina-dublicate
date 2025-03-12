@@ -33,7 +33,7 @@ class CoworkingPage extends ConsumerWidget {
     return GestureDetector(
       onHorizontalDragEnd: (details) {
         if (details.primaryVelocity != null && details.primaryVelocity! > 300) {
-          context.pop();
+          context.go('/home');
         }
       },
       child: buildingsAsync.when(

@@ -59,7 +59,7 @@ mixin AuthCheckMixin {
               label: 'auth.verify_biometric'.tr(),
               onPressed: () {
                 context.pop();
-                context.go('/coworking/$coworkingId/profile/biometric');
+                context.push('/coworking/$coworkingId/profile/biometric');
               },
             ),
           ],

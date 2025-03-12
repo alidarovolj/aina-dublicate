@@ -107,7 +107,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with RouteAware {
 
         if (mounted) {
           // Перенаправляем на страницу авторизации
-          context.go('/login');
+          context.push('/login');
         }
       }
     } finally {
@@ -244,7 +244,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with RouteAware {
             error.toString().contains('Unauthorized')) {
           // Перенаправляем на страницу логина
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            context.go('/login');
+            context.push('/login');
           });
           return const SizedBox.shrink();
         }

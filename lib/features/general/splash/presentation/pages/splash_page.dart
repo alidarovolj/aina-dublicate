@@ -53,7 +53,7 @@ class _SplashPageState extends State<SplashPage>
     if (mounted) {
       await _controller.reverse();
       if (mounted) {
-        context.go('/home');
+        context.push('/home');
       }
     }
   }

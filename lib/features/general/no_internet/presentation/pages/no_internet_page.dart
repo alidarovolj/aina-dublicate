@@ -96,7 +96,7 @@ class NoInternetPage extends ConsumerWidget {
                                           const Duration(milliseconds: 100));
                                       if (ref.read(connectivityProvider)) {
                                         if (context.mounted) {
-                                          context.go('/home');
+                                          context.push('/home');
                                         }
                                       }
                                     },

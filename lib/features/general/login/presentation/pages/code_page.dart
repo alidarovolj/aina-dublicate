@@ -264,23 +264,23 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
     await Future.delayed(const Duration(milliseconds: 300));
 
     if (widget.buildingType == 'coworking' && widget.buildingId != null) {
-      context.go('/coworking/${widget.buildingId}/profile');
+      context.push('/coworking/${widget.buildingId}/profile');
     } else if (widget.buildingType == 'mall' && widget.buildingId != null) {
-      context.go('/malls/${widget.buildingId}/profile');
+      context.push('/malls/${widget.buildingId}/profile');
     } else {
       final currentRoute = GoRouterState.of(context).uri.toString();
       final routeParts = currentRoute.split('/');
 
       if (routeParts.length >= 3) {
         if (routeParts[1] == 'coworking') {
-          context.go('/coworking/${routeParts[2]}/profile');
+          context.push('/coworking/${routeParts[2]}/profile');
           return;
         } else if (routeParts[1] == 'malls') {
-          context.go('/malls/${routeParts[2]}/profile');
+          context.push('/malls/${routeParts[2]}/profile');
           return;
         }
       }
-      context.go('/home');
+      context.push('/home');
     }
   }
 

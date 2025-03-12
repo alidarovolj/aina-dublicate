@@ -55,7 +55,7 @@ class BuildingsList extends ConsumerWidget {
                 .entries
                 .map((entry) => GestureDetector(
                       onTap: () {
-                        _logShoppingMallClick(entry.value);
+                        // _logShoppingMallClick(entry.value);
                         context.push('/malls/${entry.value.id}');
                       },
                       child: Container(
@@ -131,7 +131,7 @@ class BuildingsList extends ConsumerWidget {
                 GestureDetector(
                   onTap: () {
                     if (buildings.isNotEmpty) {
-                      context.go('/coworking/${buildings[0].id}/services');
+                      context.push('/coworking/${buildings[0].id}/services');
                     }
                   },
                   child: Container(

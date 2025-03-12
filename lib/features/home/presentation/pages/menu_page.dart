@@ -119,7 +119,7 @@ class _MenuPageState extends ConsumerState<MenuPage> {
                                   SizedBox(
                                     width: double.infinity,
                                     child: ElevatedButton(
-                                      onPressed: () => context.go('/login'),
+                                      onPressed: () => context.push('/login'),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.black,
                                         foregroundColor: Colors.white,
@@ -206,7 +206,7 @@ class _MenuPageState extends ConsumerState<MenuPage> {
                                       .map((coworking) => _buildMenuItem(
                                             context,
                                             '${'buildings.coworking'.tr()} ${coworking.name}',
-                                            () => context.go(
+                                            () => context.push(
                                                 '/coworking/${coworking.id}'),
                                           )),
                                 ],
@@ -215,8 +215,8 @@ class _MenuPageState extends ConsumerState<MenuPage> {
                                       .map((mall) => _buildMenuItem(
                                             context,
                                             '${'buildings.mall'.tr()} ${mall.name}',
-                                            () =>
-                                                context.go('/malls/${mall.id}'),
+                                            () => context
+                                                .push('/malls/${mall.id}'),
                                           )),
                                 ],
                                 if (isAuthenticated) ...[

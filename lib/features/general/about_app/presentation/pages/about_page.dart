@@ -102,7 +102,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
           print('❌ Ошибка при вызове logout через authProvider: $authError');
         }
 
-        context.go('/home');
+        context.push('/home');
       }
     } catch (e) {
       if (mounted) {

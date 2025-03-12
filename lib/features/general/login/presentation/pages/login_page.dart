@@ -111,7 +111,7 @@ class _PhoneNumberInputScreenState
             }
           }
 
-          context.go('/code', extra: {
+          context.push('/code', extra: {
             'phoneNumber': _phoneController.text,
             'buildingId': widget.buildingId,
             'buildingType': widget.buildingType,

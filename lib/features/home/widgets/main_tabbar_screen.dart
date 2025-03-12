@@ -92,18 +92,18 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
         if (index == 3) {
           final authState = ref.read(authProvider.notifier);
           if (!authState.canAccessProfile) {
-            context.go('/login');
+            context.push('/login');
             return;
           }
           // Extract current mall ID if we're in a mall route
           final parts = widget.currentRoute.split('/');
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
-            context.go('/malls/$mallId/profile');
+            context.push('/malls/$mallId/profile');
             return;
           }
           // If not in mall route, go to malls first
-          context.go('/malls');
+          context.push('/malls');
           return;
         }
 
@@ -114,12 +114,12 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
             if (!widget.currentRoute.endsWith('/stores')) {
-              context.go('/malls/$mallId/stores');
+              context.push('/malls/$mallId/stores');
             }
             return;
           }
           // If not in a mall route, go to stores
-          context.go('/stores');
+          context.push('/stores');
           return;
         }
 
@@ -128,10 +128,10 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
           final parts = widget.currentRoute.split('/');
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
-            context.go('/malls/$mallId');
+            context.push('/malls/$mallId');
             return;
           }
-          context.go('/malls');
+          context.push('/malls');
           return;
         }
 
@@ -142,23 +142,23 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
             if (!widget.currentRoute.endsWith('/promotions')) {
-              context.go('/malls/$mallId/promotions');
+              context.push('/malls/$mallId/promotions');
             }
             return;
           }
           // If not in a mall route, go to malls first
-          context.go('/malls');
+          context.push('/malls');
           return;
         }
 
         if (index == 4) {
           final authState = ref.read(authProvider);
           if (!authState.isAuthenticated) {
-            context.go('/login');
+            context.push('/login');
             return;
           }
         }
-        context.go(route);
+        context.push(route);
       });
     }
   }

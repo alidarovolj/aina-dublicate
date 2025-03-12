@@ -170,8 +170,11 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+
         final normalizedRoute = _normalizeRoute(widget.currentRoute);
         final currentIndex = _routesToTabIndex[normalizedRoute] ?? 0;
 
@@ -182,10 +185,10 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
         if (currentIndex != 0) {
           print('↩️ Not on first tab, navigating to malls');
           _navigateToTab(0);
-          return false;
+        } else {
+          print('✅ On first tab, allowing default back behavior');
+          Navigator.of(context).pop();
         }
-        print('✅ On first tab, allowing default back behavior');
-        return true;
       },
       child: Scaffold(
         body: widget.child,

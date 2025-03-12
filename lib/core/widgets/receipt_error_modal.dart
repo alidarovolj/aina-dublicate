@@ -19,7 +19,7 @@ class ReceiptErrorModal {
         ModalButton(
           label: 'receipt.back_to_promotions'.tr(),
           onPressed: () {
-            context.go('/malls/$mallId/promotions');
+            context.push('/malls/$mallId/promotions');
           },
           textColor: AppColors.secondary,
           backgroundColor: Colors.white,

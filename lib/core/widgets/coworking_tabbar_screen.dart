@@ -141,13 +141,16 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
   Widget build(BuildContext context) {
     final isDetailsPage = _getCoworkingId() != null;
 
-    return Scaffold(
-      body: widget.child,
-      bottomNavigationBar: isDetailsPage
-          ? CoworkingCustomTabBar(
-              tabController: _tabController,
-            )
-          : null,
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
+        body: widget.child,
+        bottomNavigationBar: isDetailsPage
+            ? CoworkingCustomTabBar(
+                tabController: _tabController,
+              )
+            : null,
+      ),
     );
   }
 

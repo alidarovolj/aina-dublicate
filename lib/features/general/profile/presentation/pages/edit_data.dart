@@ -567,7 +567,7 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
 
                                       // Navigate to home and wait for navigation to complete
                                       print('Logout: Navigating to home');
-                                      context.go('/home');
+                                      context.push('/home');
 
                                       // Wait for navigation and state cleanup
                                       print('Logout: Waiting before restart');

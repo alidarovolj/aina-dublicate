@@ -280,7 +280,7 @@ class PromotionDetailsPage extends ConsumerWidget {
                                         mallId: mallId,
                                       );
                                     } else {
-                                      context.goNamed(
+                                      context.pushNamed(
                                         'promotion_qr',
                                         pathParameters: {
                                           'promotionId':

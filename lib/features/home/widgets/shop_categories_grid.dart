@@ -105,7 +105,7 @@ class _ShopCategoriesGridState extends ConsumerState<ShopCategoriesGrid> {
               TextButton(
                 onPressed: () {
                   if (currentMallId.isNotEmpty) {
-                    context.goNamed(
+                    context.pushNamed(
                       'mall_shop_categories',
                       pathParameters: {'id': currentMallId},
                     );
@@ -153,7 +153,7 @@ class _ShopCategoriesGridState extends ConsumerState<ShopCategoriesGrid> {
                   final category = sortedCategories[index];
                   return GestureDetector(
                     onTap: () {
-                      context.goNamed(
+                      context.pushNamed(
                         'mall_stores',
                         pathParameters: {'id': currentMallId},
                         queryParameters: {'category': category.id.toString()},

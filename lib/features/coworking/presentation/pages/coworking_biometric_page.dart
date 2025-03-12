@@ -188,7 +188,7 @@ class _CoworkingBiometricPageState
             ModalButton(
                 label: 'biometry.view_tariffs'.tr(),
                 onPressed: () {
-                  context.go('/coworking/${widget.coworkingId}/services');
+                  context.push('/coworking/${widget.coworkingId}/services');
                   setState(() {
                     _showTariffsModal = true;
                   });

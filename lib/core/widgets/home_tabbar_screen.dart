@@ -82,7 +82,7 @@ class _HomeTabBarScreenState extends ConsumerState<HomeTabBarScreen>
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         // Handle menu tab
         if (index == 3) {
-          context.go('/menu');
+          context.push('/menu');
           return;
         }
 
@@ -107,23 +107,26 @@ class _HomeTabBarScreenState extends ConsumerState<HomeTabBarScreen>
           );
         }
 
-        context.go(route);
+        context.push(route);
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+
         final normalizedRoute = _normalizeRoute(widget.currentRoute);
         final currentIndex = _routesToTabIndex[normalizedRoute] ?? 0;
 
         if (currentIndex != 0) {
           _navigateToTab(0);
-          return false;
+        } else {
+          Navigator.of(context).pop();
         }
-        return true;
       },
       child: Scaffold(
         body: widget.child,

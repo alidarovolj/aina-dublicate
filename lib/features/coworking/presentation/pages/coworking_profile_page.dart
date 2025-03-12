@@ -112,7 +112,7 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
 
         if (mounted) {
           // Перенаправляем на страницу авторизации с параметрами для возврата в коворкинг
-          context.go('/login');
+          context.push('/login');
         }
       }
     } finally {
@@ -211,7 +211,7 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
         if (error.toString().contains('401') ||
             error.toString().contains('Unauthorized')) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            context.go('/login');
+            context.push('/login');
           });
           return const SizedBox.shrink();
         }

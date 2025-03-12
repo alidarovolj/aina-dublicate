@@ -66,7 +66,7 @@ class AuthWarningModal {
                   );
 
                   if (building.type == 'coworking') {
-                    context.go('/coworking/$mallId/profile');
+                    context.push('/coworking/$mallId/profile');
                   } else {
                     context.pushNamed('mall_profile',
                         pathParameters: {'id': mallId});
@@ -133,7 +133,7 @@ class AuthWarningModal {
                 label: 'auth.warning.login'.tr(),
                 type: ButtonType.light,
                 onPressed: () {
-                  context.go('/login');
+                  context.push('/login');
                 },
               ),
             ],

@@ -21,7 +21,7 @@ class ReceiptSuccessModal {
         ModalButton(
           label: 'scanner.back_to_promotions'.tr(),
           onPressed: () {
-            context.go('/malls/$mallId/promotions');
+            context.push('/malls/$mallId/promotions');
           },
           textColor: AppColors.secondary,
           backgroundColor: Colors.white,
@@ -30,7 +30,7 @@ class ReceiptSuccessModal {
           label: 'scanner.to_profile'.tr(),
           type: ButtonType.light,
           onPressed: () {
-            context.go('/malls/$mallId/profile');
+            context.push('/malls/$mallId/profile');
           },
         ),
       ],

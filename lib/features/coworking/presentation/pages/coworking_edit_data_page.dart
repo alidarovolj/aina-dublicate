@@ -358,7 +358,7 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
                 prefs.remove('auth_token');
               });
             }
-            context.go('/home');
+            context.push('/home');
           },
         ),
       ],

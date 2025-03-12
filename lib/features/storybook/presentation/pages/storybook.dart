@@ -13,7 +13,7 @@ class StorybookScreen extends StatelessWidget {
         title: const Text('Storybook'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/home'),
+          onPressed: () => context.push('/home'),
         ),
       ),
       body: Storybook(

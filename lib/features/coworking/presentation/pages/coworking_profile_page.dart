@@ -216,7 +216,57 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
           return const SizedBox.shrink();
         }
 
-        return Scaffold(
+        return GestureDetector(
+          onHorizontalDragEnd: (details) {
+            // Если свайп слева направо (положительная скорость) и достаточно быстрый
+            if (details.primaryVelocity != null &&
+                details.primaryVelocity! > 300) {
+              Navigator.of(context).pop();
+            }
+          },
+          child: Scaffold(
+            body: Container(
+              color: AppColors.primary,
+              child: SafeArea(
+                child: Stack(
+                  children: [
+                    Container(
+                      color: AppColors.white,
+                      margin: const EdgeInsets.only(top: 64),
+                      child: Center(
+                        child: Text(
+                          'profile.load_error'.tr(),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ),
+                    CustomHeader(
+                      title: 'coworking.profile.title'.tr(),
+                      type: HeaderType.pop,
+                      onBack: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      data: (userData) => GestureDetector(
+        onHorizontalDragEnd: (details) {
+          // Если свайп слева направо (положительная скорость) и достаточно быстрый
+          if (details.primaryVelocity != null &&
+              details.primaryVelocity! > 300) {
+            Navigator.of(context).pop();
+          }
+        },
+        child: Scaffold(
+          backgroundColor: AppColors.primary,
           body: Container(
             color: AppColors.primary,
             child: SafeArea(
@@ -225,12 +275,216 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
                   Container(
                     color: AppColors.white,
                     margin: const EdgeInsets.only(top: 64),
-                    child: Center(
-                      child: Text(
-                        'profile.load_error'.tr(),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
+                    child: SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: MediaQuery.of(context).size.height - 64,
+                        ),
+                        child: IntrinsicHeight(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Container(
+                                color: AppColors.primary,
+                                padding: const EdgeInsets.all(12),
+                                margin: const EdgeInsets.only(bottom: 0),
+                                child: Row(
+                                  children: [
+                                    AvatarEditWidget(
+                                      avatarUrl: userData.avatarUrl,
+                                      onAvatarPicked: _handleAvatarPicked,
+                                      isLoading: _isLoading,
+                                      temporaryImage: _temporaryAvatar,
+                                      onAvatarRemoved: () async {
+                                        setState(() {
+                                          _isLoading = true;
+                                          _temporaryAvatar = null;
+                                        });
+                                        try {
+                                          final profileService = ref
+                                              .read(promenadeProfileProvider);
+                                          await profileService.removeAvatar();
+                                          if (!mounted) return;
+                                          ScaffoldMessenger.of(context)
+                                              .clearSnackBars();
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                  'profile.settings.edit.avatar_removed'
+                                                      .tr()),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+                                        } catch (e) {
+                                          if (!mounted) return;
+                                          ScaffoldMessenger.of(context)
+                                              .clearSnackBars();
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                  'profile.settings.edit.avatar_error'
+                                                      .tr()),
+                                              backgroundColor: Colors.red,
+                                            ),
+                                          );
+                                        } finally {
+                                          if (mounted) {
+                                            setState(() => _isLoading = false);
+                                          }
+                                        }
+                                      },
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${userData.firstName} ${userData.lastName}',
+                                            style: const TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w500,
+                                              color: AppColors.white,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            userData.maskedPhone,
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: AppColors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 24),
+                                child: Column(
+                                  children: [
+                                    _buildMenuItem(
+                                      'coworking.profile.personal_info'.tr(),
+                                      Icons.chevron_right,
+                                      backgroundColor: Colors.grey[200],
+                                      onTap: () {
+                                        _logPersonalInfoClick();
+                                        context.pushNamed(
+                                          'coworking_edit_data',
+                                          pathParameters: {
+                                            'id': widget.coworkingId.toString()
+                                          },
+                                        );
+                                      },
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ticketsAsync.when(
+                                      loading: () => const SizedBox.shrink(),
+                                      error: (_, __) => const SizedBox.shrink(),
+                                      data: (tickets) {
+                                        if (tickets.isNotEmpty) {
+                                          return Column(
+                                            children: [
+                                              _buildMenuItem(
+                                                'profile.coupons'.tr(),
+                                                Icons.chevron_right,
+                                                backgroundColor:
+                                                    Colors.grey[200],
+                                                onTap: () {
+                                                  context.pushNamed(
+                                                    'tickets',
+                                                    pathParameters: {
+                                                      'id': widget.coworkingId
+                                                          .toString()
+                                                    },
+                                                  );
+                                                },
+                                              ),
+                                              const SizedBox(height: 8),
+                                            ],
+                                          );
+                                        }
+                                        return const SizedBox.shrink();
+                                      },
+                                    ),
+                                    _buildMenuItem(
+                                      'coworking.profile.biometric'.tr(),
+                                      Icons.chevron_right,
+                                      backgroundColor: Colors.grey[200],
+                                      onTap: () {
+                                        context.pushNamed(
+                                          'coworking_biometric',
+                                          pathParameters: {
+                                            'id': widget.coworkingId.toString()
+                                          },
+                                        );
+                                      },
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _buildMenuItem(
+                                      'coworking.profile.community_card'.tr(),
+                                      Icons.chevron_right,
+                                      backgroundColor: Colors.grey[200],
+                                      onTap: () {
+                                        context.pushNamed(
+                                          'community_card',
+                                          pathParameters: {
+                                            'id': widget.coworkingId.toString()
+                                          },
+                                        );
+                                      },
+                                    ),
+                                    // const SizedBox(height: 8),
+                                    // _buildMenuItem(
+                                    //   'coworking.profile.limit_accounts'.tr(),
+                                    //   Icons.chevron_right,
+                                    //   backgroundColor: Colors.grey[200],
+                                    //   onTap: () {
+                                    //     context.pushNamed(
+                                    //       'coworking_limit_accounts',
+                                    //       pathParameters: {
+                                    //         'id': widget.coworkingId.toString()
+                                    //       },
+                                    //     );
+                                    //   },
+                                    // ),
+                                    const SizedBox(height: 24),
+                                    _buildMenuItem(
+                                      'coworking.profile.contact_us'.tr(),
+                                      Icons.chevron_right,
+                                      backgroundColor: Colors.grey[200],
+                                      onTap: () {
+                                        final settingsAsync =
+                                            ref.read(settingsProvider);
+                                        settingsAsync.whenData((settings) {
+                                          CommunicationModal.show(
+                                            context,
+                                            whatsappUrl:
+                                                settings.whatsappLinkPromenade,
+                                          );
+                                        });
+                                      },
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _buildMenuItem(
+                                      'coworking.profile.about_app'.tr(),
+                                      Icons.chevron_right,
+                                      backgroundColor: Colors.grey[200],
+                                      onTap: () {
+                                        context.pushNamed('about');
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -241,237 +495,6 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
                   ),
                 ],
               ),
-            ),
-          ),
-        );
-      },
-      data: (userData) => Scaffold(
-        backgroundColor: AppColors.primary,
-        body: Container(
-          color: AppColors.primary,
-          child: SafeArea(
-            child: Stack(
-              children: [
-                Container(
-                  color: AppColors.white,
-                  margin: const EdgeInsets.only(top: 64),
-                  child: SingleChildScrollView(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: MediaQuery.of(context).size.height - 64,
-                      ),
-                      child: IntrinsicHeight(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            Container(
-                              color: AppColors.primary,
-                              padding: const EdgeInsets.all(12),
-                              margin: const EdgeInsets.only(bottom: 0),
-                              child: Row(
-                                children: [
-                                  AvatarEditWidget(
-                                    avatarUrl: userData.avatarUrl,
-                                    onAvatarPicked: _handleAvatarPicked,
-                                    isLoading: _isLoading,
-                                    temporaryImage: _temporaryAvatar,
-                                    onAvatarRemoved: () async {
-                                      setState(() {
-                                        _isLoading = true;
-                                        _temporaryAvatar = null;
-                                      });
-                                      try {
-                                        final profileService =
-                                            ref.read(promenadeProfileProvider);
-                                        await profileService.removeAvatar();
-                                        if (!mounted) return;
-                                        ScaffoldMessenger.of(context)
-                                            .clearSnackBars();
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                                'profile.settings.edit.avatar_removed'
-                                                    .tr()),
-                                            backgroundColor: Colors.green,
-                                          ),
-                                        );
-                                      } catch (e) {
-                                        if (!mounted) return;
-                                        ScaffoldMessenger.of(context)
-                                            .clearSnackBars();
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                                'profile.settings.edit.avatar_error'
-                                                    .tr()),
-                                            backgroundColor: Colors.red,
-                                          ),
-                                        );
-                                      } finally {
-                                        if (mounted) {
-                                          setState(() => _isLoading = false);
-                                        }
-                                      }
-                                    },
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '${userData.firstName} ${userData.lastName}',
-                                          style: const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w500,
-                                            color: AppColors.white,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          userData.maskedPhone,
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            color: AppColors.white,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(vertical: 24),
-                              child: Column(
-                                children: [
-                                  _buildMenuItem(
-                                    'coworking.profile.personal_info'.tr(),
-                                    Icons.chevron_right,
-                                    backgroundColor: Colors.grey[200],
-                                    onTap: () {
-                                      _logPersonalInfoClick();
-                                      context.pushNamed(
-                                        'coworking_edit_data',
-                                        pathParameters: {
-                                          'id': widget.coworkingId.toString()
-                                        },
-                                      );
-                                    },
-                                  ),
-                                  const SizedBox(height: 8),
-                                  ticketsAsync.when(
-                                    loading: () => const SizedBox.shrink(),
-                                    error: (_, __) => const SizedBox.shrink(),
-                                    data: (tickets) {
-                                      if (tickets.isNotEmpty) {
-                                        return Column(
-                                          children: [
-                                            _buildMenuItem(
-                                              'profile.coupons'.tr(),
-                                              Icons.chevron_right,
-                                              backgroundColor: Colors.grey[200],
-                                              onTap: () {
-                                                context.pushNamed(
-                                                  'tickets',
-                                                  pathParameters: {
-                                                    'id': widget.coworkingId
-                                                        .toString()
-                                                  },
-                                                );
-                                              },
-                                            ),
-                                            const SizedBox(height: 8),
-                                          ],
-                                        );
-                                      }
-                                      return const SizedBox.shrink();
-                                    },
-                                  ),
-                                  _buildMenuItem(
-                                    'coworking.profile.biometric'.tr(),
-                                    Icons.chevron_right,
-                                    backgroundColor: Colors.grey[200],
-                                    onTap: () {
-                                      context.pushNamed(
-                                        'coworking_biometric',
-                                        pathParameters: {
-                                          'id': widget.coworkingId.toString()
-                                        },
-                                      );
-                                    },
-                                  ),
-                                  const SizedBox(height: 8),
-                                  _buildMenuItem(
-                                    'coworking.profile.community_card'.tr(),
-                                    Icons.chevron_right,
-                                    backgroundColor: Colors.grey[200],
-                                    onTap: () {
-                                      context.pushNamed(
-                                        'community_card',
-                                        pathParameters: {
-                                          'id': widget.coworkingId.toString()
-                                        },
-                                      );
-                                    },
-                                  ),
-                                  // const SizedBox(height: 8),
-                                  // _buildMenuItem(
-                                  //   'coworking.profile.limit_accounts'.tr(),
-                                  //   Icons.chevron_right,
-                                  //   backgroundColor: Colors.grey[200],
-                                  //   onTap: () {
-                                  //     context.pushNamed(
-                                  //       'coworking_limit_accounts',
-                                  //       pathParameters: {
-                                  //         'id': widget.coworkingId.toString()
-                                  //       },
-                                  //     );
-                                  //   },
-                                  // ),
-                                  const SizedBox(height: 24),
-                                  _buildMenuItem(
-                                    'coworking.profile.contact_us'.tr(),
-                                    Icons.chevron_right,
-                                    backgroundColor: Colors.grey[200],
-                                    onTap: () {
-                                      final settingsAsync =
-                                          ref.read(settingsProvider);
-                                      settingsAsync.whenData((settings) {
-                                        CommunicationModal.show(
-                                          context,
-                                          whatsappUrl:
-                                              settings.whatsappLinkPromenade,
-                                        );
-                                      });
-                                    },
-                                  ),
-                                  const SizedBox(height: 8),
-                                  _buildMenuItem(
-                                    'coworking.profile.about_app'.tr(),
-                                    Icons.chevron_right,
-                                    backgroundColor: Colors.grey[200],
-                                    onTap: () {
-                                      context.pushNamed('about');
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                CustomHeader(
-                  title: 'coworking.profile.title'.tr(),
-                  type: HeaderType.close,
-                ),
-              ],
             ),
           ),
         ),

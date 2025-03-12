@@ -88,99 +88,112 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
     final servicesAsync = ref.watch(servicesProvider);
     final defaultServicesAsync = ref.watch(defaultServicesProvider);
 
-    return Container(
-      color: AppColors.primary,
-      child: SafeArea(
-        child: Stack(
-          children: [
-            Container(
-              color: AppColors.appBg,
-              margin: const EdgeInsets.only(top: 64),
-              child: servicesAsync.when(
-                loading: () => _buildSkeletonLoader(),
-                error: (error, stack) {
-                  print('❌ Ошибка при загрузке категорий услуг: $error');
-                  return ErrorRefreshWidget(
-                    onRefresh: () {
-                      print('🔄 Обновление категорий услуг...');
-                      ref.refresh(servicesProvider);
-                    },
-                    errorMessage: 'stories.error.loading'.tr(),
-                    refreshText: 'common.refresh'.tr(),
-                    icon: Icons.warning_amber_rounded,
-                    isServerError: true,
-                  );
-                },
-                data: (services) {
-                  print('✅ Категории услуг загружены: ${services.length}');
-                  for (var service in services) {
-                    print(
-                        '  - Категория: ${service.title}, ID: ${service.id}, Type: ${service.type}');
-                  }
-
-                  return defaultServicesAsync.when(
-                    loading: () => _buildSkeletonLoader(),
-                    error: (error, stack) {
-                      print('❌ Ошибка при загрузке услуг типа DEFAULT: $error');
-                      final is500Error = error.toString().contains('500') ||
-                          error.toString().contains('Internal Server Error');
-
-                      return ErrorRefreshWidget(
-                        onRefresh: () {
-                          print('🔄 Обновление услуг типа DEFAULT...');
-                          ref.refresh(defaultServicesProvider);
-                        },
-                        errorMessage: 'stories.error.loading'.tr(),
-                        refreshText: 'common.refresh'.tr(),
-                        icon: Icons.warning_amber_rounded,
-                        isServerError: true,
-                      );
-                    },
-                    data: (defaultServices) {
+    return GestureDetector(
+      onHorizontalDragEnd: (details) {
+        // Если свайп слева направо (положительная скорость) и достаточно быстрый
+        if (details.primaryVelocity != null && details.primaryVelocity! > 300) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Container(
+        color: AppColors.primary,
+        child: SafeArea(
+          child: Stack(
+            children: [
+              Container(
+                color: AppColors.appBg,
+                margin: const EdgeInsets.only(top: 64),
+                child: servicesAsync.when(
+                  loading: () => _buildSkeletonLoader(),
+                  error: (error, stack) {
+                    print('❌ Ошибка при загрузке категорий услуг: $error');
+                    return ErrorRefreshWidget(
+                      onRefresh: () {
+                        print('🔄 Обновление категорий услуг...');
+                        ref.refresh(servicesProvider);
+                      },
+                      errorMessage: 'stories.error.loading'.tr(),
+                      refreshText: 'common.refresh'.tr(),
+                      icon: Icons.warning_amber_rounded,
+                      isServerError: true,
+                    );
+                  },
+                  data: (services) {
+                    print('✅ Категории услуг загружены: ${services.length}');
+                    for (var service in services) {
                       print(
-                          '✅ Услуги типа DEFAULT загружены: ${defaultServices.length}');
-                      for (var service in defaultServices) {
+                          '  - Категория: ${service.title}, ID: ${service.id}, Type: ${service.type}');
+                    }
+
+                    return defaultServicesAsync.when(
+                      loading: () => _buildSkeletonLoader(),
+                      error: (error, stack) {
                         print(
-                            '  - Услуга: ${service.title}, ID: ${service.id}, Type: ${service.type}');
-                      }
+                            '❌ Ошибка при загрузке услуг типа DEFAULT: $error');
+                        final is500Error = error.toString().contains('500') ||
+                            error.toString().contains('Internal Server Error');
 
-                      // Изменяем порядок: сначала услуги, потом категории
-                      final allServices = [...defaultServices, ...services];
-                      print('📋 Общее количество услуг: ${allServices.length}');
-
-                      if (allServices.isEmpty) {
-                        return Center(
-                          child: Text(
-                            'services.no_services'.tr(),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.black54,
-                            ),
-                          ),
+                        return ErrorRefreshWidget(
+                          onRefresh: () {
+                            print('🔄 Обновление услуг типа DEFAULT...');
+                            ref.refresh(defaultServicesProvider);
+                          },
+                          errorMessage: 'stories.error.loading'.tr(),
+                          refreshText: 'common.refresh'.tr(),
+                          icon: Icons.warning_amber_rounded,
+                          isServerError: true,
                         );
-                      }
-
-                      return ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(12, 24, 12, 12),
-                        itemCount: allServices.length,
-                        itemBuilder: (context, index) {
-                          final service = allServices[index];
+                      },
+                      data: (defaultServices) {
+                        print(
+                            '✅ Услуги типа DEFAULT загружены: ${defaultServices.length}');
+                        for (var service in defaultServices) {
                           print(
-                              '🔍 Отображение услуги: ${service.title}, ID: ${service.id}, Type: ${service.type}');
-                          return _buildServiceItem(
-                              context, ref, service, coworkingId);
-                        },
-                      );
-                    },
-                  );
+                              '  - Услуга: ${service.title}, ID: ${service.id}, Type: ${service.type}');
+                        }
+
+                        // Изменяем порядок: сначала услуги, потом категории
+                        final allServices = [...defaultServices, ...services];
+                        print(
+                            '📋 Общее количество услуг: ${allServices.length}');
+
+                        if (allServices.isEmpty) {
+                          return Center(
+                            child: Text(
+                              'services.no_services'.tr(),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          );
+                        }
+
+                        return ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(12, 24, 12, 12),
+                          itemCount: allServices.length,
+                          itemBuilder: (context, index) {
+                            final service = allServices[index];
+                            print(
+                                '🔍 Отображение услуги: ${service.title}, ID: ${service.id}, Type: ${service.type}');
+                            return _buildServiceItem(
+                                context, ref, service, coworkingId);
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+              CustomHeader(
+                title: 'coworking_tabs.services'.tr(),
+                type: HeaderType.pop,
+                onBack: () {
+                  Navigator.of(context).pop();
                 },
               ),
-            ),
-            CustomHeader(
-              title: 'coworking_tabs.services'.tr(),
-              type: HeaderType.close,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

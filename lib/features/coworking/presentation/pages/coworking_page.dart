@@ -30,8 +30,12 @@ class CoworkingPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final buildingsAsync = ref.watch(buildingsProvider);
 
-    return PopScope(
-      canPop: true,
+    return GestureDetector(
+      onHorizontalDragEnd: (details) {
+        if (details.primaryVelocity != null && details.primaryVelocity! > 300) {
+          context.pop();
+        }
+      },
       child: buildingsAsync.when(
         loading: () => Scaffold(
           backgroundColor: AppColors.primary,
@@ -39,9 +43,12 @@ class CoworkingPage extends ConsumerWidget {
             child: Stack(
               children: [
                 _buildSkeletonLoader(),
-                const CustomHeader(
+                CustomHeader(
                   title: '',
-                  type: HeaderType.close,
+                  type: HeaderType.pop,
+                  onBack: () {
+                    Navigator.of(context).pop();
+                  },
                 ),
               ],
             ),
@@ -200,7 +207,10 @@ class CoworkingPage extends ConsumerWidget {
                   ),
                   CustomHeader(
                     title: coworking.name,
-                    type: HeaderType.close,
+                    type: HeaderType.pop,
+                    onBack: () {
+                      context.pop();
+                    },
                   ),
                 ],
               ),

@@ -88,197 +88,210 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
     final userCardAsync =
         token != null ? ref.watch(communityCardProvider(true)) : null;
 
-    return Container(
-      color: AppColors.primary,
-      child: SafeArea(
-        child: Stack(
-          children: [
-            Container(
-              color: AppColors.appBg,
-              margin: const EdgeInsets.only(top: 64),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: const BoxDecoration(
-                      color: AppColors.appBg,
-                      border: Border(
-                        bottom: BorderSide(
-                          color: Color(0xFFEEEEEE),
-                          width: 1,
+    return GestureDetector(
+      onHorizontalDragEnd: (details) {
+        // Если свайп слева направо (положительная скорость) и достаточно быстрый
+        if (details.primaryVelocity != null && details.primaryVelocity! > 300) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Container(
+        color: AppColors.primary,
+        child: SafeArea(
+          child: Stack(
+            children: [
+              Container(
+                color: AppColors.appBg,
+                margin: const EdgeInsets.only(top: 64),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: const BoxDecoration(
+                        color: AppColors.appBg,
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Color(0xFFEEEEEE),
+                            width: 1,
+                          ),
                         ),
                       ),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: Colors.black,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'community.search'.tr(),
-                        hintStyle: const TextStyle(
+                      child: TextField(
+                        controller: _searchController,
+                        style: const TextStyle(
                           fontSize: 15,
-                          color: AppColors.darkGrey,
+                          color: Colors.black,
                         ),
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(4),
-                          borderSide: BorderSide.none,
+                        decoration: InputDecoration(
+                          hintText: 'community.search'.tr(),
+                          hintStyle: const TextStyle(
+                            fontSize: 15,
+                            color: AppColors.darkGrey,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                            borderSide: BorderSide.none,
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: AppColors.grey2,
+                            size: 24,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(4),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(4),
-                          borderSide: BorderSide.none,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          color: AppColors.grey2,
-                          size: 24,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value;
+                          });
+                        },
                       ),
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value;
-                        });
-                      },
                     ),
-                  ),
-                  if (token != null) ...[
-                    userCardAsync?.when(
-                          data: (userCard) {
-                            if (userCard['status'] != 'APPROVED') {
-                              return Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: CustomButton(
-                                  label: 'community.create_card'.tr(),
-                                  onPressed: () {
-                                    context.pushNamed(
-                                      'community_card',
-                                      pathParameters: {
-                                        'id': widget.coworkingId.toString()
-                                      },
-                                    );
-                                  },
-                                  isFullWidth: true,
-                                  type: ButtonType.bordered,
-                                  backgroundColor: AppColors.bgLight,
-                                  textColor: AppColors.primary,
+                    if (token != null) ...[
+                      userCardAsync?.when(
+                            data: (userCard) {
+                              if (userCard['status'] != 'APPROVED') {
+                                return Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: CustomButton(
+                                    label: 'community.create_card'.tr(),
+                                    onPressed: () {
+                                      context.pushNamed(
+                                        'community_card',
+                                        pathParameters: {
+                                          'id': widget.coworkingId.toString()
+                                        },
+                                      );
+                                    },
+                                    isFullWidth: true,
+                                    type: ButtonType.bordered,
+                                    backgroundColor: AppColors.bgLight,
+                                    textColor: AppColors.primary,
+                                  ),
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, __) => const SizedBox.shrink(),
+                          ) ??
+                          const SizedBox.shrink(),
+                    ],
+                    Expanded(
+                      child: communityCardsAsync.when(
+                        data: (cards) {
+                          if (cards.isEmpty) {
+                            return Center(
+                              child: Text(
+                                'community.empty'.tr(),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: AppColors.textDarkGrey,
                                 ),
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                          loading: () => const SizedBox.shrink(),
-                          error: (_, __) => const SizedBox.shrink(),
-                        ) ??
-                        const SizedBox.shrink(),
-                  ],
-                  Expanded(
-                    child: communityCardsAsync.when(
-                      data: (cards) {
-                        if (cards.isEmpty) {
-                          return Center(
-                            child: Text(
-                              'community.empty'.tr(),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: AppColors.textDarkGrey,
                               ),
-                            ),
-                          );
-                        }
+                            );
+                          }
 
-                        final groupedCards = _groupCards(cards);
+                          final groupedCards = _groupCards(cards);
 
-                        if (token != null) {
-                          return userCardAsync?.when(
-                                data: (userCard) {
-                                  if (userCard['status'] == 'APPROVED') {
-                                    return SingleChildScrollView(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.all(12),
-                                            child: Text(
-                                              'community.you'.tr(),
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w500,
-                                                color: AppColors.grey2,
-                                              ),
-                                            ),
-                                          ),
-                                          _CommunityUserCard(
-                                            user: CommunityCard.fromJson(
-                                                userCard),
-                                          ),
-                                          if (cards.isNotEmpty) ...[
-                                            for (var entry
-                                                in groupedCards.entries) ...[
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.all(12),
-                                                child: Text(
-                                                  entry.key,
-                                                  style: const TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w500,
-                                                    color: AppColors.grey2,
-                                                  ),
+                          if (token != null) {
+                            return userCardAsync?.when(
+                                  data: (userCard) {
+                                    if (userCard['status'] == 'APPROVED') {
+                                      return SingleChildScrollView(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Padding(
+                                              padding: const EdgeInsets.all(12),
+                                              child: Text(
+                                                'community.you'.tr(),
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: AppColors.grey2,
                                                 ),
                                               ),
-                                              ...entry.value.map((user) =>
-                                                  _CommunityUserCard(
-                                                      user: user)),
+                                            ),
+                                            _CommunityUserCard(
+                                              user: CommunityCard.fromJson(
+                                                  userCard),
+                                            ),
+                                            if (cards.isNotEmpty) ...[
+                                              for (var entry
+                                                  in groupedCards.entries) ...[
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(12),
+                                                  child: Text(
+                                                    entry.key,
+                                                    style: const TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      color: AppColors.grey2,
+                                                    ),
+                                                  ),
+                                                ),
+                                                ...entry.value.map((user) =>
+                                                    _CommunityUserCard(
+                                                        user: user)),
+                                              ],
                                             ],
                                           ],
-                                        ],
-                                      ),
-                                    );
-                                  }
-                                  return _buildCardsList(groupedCards);
-                                },
-                                loading: () => const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                                error: (_, __) => _buildCardsList(groupedCards),
-                              ) ??
-                              _buildCardsList(groupedCards);
-                        }
+                                        ),
+                                      );
+                                    }
+                                    return _buildCardsList(groupedCards);
+                                  },
+                                  loading: () => const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                  error: (_, __) =>
+                                      _buildCardsList(groupedCards),
+                                ) ??
+                                _buildCardsList(groupedCards);
+                          }
 
-                        return _buildCardsList(groupedCards);
-                      },
-                      loading: () => _buildSkeletonLoader(),
-                      error: (error, stack) => Center(
-                        child: Text(
-                          'community.error'.tr(args: [error.toString()]),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: AppColors.textDarkGrey,
+                          return _buildCardsList(groupedCards);
+                        },
+                        loading: () => _buildSkeletonLoader(),
+                        error: (error, stack) => Center(
+                          child: Text(
+                            'community.error'.tr(args: [error.toString()]),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: AppColors.textDarkGrey,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            CustomHeader(
-              title: 'community.title'.tr(),
-              type: HeaderType.close,
-            ),
-          ],
+              CustomHeader(
+                title: 'community.title'.tr(),
+                type: HeaderType.pop,
+                onBack: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

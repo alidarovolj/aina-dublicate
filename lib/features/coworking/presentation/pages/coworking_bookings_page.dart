@@ -205,23 +205,35 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
 
     return Focus(
       focusNode: _focusNode,
-      child: Container(
-        color: AppColors.primary,
-        child: SafeArea(
-          child: Stack(
-            children: [
-              Container(
-                color: Colors.white,
-                margin: const EdgeInsets.only(top: 64),
-                child: !authState.isAuthenticated
-                    ? _buildUnauthorizedState()
-                    : _buildAuthorizedState(),
-              ),
-              CustomHeader(
-                title: 'coworking_tabs.bookings'.tr(),
-                type: HeaderType.close,
-              ),
-            ],
+      child: GestureDetector(
+        onHorizontalDragEnd: (details) {
+          // Если свайп слева направо (положительная скорость) и достаточно быстрый
+          if (details.primaryVelocity != null &&
+              details.primaryVelocity! > 300) {
+            Navigator.of(context).pop();
+          }
+        },
+        child: Container(
+          color: AppColors.primary,
+          child: SafeArea(
+            child: Stack(
+              children: [
+                Container(
+                  color: Colors.white,
+                  margin: const EdgeInsets.only(top: 64),
+                  child: !authState.isAuthenticated
+                      ? _buildUnauthorizedState()
+                      : _buildAuthorizedState(),
+                ),
+                CustomHeader(
+                  title: 'coworking_tabs.bookings'.tr(),
+                  type: HeaderType.pop,
+                  onBack: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),

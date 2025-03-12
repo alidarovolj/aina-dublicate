@@ -107,7 +107,7 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
 
         final coworkingId = _getCoworkingId();
         if (coworkingId == null) {
-          context.push('/coworking');
+          context.go('/coworking');
           return;
         }
 
@@ -140,9 +140,31 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
   @override
   Widget build(BuildContext context) {
     final isDetailsPage = _getCoworkingId() != null;
+    final normalizedRoute = _normalizeRoute(widget.currentRoute);
+    final currentIndex = _routesToTabIndex[normalizedRoute] ?? 0;
 
     return PopScope(
-      canPop: true,
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+
+        final coworkingId = _getCoworkingId();
+
+        if (currentIndex != 0) {
+          if (coworkingId != null) {
+            context.pushNamed('coworking_details',
+                pathParameters: {'id': coworkingId});
+          } else {
+            context.push('/coworking');
+          }
+        } else {
+          if (widget.currentRoute == '/coworking') {
+            context.push('/home');
+          } else {
+            context.pop();
+          }
+        }
+      },
       child: Scaffold(
         body: widget.child,
         bottomNavigationBar: isDetailsPage

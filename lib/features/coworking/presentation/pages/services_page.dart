@@ -187,7 +187,7 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
               ),
               CustomHeader(
                 title: 'coworking_tabs.services'.tr(),
-                type: HeaderType.pop,
+                type: HeaderType.close,
                 onBack: () {
                   Navigator.of(context).pop();
                 },

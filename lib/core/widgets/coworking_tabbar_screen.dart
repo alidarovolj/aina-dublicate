@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'coworking_custom_tabbar.dart';
+import 'package:aina_flutter/core/providers/auth/auth_state.dart';
+import 'package:aina_flutter/core/widgets/base_modal.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class CoworkingTabBarScreen extends ConsumerStatefulWidget {
   final String currentRoute;
@@ -129,6 +132,11 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
                 pathParameters: {'id': coworkingId});
             break;
           case 4:
+            final authState = ref.read(authProvider);
+            if (!authState.isAuthenticated) {
+              context.pushNamed('login');
+              return;
+            }
             context.pushNamed('coworking_profile',
                 pathParameters: {'id': coworkingId});
             break;

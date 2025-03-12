@@ -227,7 +227,7 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
                 ),
                 CustomHeader(
                   title: 'coworking_tabs.bookings'.tr(),
-                  type: HeaderType.pop,
+                  type: HeaderType.close,
                   onBack: () {
                     Navigator.of(context).pop();
                   },

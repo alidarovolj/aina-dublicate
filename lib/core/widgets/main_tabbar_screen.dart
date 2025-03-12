@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'custom_tabbar.dart';
+import 'package:aina_flutter/core/providers/auth/auth_state.dart';
+import 'package:aina_flutter/core/widgets/base_modal.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class MainTabBarScreen extends ConsumerStatefulWidget {
   final Widget child;
@@ -107,6 +110,12 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
         if (index == 3) {
           // Profile tab
           print('👤 Handling profile tab navigation');
+          final authState = ref.read(authProvider);
+          if (!authState.isAuthenticated) {
+            context.pushNamed('login');
+            return;
+          }
+
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
             print('🏢 Mall ID found: $mallId, navigating to profile');

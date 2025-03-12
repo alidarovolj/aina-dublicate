@@ -285,7 +285,7 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
               ),
               CustomHeader(
                 title: 'community.title'.tr(),
-                type: HeaderType.pop,
+                type: HeaderType.close,
                 onBack: () {
                   Navigator.of(context).pop();
                 },

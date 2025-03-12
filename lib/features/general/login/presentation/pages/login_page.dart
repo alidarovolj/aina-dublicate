@@ -378,7 +378,10 @@ class _PhoneNumberInputScreenState
               ),
               CustomHeader(
                 title: 'auth.title'.tr(),
-                type: HeaderType.close,
+                type: HeaderType.pop,
+                onBack: () {
+                  Navigator.of(context).pop();
+                },
               ),
             ],
           ),

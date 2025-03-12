@@ -207,7 +207,7 @@ class CoworkingPage extends ConsumerWidget {
                   ),
                   CustomHeader(
                     title: coworking.name,
-                    type: HeaderType.pop,
+                    type: HeaderType.close,
                     onBack: () {
                       context.pop();
                     },

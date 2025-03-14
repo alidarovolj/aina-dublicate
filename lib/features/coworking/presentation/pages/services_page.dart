@@ -92,7 +92,15 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
       onHorizontalDragEnd: (details) {
         // Если свайп слева направо (положительная скорость) и достаточно быстрый
         if (details.primaryVelocity != null && details.primaryVelocity! > 300) {
-          Navigator.of(context).pop();
+          final extra = GoRouter.of(context)
+              .routerDelegate
+              .currentConfiguration
+              .extra as Map<String, dynamic>?;
+          if (extra?['fromHome'] == true) {
+            context.go('/home');
+          } else {
+            Navigator.of(context).pop();
+          }
         }
       },
       child: Container(
@@ -189,7 +197,15 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
                 title: 'coworking_tabs.services'.tr(),
                 type: HeaderType.close,
                 onBack: () {
-                  Navigator.of(context).pop();
+                  final extra = GoRouter.of(context)
+                      .routerDelegate
+                      .currentConfiguration
+                      .extra as Map<String, dynamic>?;
+                  if (extra?['fromHome'] == true) {
+                    context.go('/home');
+                  } else {
+                    Navigator.of(context).pop();
+                  }
                 },
               ),
             ],

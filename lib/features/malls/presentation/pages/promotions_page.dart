@@ -9,6 +9,7 @@ import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
 import 'package:aina_flutter/core/providers/requests/events_provider.dart';
+import 'package:aina_flutter/core/widgets/events_block.dart';
 
 class PromotionsPage extends ConsumerStatefulWidget {
   final int mallId;
@@ -177,77 +178,22 @@ class _PromotionsPageState extends ConsumerState<PromotionsPage>
                             ),
                           ),
                         ),
-                        RefreshIndicator(
-                          onRefresh: _loadData,
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.only(top: 28, bottom: 28),
-                            child: Consumer(
-                              builder: (context, ref, child) {
-                                final eventsAsync = ref.watch(eventsProvider);
-
-                                return eventsAsync.when(
-                                  loading: () => const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                  error: (error, stack) {
-                                    print(
-                                        '❌ Ошибка при загрузке событий: $error');
-
-                                    final is500Error = error
-                                            .toString()
-                                            .contains('500') ||
-                                        error
-                                            .toString()
-                                            .contains('Internal Server Error');
-
-                                    return ErrorRefreshWidget(
-                                      onRefresh: () {
-                                        print('🔄 Обновление событий...');
-                                        Future.microtask(() async {
-                                          try {
-                                            ref
-                                                .read(eventsProvider.notifier)
-                                                .fetchEvents(context,
-                                                    forceRefresh: true);
-                                          } catch (e) {
-                                            print(
-                                                '❌ Ошибка при обновлении событий: $e');
-                                          }
-                                        });
-                                      },
-                                      errorMessage: is500Error
-                                          ? 'stories.error.server'.tr()
-                                          : 'stories.error.loading'.tr(),
-                                      refreshText: 'common.refresh'.tr(),
-                                      icon: Icons.warning_amber_rounded,
-                                      isServerError: true,
-                                    );
-                                  },
-                                  data: (events) {
-                                    if (events.isEmpty) {
-                                      return Center(
-                                        child: Text(
-                                          'events.no_active_events'.tr(),
-                                          style: const TextStyle(
-                                            fontSize: 15,
-                                            color: AppColors.textDarkGrey,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      );
-                                    }
-
-                                    return PromotionsBlock(
-                                      onViewAllTap: () {},
-                                      showTitle: false,
-                                      showViewAll: false,
-                                      showDivider: false,
-                                      cardType: PromotionCardType.full,
-                                      showGradient: true,
-                                    );
-                                  },
-                                );
-                              },
+                        Center(
+                          child: EventsBlock(
+                            mallId: widget.mallId.toString(),
+                            onViewAllTap: () {},
+                            showTitle: false,
+                            showViewAll: false,
+                            showDivider: false,
+                            cardType: PromotionCardType.full,
+                            showGradient: true,
+                            emptyBuilder: (context) => Text(
+                              'events.no_active_events'.tr(),
+                              style: const TextStyle(
+                                fontSize: 15,
+                                color: AppColors.textDarkGrey,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
                           ),
                         ),

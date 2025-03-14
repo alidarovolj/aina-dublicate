@@ -131,7 +131,8 @@ class BuildingsList extends ConsumerWidget {
                 GestureDetector(
                   onTap: () {
                     if (buildings.isNotEmpty) {
-                      context.push('/coworking/${buildings[0].id}/services');
+                      context.push('/coworking/${buildings[0].id}/services',
+                          extra: {'fromHome': true});
                     }
                   },
                   child: Container(

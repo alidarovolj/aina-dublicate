@@ -1,6 +1,7 @@
 import 'package:aina_flutter/core/types/card_type.dart';
 import 'package:aina_flutter/core/types/news_card_type.dart';
 import 'package:aina_flutter/core/types/slides.dart' as slides;
+import 'package:aina_flutter/core/widgets/events_block.dart';
 import 'package:aina_flutter/core/widgets/news_block.dart';
 import 'package:flutter/material.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
@@ -294,6 +295,25 @@ class MallDetailsPage extends ConsumerWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 24),
+
+                                // Events Section
+                                EventsBlock(
+                                  mallId: mallId.toString(),
+                                  showTitle: true,
+                                  showViewAll: true,
+                                  showDivider: true,
+                                  cardType: PromotionCardType.medium,
+                                  onViewAllTap: () {
+                                    context.pushNamed(
+                                      'mall_events',
+                                      pathParameters: {
+                                        'mallId': mallId.toString()
+                                      },
+                                    );
+                                  },
+                                  emptyBuilder: (context) =>
+                                      const SizedBox.shrink(),
+                                ),
                                 ShopCategoriesGrid(
                                   mallId: mallId.toString(),
                                   emptyBuilder: (context) => Center(

@@ -5,6 +5,8 @@ import 'package:aina_flutter/features/general/profile/presentation/pages/edit_da
 import 'package:aina_flutter/features/general/profile/presentation/pages/profile_page.dart';
 import 'package:aina_flutter/features/general/profile/presentation/pages/tickets_page.dart';
 import 'package:aina_flutter/features/general/promotions/presentation/pages/promotion_details_page.dart';
+import 'package:aina_flutter/features/general/events/presentation/pages/event_details_page.dart';
+import 'package:aina_flutter/features/general/events/presentation/pages/events_page.dart';
 import 'package:aina_flutter/features/malls/stores/presentation/pages/store_details_page.dart';
 import 'package:aina_flutter/features/malls/stores/presentation/pages/category_stores_page.dart';
 import 'package:aina_flutter/features/general/news/presentation/pages/news_details_page.dart';
@@ -635,6 +637,25 @@ class AppRouter {
         path: '/no-internet',
         name: 'no_internet',
         builder: (context, state) => const NoInternetPage(),
+      ),
+      GoRoute(
+        path: '/events/:id',
+        name: 'event_details',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '0';
+          final fromHome =
+              (state.extra as Map<String, dynamic>?)?['fromHome'] as bool? ??
+                  false;
+          return EventDetailsPage(id: id, fromHome: fromHome);
+        },
+      ),
+      GoRoute(
+        path: '/malls/:mallId/events',
+        name: 'mall_events',
+        builder: (context, state) {
+          final mallId = state.pathParameters['mallId'];
+          return EventsPage(mallId: mallId);
+        },
       ),
     ],
   );

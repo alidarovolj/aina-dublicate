@@ -4,6 +4,7 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 import 'package:aina_flutter/features/coworking/domain/models/coworking_tariff_details.dart';
 import 'package:aina_flutter/features/coworking/providers/coworking_tariff_details_provider.dart';
 import 'package:aina_flutter/features/coworking/presentation/widgets/time_selection_modal.dart';
@@ -689,10 +690,10 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
 
   Future<void> _handlePaymentPress() async {
     if (selectedDate == null || endDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('coworking.calendar.select_date'.tr()),
-        ),
+      BaseSnackBar.show(
+        context,
+        message: 'coworking.calendar.select_date'.tr(),
+        type: SnackBarType.error,
       );
       return;
     }
@@ -724,10 +725,10 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
       setState(() => isLoading = false);
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('coworking.calendar.order_error'.tr()),
-        ),
+      BaseSnackBar.show(
+        context,
+        message: 'coworking.calendar.order_error'.tr(),
+        type: SnackBarType.error,
       );
     }
   }

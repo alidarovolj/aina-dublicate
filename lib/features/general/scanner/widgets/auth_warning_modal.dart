@@ -9,6 +9,7 @@ import 'package:aina_flutter/core/services/amplitude_service.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:easy_localization/easy_localization.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 
 class AuthWarningModal {
   static String _getPlatform() {
@@ -25,8 +26,10 @@ class AuthWarningModal {
     String? promotionId,
   }) {
     void showError(BuildContext context, String message) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+      BaseSnackBar.show(
+        context,
+        message: message,
+        type: SnackBarType.error,
       );
     }
 

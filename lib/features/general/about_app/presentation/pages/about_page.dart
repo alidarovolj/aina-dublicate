@@ -9,6 +9,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 import 'package:aina_flutter/core/api/api_client.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,10 +28,10 @@ class _AboutPageState extends ConsumerState<AboutPage> {
   Future<void> _launchURL(String? urlString) async {
     if (urlString == null || urlString.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('about.url_not_available'.tr()),
-          ),
+        BaseSnackBar.show(
+          context,
+          message: 'about.url_not_available'.tr(),
+          type: SnackBarType.error,
         );
       }
       return;
@@ -44,18 +45,18 @@ class _AboutPageState extends ConsumerState<AboutPage> {
       );
 
       if (!launched && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('about.url_error'.tr()),
-          ),
+        BaseSnackBar.show(
+          context,
+          message: 'about.url_error'.tr(),
+          type: SnackBarType.error,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('about.url_error'.tr()),
-          ),
+        BaseSnackBar.show(
+          context,
+          message: 'about.url_error'.tr(),
+          type: SnackBarType.error,
         );
       }
     }
@@ -102,12 +103,20 @@ class _AboutPageState extends ConsumerState<AboutPage> {
           print('❌ Ошибка при вызове logout через authProvider: $authError');
         }
 
-        context.push('/home');
+        BaseSnackBar.show(
+          context,
+          message: 'about.account_deleted_success'.tr(),
+          type: SnackBarType.success,
+        );
+
+        context.go('/home');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('errors.delete_profile'.tr())),
+        BaseSnackBar.show(
+          context,
+          message: 'errors.delete_profile'.tr(),
+          type: SnackBarType.error,
         );
       }
     }

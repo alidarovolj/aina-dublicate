@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/providers/requests/auth/user.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SetInfoPage extends ConsumerStatefulWidget {
   final String phoneNumber;
@@ -138,11 +140,10 @@ class _SetInfoPageState extends ConsumerState<SetInfoPage> {
         if (!mounted) return;
 
         if (response == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Ошибка соединения с сервером'),
-              backgroundColor: Colors.red,
-            ),
+          BaseSnackBar.show(
+            context,
+            message: 'auth.server_connection_error'.tr(),
+            type: SnackBarType.error,
           );
           return;
         }
@@ -150,20 +151,19 @@ class _SetInfoPageState extends ConsumerState<SetInfoPage> {
         if (response.statusCode == 200) {
           context.push('/code', extra: formattedPhone);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Ошибка при регистрации: ${response.statusCode}'),
-              backgroundColor: Colors.red,
-            ),
+          BaseSnackBar.show(
+            context,
+            message: 'auth.registration_error'
+                .tr(args: [response.statusCode.toString()]),
+            type: SnackBarType.error,
           );
         }
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Произошла ошибка: $e'),
-            backgroundColor: Colors.red,
-          ),
+        BaseSnackBar.show(
+          context,
+          message: 'auth.error'.tr(args: [e.toString()]),
+          type: SnackBarType.error,
         );
       } finally {
         if (mounted) {

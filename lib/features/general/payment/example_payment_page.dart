@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'services/epay_service.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class PaymentPage extends StatefulWidget {
   const PaymentPage({super.key});
@@ -33,8 +35,10 @@ class _PaymentPageState extends State<PaymentPage> {
     } catch (e) {
       debugPrint('❌ Failed to configure Epay SDK: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to configure Epay: $e')),
+        BaseSnackBar.show(
+          context,
+          message: 'payment.configure_error'.tr(args: [e.toString()]),
+          type: SnackBarType.error,
         );
       }
     }
@@ -71,18 +75,20 @@ class _PaymentPageState extends State<PaymentPage> {
         final paymentReference = result['paymentReference'] as String;
         debugPrint('✅ Payment successful! Reference: $paymentReference');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Payment successful! Reference: $paymentReference'),
-            ),
+          BaseSnackBar.show(
+            context,
+            message: 'payment.success'.tr(args: [paymentReference]),
+            type: SnackBarType.success,
           );
         }
       } else {
         final errorMessage = result['errorMessage'] as String;
         debugPrint('❌ Payment failed: $errorMessage');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Payment failed: $errorMessage')),
+          BaseSnackBar.show(
+            context,
+            message: 'payment.failed'.tr(args: [errorMessage]),
+            type: SnackBarType.error,
           );
         }
       }
@@ -90,8 +96,10 @@ class _PaymentPageState extends State<PaymentPage> {
       debugPrint('❌ Payment error: $e');
       debugPrint('Stack trace: ${StackTrace.current}');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Payment error: $e')),
+        BaseSnackBar.show(
+          context,
+          message: 'payment.error'.tr(args: [e.toString()]),
+          type: SnackBarType.error,
         );
       }
     } finally {

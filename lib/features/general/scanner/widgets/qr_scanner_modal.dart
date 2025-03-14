@@ -5,7 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
+import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class QrScannerModal extends ConsumerStatefulWidget {
   final int promotionId;
@@ -31,6 +33,27 @@ class QrScannerModal extends ConsumerStatefulWidget {
 class _QrScannerModalState extends ConsumerState<QrScannerModal> {
   QRViewController? _controller;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
+
+  void _navigateToProfile(BuildContext context, String mallId) {
+    final buildingsAsync = ref.read(buildingsProvider);
+    buildingsAsync.whenData((buildings) {
+      final allBuildings = [
+        ...buildings['mall'] ?? [],
+        ...buildings['coworking'] ?? []
+      ];
+      final building = allBuildings.firstWhere(
+        (b) => b.id.toString() == mallId,
+        orElse: () => allBuildings.first,
+      );
+
+      Navigator.of(context).pop();
+      if (building.type == 'coworking') {
+        context.push('/coworking/profile');
+      } else {
+        context.push('/profile');
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -129,7 +152,7 @@ class _QrScannerModalState extends ConsumerState<QrScannerModal> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Перед сканированием чека, пожалуйста, убедитесь в правильности имени и фамилии в профиле. Это обязательное условие участия в акции.',
+            'qr.profile_required'.tr(),
             style: GoogleFonts.lora(
               fontSize: 16,
               color: AppColors.textDarkGrey,
@@ -141,18 +164,16 @@ class _QrScannerModalState extends ConsumerState<QrScannerModal> {
             children: [
               Expanded(
                 child: CustomButton(
-                  label: 'В профиль',
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    context.push('/profile');
-                  },
+                  label: 'qr.to_profile'.tr(),
+                  onPressed: () => _navigateToProfile(
+                      context, widget.promotionId.toString()),
                   backgroundColor: AppColors.secondary,
                 ),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: CustomButton(
-                  label: 'Сканировать',
+                  label: 'qr.scan'.tr(),
                   isEnabled: false,
                 ),
               ),

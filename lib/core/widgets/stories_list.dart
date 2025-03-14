@@ -5,6 +5,7 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/providers/requests/stories_provider.dart';
 import 'package:aina_flutter/core/providers/requests/stories/detail.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart'
     show CustomButton, ButtonType;
@@ -12,8 +13,10 @@ import 'package:aina_flutter/core/utils/button_navigation_handler.dart';
 import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/core/services/amplitude_service.dart';
+import 'dart:ui' show ImageFilter;
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/rendering.dart';
 
 class StoryList extends ConsumerStatefulWidget {
   const StoryList({super.key});
@@ -412,7 +415,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
       _progressController.reset();
       _progressController.forward();
     } else {
-      Navigator.of(context).pop();
+      context.pop();
     }
   }
 
@@ -502,11 +505,117 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
                 },
                 child: Container(
                   color: Colors.black,
-                  child: Image.network(
-                    story.previewImage ?? '',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Center(
-                        child: Icon(Icons.error, color: Colors.white)),
+                  child: Stack(
+                    children: [
+                      // Размытый фон для заполнения всего экрана
+                      Container(
+                        width: double.infinity,
+                        height: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          image: DecorationImage(
+                            image: NetworkImage(story.previewImage ?? ''),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                          child: Container(
+                            color: Colors.black.withOpacity(0.15),
+                          ),
+                        ),
+                      ),
+                      // Основное изображение с отступами
+                      Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: MediaQuery.of(context).size.height * 0.03,
+                          ),
+                          child: Stack(
+                            children: [
+                              // Основное изображение
+                              Image.network(
+                                story.previewImage ?? '',
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Center(
+                                        child: Icon(Icons.error,
+                                            color: Colors.white)),
+                              ),
+                              // Размытие по краям
+                              Positioned(
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                height: 40,
+                                child: ClipRect(
+                                  child: BackdropFilter(
+                                    filter:
+                                        ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                                    child: Container(
+                                      color: Colors.transparent,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                height: 40,
+                                child: ClipRect(
+                                  child: BackdropFilter(
+                                    filter:
+                                        ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                                    child: Container(
+                                      color: Colors.transparent,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Тень сверху
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: 120,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withOpacity(0.4),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Тень снизу
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: 120,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [
+                                Colors.black.withOpacity(0.4),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -546,41 +655,45 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
                 ),
                 const SizedBox(height: 16),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          image: NetworkImage(
-                            widget.stories[currentStoryIndex].previewImage ??
-                                '',
+                    Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            image: DecorationImage(
+                              image: NetworkImage(
+                                widget.stories[currentStoryIndex]
+                                        .previewImage ??
+                                    '',
+                              ),
+                              fit: BoxFit.cover,
+                            ),
                           ),
-                          fit: BoxFit.cover,
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        Text(
+                          widget.stories[currentStoryIndex].name ?? '',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      widget.stories[currentStoryIndex].name ?? '',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: () => Navigator.of(context).pop(),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                     ),
                   ],
                 ),
               ],
-            ),
-          ),
-          Positioned(
-            top: paddingTop,
-            right: 8,
-            child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
             ),
           ),
           if (button != null)

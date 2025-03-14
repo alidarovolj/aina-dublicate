@@ -22,6 +22,13 @@ class CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Проверяем, что URL не пустой и не содержит HTTP ошибок
+    final bool isValidImageUrl = imageUrl != null &&
+        imageUrl!.isNotEmpty &&
+        !imageUrl!.contains('HTTP') &&
+        !imageUrl!.toLowerCase().contains('error') &&
+        imageUrl!.startsWith('http'); // Проверяем, что URL начинается с http
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -43,18 +50,40 @@ class CategoryCard extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             // Background image
-            if (imageUrl != null)
+            if (isValidImageUrl)
               Image.network(
                 imageUrl!,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // При ошибке загрузки изображения показываем запасной вариант
+                  return Image.asset(
+                    'lib/core/assets/images/no_photo.png',
+                    fit: BoxFit.cover,
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) {
+                    return child; // Изображение полностью загружено
+                  }
+                  // Показываем индикатор загрузки
+                  return Container(
+                    color: Colors.grey[100],
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                (loadingProgress.expectedTotalBytes ?? 1)
+                            : null,
+                      ),
+                    ),
+                  );
+                },
               )
             else
-              const Center(
-                child: Icon(
-                  Icons.category,
-                  size: 32,
-                  color: Colors.grey,
-                ),
+              // Если URL невалидный, показываем запасное изображение
+              Image.asset(
+                'lib/core/assets/images/no_photo.png',
+                fit: BoxFit.cover,
               ),
 
             // Gradient overlay at the bottom

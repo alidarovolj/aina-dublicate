@@ -9,6 +9,7 @@ import 'package:aina_flutter/core/providers/requests/settings_provider.dart';
 import 'package:aina_flutter/core/widgets/feedback_form_modal.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/providers/requests/auth/user.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 
 class CommunicationModal {
   static Future<void> show(
@@ -116,18 +117,18 @@ class CommunicationModal {
             }
 
             if (!launched && context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('communication.modal.whatsapp.error'.tr()),
-                ),
+              BaseSnackBar.show(
+                context,
+                message: 'communication.modal.whatsapp.error'.tr(),
+                type: SnackBarType.error,
               );
             }
           } catch (e) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('communication.modal.whatsapp.error'.tr()),
-                ),
+              BaseSnackBar.show(
+                context,
+                message: 'communication.modal.whatsapp.error'.tr(),
+                type: SnackBarType.error,
               );
             }
           }

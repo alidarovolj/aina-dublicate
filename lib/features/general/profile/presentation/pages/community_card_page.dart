@@ -7,6 +7,7 @@ import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/widgets/custom_text_field.dart';
 import 'package:aina_flutter/core/widgets/custom_toggle.dart';
+import 'package:aina_flutter/core/widgets/custom_dropdown.dart';
 import 'package:aina_flutter/core/services/community_card_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -52,6 +53,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
   String? _reviewComment;
   String? _employment;
   bool _isLoading = false;
+  bool _showValidation = false;
 
   final List<Map<String, String?>> _employmentOptions = [
     {'label': 'community.card.work.title'.tr(), 'value': null},
@@ -112,6 +114,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
         _textContentController.text = data['text_content'] ?? '';
         _buttonTitleController.text = data['button_title'] ?? '';
         _buttonLinkController.text = data['button_link'] ?? '';
+        _employment = data['employment'];
 
         // Handle avatar and image separately
         _avatarUrl = data['avatar']?['url'];
@@ -125,6 +128,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
         _pageVisible = data['page_visible'] ?? false;
         _phoneVisible = data['phone_visible'] ?? false;
         _imageVisible = data['image_visible'] ?? false;
+        _reviewComment = data['review_comment'];
         _isLoading = false;
       });
     } catch (e) {
@@ -135,7 +139,8 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
       });
       BaseSnackBar.show(
         context,
-        message: 'community.card.errors.loading'.tr(args: [e.toString()]),
+        message:
+            'community.card.submit.errors.loading'.tr(args: [e.toString()]),
         type: SnackBarType.error,
       );
     }
@@ -159,13 +164,27 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
       if (!mounted) return;
       BaseSnackBar.show(
         context,
-        message: 'community.card.errors.visibility'.tr(args: [e.toString()]),
+        message:
+            'community.card.submit.errors.visibility'.tr(args: [e.toString()]),
         type: SnackBarType.error,
       );
     }
   }
 
   Future<void> _showConfirmationModal() async {
+    setState(() {
+      _showValidation = true;
+    });
+
+    if (_nameController.text.isEmpty || _positionController.text.isEmpty) {
+      BaseSnackBar.show(
+        context,
+        message: 'community.card.validation.required_fields'.tr(),
+        type: SnackBarType.error,
+      );
+      return;
+    }
+
     await BaseModal.show(
       context,
       title: tr('community.card.submit.confirmation.title'),
@@ -195,15 +214,6 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
   }
 
   Future<void> _saveData() async {
-    if (_nameController.text.isEmpty || _positionController.text.isEmpty) {
-      BaseSnackBar.show(
-        context,
-        message: 'Please fill in required fields',
-        type: SnackBarType.error,
-      );
-      return;
-    }
-
     setState(() {
       _isLoading = true;
     });
@@ -258,11 +268,20 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
       });
 
       await _loadData();
+
+      if (!mounted) return;
+
+      // Show success message
+      BaseSnackBar.show(
+        context,
+        message: 'community.card.submit.success'.tr(),
+        type: SnackBarType.success,
+      );
     } catch (e) {
       if (!mounted) return;
       BaseSnackBar.show(
         context,
-        message: 'community.card.errors.saving'.tr(args: [e.toString()]),
+        message: 'community.card.submit.errors.saving'.tr(args: [e.toString()]),
         type: SnackBarType.error,
       );
     } finally {
@@ -458,11 +477,34 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
               ],
             ),
             if (_reviewComment != null) ...[
-              const Divider(height: 16, thickness: 1),
               const SizedBox(height: 8),
-              Text(
-                'Причина: $_reviewComment',
-                style: const TextStyle(fontSize: 14),
+              const Divider(
+                height: 16,
+                thickness: 1,
+                color: AppColors.grey2,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Причина: ',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      _reviewComment!,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textDarkGrey,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
             ],
@@ -755,7 +797,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
                                         },
                                   label: 'community.card.visibility.show_card'
                                       .tr(),
-                                  activeColor: AppColors.secondary,
+                                  activeColor: const Color(0xFFD4B33E),
                                 ),
                                 CustomToggle(
                                   value: _phoneVisible,
@@ -768,7 +810,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
                                         },
                                   label: 'community.card.visibility.show_phone'
                                       .tr(),
-                                  activeColor: AppColors.secondary,
+                                  activeColor: const Color(0xFFD4B33E),
                                 ),
                                 const SizedBox(height: 16),
                                 if (_status != 'REVIEW')
@@ -887,6 +929,15 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
                                             hintText:
                                                 tr('community.card.main.name'),
                                             enabled: _status != 'REVIEW',
+                                            isValid: _showValidation
+                                                ? _nameController
+                                                    .text.isNotEmpty
+                                                : null,
+                                            errorText: _showValidation &&
+                                                    _nameController.text.isEmpty
+                                                ? 'community.card.validation.name_required'
+                                                    .tr()
+                                                : null,
                                           ),
                                           const SizedBox(height: 8),
                                           CustomTextField(
@@ -894,6 +945,16 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
                                             hintText: tr(
                                                 'community.card.main.position'),
                                             enabled: _status != 'REVIEW',
+                                            isValid: _showValidation
+                                                ? _positionController
+                                                    .text.isNotEmpty
+                                                : null,
+                                            errorText: _showValidation &&
+                                                    _positionController
+                                                        .text.isEmpty
+                                                ? 'community.card.validation.position_required'
+                                                    .tr()
+                                                : null,
                                           ),
                                         ],
                                       ),
@@ -986,52 +1047,24 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                CustomTextField(
-                                  controller: _companyController,
-                                  hintText: tr('community.card.main.company'),
-                                  enabled: _status != 'REVIEW',
-                                ),
-                                const SizedBox(height: 16),
-                                DropdownButtonFormField<String>(
-                                  value: _employment,
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 10,
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                      borderSide: BorderSide(
-                                        color: Colors.grey[300]!,
-                                      ),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                      borderSide: BorderSide(
-                                        color: Colors.grey[300]!,
-                                      ),
-                                    ),
-                                  ),
-                                  items: _employmentOptions.map((option) {
-                                    return DropdownMenuItem(
-                                      value: option['value'],
-                                      child: Text(
-                                        option['label']!,
-                                        style: TextStyle(
-                                          color: Colors.grey[800],
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                  onChanged: _status == 'REVIEW'
-                                      ? null
-                                      : (value) {
-                                          setState(() {
-                                            _employment = value;
-                                          });
-                                        },
+                                CustomDropdown<Map<String, String?>>(
+                                  items: _employmentOptions,
+                                  value: _employment != null
+                                      ? _employmentOptions.firstWhere(
+                                          (option) =>
+                                              option['value'] == _employment,
+                                          orElse: () =>
+                                              _employmentOptions.first,
+                                        )
+                                      : _employmentOptions.first,
+                                  labelBuilder: (option) => option['label']!,
+                                  onChanged: (option) {
+                                    setState(() {
+                                      _employment = option['value'];
+                                    });
+                                  },
+                                  hint: tr('community.card.work.title'),
+                                  disabled: _status == 'REVIEW',
                                 ),
                               ],
                             ),

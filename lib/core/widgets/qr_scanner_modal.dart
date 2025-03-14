@@ -7,21 +7,30 @@ import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
+import 'package:aina_flutter/core/providers/requests/promotion_details_provider.dart';
 
 class QrScannerModal extends ConsumerStatefulWidget {
   final int promotionId;
+  final String mallId;
 
   const QrScannerModal({
     super.key,
     required this.promotionId,
+    required this.mallId,
   });
 
-  static Future<void> show(BuildContext context, int promotionId) {
+  static Future<void> show(
+      BuildContext context, int promotionId, String mallId) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => QrScannerModal(promotionId: promotionId),
+      builder: (context) => QrScannerModal(
+        promotionId: promotionId,
+        mallId: mallId,
+      ),
     );
   }
 
@@ -143,9 +152,72 @@ class _QrScannerModalState extends ConsumerState<QrScannerModal> {
               Expanded(
                 child: CustomButton(
                   label: 'qr.to_profile'.tr(),
-                  onPressed: () {
+                  onPressed: () async {
+                    print('🔍 Debug QR Scanner:');
+                    print('   Initial mallId: ${widget.mallId}');
+
+                    if (widget.mallId.isEmpty) {
+                      print('❌ Error: mallId is empty');
+                      BaseSnackBar.show(
+                        context,
+                        message: 'errors.mall_id_not_found'.tr(),
+                        type: SnackBarType.error,
+                      );
+                      return;
+                    }
+
+                    final container = ProviderScope.containerOf(context);
+                    final buildingsAsync = container.read(buildingsProvider);
+
+                    final buildingsData = buildingsAsync.value;
+                    if (buildingsData == null) {
+                      print('❌ Error: buildingsData is null');
+                      BaseSnackBar.show(
+                        context,
+                        message: 'errors.buildings_data_unavailable'.tr(),
+                        type: SnackBarType.error,
+                      );
+                      return;
+                    }
+
+                    print('📦 Buildings data:');
+                    print(
+                        '   Mall count: ${buildingsData['mall']?.length ?? 0}');
+                    print(
+                        '   Coworking count: ${buildingsData['coworking']?.length ?? 0}');
+
+                    final buildings = [
+                      ...buildingsData['mall'] ?? [],
+                      ...buildingsData['coworking'] ?? []
+                    ];
+
+                    print('🏢 Total buildings: ${buildings.length}');
+
+                    final building = buildings.firstWhere(
+                      (b) => b.id.toString() == widget.mallId,
+                      orElse: () {
+                        print(
+                            '⚠️ Building not found with mallId: ${widget.mallId}, using first building');
+                        return buildings.first;
+                      },
+                    );
+
+                    print('🎯 Found building:');
+                    print('   ID: ${building.id}');
+                    print('   Type: ${building.type}');
+                    print('   Name: ${building.name}');
+
                     Navigator.of(context).pop();
-                    context.push('/profile');
+                    if (building.type == 'coworking') {
+                      print(
+                          '🚀 Navigating to coworking profile: /coworking/${widget.mallId}/profile');
+                      context.push('/coworking/${widget.mallId}/profile');
+                    } else {
+                      print(
+                          '🚀 Navigating to mall profile: mall_profile with id: ${widget.mallId}');
+                      context.pushNamed('mall_profile',
+                          pathParameters: {'id': widget.mallId});
+                    }
                   },
                   backgroundColor: AppColors.secondary,
                 ),

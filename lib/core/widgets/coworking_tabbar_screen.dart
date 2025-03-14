@@ -188,19 +188,19 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
           case 0:
             // Если мы уже на странице деталей, не выполняем навигацию
             if (currentRouteBase == '/coworking/$coworkingId') return;
-            context.go('/coworking/$coworkingId');
+            context.push('/coworking/$coworkingId');
             break;
           case 1:
             if (currentRouteBase == '/coworking/$coworkingId/community') return;
-            context.go('/coworking/$coworkingId/community');
+            context.push('/coworking/$coworkingId/community');
             break;
           case 2:
             if (currentRouteBase == '/coworking/$coworkingId/services') return;
-            context.go('/coworking/$coworkingId/services');
+            context.push('/coworking/$coworkingId/services');
             break;
           case 3:
             if (currentRouteBase == '/coworking/$coworkingId/bookings') return;
-            context.go('/coworking/$coworkingId/bookings');
+            context.push('/coworking/$coworkingId/bookings');
             break;
           case 4:
             final authState = ref.read(authProvider);
@@ -211,7 +211,7 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
               return;
             }
             if (currentRouteBase == '/coworking/$coworkingId/profile') return;
-            context.go('/coworking/$coworkingId/profile');
+            context.push('/coworking/$coworkingId/profile');
             break;
         }
       });

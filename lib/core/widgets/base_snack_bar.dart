@@ -53,6 +53,7 @@ class BaseSnackBar extends StatelessWidget {
     final overlayState = Overlay.of(context);
     final theme = Theme.of(context);
     final mediaQuery = MediaQuery.of(context);
+    final keyboardHeight = mediaQuery.viewInsets.bottom;
 
     final overlayEntry = OverlayEntry(
       builder: (context) => _SnackBarAnimation(
@@ -61,7 +62,7 @@ class BaseSnackBar extends StatelessWidget {
           alignment: Alignment.bottomCenter,
           child: Padding(
             padding: EdgeInsets.only(
-              bottom: mediaQuery.padding.bottom + 16,
+              bottom: mediaQuery.padding.bottom + keyboardHeight + 16,
               left: 16,
               right: 16,
             ),

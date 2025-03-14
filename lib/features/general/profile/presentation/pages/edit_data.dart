@@ -17,6 +17,7 @@ import 'dart:io';
 import 'package:aina_flutter/core/providers/requests/auth/profile.dart';
 import 'package:aina_flutter/core/widgets/avatar_edit_widget.dart';
 import 'package:aina_flutter/core/widgets/base_radio.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 
 final selectedGenderProvider = StateProvider<String>((ref) => 'Не указывать');
 
@@ -65,8 +66,8 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
     final userData = await ref.read(userProvider.future);
     if (!mounted) return;
 
-    firstNameController.text = userData.firstName;
-    lastNameController.text = userData.lastName;
+    firstNameController.text = userData.firstName ?? '';
+    lastNameController.text = userData.lastName ?? '';
     patronymicController.text = userData.patronymic ?? '';
     emailController.text = userData.email ?? '';
     licensePlateController.text = userData.licensePlate ?? '';
@@ -90,9 +91,7 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
 
   void _onFieldChanged() {
     if (!mounted) return;
-    setState(() {
-      _hasChanges = true;
-    });
+    _hasChanges = true;
   }
 
   Future<void> _pickImage() async {
@@ -113,19 +112,17 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
       ref.invalidate(userProvider);
       ref.invalidate(userTicketsProvider);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('profile.settings.edit.avatar_updated'.tr()),
-          backgroundColor: Colors.green,
-        ),
+      BaseSnackBar.show(
+        context,
+        message: 'profile.settings.edit.avatar_updated'.tr(),
+        type: SnackBarType.success,
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('profile.settings.edit.avatar_error'.tr()),
-          backgroundColor: Colors.red,
-        ),
+      BaseSnackBar.show(
+        context,
+        message: 'profile.settings.edit.avatar_error'.tr(),
+        type: SnackBarType.error,
       );
     } finally {
       if (mounted) {
@@ -145,19 +142,17 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
       ref.invalidate(userTicketsProvider);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('profile.settings.edit.avatar_removed'.tr()),
-          backgroundColor: Colors.green,
-        ),
+      BaseSnackBar.show(
+        context,
+        message: 'profile.settings.edit.avatar_removed'.tr(),
+        type: SnackBarType.success,
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('profile.settings.edit.avatar_error'.tr()),
-          backgroundColor: Colors.red,
-        ),
+      BaseSnackBar.show(
+        context,
+        message: 'profile.settings.edit.avatar_error'.tr(),
+        type: SnackBarType.error,
       );
     } finally {
       if (mounted) {
@@ -195,30 +190,26 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
         ref.invalidate(userProvider);
         ref.invalidate(userTicketsProvider);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('profile.settings.edit.update_success'.tr()),
-            backgroundColor: Colors.green,
-          ),
+        BaseSnackBar.show(
+          context,
+          message: 'profile.settings.edit.update_success'.tr(),
+          type: SnackBarType.success,
         );
 
         setState(() => _hasChanges = false);
-        context.pop();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('profile.settings.edit.update_error'.tr()),
-            backgroundColor: Colors.red,
-          ),
+        BaseSnackBar.show(
+          context,
+          message: 'profile.settings.edit.update_error'.tr(),
+          type: SnackBarType.error,
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('profile.settings.edit.update_error'.tr()),
-          backgroundColor: Colors.red,
-        ),
+      BaseSnackBar.show(
+        context,
+        message: 'profile.settings.edit.update_error'.tr(),
+        type: SnackBarType.error,
       );
     } finally {
       if (mounted) {
@@ -384,23 +375,21 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                                   ref.invalidate(userProvider);
                                   ref.invalidate(userTicketsProvider);
 
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                          'profile.settings.edit.avatar_updated'
-                                              .tr()),
-                                      backgroundColor: Colors.green,
-                                    ),
+                                  BaseSnackBar.show(
+                                    context,
+                                    message:
+                                        'profile.settings.edit.avatar_updated'
+                                            .tr(),
+                                    type: SnackBarType.success,
                                   );
                                 } catch (e) {
                                   if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                          'profile.settings.edit.avatar_error'
-                                              .tr()),
-                                      backgroundColor: Colors.red,
-                                    ),
+                                  BaseSnackBar.show(
+                                    context,
+                                    message:
+                                        'profile.settings.edit.avatar_error'
+                                            .tr(),
+                                    type: SnackBarType.error,
                                   );
                                 } finally {
                                   if (mounted) {
@@ -421,23 +410,21 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                                   ref.invalidate(userTicketsProvider);
 
                                   if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                          'profile.settings.edit.avatar_removed'
-                                              .tr()),
-                                      backgroundColor: Colors.green,
-                                    ),
+                                  BaseSnackBar.show(
+                                    context,
+                                    message:
+                                        'profile.settings.edit.avatar_removed'
+                                            .tr(),
+                                    type: SnackBarType.success,
                                   );
                                 } catch (e) {
                                   if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                          'profile.settings.edit.avatar_error'
-                                              .tr()),
-                                      backgroundColor: Colors.red,
-                                    ),
+                                  BaseSnackBar.show(
+                                    context,
+                                    message:
+                                        'profile.settings.edit.avatar_error'
+                                            .tr(),
+                                    type: SnackBarType.error,
                                   );
                                 } finally {
                                   if (mounted) {
@@ -487,10 +474,13 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                               ? 'profile.settings.edit.required_field'.tr()
                               : null,
                           onChanged: (value) {
-                            setState(() {
-                              isFirstNameValid = value.trim().isNotEmpty;
-                            });
-                            _markDirty();
+                            final isValid = value.trim().isNotEmpty;
+                            if (isValid != isFirstNameValid) {
+                              setState(() {
+                                isFirstNameValid = isValid;
+                              });
+                            }
+                            _hasChanges = true;
                           },
                         ),
 
@@ -504,23 +494,26 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                               ? 'profile.settings.edit.required_field'.tr()
                               : null,
                           onChanged: (value) {
-                            setState(() {
-                              isLastNameValid = value.trim().isNotEmpty;
-                            });
-                            _markDirty();
+                            final isValid = value.trim().isNotEmpty;
+                            if (isValid != isLastNameValid) {
+                              setState(() {
+                                isLastNameValid = isValid;
+                              });
+                            }
+                            _hasChanges = true;
                           },
                         ),
                         CustomInputField(
                           controller: patronymicController,
                           placeholder: 'profile.settings.edit.patronymic'.tr(),
                           focusNode: focusNodes['patronymic'],
-                          onChanged: (_) => _markDirty(),
+                          onChanged: (_) => {_hasChanges = true},
                         ),
                         CustomInputField(
                           controller: emailController,
                           placeholder: 'profile.settings.edit.email'.tr(),
                           focusNode: focusNodes['email'],
-                          onChanged: (_) => _markDirty(),
+                          onChanged: (_) => {_hasChanges = true},
                         ),
 
                         const SizedBox(height: 20),
@@ -536,10 +529,13 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                                   : 'profile.settings.edit.min_length'.tr()
                               : null,
                           onChanged: (value) {
-                            setState(() {
-                              isLicensePlateValid = value.trim().length >= 5;
-                            });
-                            _markDirty();
+                            final isValid = value.trim().length >= 5;
+                            if (isValid != isLicensePlateValid) {
+                              setState(() {
+                                isLicensePlateValid = isValid;
+                              });
+                            }
+                            _hasChanges = true;
                           },
                         ),
                         const SizedBox(height: 4),
@@ -564,7 +560,7 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                           onChanged: (value) {
                             ref.read(selectedGenderProvider.notifier).state =
                                 value;
-                            _markDirty();
+                            _hasChanges = true;
                           },
                         ),
                         const SizedBox(height: 32),
@@ -582,17 +578,25 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                         // Logout button
                         Container(
                           decoration: BoxDecoration(
-                            color: AppColors.lightGrey,
+                            color: AppColors.bgLight,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: ListTile(
-                            title: Text(
-                              'profile.settings.edit.logout.button'.tr(),
-                              style: const TextStyle(fontSize: 14),
+                          child: InkWell(
+                            onTap: _handleLogout,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'coworking.edit_data.logout'.tr(),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      color: AppColors.textDarkGrey,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            onTap: () async {
-                              await _handleLogout();
-                            },
                           ),
                         ),
                       ],
@@ -629,9 +633,12 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
   }
 
   void _markDirty() {
-    setState(() {
-      _hasChanges = true;
-    });
+    if (!mounted) return;
+    if (!_hasChanges) {
+      setState(() {
+        _hasChanges = true;
+      });
+    }
   }
 
   Future<bool> _onWillPop() async {
@@ -651,7 +658,8 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
             ),
             ModalButton(
               label: 'modals.validation_error.discard'.tr(),
-              type: ButtonType.bordered,
+              type: ButtonType.normal,
+              backgroundColor: Colors.white,
               textColor: Colors.red,
               onPressed: () {
                 shouldExit = true;
@@ -660,10 +668,9 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
           ],
         );
 
-        return shouldExit; // Only exit if user explicitly chose to discard
+        return shouldExit;
       }
 
-      // If validation passes, show save changes modal
       bool? result;
       await BaseModal.show(
         context,
@@ -674,6 +681,7 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
             label: 'common.discard'.tr(),
             type: ButtonType.light,
             onPressed: () {
+              context.pop();
               result = false;
             },
           ),
@@ -692,28 +700,31 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
         await _saveChanges();
         return true;
       }
-      return true;
+      return result == true;
     }
     return true;
   }
 
   Future<void> _handleLogout() async {
+    final userData = await ref.read(userProvider.future);
+
     await BaseModal.show(
       context,
-      message: 'profile.settings.edit.logout.confirmation'.tr(),
+      title: 'profile.settings.edit.logout.title'.tr(),
+      message: 'profile.settings.edit.logout.message'
+          .tr(args: [userData.maskedPhone]),
       buttons: [
         ModalButton(
           label: 'profile.settings.edit.logout.cancel'.tr(),
-          type: ButtonType.normal,
-          textColor: AppColors.primary,
-          backgroundColor: AppColors.lightGrey,
-          onPressed: () => context.pop(),
+          type: ButtonType.light,
+          backgroundColor: AppColors.backgroundLight,
+          onPressed: () => {},
         ),
         ModalButton(
           label: 'profile.settings.edit.logout.confirm'.tr(),
           type: ButtonType.normal,
+          backgroundColor: AppColors.appBg,
           textColor: Colors.red,
-          backgroundColor: Colors.white,
           onPressed: () async {
             context.pop(); // Закрываем модальное окно
 

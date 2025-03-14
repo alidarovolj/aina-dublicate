@@ -49,40 +49,47 @@ class StoreDetailsPage extends ConsumerWidget {
                           children: [
                             Stack(
                               children: [
-                                storeData['preview_image']?['url'] != null
-                                    ? Image.network(
-                                        storeData['preview_image']['url'],
-                                        width: double.infinity,
-                                        height: 212,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          return Container(
-                                            width: double.infinity,
-                                            height: 212,
-                                            color: AppColors.grey2,
-                                            child: const Center(
-                                              child: Icon(
-                                                Icons.store,
-                                                size: 48,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      )
-                                    : Container(
-                                        width: double.infinity,
-                                        height: 212,
-                                        color: AppColors.grey2,
-                                        child: const Center(
-                                          child: Icon(
-                                            Icons.store,
-                                            size: 48,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
+                                (() {
+                                  // Проверяем валидность URL изображения
+                                  final String? imageUrl =
+                                      storeData['preview_image']?['url'];
+                                  final bool isValidImageUrl =
+                                      imageUrl != null &&
+                                          imageUrl.isNotEmpty &&
+                                          !imageUrl.contains('HTTP') &&
+                                          !imageUrl
+                                              .toLowerCase()
+                                              .contains('error') &&
+                                          imageUrl.startsWith('http') &&
+                                          !imageUrl.contains('404') &&
+                                          !imageUrl.contains('500') &&
+                                          !imageUrl.contains('403');
+
+                                  if (isValidImageUrl) {
+                                    return Image.network(
+                                      imageUrl!,
+                                      width: double.infinity,
+                                      height: 212,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return Image.asset(
+                                          'lib/core/assets/images/no_photo.png',
+                                          width: double.infinity,
+                                          height: 212,
+                                          fit: BoxFit.cover,
+                                        );
+                                      },
+                                    );
+                                  } else {
+                                    return Image.asset(
+                                      'lib/core/assets/images/no_photo.png',
+                                      width: double.infinity,
+                                      height: 212,
+                                      fit: BoxFit.cover,
+                                    );
+                                  }
+                                })(),
                                 Positioned.fill(
                                   child: Container(
                                     decoration: BoxDecoration(

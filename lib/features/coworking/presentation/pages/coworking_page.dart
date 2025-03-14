@@ -32,7 +32,7 @@ class CoworkingPage extends ConsumerWidget {
 
     return GestureDetector(
       onHorizontalDragEnd: (details) {
-        if (details.primaryVelocity != null && details.primaryVelocity! > 300) {
+        if (details.primaryVelocity != null && details.primaryVelocity! > 100) {
           context.go('/home');
         }
       },
@@ -45,9 +45,9 @@ class CoworkingPage extends ConsumerWidget {
                 _buildSkeletonLoader(),
                 CustomHeader(
                   title: '',
-                  type: HeaderType.pop,
+                  type: HeaderType.close,
                   onBack: () {
-                    Navigator.of(context).pop();
+                    context.go('/home');
                   },
                 ),
               ],
@@ -207,9 +207,9 @@ class CoworkingPage extends ConsumerWidget {
                   ),
                   CustomHeader(
                     title: coworking.name,
-                    type: HeaderType.close,
+                    type: HeaderType.pop,
                     onBack: () {
-                      context.pop();
+                      context.go('/home');
                     },
                   ),
                 ],

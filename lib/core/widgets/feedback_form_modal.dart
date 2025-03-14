@@ -22,7 +22,21 @@ class FeedbackFormModal extends ConsumerStatefulWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
       ),
-      builder: (context) => const FeedbackFormModal(),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.9,
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.9,
+          minChildSize: 0.5,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) => const FeedbackFormModal(),
+        ),
+      ),
     );
   }
 
@@ -201,6 +215,15 @@ class _FeedbackFormModalState extends ConsumerState<FeedbackFormModal> {
       return;
     }
 
+    if (_form['category_id'] == null) {
+      BaseSnackBar.show(
+        context,
+        message: 'contact_admin.errors.required'.tr(),
+        type: SnackBarType.error,
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -240,6 +263,18 @@ class _FeedbackFormModalState extends ConsumerState<FeedbackFormModal> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 12),
+            // Добавляем индикатор перетаскивания
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             Text(
               'contact_admin.title'.tr(),
               style: const TextStyle(
@@ -249,69 +284,77 @@ class _FeedbackFormModalState extends ConsumerState<FeedbackFormModal> {
               ),
             ),
             const SizedBox(height: 24),
-            categoriesAsync.when(
-              loading: () => _buildSkeletonLoader(),
-              error: (_, __) => const Text('Error loading categories'),
-              data: (categories) => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CustomDropdown<dynamic>(
-                    items: categories,
-                    value: categories.firstWhere(
-                      (category) => category.id == _form['category_id'],
-                      orElse: () => categories.first,
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    categoriesAsync.when(
+                      loading: () => _buildSkeletonLoader(),
+                      error: (_, __) => const Text('Error loading categories'),
+                      data: (categories) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomDropdown<dynamic>(
+                            items: categories,
+                            value: categories.firstWhere(
+                              (category) => category.id == _form['category_id'],
+                              orElse: () => categories.first,
+                            ),
+                            labelBuilder: (category) => category.title,
+                            onChanged: (category) {
+                              setState(() {
+                                _form['category_id'] = category.id;
+                              });
+                            },
+                            label: 'contact_admin.category_label'.tr(),
+                          ),
+                          const SizedBox(height: 24),
+                          BaseTextarea(
+                            controller: _descriptionController,
+                            label: 'contact_admin.comment_label'.tr(),
+                            hintText: 'contact_admin.comment_placeholder'.tr(),
+                            validator: (value) => value?.isEmpty ?? true
+                                ? 'contact_admin.errors.required'.tr()
+                                : null,
+                            maxLines: 10,
+                          ),
+                          const SizedBox(height: 24),
+                          BaseInput(
+                            controller: _phoneController,
+                            label: 'contact_admin.phone_label'.tr(),
+                            hintText: 'contact_admin.phone_placeholder'.tr(),
+                            keyboardType: TextInputType.phone,
+                            validator: (value) => value?.isEmpty ?? true
+                                ? 'contact_admin.errors.required'.tr()
+                                : null,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'contact_admin.response_note'.tr(),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textDarkGrey,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          CustomButton(
+                            label: 'contact_admin.submit_button'.tr(),
+                            onPressed: _submitForm,
+                            isLoading: _isLoading,
+                            type: ButtonType.filled,
+                            isFullWidth: true,
+                          ),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).padding.bottom + 24),
+                        ],
+                      ),
                     ),
-                    labelBuilder: (category) => category.title,
-                    onChanged: (category) {
-                      setState(() {
-                        _form['category_id'] = category.id;
-                      });
-                    },
-                    label: 'contact_admin.category_label'.tr(),
-                    errorText: _form['category_id'] == null
-                        ? 'contact_admin.errors.required'.tr()
-                        : null,
-                  ),
-                  const SizedBox(height: 24),
-                  BaseTextarea(
-                    controller: _descriptionController,
-                    label: 'contact_admin.comment_label'.tr(),
-                    hintText: 'contact_admin.comment_placeholder'.tr(),
-                    validator: (value) => value?.isEmpty ?? true
-                        ? 'contact_admin.errors.required'.tr()
-                        : null,
-                    maxLines: 10,
-                  ),
-                  const SizedBox(height: 24),
-                  BaseInput(
-                    controller: _phoneController,
-                    label: 'contact_admin.phone_label'.tr(),
-                    hintText: 'contact_admin.phone_placeholder'.tr(),
-                    keyboardType: TextInputType.phone,
-                    validator: (value) => value?.isEmpty ?? true
-                        ? 'contact_admin.errors.required'.tr()
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'contact_admin.response_note'.tr(),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textDarkGrey,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  CustomButton(
-                    label: 'contact_admin.submit_button'.tr(),
-                    onPressed: _submitForm,
-                    isLoading: _isLoading,
-                    type: ButtonType.filled,
-                    isFullWidth: true,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-            SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
           ],
         ),
       ),

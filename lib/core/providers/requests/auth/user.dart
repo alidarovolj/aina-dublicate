@@ -103,6 +103,7 @@ class RequestCodeService {
   Future<Response?> sendCodeRequest(
     String phone, {
     String? appHash,
+    Options? options,
   }) async {
     try {
       final response = await _dio.get(
@@ -111,6 +112,7 @@ class RequestCodeService {
           'phone': phone,
           if (appHash != null) 'app_hash': appHash,
         },
+        options: options,
       );
 
       return response;
@@ -219,8 +221,8 @@ class UserProfile {
   final String numericPhone;
   final String maskedPhone;
   final String? email;
-  final String firstName;
-  final String lastName;
+  final String? firstName;
+  final String? lastName;
   final String? patronymic;
   final String? gender;
   final String? licensePlate;
@@ -229,9 +231,9 @@ class UserProfile {
   UserProfile({
     required this.numericPhone,
     required this.maskedPhone,
-    required this.firstName,
-    required this.lastName,
     this.email,
+    this.firstName,
+    this.lastName,
     this.patronymic,
     this.gender,
     this.licensePlate,
@@ -241,7 +243,7 @@ class UserProfile {
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     final data = json['data'];
     return UserProfile(
-      numericPhone: data['phone']['numeric'],
+      numericPhone: data['phone']['numeric'].toString(),
       maskedPhone: data['phone']['masked'],
       email: data['email'],
       firstName: data['firstname'],
@@ -255,14 +257,43 @@ class UserProfile {
 }
 
 final userProvider = FutureProvider<UserProfile>((ref) async {
-  final requestService = ref.read(requestCodeProvider);
-  final response = await requestService.userProfile();
+  try {
+    print('🔄 Fetching user profile from userProvider');
+    final requestService = ref.read(requestCodeProvider);
+    final response = await requestService.userProfile();
 
-  if (response == null || response.statusCode != 200) {
-    throw Exception('Failed to fetch user profile');
+    print('📊 User profile response: ${response?.data}');
+
+    if (response == null) {
+      print('❌ User profile response is null');
+      throw Exception('Failed to fetch user profile: Response is null');
+    }
+
+    if (response.statusCode != 200) {
+      print(
+          '❌ User profile request failed with status: ${response.statusCode}');
+      throw Exception(
+          'Failed to fetch user profile: Status ${response.statusCode}');
+    }
+
+    if (response.data == null) {
+      print('❌ User profile data is null');
+      throw Exception('Failed to fetch user profile: Data is null');
+    }
+
+    final userData = response.data;
+    if (userData['data'] == null) {
+      print('❌ User profile data["data"] is null');
+      throw Exception('Failed to fetch user profile: Invalid data format');
+    }
+
+    print('✅ Creating UserProfile from data');
+    return UserProfile.fromJson(userData);
+  } catch (e, stack) {
+    print('❌ Error in userProvider: $e');
+    print('📚 Stack trace: $stack');
+    rethrow;
   }
-
-  return UserProfile.fromJson(response.data);
 });
 
 class Ticket {

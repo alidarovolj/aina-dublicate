@@ -16,6 +16,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io' show Platform;
 import 'package:dio/dio.dart';
 import 'package:aina_flutter/core/providers/requests/settings_provider.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
+import 'package:aina_flutter/core/api/api_client.dart';
 
 class PhoneNumberInputScreen extends ConsumerStatefulWidget {
   final String? buildingId;
@@ -81,10 +83,12 @@ class _PhoneNumberInputScreenState
         final prefs = await SharedPreferences.getInstance();
         final appHash = prefs.getString('app-hash');
 
-        await ref.read(requestCodeProvider).sendCodeRequest(
-              '7$phoneNumber',
-              appHash: appHash,
-            );
+        final requestService = ref.read(requestCodeProvider);
+        await requestService.sendCodeRequest(
+          '7$phoneNumber',
+          appHash: appHash,
+          options: Options(headers: {'force-refresh': 'true'}),
+        );
 
         if (Platform.isAndroid) {
           try {
@@ -128,10 +132,10 @@ class _PhoneNumberInputScreenState
             }
           }
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMessage),
-            ),
+          BaseSnackBar.show(
+            context,
+            message: errorMessage,
+            type: SnackBarType.error,
           );
         }
       } finally {
@@ -147,10 +151,10 @@ class _PhoneNumberInputScreenState
   Future<void> _launchURL(String? urlString) async {
     if (urlString == null || urlString.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('about.url_not_available'.tr()),
-          ),
+        BaseSnackBar.show(
+          context,
+          message: 'about.url_not_available'.tr(),
+          type: SnackBarType.error,
         );
       }
       return;
@@ -164,18 +168,18 @@ class _PhoneNumberInputScreenState
       );
 
       if (!launched && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('about.url_error'.tr()),
-          ),
+        BaseSnackBar.show(
+          context,
+          message: 'about.url_error'.tr(),
+          type: SnackBarType.error,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('about.url_error'.tr()),
-          ),
+        BaseSnackBar.show(
+          context,
+          message: 'about.url_error'.tr(),
+          type: SnackBarType.error,
         );
       }
     }

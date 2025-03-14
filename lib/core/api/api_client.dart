@@ -28,21 +28,58 @@ class ApiClient {
   late final Dio dio;
   String? _token;
   String _currentLocale = 'ru';
+  bool _isSentryEnabled = false;
 
   // Enhanced cache implementation
   final Map<String, _CacheEntry> _requestCache = <String, _CacheEntry>{};
-  static const int _maxCacheSize = 100; // Maximum number of cached responses
+  static const int _maxCacheSize = 100;
   static const Duration _defaultCacheExpiry = Duration(minutes: 5);
 
-  // Stream controller for notifying about data updates
   final _updateController = StreamController<String>.broadcast();
   Stream<String> get onUpdate => _updateController.stream;
+
+  Future<void> _captureException(dynamic exception, dynamic stackTrace,
+      {Map<String, dynamic>? extras}) async {
+    if (!_isSentryEnabled) return;
+
+    try {
+      await Sentry.captureException(
+        exception,
+        stackTrace: stackTrace,
+        hint: extras != null ? Hint.withMap(extras) : null,
+      );
+    } catch (e) {
+      debugPrint('Error sending exception to Sentry: $e');
+    }
+  }
+
+  Future<void> _addBreadcrumb({
+    required String category,
+    required String message,
+    Map<String, dynamic>? data,
+    SentryLevel level = SentryLevel.info,
+  }) async {
+    if (!_isSentryEnabled) return;
+
+    try {
+      await Sentry.addBreadcrumb(
+        Breadcrumb(
+          category: category,
+          message: message,
+          data: data,
+          level: level,
+          timestamp: DateTime.now(),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error adding breadcrumb to Sentry: $e');
+    }
+  }
 
   void dispose() {
     _updateController.close();
   }
 
-  // Update locale from context
   void updateLocaleFromContext(BuildContext context) {
     final newLocale = context.locale.languageCode;
     if (newLocale != _currentLocale) {
@@ -61,7 +98,6 @@ class ApiClient {
 
   void _enforceMaxCacheSize() {
     if (_requestCache.length > _maxCacheSize) {
-      // Remove oldest entries first
       final sortedEntries = _requestCache.entries.toList()
         ..sort((a, b) => a.value.expiresAt.compareTo(b.value.expiresAt));
 
@@ -102,57 +138,53 @@ class ApiClient {
 
     _updateHeaders();
     _addInterceptors();
+
+    // Check if Sentry is enabled
+    _isSentryEnabled = Sentry.isEnabled;
   }
 
   void _addInterceptors() {
-    // Add error interceptor for 401 responses
     dio.interceptors.add(InterceptorsWrapper(
       onError: (error, handler) async {
-        // Capture all API errors in Sentry with request details
-        await Sentry.captureException(
+        await _captureException(
           error.error,
-          stackTrace: error.stackTrace,
-          hint: Hint.withMap({
+          error.stackTrace,
+          extras: {
             'path': error.requestOptions.path,
             'method': error.requestOptions.method,
             'statusCode': error.response?.statusCode,
             'responseData': error.response?.data,
-          }),
+          },
         );
 
         if (error.response?.statusCode == 401) {
-          print(
+          debugPrint(
               '🔒 Получена ошибка 401 Unauthorized: ${error.requestOptions.path}');
 
-          // Clear token and cache
           _token = null;
           clearCache();
           _updateHeaders();
 
-          // Очищаем все данные авторизации через StorageService
           await StorageService.clearAuthData();
 
-          // Get the navigator key to access navigation
           final context = navigatorKey.currentContext;
           if (context != null && context.mounted) {
-            // Logout user using the auth provider
             try {
               final container = ProviderScope.containerOf(context);
               await container.read(authProvider.notifier).logout();
-              print('✅ Успешно выполнен logout через authProvider');
-            } catch (e) {
-              // Capture authentication-related errors
-              await Sentry.captureException(
+              debugPrint('✅ Успешно выполнен logout через authProvider');
+            } catch (e, stackTrace) {
+              await _captureException(
                 e,
-                hint: Hint.withMap({
+                stackTrace,
+                extras: {
                   'action': 'logout',
                   'context': 'auth_provider',
-                }),
+                },
               );
-              print('❌ Ошибка при вызове logout через authProvider: $e');
+              debugPrint('❌ Ошибка при вызове logout через authProvider: $e');
             }
 
-            // Если это не запрос к профилю, то показываем сообщение и перенаправляем
             if (!error.requestOptions.path.contains('/api/promenade/profile')) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 BaseSnackBar.show(
@@ -168,10 +200,8 @@ class ApiClient {
       },
       onRequest: (options, handler) async {
         try {
-          // Clean expired cache entries
           _cleanExpiredCache();
 
-          // Check for force refresh header
           final forceRefresh = options.headers['force-refresh'] == 'true';
           if (forceRefresh) {
             options.headers.remove('force-refresh');
@@ -180,14 +210,12 @@ class ApiClient {
             return handler.next(options);
           }
 
-          // Clear cache for specific endpoints when POST requests are made
           if (options.method == 'POST') {
             if (options.path.contains('/api/promenade/profile/biometric')) {
               _clearBiometricCache();
             }
           }
 
-          // Only cache GET requests
           if (options.method == 'GET') {
             final cacheKey = '${options.uri}_$_currentLocale';
             final cachedEntry = _requestCache[cacheKey];
@@ -197,65 +225,56 @@ class ApiClient {
             }
           }
 
-          // Add request to Sentry breadcrumbs
-          Sentry.addBreadcrumb(
-            Breadcrumb(
-              category: 'http',
-              type: 'http',
-              level: SentryLevel.info,
-              data: {
-                'url': options.uri.toString(),
-                'method': options.method,
-                'headers': options.headers,
-              },
-            ),
+          await _addBreadcrumb(
+            category: 'http',
+            message: 'API Request',
+            data: {
+              'url': options.uri.toString(),
+              'method': options.method,
+              'headers': options.headers,
+            },
           );
 
           return handler.next(options);
         } catch (e, stackTrace) {
-          await Sentry.captureException(
+          await _captureException(
             e,
-            stackTrace: stackTrace,
-            hint: Hint.withMap({
+            stackTrace,
+            extras: {
               'stage': 'request_interceptor',
               'url': options.uri.toString(),
               'method': options.method,
-            }),
+            },
           );
           return handler.next(options);
         }
       },
       onResponse: (response, handler) async {
         try {
-          // Only cache GET responses
           if (response.requestOptions.method == 'GET') {
             _cacheResponse(response);
           }
 
-          // Add successful response to Sentry breadcrumbs
-          Sentry.addBreadcrumb(
-            Breadcrumb(
-              category: 'http',
-              type: 'http',
-              level: SentryLevel.info,
-              data: {
-                'url': response.requestOptions.uri.toString(),
-                'status_code': response.statusCode,
-                'method': response.requestOptions.method,
-              },
-            ),
+          await _addBreadcrumb(
+            category: 'http',
+            message: 'API Response',
+            data: {
+              'url': response.requestOptions.uri.toString(),
+              'status_code': response.statusCode,
+              'method': response.requestOptions.method,
+            },
           );
 
           return handler.next(response);
         } catch (e, stackTrace) {
-          await Sentry.captureException(
+          await _captureException(
             e,
-            stackTrace: stackTrace,
-            hint: Hint.withMap({
+            stackTrace,
+            extras: {
               'stage': 'response_interceptor',
               'url': response.requestOptions.uri.toString(),
               'status_code': response.statusCode,
-            }),
+            },
           );
           return handler.next(response);
         }
@@ -276,7 +295,6 @@ class ApiClient {
   void _clearBiometricCache() {
     final pattern = RegExp(r'/api/promenade/profile/biometric.*');
     _requestCache.removeWhere((key, _) => pattern.hasMatch(key));
-    // Clear localized versions
     for (var locale in ['ru', 'kk', 'en']) {
       _requestCache.removeWhere((key, _) => pattern.hasMatch('${key}_$locale'));
     }
@@ -285,10 +303,8 @@ class ApiClient {
   void _cacheResponse(Response response) {
     final cacheKey = '${response.requestOptions.uri}_$_currentLocale';
 
-    // Check if response should be cached based on headers
     final cacheControl = response.headers.value('cache-control');
     if (cacheControl == null || !cacheControl.contains('no-store')) {
-      // Parse cache duration from headers or use default
       Duration cacheDuration = _defaultCacheExpiry;
       if (cacheControl != null) {
         final maxAgeMatch = RegExp(r'max-age=(\d+)').firstMatch(cacheControl);
@@ -302,10 +318,7 @@ class ApiClient {
         DateTime.now().add(cacheDuration),
       );
 
-      // Enforce cache size limits
       _enforceMaxCacheSize();
-
-      // Notify about new data
       _updateController.add(response.requestOptions.uri.toString());
     }
   }

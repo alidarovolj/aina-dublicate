@@ -89,7 +89,10 @@ class NotificationsPage extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Text(
                     'notifications.empty'.tr(),
-                    style: const TextStyle(fontSize: 16),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: AppColors.darkGrey,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],

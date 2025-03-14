@@ -17,6 +17,7 @@ import 'package:dio/dio.dart';
 import 'package:aina_flutter/core/router/route_observer.dart';
 import 'package:aina_flutter/core/services/amplitude_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 
 class CoworkingProfilePage extends ConsumerStatefulWidget {
   final int coworkingId;
@@ -85,34 +86,43 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
     });
 
     try {
-      // Выполняем прямой запрос к API для проверки авторизации
+      print('🔄 Начало проверки авторизации (коворкинг)');
       if (!mounted) return;
       final profileService = ref.read(promenadeProfileProvider);
 
-      // Выполняем запрос на получение профиля
+      print('📱 Запрос данных профиля...');
       final result = await profileService.getProfile(forceRefresh: true);
+      print('✅ Получен ответ от сервера: $result');
 
-      // Если запрос успешен, обновляем данные профиля
       if (mounted) {
+        print('🔄 Обновление данных профиля...');
         await _refreshProfileData();
+        print('✅ Данные профиля обновлены');
       }
-    } catch (e) {
+    } catch (e, stack) {
       if (!mounted) return;
       print('❌ Ошибка при проверке авторизации в коворкинге: $e');
+      print('📚 Stack trace: $stack');
 
-      // Если ошибка 401, перенаправляем на страницу авторизации
-      if (e is DioException && e.response?.statusCode == 401) {
-        try {
-          if (!mounted) return;
-          // Очищаем данные авторизации
-          await ref.read(authProvider.notifier).logout();
-        } catch (logoutError) {
-          print('❌ Ошибка при выходе из аккаунта: $logoutError');
-        }
+      if (e is DioException) {
+        print('🌐 HTTP Status: ${e.response?.statusCode}');
+        print('📝 Response data: ${e.response?.data}');
 
-        if (mounted) {
-          // Перенаправляем на страницу авторизации с параметрами для возврата в коворкинг
-          context.push('/login');
+        if (e.response?.statusCode == 401) {
+          print('🔑 Обнаружена ошибка авторизации 401');
+          try {
+            if (!mounted) return;
+            print('🔄 Попытка выхода из аккаунта...');
+            await ref.read(authProvider.notifier).logout();
+            print('✅ Выход выполнен успешно');
+          } catch (logoutError) {
+            print('❌ Ошибка при выходе: $logoutError');
+          }
+
+          if (mounted) {
+            print('🔄 Перенаправление на страницу входа');
+            context.push('/login');
+          }
         }
       }
     } finally {
@@ -157,24 +167,20 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
       await profileService.uploadAvatar(photo);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('profile.settings.edit.avatar_updated'.tr()),
-          backgroundColor: Colors.green,
-        ),
+      BaseSnackBar.show(
+        context,
+        message: 'profile.settings.edit.avatar_updated'.tr(),
+        type: SnackBarType.success,
       );
     } catch (e) {
       setState(() {
         _temporaryAvatar = null;
       });
       if (!mounted) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('profile.settings.edit.avatar_error'.tr()),
-          backgroundColor: Colors.red,
-        ),
+      BaseSnackBar.show(
+        context,
+        message: 'profile.settings.edit.avatar_error'.tr(),
+        type: SnackBarType.error,
       );
     } finally {
       if (mounted) {
@@ -343,7 +349,10 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            '${userData.firstName} ${userData.lastName}',
+                                            userData.firstName != null &&
+                                                    userData.lastName != null
+                                                ? '${userData.firstName} ${userData.lastName}'
+                                                : userData.maskedPhone,
                                             style: const TextStyle(
                                               fontSize: 18,
                                               fontWeight: FontWeight.w500,
@@ -351,13 +360,15 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
                                             ),
                                           ),
                                           const SizedBox(height: 4),
-                                          Text(
-                                            userData.maskedPhone,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              color: AppColors.white,
+                                          if (userData.firstName != null &&
+                                              userData.lastName != null)
+                                            Text(
+                                              userData.maskedPhone,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: AppColors.white,
+                                              ),
                                             ),
-                                          ),
                                         ],
                                       ),
                                     ),

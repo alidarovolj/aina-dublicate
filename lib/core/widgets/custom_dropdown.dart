@@ -9,6 +9,7 @@ class CustomDropdown<T> extends StatefulWidget {
   final String? errorText;
   final String? label;
   final String? hint;
+  final bool disabled;
 
   const CustomDropdown({
     super.key,
@@ -19,6 +20,7 @@ class CustomDropdown<T> extends StatefulWidget {
     this.errorText,
     this.label,
     this.hint,
+    this.disabled = false,
   });
 
   @override
@@ -29,6 +31,21 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>> {
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
   bool _isDropdownOpen = false;
+  late T? _selectedValue;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedValue = widget.value;
+  }
+
+  @override
+  void didUpdateWidget(CustomDropdown<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != oldWidget.value) {
+      _selectedValue = widget.value;
+    }
+  }
 
   @override
   void dispose() {
@@ -42,6 +59,8 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>> {
   }
 
   void _toggleDropdown() {
+    if (widget.disabled) return;
+
     setState(() {
       _isDropdownOpen = !_isDropdownOpen;
     });
@@ -112,9 +131,12 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>> {
                     itemCount: widget.items.length,
                     itemBuilder: (context, index) {
                       final item = widget.items[index];
-                      final isSelected = item == widget.value;
+                      final isSelected = item == _selectedValue;
                       return InkWell(
                         onTap: () {
+                          setState(() {
+                            _selectedValue = item;
+                          });
                           widget.onChanged(item);
                           _toggleDropdown();
                         },
@@ -183,11 +205,16 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F5),
+                color: widget.disabled
+                    ? Colors.grey[200]
+                    : const Color(0xFFF5F5F5),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color:
-                      _isDropdownOpen ? AppColors.primary : Colors.grey[300]!,
+                  color: widget.disabled
+                      ? Colors.grey[400]!
+                      : _isDropdownOpen
+                          ? AppColors.primary
+                          : Colors.grey[300]!,
                   width: 1,
                 ),
               ),
@@ -195,13 +222,15 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>> {
                 children: [
                   Expanded(
                     child: Text(
-                      widget.value != null
-                          ? widget.labelBuilder(widget.value as T)
+                      _selectedValue != null
+                          ? widget.labelBuilder(_selectedValue as T)
                           : widget.hint ?? '',
                       style: TextStyle(
-                        color: widget.value != null
-                            ? AppColors.primary
-                            : Colors.grey[600],
+                        color: widget.disabled
+                            ? Colors.grey[600]
+                            : _selectedValue != null
+                                ? AppColors.primary
+                                : Colors.grey[600],
                         fontSize: 16,
                       ),
                     ),
@@ -210,7 +239,8 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>> {
                     _isDropdownOpen
                         ? Icons.keyboard_arrow_up
                         : Icons.keyboard_arrow_down,
-                    color: AppColors.primary,
+                    color:
+                        widget.disabled ? Colors.grey[600] : AppColors.primary,
                   ),
                 ],
               ),

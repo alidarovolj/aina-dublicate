@@ -14,6 +14,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/core/services/amplitude_service.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 
 class PromotionQrPage extends ConsumerStatefulWidget {
   final int promotionId;
@@ -76,18 +78,57 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
         // Ignore camera errors
       }
 
-      final promotionDetailsService = ref.read(requestPromotionDetailsProvider);
-      final promotionResponse = await promotionDetailsService
-          .promotionDetails(widget.promotionId.toString());
+      print('🔍 Debug QR Scanner:');
+      print('   Initial mallId: ${widget.mallId}');
 
-      if (promotionResponse == null || !promotionResponse.data['success']) {
-        throw Exception('Failed to fetch promotion details');
+      if (widget.mallId.isEmpty) {
+        print('❌ Error: mallId is empty');
+        BaseSnackBar.show(
+          context,
+          message: 'errors.mall_id_not_found'.tr(),
+          type: SnackBarType.error,
+        );
+        return;
       }
 
-      final promotionData =
-          promotionResponse.data['data'] as Map<String, dynamic>;
-      final building = promotionData['building'] as Map<String, dynamic>?;
-      final buildingId = building?['id']?.toString() ?? widget.mallId;
+      final container = ProviderScope.containerOf(context);
+      final buildingsAsync = container.read(buildingsProvider);
+
+      final buildingsData = buildingsAsync.value;
+      if (buildingsData == null) {
+        print('❌ Error: buildingsData is null');
+        BaseSnackBar.show(
+          context,
+          message: 'errors.buildings_data_unavailable'.tr(),
+          type: SnackBarType.error,
+        );
+        return;
+      }
+
+      print('📦 Buildings data:');
+      print('   Mall count: ${buildingsData['mall']?.length ?? 0}');
+      print('   Coworking count: ${buildingsData['coworking']?.length ?? 0}');
+
+      final buildings = [
+        ...buildingsData['mall'] ?? [],
+        ...buildingsData['coworking'] ?? []
+      ];
+
+      print('🏢 Total buildings: ${buildings.length}');
+
+      final building = buildings.firstWhere(
+        (b) => b.id.toString() == widget.mallId,
+        orElse: () {
+          print(
+              '⚠️ Building not found with mallId: ${widget.mallId}, using first building');
+          return buildings.first;
+        },
+      );
+
+      print('🎯 Found building:');
+      print('   ID: ${building.id}');
+      print('   Type: ${building.type}');
+      print('   Name: ${building.name}');
 
       final service = ref.read(registerReceiptProvider);
       final response = await service.registerReceipt(
@@ -122,8 +163,16 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
             ModalButton(
               label: 'qr.success.to_profile'.tr(),
               onPressed: () async {
-                context.pushNamed('mall_profile',
-                    pathParameters: {'id': widget.mallId.toString()});
+                if (building.type == 'coworking') {
+                  print(
+                      '🚀 Navigating to coworking profile: /coworking/${widget.mallId}/profile');
+                  context.push('/coworking/${widget.mallId}/profile');
+                } else {
+                  print(
+                      '🚀 Navigating to mall profile: mall_profile with id: ${widget.mallId}');
+                  context.pushNamed('mall_profile',
+                      pathParameters: {'id': widget.mallId});
+                }
               },
               textColor: AppColors.secondary,
               backgroundColor: Colors.white,

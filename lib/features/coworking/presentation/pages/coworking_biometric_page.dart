@@ -33,8 +33,6 @@ class _CoworkingBiometricPageState
   final _firstnameController = TextEditingController();
   final _lastnameController = TextEditingController();
   bool _isLoading = false;
-  bool _showErrorDialog = false;
-  String _errorMessage = '';
   bool _showTariffsModal = false;
 
   @override
@@ -75,10 +73,12 @@ class _CoworkingBiometricPageState
   }
 
   void _showError(String message) {
-    setState(() {
-      _errorMessage = message;
-      _showErrorDialog = true;
-    });
+    if (!mounted) return;
+    BaseSnackBar.show(
+      context,
+      message: message,
+      type: SnackBarType.error,
+    );
   }
 
   Future<void> _saveInfo() async {
@@ -403,7 +403,7 @@ class _CoworkingBiometricPageState
                   ),
                 ],
               ),
-              if (_isLoading)
+              if (_isLoading && biometricDataAsync.hasValue)
                 Positioned.fill(
                   top: 64,
                   child: Container(
@@ -432,11 +432,6 @@ class _CoworkingBiometricPageState
                 title: 'biometry.title'.tr(),
                 type: HeaderType.pop,
               ),
-              if (_showErrorDialog)
-                ErrorDialog(
-                  message: _errorMessage,
-                  onClose: () => setState(() => _showErrorDialog = false),
-                ),
               if (_showTariffsModal)
                 TariffsModal(
                   onClose: () => setState(() => _showTariffsModal = false),
@@ -452,40 +447,50 @@ class _CoworkingBiometricPageState
     return SingleChildScrollView(
       child: Column(
         children: [
-          // Banner section
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 62),
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('lib/core/assets/images/biometry/card.png'),
-                fit: BoxFit.cover,
-                alignment: Alignment.bottomRight,
+          // Баннер с изображением
+          AspectRatio(
+            aspectRatio: 16 / 9,
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('lib/core/assets/images/biometry/card.png'),
+                  fit: BoxFit.cover,
+                  alignment: Alignment.bottomRight,
+                ),
               ),
-            ),
-            child: Shimmer.fromColors(
-              baseColor: Colors.white.withOpacity(0.3),
-              highlightColor: Colors.white.withOpacity(0.5),
-              child: Container(
-                width: MediaQuery.of(context).size.width * 0.5,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(4),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Shimmer.fromColors(
+                      baseColor: Colors.white.withOpacity(0.3),
+                      highlightColor: Colors.white.withOpacity(0.5),
+                      child: Container(
+                        width: MediaQuery.of(context).size.width * 0.6,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-          // Form section
+          // Форма
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Section title
+                // Заголовок "Личные данные"
                 Shimmer.fromColors(
-                  baseColor: Colors.grey[100]!,
-                  highlightColor: Colors.grey[300]!,
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
                   child: Container(
                     width: 150,
                     height: 20,
@@ -496,38 +501,38 @@ class _CoworkingBiometricPageState
                   ),
                 ),
                 const SizedBox(height: 16),
-                // First name field
+                // Поле имени
                 Shimmer.fromColors(
-                  baseColor: Colors.grey[100]!,
-                  highlightColor: Colors.grey[300]!,
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
                   child: Container(
                     width: double.infinity,
                     height: 48,
                     decoration: BoxDecoration(
                       color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                 ),
                 const SizedBox(height: 12),
-                // Last name field
+                // Поле фамилии
                 Shimmer.fromColors(
-                  baseColor: Colors.grey[100]!,
-                  highlightColor: Colors.grey[300]!,
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
                   child: Container(
                     width: double.infinity,
                     height: 48,
                     decoration: BoxDecoration(
                       color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
-                // Photo section title
+                // Заголовок "Биометрия добавлена"
                 Shimmer.fromColors(
-                  baseColor: Colors.grey[100]!,
-                  highlightColor: Colors.grey[300]!,
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
                   child: Container(
                     width: 120,
                     height: 20,
@@ -538,11 +543,11 @@ class _CoworkingBiometricPageState
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Photo placeholder or button
+                // Плейсхолдер для фото
                 Center(
                   child: Shimmer.fromColors(
-                    baseColor: Colors.grey[100]!,
-                    highlightColor: Colors.grey[300]!,
+                    baseColor: Colors.grey[300]!,
+                    highlightColor: Colors.grey[100]!,
                     child: Container(
                       width: MediaQuery.of(context).size.width * 0.5,
                       height: MediaQuery.of(context).size.width * 0.5,
@@ -554,10 +559,10 @@ class _CoworkingBiometricPageState
                   ),
                 ),
                 const SizedBox(height: 40),
-                // Save button
+                // Кнопка сохранения
                 Shimmer.fromColors(
-                  baseColor: Colors.grey[100]!,
-                  highlightColor: Colors.grey[300]!,
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
                   child: Container(
                     width: double.infinity,
                     height: 48,

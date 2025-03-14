@@ -16,6 +16,7 @@ import 'package:aina_flutter/core/widgets/restart_widget.dart';
 import 'package:aina_flutter/core/api/api_client.dart';
 import 'package:aina_flutter/core/services/amplitude_service.dart';
 import 'dart:io' show Platform;
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 
 class CodeInputScreen extends ConsumerStatefulWidget {
   final String phoneNumber;
@@ -191,16 +192,10 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: Colors.red,
-      ),
+    BaseSnackBar.show(
+      context,
+      message: message,
+      type: SnackBarType.error,
     );
   }
 
@@ -356,16 +351,10 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              e.toString(),
-              style: const TextStyle(
-                color: Colors.white,
-              ),
-            ),
-            backgroundColor: Colors.red,
-          ),
+        BaseSnackBar.show(
+          context,
+          message: e.toString(),
+          type: SnackBarType.error,
         );
       }
     } finally {

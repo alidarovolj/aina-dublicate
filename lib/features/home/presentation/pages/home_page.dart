@@ -1,6 +1,7 @@
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:aina_flutter/core/types/card_type.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/stories_list.dart';
@@ -186,9 +187,11 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     final bannersAsync = ref.watch(bannersProvider);
 
     return PopScope(
+      canPop: false,
       onPopInvoked: (didPop) {
-        // Убираем обновление при возврате через системную кнопку, так как у нас есть didPopNext
-        return;
+        if (didPop) return;
+        // Just exit the app
+        SystemNavigator.pop();
       },
       child: Scaffold(
         body: Container(

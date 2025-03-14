@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:aina_flutter/features/coworking/providers/biometric_provider.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 
 class BiometricCameraModal extends ConsumerStatefulWidget {
   const BiometricCameraModal({super.key});
@@ -98,8 +99,10 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
     } catch (e) {
       // print("Error loading biometric data: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+        BaseSnackBar.show(
+          context,
+          message: e.toString(),
+          type: SnackBarType.error,
         );
       }
     } finally {
@@ -210,8 +213,10 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('camera.initialization_error'.tr())),
+        BaseSnackBar.show(
+          context,
+          message: 'camera.initialization_error'.tr(),
+          type: SnackBarType.error,
         );
       }
     }
@@ -266,8 +271,10 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
     } catch (e) {
       // print("Error during photo capture: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+        BaseSnackBar.show(
+          context,
+          message: e.toString(),
+          type: SnackBarType.error,
         );
       }
     } finally {

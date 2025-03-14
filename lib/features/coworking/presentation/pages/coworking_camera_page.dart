@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 import 'package:aina_flutter/features/coworking/providers/biometric_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -181,8 +182,10 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
               if (await openAppSettings()) {
                 Navigator.of(context).pop(null);
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('camera.settings_open_failed'.tr())),
+                BaseSnackBar.show(
+                  context,
+                  message: 'camera.settings_open_failed'.tr(),
+                  type: SnackBarType.error,
                 );
               }
             },
@@ -270,8 +273,10 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
           _isLoading = false;
           _error = true;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('camera.initialization_error'.tr())),
+        BaseSnackBar.show(
+          context,
+          message: 'camera.initialization_error'.tr(),
+          type: SnackBarType.error,
         );
       }
     }
@@ -302,8 +307,10 @@ class _BiometricCameraModalState extends ConsumerState<BiometricCameraModal>
     } catch (e) {
       // print("Error during photo capture: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+        BaseSnackBar.show(
+          context,
+          message: e.toString(),
+          type: SnackBarType.error,
         );
       }
     } finally {
@@ -638,8 +645,10 @@ class _CoworkingCameraPageState extends ConsumerState<CoworkingCameraPage>
               if (await openAppSettings()) {
                 Navigator.of(context).pop(null);
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('camera.settings_open_failed'.tr())),
+                BaseSnackBar.show(
+                  context,
+                  message: 'camera.settings_open_failed'.tr(),
+                  type: SnackBarType.error,
                 );
               }
             },
@@ -727,8 +736,10 @@ class _CoworkingCameraPageState extends ConsumerState<CoworkingCameraPage>
           _isLoading = false;
           _error = true;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('camera.initialization_error'.tr())),
+        BaseSnackBar.show(
+          context,
+          message: 'camera.initialization_error'.tr(),
+          type: SnackBarType.error,
         );
       }
     }
@@ -761,8 +772,10 @@ class _CoworkingCameraPageState extends ConsumerState<CoworkingCameraPage>
       await service.getBiometricInfo();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+        BaseSnackBar.show(
+          context,
+          message: e.toString(),
+          type: SnackBarType.error,
         );
       }
     } finally {

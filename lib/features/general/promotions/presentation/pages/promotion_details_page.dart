@@ -16,6 +16,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:aina_flutter/core/services/amplitude_service.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 
 class PromotionDetailsPage extends ConsumerWidget {
   final int id;
@@ -256,12 +257,11 @@ class PromotionDetailsPage extends ConsumerWidget {
                                         promotion.building?.id.toString();
 
                                     if (mallId == null) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                            content: Text(
-                                                'promotions.error.no_mall'
-                                                    .tr())),
+                                      BaseSnackBar.show(
+                                        context,
+                                        message:
+                                            'promotions.error.no_mall'.tr(),
+                                        type: SnackBarType.error,
                                       );
                                       return;
                                     }

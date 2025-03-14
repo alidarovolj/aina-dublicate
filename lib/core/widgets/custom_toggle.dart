@@ -32,9 +32,16 @@ class CustomToggle extends StatelessWidget {
         Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: activeColor ?? AppColors.primary,
-          activeTrackColor: activeColor?.withOpacity(0.4) ??
-              AppColors.primary.withOpacity(0.4),
+          activeColor: Colors.white,
+          activeTrackColor: activeColor ?? AppColors.primary,
+          inactiveThumbColor: Colors.white,
+          inactiveTrackColor: Colors.grey[300],
+          trackOutlineColor: MaterialStateProperty.resolveWith((states) {
+            if (states.contains(MaterialState.disabled)) {
+              return Colors.grey[400];
+            }
+            return Colors.transparent;
+          }),
         ),
       ],
     );

@@ -99,6 +99,11 @@
           "saving": "Error saving data: {}"
         },
         "update_success": "Changes saved"
+      },
+      "validation": {
+        "required_fields": "Please fill in the required fields",
+        "name_required": "Enter your name",
+        "position_required": "Enter your position"
       }
     }
   },
@@ -202,7 +207,7 @@
     "register": "Register",
     "verify_biometric": "Pass verification",
     "warning": {
-      "profile_incomplete_message": "Before scanning the receipt, please make sure your first and last name in your profile are correct. This is a mandatory requirement for participating in the promotion.",
+      "profile_incomplete_message": "Before scanning the QR, please make sure your first and last name in your profile are correct. This is a mandatory requirement for participating in the promotion.",
       "auth_required_message": "Authorization is required to participate in the promotion",
       "to_profile": "To Profile",
       "scan": "Scan",
@@ -216,7 +221,8 @@
     "license_agreement": "License agreement",
     "public_offer": "Public offer",
     "privacy_policy": "Privacy policy",
-    "delete_profile": "Delete profile"
+    "delete_profile": "Delete profile",
+    "account_deleted_success": "Your account has been successfully deleted"
   },
   "profile": {
     "mall_title": "Mall profile",
@@ -258,10 +264,10 @@
         },
         "settings": "Settings",
         "logout": {
-          "button": "Log out",
-          "confirmation": "Log out from account\n{}?",
+          "title": "Logout",
+          "message": "Are you sure you want to log out of account {}?",
           "cancel": "Cancel",
-          "confirm": "Log out"
+          "confirm": "Logout"
         },
         "update_success": "Changes saved"
       }

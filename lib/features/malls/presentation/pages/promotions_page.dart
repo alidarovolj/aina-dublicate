@@ -64,8 +64,27 @@ class _PromotionsPageState extends ConsumerState<PromotionsPage>
 
     return buildingsAsync.when(
       data: (buildings) {
-        final mall = (buildings['mall'] ?? [])
-            .firstWhere((building) => building.id == widget.mallId);
+        final mallsList = buildings['mall'] ?? [];
+        final mall = mallsList.firstWhere(
+          (building) => building.id == widget.mallId,
+          orElse: () {
+            if (mallsList.isEmpty) {
+              throw Exception('No buildings available');
+            }
+            return mallsList.first;
+          },
+        );
+
+        if (mall == null) {
+          return const Scaffold(
+            backgroundColor: AppColors.primary,
+            body: SafeArea(
+              child: Center(
+                child: Text('Building not found'),
+              ),
+            ),
+          );
+        }
 
         return Scaffold(
           backgroundColor: AppColors.primary,

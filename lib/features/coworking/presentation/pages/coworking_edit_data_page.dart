@@ -117,7 +117,8 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
             ),
             ModalButton(
               label: 'modals.validation_error.discard'.tr(),
-              type: ButtonType.bordered,
+              type: ButtonType.normal,
+              backgroundColor: Colors.white,
               textColor: Colors.red,
               onPressed: () {
                 shouldExit = true;
@@ -233,25 +234,32 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
   }
 
   void _markDirty() {
-    setState(() {
-      _isDirty = true;
-    });
+    if (!mounted) return;
+    if (!_isDirty) {
+      setState(() {
+        _isDirty = true;
+      });
+    }
   }
 
-  void _handleLogout() {
+  void _handleLogout() async {
+    final profileData = await ref.read(
+        promenadeProfileDataProvider(ref.read(profileCacheKeyProvider)).future);
+
     BaseModal.show(
       context,
-      title: 'modals.logout.title'.tr(),
-      message: 'modals.logout.message'.tr(),
+      title: 'profile.settings.edit.logout.title'.tr(),
+      message: 'profile.settings.edit.logout.message'
+          .tr(args: [profileData['phone']['masked']]),
       buttons: [
         ModalButton(
-          label: 'common.cancel'.tr(),
+          label: 'profile.settings.edit.logout.cancel'.tr(),
           type: ButtonType.light,
           backgroundColor: AppColors.backgroundLight,
-          onPressed: () => context.pop(),
+          onPressed: () => {},
         ),
         ModalButton(
-          label: 'common.logout'.tr(),
+          label: 'profile.settings.edit.logout.confirm'.tr(),
           type: ButtonType.normal,
           backgroundColor: AppColors.appBg,
           textColor: Colors.red,
@@ -516,10 +524,13 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
                                 ? 'coworking.edit_data.required_field'.tr()
                                 : null,
                             onChanged: (value) {
-                              setState(() {
-                                isFirstNameValid = value.trim().isNotEmpty;
-                              });
-                              _markDirty();
+                              final isValid = value.trim().isNotEmpty;
+                              if (isValid != isFirstNameValid) {
+                                setState(() {
+                                  isFirstNameValid = isValid;
+                                });
+                              }
+                              _isDirty = true;
                             },
                           ),
 
@@ -532,17 +543,20 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
                                 ? 'coworking.edit_data.required_field'.tr()
                                 : null,
                             onChanged: (value) {
-                              setState(() {
-                                isLastNameValid = value.trim().isNotEmpty;
-                              });
-                              _markDirty();
+                              final isValid = value.trim().isNotEmpty;
+                              if (isValid != isLastNameValid) {
+                                setState(() {
+                                  isLastNameValid = isValid;
+                                });
+                              }
+                              _isDirty = true;
                             },
                           ),
 
                           CustomInputField(
                             controller: patronymicController,
                             placeholder: 'coworking.edit_data.patronymic'.tr(),
-                            onChanged: (_) => _markDirty(),
+                            onChanged: (_) => {_isDirty = true},
                           ),
 
                           CustomInputField(
@@ -555,10 +569,13 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
                                 : null,
                             keyboardType: TextInputType.emailAddress,
                             onChanged: (value) {
-                              setState(() {
-                                isEmailValid = value.trim().contains('@');
-                              });
-                              _markDirty();
+                              final isValid = value.trim().contains('@');
+                              if (isValid != isEmailValid) {
+                                setState(() {
+                                  isEmailValid = isValid;
+                                });
+                              }
+                              _isDirty = true;
                             },
                           ),
 
@@ -572,10 +589,13 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
                                 : null,
                             keyboardType: TextInputType.number,
                             onChanged: (value) {
-                              setState(() {
-                                isIINValid = value.trim().length == 12;
-                              });
-                              _markDirty();
+                              final isValid = value.trim().length == 12;
+                              if (isValid != isIINValid) {
+                                setState(() {
+                                  isIINValid = isValid;
+                                });
+                              }
+                              _isDirty = true;
                             },
                           ),
                           const SizedBox(height: 24),
@@ -590,10 +610,12 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
                               'NONE',
                             ],
                             onChanged: (value) {
-                              setState(() {
-                                selectedGender = value;
-                              });
-                              _markDirty();
+                              if (value != selectedGender) {
+                                setState(() {
+                                  selectedGender = value;
+                                });
+                              }
+                              _isDirty = true;
                             },
                           ),
                           const SizedBox(height: 32),

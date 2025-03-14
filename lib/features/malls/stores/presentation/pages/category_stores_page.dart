@@ -28,6 +28,7 @@ class CategoryStoresPage extends ConsumerStatefulWidget {
 
 class _CategoryStoresPageState extends ConsumerState<CategoryStoresPage> {
   final ScrollController _scrollController = ScrollController();
+  bool _isLoadingMore = false;
 
   @override
   void initState() {
@@ -36,6 +37,9 @@ class _CategoryStoresPageState extends ConsumerState<CategoryStoresPage> {
   }
 
   void _onScroll() {
+    if (_isLoadingMore)
+      return; // Предотвращаем множественные вызовы во время загрузки
+
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       final notifier = ref.read(
@@ -44,7 +48,17 @@ class _CategoryStoresPageState extends ConsumerState<CategoryStoresPage> {
             .notifier,
       );
       if (notifier.hasMorePages) {
-        notifier.loadMoreStores();
+        setState(() {
+          _isLoadingMore = true;
+        });
+
+        notifier.loadMoreStores().then((_) {
+          if (mounted) {
+            setState(() {
+              _isLoadingMore = false;
+            });
+          }
+        });
       }
     }
   }
@@ -69,28 +83,45 @@ class _CategoryStoresPageState extends ConsumerState<CategoryStoresPage> {
                       ? Center(
                           child: Text('stores.no_stores'.tr()),
                         )
-                      : ListView.builder(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.all(12),
-                          itemCount: stores.length,
-                          itemBuilder: (context, index) {
-                            final store = stores[index];
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: CategoryCard(
-                                title: store.name,
-                                imageUrl: store.previewImage?.url,
-                                subtitle: store.shortDescription,
-                                height: 180,
-                                onTap: () {
-                                  context.pushNamed(
-                                    'store_details',
-                                    pathParameters: {'id': store.id.toString()},
+                      : Column(
+                          children: [
+                            Expanded(
+                              child: ListView.builder(
+                                controller: _scrollController,
+                                padding: const EdgeInsets.all(12),
+                                itemCount: stores.length,
+                                itemBuilder: (context, index) {
+                                  final store = stores[index];
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: CategoryCard(
+                                      title: store.name,
+                                      imageUrl: _cleanImageUrl(
+                                          store.previewImage?.url),
+                                      subtitle: store.shortDescription,
+                                      height: 180,
+                                      onTap: () {
+                                        context.pushNamed(
+                                          'store_details',
+                                          pathParameters: {
+                                            'id': store.id.toString()
+                                          },
+                                        );
+                                      },
+                                    ),
                                   );
                                 },
                               ),
-                            );
-                          },
+                            ),
+                            if (_isLoadingMore)
+                              Container(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                child: const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
+                          ],
                         ),
                   loading: () => _buildSkeletonLoader(),
                   error: (error, stack) => Center(
@@ -166,6 +197,45 @@ class _CategoryStoresPageState extends ConsumerState<CategoryStoresPage> {
         );
       },
     );
+  }
+
+  String _cleanImageUrl(String? url) {
+    if (url == null || url.isEmpty) {
+      return '';
+    }
+
+    // Проверяем на наличие HTTP ошибок в URL
+    if (url.contains('HTTP') ||
+        url.toLowerCase().contains('error') ||
+        !url.startsWith('http')) {
+      return ''; // Возвращаем пустую строку для невалидных URL
+    }
+
+    // Проверяем на наличие специфических ошибок в URL
+    if (url.contains('404') ||
+        url.contains('500') ||
+        url.contains('403') ||
+        url.contains('not found') ||
+        url.contains('undefined')) {
+      return ''; // Возвращаем пустую строку для URL с ошибками
+    }
+
+    // Если URL содержит специальные символы или пробелы, кодируем их
+    if (url.contains(' ') ||
+        url.contains('%') ||
+        url.contains('?') ||
+        url.contains('&')) {
+      try {
+        // Пытаемся закодировать URL
+        final Uri uri = Uri.parse(url);
+        return uri.toString();
+      } catch (e) {
+        // Если не удалось закодировать, возвращаем пустую строку
+        return '';
+      }
+    }
+
+    return url;
   }
 
   @override

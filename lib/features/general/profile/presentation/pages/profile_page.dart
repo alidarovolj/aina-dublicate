@@ -17,6 +17,7 @@ import 'package:dio/dio.dart';
 import 'package:aina_flutter/core/router/route_observer.dart';
 import 'package:aina_flutter/core/services/amplitude_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   final int mallId;
@@ -79,35 +80,53 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with RouteAware {
   Future<void> _checkAuthAndLoadProfile() async {
     if (!mounted) return;
 
+    print('🔍 Starting _checkAuthAndLoadProfile');
     setState(() {
       _isCheckingAuth = true;
     });
 
     try {
-      // Выполняем прямой запрос к API для проверки авторизации
+      print('🔄 Начало проверки авторизации');
       if (!mounted) return;
       final profileService = ref.read(promenadeProfileProvider);
 
-      // Выполняем запрос на получение профиля
+      print('📱 Запрос данных профиля...');
       final result = await profileService.getProfile(forceRefresh: true);
+      print('✅ Получен ответ от сервера: $result');
+      print('📋 Response type: ${result.runtimeType}');
 
-      // Если запрос успешен, обновляем данные профиля
       if (mounted) {
+        print('🔄 Обновление данных профиля...');
         await _refreshProfileData();
+        print('✅ Данные профиля обновлены');
       }
-    } catch (e) {
+    } catch (e, stack) {
       if (!mounted) return;
       print('❌ Ошибка при проверке авторизации: $e');
+      print('📚 Stack trace: $stack');
 
-      // Если ошибка 401, перенаправляем на страницу авторизации
-      if (e is DioException && e.response?.statusCode == 401) {
-        // Очищаем данные авторизации
-        if (!mounted) return;
-        await ref.read(authProvider.notifier).logout();
+      if (e is DioException) {
+        print('🌐 HTTP Status: ${e.response?.statusCode}');
+        print('📝 Response data: ${e.response?.data}');
+        print('🔍 Error type: ${e.type}');
+        print('🔍 Error message: ${e.message}');
 
-        if (mounted) {
-          // Перенаправляем на страницу авторизации
-          context.push('/login');
+        if (e.response?.statusCode == 401) {
+          print('🔑 Обнаружена ошибка авторизации 401');
+          if (!mounted) return;
+
+          try {
+            print('🔄 Попытка выхода из аккаунта...');
+            await ref.read(authProvider.notifier).logout();
+            print('✅ Выход выполнен успешно');
+          } catch (logoutError) {
+            print('❌ Ошибка при выходе: $logoutError');
+          }
+
+          if (mounted) {
+            print('🔄 Перенаправление на страницу входа');
+            context.push('/login');
+          }
         }
       }
     } finally {
@@ -122,21 +141,35 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with RouteAware {
   Future<void> _refreshProfileData() async {
     if (!mounted) return;
 
+    print('🔄 Starting _refreshProfileData');
     try {
+      print('🔄 Invalidating providers...');
       ref.invalidate(userProvider);
       ref.invalidate(userTicketsProvider);
       ref.invalidate(promenadeProfileProvider);
       ref.invalidate(profileCacheKeyProvider);
 
-      // Wrap the state update in a Future to avoid build-time modifications
       await Future(() {
         if (!mounted) return;
         try {
+          print('🔄 Updating profile cache key...');
+          final oldKey = ref.read(profileCacheKeyProvider);
           ref.read(profileCacheKeyProvider.notifier).state++;
+          final newKey = ref.read(profileCacheKeyProvider);
+          print('🔑 Profile cache key updated: $oldKey -> $newKey');
         } catch (e) {
           print('❌ Ошибка при обновлении profileCacheKeyProvider: $e');
         }
       });
+
+      // Force refresh user data
+      print('🔄 Force refreshing user data');
+      if (mounted) {
+        setState(() {
+          _isCheckingAuth = false;
+        });
+      }
+      print('✅ _refreshProfileData completed');
     } catch (e) {
       print('❌ Ошибка при обновлении данных профиля: $e');
     }
@@ -153,24 +186,20 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with RouteAware {
       await profileService.uploadAvatar(photo);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('profile.settings.edit.avatar_updated'.tr()),
-          backgroundColor: Colors.green,
-        ),
+      BaseSnackBar.show(
+        context,
+        message: 'profile.settings.edit.avatar_updated'.tr(),
+        type: SnackBarType.success,
       );
     } catch (e) {
       setState(() {
         _temporaryAvatar = null;
       });
       if (!mounted) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('profile.settings.edit.avatar_error'.tr()),
-          backgroundColor: Colors.red,
-        ),
+      BaseSnackBar.show(
+        context,
+        message: 'profile.settings.edit.avatar_error'.tr(),
+        type: SnackBarType.error,
       );
     } finally {
       if (mounted) {
@@ -190,21 +219,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with RouteAware {
       await profileService.removeAvatar();
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('profile.settings.edit.avatar_removed'.tr()),
-          backgroundColor: Colors.green,
-        ),
+      BaseSnackBar.show(
+        context,
+        message: 'profile.settings.edit.avatar_removed'.tr(),
+        type: SnackBarType.success,
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('profile.settings.edit.avatar_error'.tr()),
-          backgroundColor: Colors.red,
-        ),
+      BaseSnackBar.show(
+        context,
+        message: 'profile.settings.edit.avatar_error'.tr(),
+        type: SnackBarType.error,
       );
     } finally {
       if (mounted) {
@@ -227,28 +252,42 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
+    print('🏗️ Building ProfilePage widget');
     final userAsync = ref.watch(userProvider);
     final ticketsAsync = ref.watch(userTicketsProvider);
     final settingsAsync = ref.watch(settingsProvider);
 
+    print('📊 User data state: ${userAsync.toString()}');
+    print('🎫 Tickets state: ${ticketsAsync.toString()}');
+    print('⚙️ Settings state: ${settingsAsync.toString()}');
+    print('🔒 Is checking auth: $_isCheckingAuth');
+
     // Показываем индикатор загрузки во время проверки авторизации
     if (_isCheckingAuth) {
+      print('🔄 Showing skeleton loader - checking auth');
       return _buildSkeletonLoader();
     }
 
     return userAsync.when(
-      loading: () => _buildSkeletonLoader(),
+      loading: () {
+        print('🔄 Showing skeleton loader - loading user data');
+        return _buildSkeletonLoader();
+      },
       error: (error, stack) {
-        // Проверяем, является ли ошибка 401 Unauthorized
-        if (error.toString().contains('401') ||
-            error.toString().contains('Unauthorized')) {
-          // Перенаправляем на страницу логина
+        print('❌ Error in user data: $error');
+        print('📚 Stack trace: $stack');
+
+        // Проверяем тип ошибки более детально
+        final errorStr = error.toString().toLowerCase();
+        if (errorStr.contains('401') || errorStr.contains('unauthorized')) {
+          print('🔑 Unauthorized error detected, redirecting to login');
           WidgetsBinding.instance.addPostFrameCallback((_) {
             context.push('/login');
           });
           return const SizedBox.shrink();
         }
 
+        print('⚠️ Showing error screen');
         return Scaffold(
           body: Container(
             color: AppColors.primary,
@@ -259,11 +298,241 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with RouteAware {
                     color: AppColors.white,
                     margin: const EdgeInsets.only(top: 64),
                     child: Center(
-                      child: Text(
-                        'profile.load_error'.tr(),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'profile.load_error'.tr(),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              print('🔄 Retrying profile load');
+                              _checkAuthAndLoadProfile();
+                            },
+                            child: Text('common.refresh'.tr()),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  CustomHeader(
+                    title: 'profile.mall_title'.tr(),
+                    type: HeaderType.close,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+      data: (userData) {
+        print('✅ Received user data: $userData');
+        return Scaffold(
+          body: Container(
+            color: AppColors.primary,
+            child: SafeArea(
+              child: Stack(
+                children: [
+                  Container(
+                    color: AppColors.white,
+                    margin: const EdgeInsets.only(top: 64),
+                    child: SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: MediaQuery.of(context).size.height -
+                              64, // 64 это высота хедера
+                        ),
+                        child: IntrinsicHeight(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              // Profile Info Section
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                margin: const EdgeInsets.only(bottom: 30),
+                                child: Row(
+                                  children: [
+                                    AvatarEditWidget(
+                                      avatarUrl: userData.avatarUrl,
+                                      temporaryImage: _temporaryAvatar,
+                                      onAvatarPicked: _handleAvatarPicked,
+                                      onAvatarRemoved: _handleAvatarRemoved,
+                                      isLoading: _isLoading,
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            userData.firstName != null &&
+                                                    userData.lastName != null
+                                                ? '${userData.firstName} ${userData.lastName}'
+                                                : userData.maskedPhone,
+                                            style: const TextStyle(
+                                              color: AppColors.primary,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          if (userData.firstName != null &&
+                                              userData.lastName != null)
+                                            Text(
+                                              userData.maskedPhone,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Menu Items
+                              _buildMenuItem(
+                                'profile.personal_info'.tr(),
+                                Icons.chevron_right,
+                                backgroundColor: Colors.grey[200],
+                                onTap: () async {
+                                  _logPersonalInfoClick();
+                                  // Navigate and wait for result
+                                  final result = await context.pushNamed(
+                                    'mall_edit',
+                                    pathParameters: {
+                                      'id': widget.mallId.toString()
+                                    },
+                                  );
+
+                                  // After returning, refresh the data
+                                  if (mounted) {
+                                    await _refreshProfileData();
+
+                                    // Clear image cache for the avatar
+                                    if (userData.avatarUrl != null) {
+                                      imageCache.evict(
+                                          NetworkImage(userData.avatarUrl!));
+                                    }
+
+                                    // Force rebuild
+                                    setState(() {});
+                                  }
+                                },
+                              ),
+                              const SizedBox(height: 8),
+
+                              // Show tickets menu item if tickets are available
+                              ticketsAsync.when(
+                                loading: () => const SizedBox.shrink(),
+                                error: (_, __) => const SizedBox.shrink(),
+                                data: (tickets) {
+                                  if (tickets.isNotEmpty) {
+                                    return Column(
+                                      children: [
+                                        _buildMenuItem(
+                                          'profile.coupons'.tr(),
+                                          Icons.chevron_right,
+                                          backgroundColor: Colors.grey[200],
+                                          onTap: () {
+                                            context.pushNamed(
+                                              'tickets',
+                                              pathParameters: {
+                                                'id': widget.mallId.toString()
+                                              },
+                                            );
+                                          },
+                                        ),
+                                        const SizedBox(height: 8),
+                                      ],
+                                    );
+                                  }
+                                  return const SizedBox.shrink();
+                                },
+                              ),
+
+                              _buildMenuItem(
+                                'profile.contact_us'.tr(),
+                                Icons.chevron_right,
+                                backgroundColor: Colors.grey[200],
+                                onTap: () {
+                                  settingsAsync.whenData((settings) async {
+                                    try {
+                                      // Декодируем URL и заменяем закодированные символы
+                                      final decodedUrl = Uri.decodeFull(
+                                              settings.whatsappLinkAinaMall)
+                                          .replaceAll('%2B', '+')
+                                          .replaceAll('%20', ' ');
+
+                                      // Пробуем сначала открыть через whatsapp://
+                                      final whatsappUri =
+                                          Uri.parse(decodedUrl.replaceAll(
+                                        'https://api.whatsapp.com/send',
+                                        'whatsapp://send',
+                                      ));
+
+                                      bool launched = false;
+                                      try {
+                                        launched = await launchUrl(
+                                          whatsappUri,
+                                          mode: LaunchMode.externalApplication,
+                                        );
+                                      } catch (_) {
+                                        launched = false;
+                                      }
+
+                                      // Если не получилось открыть через whatsapp://, пробуем через https://
+                                      if (!launched) {
+                                        final httpUri = Uri.parse(decodedUrl);
+                                        launched = await launchUrl(
+                                          httpUri,
+                                          mode: LaunchMode.externalApplication,
+                                        );
+                                      }
+
+                                      if (!launched && context.mounted) {
+                                        BaseSnackBar.show(
+                                          context,
+                                          message:
+                                              'communication.modal.whatsapp.error'
+                                                  .tr(),
+                                          type: SnackBarType.error,
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        BaseSnackBar.show(
+                                          context,
+                                          message:
+                                              'communication.modal.whatsapp.error'
+                                                  .tr(),
+                                          type: SnackBarType.error,
+                                        );
+                                      }
+                                    }
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: 8),
+
+                              _buildMenuItem(
+                                'profile.about_app'.tr(),
+                                Icons.chevron_right,
+                                backgroundColor: Colors.grey[200],
+                                onTap: () {
+                                  context.pushNamed('about');
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -278,217 +547,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with RouteAware {
           ),
         );
       },
-      data: (userData) => Scaffold(
-        body: Container(
-          color: AppColors.primary,
-          child: SafeArea(
-            child: Stack(
-              children: [
-                Container(
-                  color: AppColors.white,
-                  margin: const EdgeInsets.only(top: 64),
-                  child: SingleChildScrollView(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: MediaQuery.of(context).size.height -
-                            64, // 64 это высота хедера
-                      ),
-                      child: IntrinsicHeight(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            // Profile Info Section
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              margin: const EdgeInsets.only(bottom: 30),
-                              child: Row(
-                                children: [
-                                  AvatarEditWidget(
-                                    avatarUrl: userData.avatarUrl,
-                                    temporaryImage: _temporaryAvatar,
-                                    onAvatarPicked: _handleAvatarPicked,
-                                    onAvatarRemoved: _handleAvatarRemoved,
-                                    isLoading: _isLoading,
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '${userData.firstName} ${userData.lastName}',
-                                          style: const TextStyle(
-                                            color: AppColors.primary,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          userData.maskedPhone,
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // Menu Items
-                            _buildMenuItem(
-                              'profile.personal_info'.tr(),
-                              Icons.chevron_right,
-                              backgroundColor: Colors.grey[200],
-                              onTap: () async {
-                                _logPersonalInfoClick();
-                                // Navigate and wait for result
-                                final result = await context.pushNamed(
-                                  'mall_edit',
-                                  pathParameters: {
-                                    'id': widget.mallId.toString()
-                                  },
-                                );
-
-                                // After returning, refresh the data
-                                if (mounted) {
-                                  await _refreshProfileData();
-
-                                  // Clear image cache for the avatar
-                                  if (userData.avatarUrl != null) {
-                                    imageCache.evict(
-                                        NetworkImage(userData.avatarUrl!));
-                                  }
-
-                                  // Force rebuild
-                                  setState(() {});
-                                }
-                              },
-                            ),
-                            const SizedBox(height: 8),
-
-                            // Show tickets menu item if tickets are available
-                            ticketsAsync.when(
-                              loading: () => const SizedBox.shrink(),
-                              error: (_, __) => const SizedBox.shrink(),
-                              data: (tickets) {
-                                if (tickets.isNotEmpty) {
-                                  return Column(
-                                    children: [
-                                      _buildMenuItem(
-                                        'profile.coupons'.tr(),
-                                        Icons.chevron_right,
-                                        backgroundColor: Colors.grey[200],
-                                        onTap: () {
-                                          context.pushNamed(
-                                            'tickets',
-                                            pathParameters: {
-                                              'id': widget.mallId.toString()
-                                            },
-                                          );
-                                        },
-                                      ),
-                                      const SizedBox(height: 8),
-                                    ],
-                                  );
-                                }
-                                return const SizedBox.shrink();
-                              },
-                            ),
-
-                            _buildMenuItem(
-                              'profile.contact_us'.tr(),
-                              Icons.chevron_right,
-                              backgroundColor: Colors.grey[200],
-                              onTap: () {
-                                settingsAsync.whenData((settings) async {
-                                  try {
-                                    // Декодируем URL и заменяем закодированные символы
-                                    final decodedUrl = Uri.decodeFull(
-                                            settings.whatsappLinkAinaMall)
-                                        .replaceAll('%2B', '+')
-                                        .replaceAll('%20', ' ');
-
-                                    // Пробуем сначала открыть через whatsapp://
-                                    final whatsappUri =
-                                        Uri.parse(decodedUrl.replaceAll(
-                                      'https://api.whatsapp.com/send',
-                                      'whatsapp://send',
-                                    ));
-
-                                    bool launched = false;
-                                    try {
-                                      launched = await launchUrl(
-                                        whatsappUri,
-                                        mode: LaunchMode.externalApplication,
-                                      );
-                                    } catch (_) {
-                                      launched = false;
-                                    }
-
-                                    // Если не получилось открыть через whatsapp://, пробуем через https://
-                                    if (!launched) {
-                                      final httpUri = Uri.parse(decodedUrl);
-                                      launched = await launchUrl(
-                                        httpUri,
-                                        mode: LaunchMode.externalApplication,
-                                      );
-                                    }
-
-                                    if (!launched && context.mounted) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                              'communication.modal.whatsapp.error'
-                                                  .tr()),
-                                        ),
-                                      );
-                                    }
-                                  } catch (e) {
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                              'communication.modal.whatsapp.error'
-                                                  .tr()),
-                                        ),
-                                      );
-                                    }
-                                  }
-                                });
-                              },
-                            ),
-                            const SizedBox(height: 8),
-
-                            _buildMenuItem(
-                              'profile.about_app'.tr(),
-                              Icons.chevron_right,
-                              backgroundColor: Colors.grey[200],
-                              onTap: () {
-                                context.pushNamed('about');
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                CustomHeader(
-                  title: 'profile.mall_title'.tr(),
-                  type: HeaderType.close,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 

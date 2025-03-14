@@ -2,7 +2,7 @@ name: aina_flutter
 description: "A new Flutter project."
 
 publish_to: "none"
-version: 3.5.6+2
+version: 3.5.6+3
 
 environment:
   sdk: ">=3.5.4 <4.0.0"
@@ -81,6 +81,7 @@ dependencies:
   firebase_remote_config: ^5.4.2
   connectivity_plus: ^5.0.2
   amplitude_flutter: ^3.4.0
+  sentry_flutter: ^8.14.0
 
 dev_dependencies:
   flutter_test:
@@ -90,7 +91,7 @@ dev_dependencies:
   freezed: ^2.5.8
   json_serializable: ^6.9.3
   storybook_flutter: ^0.14.0
-  flutter_native_splash: ^2.4.0
+  flutter_native_splash: ^2.3.10
 
 flutter:
   uses-material-design: true
@@ -159,3 +160,18 @@ flutter:
     - lib/core/assets/images/
     - lib/core/assets/images/biometry/
     - lib/core/assets/images/logo.png
+
+flutter_native_splash:
+  color: "#000000"
+  image: lib/core/assets/images/logo-superapp.png
+  android_12:
+    color: "#000000"
+    image: lib/core/assets/images/logo-superapp.png
+    icon_background_color: "#000000"
+  android: true
+  ios: true
+  web: false
+  image_dark: lib/core/assets/images/logo-superapp.png
+  android_gravity: center
+  ios_content_mode: center
+  fullscreen: true

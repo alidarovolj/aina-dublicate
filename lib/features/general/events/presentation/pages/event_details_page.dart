@@ -10,20 +10,21 @@ import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:aina_flutter/core/services/amplitude_service.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/types/button_config.dart';
 import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
+import 'package:aina_flutter/core/widgets/base_slider.dart';
+import 'package:aina_flutter/core/types/slides.dart' as slides;
 
 class EventDetailsPage extends ConsumerWidget {
-  final String id;
-  final bool fromHome;
+  final int id;
 
   const EventDetailsPage({
     super.key,
     required this.id,
-    this.fromHome = false,
   });
 
   String _getPlatform() {
@@ -79,29 +80,6 @@ class EventDetailsPage extends ConsumerWidget {
                   Shimmer.fromColors(
                     baseColor: Colors.grey[200]!,
                     highlightColor: Colors.grey[300]!,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 16,
-                          height: 16,
-                          color: Colors.white,
-                        ),
-                        const SizedBox(width: AppLength.xs),
-                        Container(
-                          width: 120,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppLength.sm),
-                  Shimmer.fromColors(
-                    baseColor: Colors.grey[200]!,
-                    highlightColor: Colors.grey[300]!,
                     child: Column(
                       children: List.generate(
                         3,
@@ -147,7 +125,7 @@ class EventDetailsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final eventAsync = ref.watch(eventDetailsProvider(id));
+    final eventAsync = ref.watch(eventDetailsProvider(id.toString()));
 
     return Scaffold(
       body: Container(
@@ -162,6 +140,8 @@ class EventDetailsPage extends ConsumerWidget {
 
                   final is500Error = error.toString().contains('500') ||
                       error.toString().contains('Internal Server Error');
+                  final isNotFoundError =
+                      error.toString().contains('Event not found');
 
                   return Container(
                     margin: const EdgeInsets.only(top: 64),
@@ -170,22 +150,26 @@ class EventDetailsPage extends ConsumerWidget {
                         print('🔄 Refreshing event details...');
                         Future.microtask(() async {
                           try {
-                            ref.refresh(eventDetailsProvider(id));
+                            ref.refresh(eventDetailsProvider(id.toString()));
                           } catch (e) {
                             print('❌ Error refreshing event details: $e');
                           }
                         });
                       },
-                      errorMessage: is500Error
-                          ? 'events.error.server'.tr()
-                          : 'events.error.loading'.tr(),
+                      errorMessage: isNotFoundError
+                          ? 'events.error.not_found'.tr()
+                          : is500Error
+                              ? 'events.error.server'.tr()
+                              : 'events.error.loading'.tr(),
                       refreshText: 'common.refresh'.tr(),
-                      icon: Icons.warning_amber_rounded,
-                      isServerError: true,
+                      icon: isNotFoundError
+                          ? Icons.search_off_rounded
+                          : Icons.warning_amber_rounded,
+                      isServerError: is500Error,
                     ),
                   );
                 },
-                data: (event) => Container(
+                data: (promotion) => Container(
                   color: AppColors.white,
                   margin: const EdgeInsets.only(top: 64),
                   child: CustomScrollView(
@@ -195,7 +179,7 @@ class EventDetailsPage extends ConsumerWidget {
                           height: 240,
                           width: double.infinity,
                           child: Image.network(
-                            event.previewImage.url,
+                            promotion.previewImage.url,
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -207,10 +191,9 @@ class EventDetailsPage extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                event.title,
+                                promotion.title,
                                 style: GoogleFonts.lora(
                                   fontSize: 24,
-                                  fontWeight: FontWeight.w500,
                                   color: AppColors.textDarkGrey,
                                 ),
                               ),
@@ -221,10 +204,14 @@ class EventDetailsPage extends ConsumerWidget {
                                     'lib/core/assets/icons/calendar.svg',
                                     width: 16,
                                     height: 16,
+                                    colorFilter: const ColorFilter.mode(
+                                      AppColors.textDarkGrey,
+                                      BlendMode.srcIn,
+                                    ),
                                   ),
                                   const SizedBox(width: AppLength.xs),
                                   Text(
-                                    event.formattedDateRange,
+                                    promotion.formattedDateRange,
                                     style: const TextStyle(
                                       fontSize: 15,
                                       color: AppColors.textDarkGrey,
@@ -234,7 +221,7 @@ class EventDetailsPage extends ConsumerWidget {
                               ),
                               const SizedBox(height: AppLength.sm),
                               Html(
-                                data: event.subtitle,
+                                data: promotion.subtitle,
                                 style: {
                                   "body": Style(
                                     fontSize: FontSize(15),
@@ -243,18 +230,11 @@ class EventDetailsPage extends ConsumerWidget {
                                     padding: HtmlPaddings.zero,
                                     color: AppColors.textDarkGrey,
                                   ),
-                                  "a": Style(
-                                    color: Colors.blue,
-                                    textDecoration: TextDecoration.underline,
-                                  ),
-                                },
-                                onLinkTap: (url, context, attributes) {
-                                  if (url != null) _launchUrl(url);
                                 },
                               ),
                               const SizedBox(height: AppLength.sm),
                               Html(
-                                data: event.body,
+                                data: promotion.body,
                                 style: {
                                   "body": Style(
                                     fontSize: FontSize(15),
@@ -263,50 +243,45 @@ class EventDetailsPage extends ConsumerWidget {
                                     padding: HtmlPaddings.zero,
                                     color: AppColors.textDarkGrey,
                                   ),
-                                  "a": Style(
-                                    color: Colors.blue,
-                                    textDecoration: TextDecoration.underline,
-                                  ),
-                                },
-                                onLinkTap: (url, context, attributes) {
-                                  if (url != null) _launchUrl(url);
                                 },
                               ),
-                              if (event.button != null)
+                              if (promotion.images.isNotEmpty) ...[
+                                const SizedBox(height: AppLength.sm),
+                                CarouselWithIndicator(
+                                  slideList: promotion.images
+                                      .map((image) => slides.Slide(
+                                            id: image.id,
+                                            name: promotion.title,
+                                            previewImage: slides.PreviewImage(
+                                              id: image.id,
+                                              uuid: image.uuid,
+                                              url: image.url,
+                                              urlOriginal: image.urlOriginal,
+                                              orderColumn: image.orderColumn,
+                                              collectionName:
+                                                  image.collectionName,
+                                            ),
+                                            order: image.orderColumn,
+                                          ))
+                                      .toList(),
+                                  showIndicators: true,
+                                  showGradient: false,
+                                  height: 200,
+                                ),
+                              ],
+                              if (promotion.button != null) ...[
+                                const SizedBox(height: AppLength.sm),
                                 CustomButton(
-                                  button: event.button != null
-                                      ? ButtonConfig(
-                                          label: event.button!.label,
-                                          color: event.button!.color,
-                                          isInternal: event.button!.isInternal,
-                                          link: event.button!.link,
-                                          internal:
-                                              event.button!.internal != null
-                                                  ? ButtonInternal(
-                                                      model: event.button!
-                                                          .internal!.model,
-                                                      id: event
-                                                          .button!.internal!.id,
-                                                      buildingType: event
-                                                          .button!
-                                                          .internal!
-                                                          .buildingType,
-                                                      isAuthRequired: event
-                                                          .button!
-                                                          .internal!
-                                                          .isAuthRequired,
-                                                    )
-                                                  : null,
-                                        )
-                                      : null,
+                                  button: promotion.button,
                                   isFullWidth: true,
                                   backgroundColor: AppColors.primary,
                                 ),
-                              if (event.bottomBody != null &&
-                                  event.bottomBody!.isNotEmpty) ...[
+                              ],
+                              if (promotion.bottomBody != null &&
+                                  promotion.bottomBody!.isNotEmpty) ...[
                                 const SizedBox(height: AppLength.sm),
                                 Html(
-                                  data: event.bottomBody!,
+                                  data: promotion.bottomBody!,
                                   style: {
                                     "body": Style(
                                       fontSize: FontSize(13),
@@ -315,13 +290,6 @@ class EventDetailsPage extends ConsumerWidget {
                                       margin: Margins.zero,
                                       padding: HtmlPaddings.zero,
                                     ),
-                                    "a": Style(
-                                      color: Colors.blue,
-                                      textDecoration: TextDecoration.underline,
-                                    ),
-                                  },
-                                  onLinkTap: (url, context, attributes) {
-                                    if (url != null) _launchUrl(url);
                                   },
                                 ),
                               ],

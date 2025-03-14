@@ -7,6 +7,8 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/types/button_config.dart';
+import 'package:aina_flutter/core/widgets/base_slider.dart';
+import 'package:aina_flutter/core/types/slides.dart' as slides;
 import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
 
@@ -87,6 +89,30 @@ class NewsDetailsPage extends ConsumerWidget {
                                   ),
                                 },
                               ),
+                              if (news.images.isNotEmpty) ...[
+                                const SizedBox(height: AppLength.sm),
+                                CarouselWithIndicator(
+                                  slideList: news.images
+                                      .map((image) => slides.Slide(
+                                            id: image.id,
+                                            name: news.title,
+                                            previewImage: slides.PreviewImage(
+                                              id: image.id,
+                                              uuid: image.uuid,
+                                              url: image.url,
+                                              urlOriginal: image.urlOriginal,
+                                              orderColumn: image.orderColumn,
+                                              collectionName:
+                                                  image.collectionName,
+                                            ),
+                                            order: image.orderColumn,
+                                          ))
+                                      .toList(),
+                                  showIndicators: true,
+                                  showGradient: false,
+                                  height: 200,
+                                ),
+                              ],
                               if (news.button != null) ...[
                                 const SizedBox(height: AppLength.sm),
                                 CustomButton(

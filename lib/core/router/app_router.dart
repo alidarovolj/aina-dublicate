@@ -123,6 +123,17 @@ class AppRouter {
             builder: (context, state) => const HomePromotionsPage(),
           ),
           GoRoute(
+            path: '/events/:id',
+            name: 'event_details',
+            builder: (context, state) {
+              final id = state.pathParameters['id'];
+              if (id == null || int.tryParse(id) == null) {
+                return const HomePage();
+              }
+              return EventDetailsPage(id: int.parse(id));
+            },
+          ),
+          GoRoute(
             path: '/bookings',
             name: 'bookings',
             builder: (context, state) => const HomeBookingsPage(),
@@ -192,7 +203,7 @@ class AppRouter {
                     name: 'mall_profile',
                     builder: (context, state) {
                       final mallId = state.pathParameters['id'];
-                      if (mallId == null) {
+                      if (mallId == null || int.tryParse(mallId) == null) {
                         return const Malls();
                       }
                       return ProfilePage(mallId: int.parse(mallId));
@@ -260,6 +271,17 @@ class AppRouter {
                         },
                       ),
                     ],
+                  ),
+                  GoRoute(
+                    path: 'events',
+                    name: 'mall_events',
+                    builder: (context, state) {
+                      final mallId = state.pathParameters['id'];
+                      if (mallId == null || int.tryParse(mallId) == null) {
+                        return const Malls();
+                      }
+                      return EventsPage(mallId: mallId);
+                    },
                   ),
                 ],
               ),
@@ -637,25 +659,6 @@ class AppRouter {
         path: '/no-internet',
         name: 'no_internet',
         builder: (context, state) => const NoInternetPage(),
-      ),
-      GoRoute(
-        path: '/events/:id',
-        name: 'event_details',
-        builder: (context, state) {
-          final id = state.pathParameters['id'] ?? '0';
-          final fromHome =
-              (state.extra as Map<String, dynamic>?)?['fromHome'] as bool? ??
-                  false;
-          return EventDetailsPage(id: id, fromHome: fromHome);
-        },
-      ),
-      GoRoute(
-        path: '/malls/:mallId/events',
-        name: 'mall_events',
-        builder: (context, state) {
-          final mallId = state.pathParameters['mallId'];
-          return EventsPage(mallId: mallId);
-        },
       ),
     ],
   );

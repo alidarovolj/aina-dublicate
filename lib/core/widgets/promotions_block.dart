@@ -98,19 +98,20 @@ class PromotionsBlock extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     if (showTitle)
-                      Row(
-                        children: [
-                          Text(
-                            'promotions.title'.tr(),
-                            style: GoogleFonts.lora(
-                              fontSize: 22,
-                              color: Colors.black,
-                            ),
-                          )
-                        ],
+                      Text(
+                        'promotions.title'.tr(),
+                        style: GoogleFonts.lora(
+                          fontSize: 22,
+                          color: Colors.black,
+                        ),
                       ),
                     if (showViewAll && onViewAllTap != null)
                       TextButton(
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                         onPressed: onViewAllTap,
                         child: Row(
                           children: [
@@ -136,6 +137,7 @@ class PromotionsBlock extends ConsumerWidget {
                   ],
                 ),
               ),
+            const SizedBox(height: 16),
             if (cardType == PromotionCardType.medium)
               _buildMediumCardList(context, sortedPromotions)
             else if (cardType == PromotionCardType.small)

@@ -9,6 +9,7 @@ import 'package:aina_flutter/core/widgets/description_block.dart';
 import 'package:aina_flutter/core/widgets/mall_info_block.dart';
 import 'package:aina_flutter/core/widgets/news_block.dart';
 import 'package:aina_flutter/core/widgets/promotions_block.dart';
+import 'package:aina_flutter/core/widgets/events_block.dart';
 import 'package:aina_flutter/core/widgets/service_card.dart';
 import 'package:aina_flutter/core/types/news_card_type.dart';
 import 'package:aina_flutter/core/types/card_type.dart';
@@ -157,7 +158,7 @@ class CoworkingPage extends ConsumerWidget {
                                 mallId: coworkingId.toString(),
                                 showTitle: true,
                                 showViewAll: true,
-                                showDivider: hasNews,
+                                showDivider: true,
                                 cardType: PromotionCardType.medium,
                                 onViewAllTap: () {
                                   context.pushNamed(
@@ -171,6 +172,24 @@ class CoworkingPage extends ConsumerWidget {
                                     const SizedBox.shrink(),
                               );
                             },
+                          ),
+                        ),
+                        // Events Section
+                        SliverToBoxAdapter(
+                          child: EventsBlock(
+                            mallId: coworkingId.toString(),
+                            showTitle: true,
+                            showViewAll: true,
+                            showDivider: true,
+                            cardType: PromotionCardType.medium,
+                            onViewAllTap: () {
+                              context.pushNamed(
+                                'coworking_promotions',
+                                pathParameters: {'id': coworkingId.toString()},
+                                extra: {'initialTabIndex': 1},
+                              );
+                            },
+                            emptyBuilder: (context) => const SizedBox.shrink(),
                           ),
                         ),
                         // News Section

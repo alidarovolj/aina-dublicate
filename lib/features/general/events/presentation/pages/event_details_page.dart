@@ -9,12 +9,9 @@ import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:aina_flutter/core/services/amplitude_service.dart';
-import 'package:go_router/go_router.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:aina_flutter/core/widgets/custom_button.dart';
-import 'package:aina_flutter/core/types/button_config.dart';
 import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
 import 'package:aina_flutter/core/widgets/base_slider.dart';
 import 'package:aina_flutter/core/types/slides.dart' as slides;
@@ -232,7 +229,14 @@ class EventDetailsPage extends ConsumerWidget {
                                   ),
                                 },
                               ),
-                              const SizedBox(height: AppLength.sm),
+                              if (promotion.button != null) ...[
+                                const SizedBox(height: AppLength.sm),
+                                CustomButton(
+                                  button: promotion.button,
+                                  isFullWidth: true,
+                                  backgroundColor: AppColors.primary,
+                                ),
+                              ],
                               Html(
                                 data: promotion.body,
                                 style: {
@@ -267,14 +271,6 @@ class EventDetailsPage extends ConsumerWidget {
                                   showIndicators: true,
                                   showGradient: false,
                                   height: 200,
-                                ),
-                              ],
-                              if (promotion.button != null) ...[
-                                const SizedBox(height: AppLength.sm),
-                                CustomButton(
-                                  button: promotion.button,
-                                  isFullWidth: true,
-                                  backgroundColor: AppColors.primary,
                                 ),
                               ],
                               if (promotion.bottomBody != null &&

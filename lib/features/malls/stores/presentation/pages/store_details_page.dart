@@ -67,7 +67,7 @@ class StoreDetailsPage extends ConsumerWidget {
 
                                   if (isValidImageUrl) {
                                     return Image.network(
-                                      imageUrl!,
+                                      imageUrl,
                                       width: double.infinity,
                                       height: 212,
                                       fit: BoxFit.cover,

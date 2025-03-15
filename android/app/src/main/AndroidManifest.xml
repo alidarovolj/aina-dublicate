@@ -28,7 +28,10 @@
         android:icon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:enableOnBackInvokedCallback="true"
-        android:theme="@style/NormalTheme">
+        android:theme="@style/NormalTheme"
+        android:hardwareAccelerated="true"
+        android:allowBackup="true"
+        android:largeHeap="true">
         <!-- Main activity declaration -->
         <activity
             android:name=".MainActivity"
@@ -39,7 +42,10 @@
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:excludeFromRecents="false"
+            android:finishOnTaskLaunch="false"
+            android:stateNotNeeded="true">
             <!-- Specifies an Android theme for the activity during initialization -->
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Disable Vulkan and force OpenGL ES -->
+    <string name="flutter_rendering_backend">gl</string>
+    <bool name="enable_software_rendering">false</bool>
+    <bool name="enable_vulkan">false</bool>
+</resources> 

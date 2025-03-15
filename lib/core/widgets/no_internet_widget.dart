@@ -7,10 +7,10 @@ class NoInternetWidget extends StatelessWidget {
   final bool isFullScreen;
 
   const NoInternetWidget({
-    Key? key,
+    super.key,
     required this.onRefresh,
     this.isFullScreen = true,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

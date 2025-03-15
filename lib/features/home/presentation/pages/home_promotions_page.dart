@@ -8,6 +8,8 @@ import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/providers/requests/promotions_provider.dart';
 import 'package:aina_flutter/core/providers/requests/events_provider.dart';
 import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
+import 'package:aina_flutter/core/widgets/events_block.dart';
+import 'package:aina_flutter/core/types/promotion.dart';
 
 class HomePromotionsPage extends ConsumerStatefulWidget {
   const HomePromotionsPage({super.key});
@@ -203,7 +205,7 @@ class _HomePromotionsPageState extends ConsumerState<HomePromotionsPage>
                                         isServerError: true,
                                       );
                                     },
-                                    data: (events) {
+                                    data: (List<Promotion> events) {
                                       if (events.isEmpty) {
                                         return Center(
                                           child: Text(
@@ -217,13 +219,14 @@ class _HomePromotionsPageState extends ConsumerState<HomePromotionsPage>
                                         );
                                       }
 
-                                      return PromotionsBlock(
+                                      return EventsBlock(
                                         onViewAllTap: () {},
                                         showTitle: false,
                                         showViewAll: false,
                                         showDivider: false,
                                         cardType: PromotionCardType.full,
                                         showGradient: true,
+                                        events: events,
                                       );
                                     },
                                   );

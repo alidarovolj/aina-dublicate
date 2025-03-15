@@ -37,8 +37,9 @@ class _CategoryStoresPageState extends ConsumerState<CategoryStoresPage> {
   }
 
   void _onScroll() {
-    if (_isLoadingMore)
+    if (_isLoadingMore) {
       return; // Предотвращаем множественные вызовы во время загрузки
+    }
 
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {

@@ -13,6 +13,7 @@ import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
 import 'package:aina_flutter/core/services/amplitude_service.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:aina_flutter/features/general/events/presentation/pages/event_details_page.dart';
 
 class EventsBlock extends ConsumerWidget {
   final String? mallId;
@@ -26,6 +27,10 @@ class EventsBlock extends ConsumerWidget {
   final int? maxElements;
   final bool sortByQr;
   final bool showArrow;
+  final List<Promotion>? events;
+
+  static DateTime? _lastTap;
+  static const _debounceTime = Duration(milliseconds: 500);
 
   const EventsBlock({
     super.key,
@@ -40,6 +45,7 @@ class EventsBlock extends ConsumerWidget {
     this.maxElements,
     this.sortByQr = false,
     this.showArrow = false,
+    this.events,
   });
 
   List<dynamic> _sortPromotions(List<dynamic> promotions) {
@@ -67,11 +73,30 @@ class EventsBlock extends ConsumerWidget {
     );
   }
 
+  void _handleEventTap(BuildContext context, Promotion event) {
+    final now = DateTime.now();
+    if (_lastTap != null && now.difference(_lastTap!) < _debounceTime) {
+      return;
+    }
+    _lastTap = now;
+
+    _logEventClick(context, event);
+
+    // Use push instead of pushNamed for more direct control
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => EventDetailsPage(id: event.id),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final eventsAsync = mallId != null
-        ? ref.watch(mallEventsPromotionProvider(mallId!))
-        : const AsyncValue.data([]);
+    final eventsAsync = events != null
+        ? AsyncValue.data(events!)
+        : (mallId != null
+            ? ref.watch(mallEventsPromotionProvider(mallId!))
+            : const AsyncValue.data([]));
 
     return eventsAsync.when(
       loading: () => _buildShimmer(context),
@@ -111,7 +136,10 @@ class EventsBlock extends ConsumerWidget {
           children: [
             if (showTitle || showViewAll)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppLength.xs),
+                padding: const EdgeInsets.only(
+                    left: AppLength.xs,
+                    bottom: AppLength.xs,
+                    top: AppLength.xs),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -131,23 +159,23 @@ class EventsBlock extends ConsumerWidget {
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         onPressed: () {
-                          if (mallId != null) {
+                          if (onViewAllTap != null) {
+                            onViewAllTap?.call();
+                          } else if (mallId != null) {
                             context.pushNamed(
                               'mall_promotions',
                               pathParameters: {'id': mallId.toString()},
                               extra: {'initialTabIndex': 1},
                             );
-                          } else {
-                            onViewAllTap?.call();
                           }
                         },
                         child: Row(
                           children: [
                             Text(
                               'promotions.view_all'.tr(),
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 15,
-                                color: Colors.grey[600],
+                                color: AppColors.textDarkGrey,
                               ),
                             ),
                             SvgPicture.asset(
@@ -155,7 +183,7 @@ class EventsBlock extends ConsumerWidget {
                               width: 24,
                               height: 24,
                               colorFilter: const ColorFilter.mode(
-                                AppColors.grey2,
+                                AppColors.textDarkGrey,
                                 BlendMode.srcIn,
                               ),
                             ),
@@ -257,7 +285,7 @@ class EventsBlock extends ConsumerWidget {
         const horizontalPadding = AppLength.xs * 2;
         const itemSpacing = 12.0;
         const itemCount = 3;
-        final totalSpacing = itemSpacing * (itemCount - 1);
+        const totalSpacing = itemSpacing * (itemCount - 1);
         final availableWidth = screenWidth - horizontalPadding - totalSpacing;
         final itemWidth = availableWidth / itemCount;
 
@@ -296,14 +324,7 @@ class EventsBlock extends ConsumerWidget {
         itemBuilder: (context, index) {
           final event = limitedEvents[index];
           return GestureDetector(
-            onTap: () {
-              _logEventClick(context, event);
-              context.pushNamed(
-                'event_details',
-                pathParameters: {'id': event.id.toString()},
-                extra: {'fromHome': true},
-              );
-            },
+            onTap: () => _handleEventTap(context, event),
             child: Container(
               width: 220,
               margin: const EdgeInsets.only(right: 12),
@@ -365,14 +386,7 @@ class EventsBlock extends ConsumerWidget {
       itemBuilder: (context, index) {
         final event = limitedEvents[index];
         return GestureDetector(
-          onTap: () {
-            _logEventClick(context, event);
-            context.pushNamed(
-              'event_details',
-              pathParameters: {'id': event.id.toString()},
-              extra: {'fromHome': true},
-            );
-          },
+          onTap: () => _handleEventTap(context, event),
           child: Container(
             margin: const EdgeInsets.only(bottom: 16),
             child: Stack(
@@ -444,14 +458,7 @@ class EventsBlock extends ConsumerWidget {
         itemBuilder: (context, index) {
           final event = events[index];
           return GestureDetector(
-            onTap: () {
-              _logEventClick(context, event);
-              context.pushNamed(
-                'event_details',
-                pathParameters: {'id': event.id.toString()},
-                extra: {'fromHome': true},
-              );
-            },
+            onTap: () => _handleEventTap(context, event),
             child: Container(
               width: itemWidth,
               margin: EdgeInsets.only(

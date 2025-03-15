@@ -9,7 +9,6 @@ import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/core/providers/requests/buildings_provider.dart';
 import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
-import 'package:aina_flutter/core/providers/requests/promotion_details_provider.dart';
 
 class QrScannerModal extends ConsumerStatefulWidget {
   final int promotionId;

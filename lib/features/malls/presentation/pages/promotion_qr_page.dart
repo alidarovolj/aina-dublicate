@@ -7,7 +7,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:aina_flutter/core/providers/requests/promotions/register_receipt.dart';
 import 'package:dio/dio.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';
-import 'package:aina_flutter/core/providers/requests/promotions/details.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';

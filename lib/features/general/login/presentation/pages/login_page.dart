@@ -17,7 +17,6 @@ import 'dart:io' show Platform;
 import 'package:dio/dio.dart';
 import 'package:aina_flutter/core/providers/requests/settings_provider.dart';
 import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
-import 'package:aina_flutter/core/api/api_client.dart';
 
 class PhoneNumberInputScreen extends ConsumerStatefulWidget {
   final String? buildingId;

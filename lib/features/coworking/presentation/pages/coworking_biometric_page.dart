@@ -6,7 +6,6 @@ import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/widgets/custom_text_field.dart';
 import 'package:aina_flutter/features/coworking/providers/biometric_provider.dart';
-import 'package:aina_flutter/core/widgets/error_dialog.dart';
 import 'package:aina_flutter/core/widgets/tariffs_modal.dart';
 import 'package:dio/dio.dart';
 import 'package:aina_flutter/core/widgets/base_modal.dart';

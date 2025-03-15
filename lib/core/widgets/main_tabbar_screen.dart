@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'custom_tabbar.dart';
 import 'package:aina_flutter/core/providers/auth/auth_state.dart';
-import 'package:aina_flutter/core/widgets/base_modal.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/core/router/route_observer.dart';
 
 class MainTabBarScreen extends ConsumerStatefulWidget {

@@ -123,7 +123,8 @@
   },
   "events": {
     "title": "Events",
-    "no_active_events": "No active events at the moment",
+    "details_title": "Event",
+    "no_active_events": "There are no active events at the moment",
     "views_count": "Views: {}",
     "no_events": "No events",
     "error": {
@@ -649,5 +650,11 @@
     "title": "Something went wrong!",
     "description": "Please check your internet connection or try again later.",
     "reload": "Reload"
+  },
+  "exit": {
+    "title": "Exit App",
+    "message": "Are you sure you want to exit the app?",
+    "cancel": "Cancel",
+    "confirm": "Exit"
   }
 }

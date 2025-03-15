@@ -20,7 +20,6 @@ import 'firebase_options.dart';
 import 'core/services/amplitude_service.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:aina_flutter/core/api/api_client.dart';
-import 'package:aina_flutter/core/services/storage_service.dart';
 import 'dart:io' show Platform;
 import 'dart:convert';
 

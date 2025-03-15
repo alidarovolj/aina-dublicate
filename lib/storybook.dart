@@ -1598,21 +1598,21 @@ class StorybookApp extends StatelessWidget {
               description: 'Виджет для отображения цены',
               builder: (context) => Scaffold(
                 appBar: AppBar(title: const Text('Price Text')),
-                body: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                body: const Padding(
+                  padding: EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Basic Price Text',
+                      Text('Basic Price Text',
                           style: TextStyle(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       PriceText(
                         price: '5000',
                       ),
-                      const SizedBox(height: 16),
-                      const Text('Price Text with Custom Style',
+                      SizedBox(height: 16),
+                      Text('Price Text with Custom Style',
                           style: TextStyle(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       PriceText(
                         price: '15000',
                         fontSize: 24,
@@ -1725,11 +1725,11 @@ class StorybookApp extends StatelessWidget {
             Story(
               name: 'core/widgets/layout/Upper Header',
               description: 'Верхний заголовок',
-              builder: (context) => Scaffold(
+              builder: (context) => const Scaffold(
                 body: Column(
                   children: [
-                    const UpperHeader(),
-                    const Expanded(
+                    UpperHeader(),
+                    Expanded(
                       child: Center(
                         child: Text('Содержимое страницы'),
                       ),
@@ -1761,8 +1761,8 @@ class StorybookApp extends StatelessWidget {
               description: 'Карточка услуги',
               builder: (context) => Scaffold(
                 appBar: AppBar(title: const Text('Service Card')),
-                body: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                body: const Padding(
+                  padding: EdgeInsets.all(16.0),
                   child: ServiceCard(
                     coworkingId: '1',
                   ),
@@ -1872,11 +1872,11 @@ class StorybookApp extends StatelessWidget {
                           Expanded(
                             child: TabBarView(
                               controller: tabController,
-                              children: [
-                                const Center(child: Text('Главная')),
-                                const Center(child: Text('Акции')),
-                                const Center(child: Text('Бронирования')),
-                                const Center(child: Text('Меню')),
+                              children: const [
+                                Center(child: Text('Главная')),
+                                Center(child: Text('Акции')),
+                                Center(child: Text('Бронирования')),
+                                Center(child: Text('Меню')),
                               ],
                             ),
                           ),
@@ -1906,12 +1906,12 @@ class StorybookApp extends StatelessWidget {
                           Expanded(
                             child: TabBarView(
                               controller: tabController,
-                              children: [
-                                const Center(child: Text('Променад')),
-                                const Center(child: Text('Сообщество')),
-                                const Center(child: Text('Услуги')),
-                                const Center(child: Text('Бронирования')),
-                                const Center(child: Text('Профиль')),
+                              children: const [
+                                Center(child: Text('Променад')),
+                                Center(child: Text('Сообщество')),
+                                Center(child: Text('Услуги')),
+                                Center(child: Text('Бронирования')),
+                                Center(child: Text('Профиль')),
                               ],
                             ),
                           ),

@@ -137,6 +137,9 @@ class CoworkingPage extends ConsumerWidget {
                             coworkingId: coworkingId.toString(),
                           ),
                         ),
+                        const SliverToBoxAdapter(
+                          child: SizedBox(height: 12),
+                        ),
                         // Promotions Section
                         SliverToBoxAdapter(
                           child: Consumer(

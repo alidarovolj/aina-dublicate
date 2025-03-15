@@ -36,8 +36,8 @@ class CustomToggle extends StatelessWidget {
           activeTrackColor: activeColor ?? AppColors.primary,
           inactiveThumbColor: Colors.white,
           inactiveTrackColor: Colors.grey[300],
-          trackOutlineColor: MaterialStateProperty.resolveWith((states) {
-            if (states.contains(MaterialState.disabled)) {
+          trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) {
               return Colors.grey[400];
             }
             return Colors.transparent;

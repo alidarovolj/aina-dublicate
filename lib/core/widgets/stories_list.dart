@@ -16,7 +16,6 @@ import 'package:aina_flutter/core/services/amplitude_service.dart';
 import 'dart:ui' show ImageFilter;
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/rendering.dart';
 
 class StoryList extends ConsumerStatefulWidget {
   const StoryList({super.key});

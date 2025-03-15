@@ -76,17 +76,6 @@ class _PromotionsPageState extends ConsumerState<PromotionsPage>
           },
         );
 
-        if (mall == null) {
-          return const Scaffold(
-            backgroundColor: AppColors.primary,
-            body: SafeArea(
-              child: Center(
-                child: Text('Building not found'),
-              ),
-            ),
-          );
-        }
-
         return Scaffold(
           backgroundColor: AppColors.primary,
           body: SafeArea(

@@ -137,9 +137,11 @@ class EventsBlock extends ConsumerWidget {
             if (showTitle || showViewAll)
               Padding(
                 padding: const EdgeInsets.only(
-                    left: AppLength.xs,
-                    bottom: AppLength.xs,
-                    top: AppLength.xs),
+                  left: AppLength.xs,
+                  right: AppLength.xs,
+                  bottom: AppLength.xs,
+                  top: AppLength.xs,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -206,7 +208,10 @@ class EventsBlock extends ConsumerWidget {
               const SizedBox(height: 16),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: AppLength.xs),
-                child: Divider(height: 1, color: Color(0xFFE5E7EB)),
+                child: Divider(
+                  height: 1,
+                  color: Colors.black12,
+                ),
               ),
               const SizedBox(height: 8),
             ],

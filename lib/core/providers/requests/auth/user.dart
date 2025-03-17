@@ -344,6 +344,11 @@ class Ticket {
 final userTicketsProvider = FutureProvider<List<Ticket>>((ref) async {
   final requestService = ref.read(requestCodeProvider);
   try {
+    final token = await StorageService.getToken();
+    if (token == null) {
+      throw Exception('401');
+    }
+
     final response = await requestService.userTickets();
 
     if (response == null || response.statusCode != 200) {
@@ -353,6 +358,9 @@ final userTicketsProvider = FutureProvider<List<Ticket>>((ref) async {
     final data = response.data['data'] as List;
     return data.map((ticket) => Ticket.fromJson(ticket)).toList();
   } catch (e) {
+    if (e.toString().contains('401')) {
+      throw Exception('401');
+    }
     return [];
   }
 });

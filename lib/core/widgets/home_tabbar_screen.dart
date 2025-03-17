@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'main_custom_tabbar.dart';
@@ -27,20 +28,22 @@ class _HomeTabBarScreenState extends ConsumerState<HomeTabBarScreen>
     '/home': 0,
     '/promotions': 1,
     '/bookings': 2,
-    '/menu': 3,
+    '/tickets': 3,
+    '/menu': 4,
   };
 
   final Map<int, String> _tabIndexToRoutes = {
     0: '/home',
     1: '/promotions',
     2: '/bookings',
-    3: '/menu',
+    3: '/tickets',
+    4: '/menu',
   };
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _updateTabIndex();
 
     _tabController.addListener(() {
@@ -81,7 +84,7 @@ class _HomeTabBarScreenState extends ConsumerState<HomeTabBarScreen>
     if (route != null && widget.currentRoute != route) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         // Handle menu tab
-        if (index == 3) {
+        if (index == 4) {
           context.push('/menu');
           return;
         }
@@ -125,7 +128,7 @@ class _HomeTabBarScreenState extends ConsumerState<HomeTabBarScreen>
         if (currentIndex != 0) {
           _navigateToTab(0);
         } else {
-          Navigator.of(context).pop();
+          SystemNavigator.pop();
         }
       },
       child: Scaffold(

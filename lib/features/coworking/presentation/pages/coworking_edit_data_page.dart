@@ -243,10 +243,14 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
   }
 
   void _handleLogout() async {
+    if (!mounted) return;
+
     final profileData = await ref.read(
         promenadeProfileDataProvider(ref.read(profileCacheKeyProvider)).future);
 
-    BaseModal.show(
+    if (!mounted) return;
+
+    await BaseModal.show(
       context,
       title: 'profile.settings.edit.logout.title'.tr(),
       message: 'profile.settings.edit.logout.message'
@@ -264,30 +268,39 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
           backgroundColor: AppColors.appBg,
           textColor: Colors.red,
           onPressed: () async {
+            if (!mounted) return;
             context.pop(); // Закрываем модальное окно
+
             try {
               await ref.read(authProvider.notifier).logout();
+
               // Очищаем все провайдеры
               ref.invalidate(authProvider);
               ref.refresh(authProvider);
 
-              if (!context.mounted) return;
+              // Сохраняем mounted в локальную переменную
+              final isStillMounted = mounted;
 
               // Переходим на домашнюю страницу с заменой всего стека
-              context.go('/home');
+              if (isStillMounted) {
+                context.go('/home');
+              }
 
               // Принудительно перезапускаем приложение после небольшой задержки
               await Future.delayed(const Duration(milliseconds: 100));
-              if (context.mounted) {
+
+              if (isStillMounted && mounted) {
                 RestartWidget.restartApp(context);
               }
             } catch (e) {
               print('❌ Ошибка при вызове logout через authProvider: $e');
+
               // Если не удалось выйти через провайдер, очищаем токен локально
-              SharedPreferences.getInstance().then((prefs) {
+              await SharedPreferences.getInstance().then((prefs) {
                 prefs.remove('auth_token');
               });
-              if (context.mounted) {
+
+              if (mounted) {
                 context.go('/home');
               }
             }

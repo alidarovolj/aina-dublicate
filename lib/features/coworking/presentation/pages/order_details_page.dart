@@ -28,11 +28,13 @@ import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 class OrderDetailsPage extends ConsumerStatefulWidget {
   final String orderId;
   final OrderService orderService;
+  final bool isFromCalendar;
 
   const OrderDetailsPage({
     super.key,
     required this.orderId,
     required this.orderService,
+    this.isFromCalendar = false,
   });
 
   @override
@@ -312,7 +314,7 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
                 title: order != null
                     ? '${'orders.detail.title'.tr()} №${order!.id}'
                     : 'orders.detail.title'.tr(),
-                type: HeaderType.close,
+                type: widget.isFromCalendar ? HeaderType.close : HeaderType.pop,
               ),
             ],
           ),

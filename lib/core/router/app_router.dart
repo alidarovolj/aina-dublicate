@@ -57,7 +57,7 @@ import 'package:aina_flutter/features/general/no_internet/presentation/pages/no_
 class AppRouter {
   static final router = GoRouter(
     navigatorKey: app.navigatorKey,
-    initialLocation: '/',
+    initialLocation: '/home',
     observers: [
       ChuckerFlutter.navigatorObserver,
       app.routeObserver,
@@ -137,6 +137,11 @@ class AppRouter {
             path: '/bookings',
             name: 'bookings',
             builder: (context, state) => const HomeBookingsPage(),
+          ),
+          GoRoute(
+            path: '/tickets',
+            name: 'home_tickets',
+            builder: (context, state) => const TicketsPage(),
           ),
           GoRoute(
             path: '/stores',
@@ -605,7 +610,11 @@ class AppRouter {
       GoRoute(
         path: '/tickets/:id',
         name: 'tickets',
-        builder: (context, state) => const TicketsPage(),
+        builder: (context, state) => TicketsPage(
+          isFromQr: state.extra != null
+              ? (state.extra as Map)['isFromQr'] as bool?
+              : null,
+        ),
       ),
       GoRoute(
         path: '/malls/:mallId/profile',
@@ -644,12 +653,18 @@ class AppRouter {
         builder: (context, state) {
           final id = state.pathParameters['id'];
           if (id == null) return const HomePage();
+
+          // Check if we came from the calendar page
+          final fromLocation = state.uri.toString();
+          final isFromCalendar = fromLocation.contains('calendar');
+
           return Consumer(
             builder: (context, ref, child) {
               final apiClient = ref.read(apiClientProvider);
               return OrderDetailsPage(
                 orderId: id,
                 orderService: OrderService(apiClient),
+                isFromCalendar: isFromCalendar,
               );
             },
           );

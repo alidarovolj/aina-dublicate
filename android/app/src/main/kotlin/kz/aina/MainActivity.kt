@@ -5,6 +5,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import android.content.Intent
 import android.os.Bundle
+import android.os.Build
 
 class MainActivity: FlutterActivity() {
     private val DEEP_LINK_CHANNEL = "kz.aina/deep_links"
@@ -31,6 +32,15 @@ class MainActivity: FlutterActivity() {
         val data = intent.data
         if (data != null) {
             deepLinkChannel?.invokeMethod("handleDeepLink", data.toString())
+        }
+    }
+
+    override fun onBackPressed() {
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+            // For Android 10, handle back press specially
+            finishAffinity()
+        } else {
+            super.onBackPressed()
         }
     }
 } 

@@ -138,7 +138,7 @@ class _HomePromotionsPageState extends ConsumerState<HomePromotionsPage>
                             onRefresh: _loadData,
                             child: SingleChildScrollView(
                               padding:
-                                  const EdgeInsets.only(top: 28, bottom: 28),
+                                  const EdgeInsets.only(top: 8, bottom: 28),
                               child: PromotionsBlock(
                                 onViewAllTap: () {},
                                 showTitle: false,
@@ -164,7 +164,7 @@ class _HomePromotionsPageState extends ConsumerState<HomePromotionsPage>
                             onRefresh: _loadData,
                             child: SingleChildScrollView(
                               padding:
-                                  const EdgeInsets.only(top: 28, bottom: 28),
+                                  const EdgeInsets.only(top: 8, bottom: 28),
                               child: Consumer(
                                 builder: (context, ref, child) {
                                   final eventsAsync = ref.watch(eventsProvider);

@@ -204,69 +204,58 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
                             );
                           }
 
-                          final groupedCards = _groupCards(cards);
-
-                          if (token != null) {
-                            return userCardAsync?.when(
-                                  data: (userCard) {
-                                    if (userCard['status'] == 'APPROVED') {
-                                      return SingleChildScrollView(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Padding(
-                                              padding: const EdgeInsets.all(12),
-                                              child: Text(
-                                                'community.you'.tr(),
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: AppColors.grey2,
-                                                ),
-                                              ),
-                                            ),
-                                            _CommunityUserCard(
-                                              user: CommunityCard.fromJson(
-                                                  userCard),
-                                            ),
-                                            if (cards.isNotEmpty) ...[
-                                              for (var entry
-                                                  in groupedCards.entries) ...[
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(12),
-                                                  child: Text(
-                                                    entry.key,
-                                                    style: const TextStyle(
-                                                      fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      color: AppColors.grey2,
-                                                    ),
-                                                  ),
-                                                ),
-                                                ...entry.value.map((user) =>
-                                                    _CommunityUserCard(
-                                                        user: user)),
-                                              ],
-                                            ],
-                                          ],
-                                        ),
-                                      );
-                                    }
-                                    return _buildCardsList(groupedCards);
-                                  },
-                                  loading: () => const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                  error: (_, __) =>
-                                      _buildCardsList(groupedCards),
-                                ) ??
-                                _buildCardsList(groupedCards);
+                          // Разделяем карточки на карточку пользователя и остальные
+                          CommunityCard? userCard;
+                          if (token != null && cards.isNotEmpty) {
+                            try {
+                              userCard = cards.first;
+                            } catch (e) {
+                              debugPrint('Error finding user card: $e');
+                            }
                           }
 
-                          return _buildCardsList(groupedCards);
+                          final otherCards = cards.skip(1).toList();
+                          final groupedCards = _groupCards(otherCards);
+
+                          return SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (userCard != null) ...[
+                                  Padding(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Text(
+                                      'community.you'.tr(),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.grey2,
+                                      ),
+                                    ),
+                                  ),
+                                  _CommunityUserCard(
+                                    user: userCard,
+                                    isCurrentUser: true,
+                                  ),
+                                ],
+                                for (var entry in groupedCards.entries) ...[
+                                  Padding(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Text(
+                                      entry.key,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.grey2,
+                                      ),
+                                    ),
+                                  ),
+                                  ...entry.value.map(
+                                      (user) => _CommunityUserCard(user: user)),
+                                ],
+                              ],
+                            ),
+                          );
                         },
                         loading: () => _buildSkeletonLoader(),
                         error: (error, stack) => Center(
@@ -293,30 +282,6 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildCardsList(Map<String, List<CommunityCard>> groupedCards) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (var entry in groupedCards.entries) ...[
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Text(
-                entry.key,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.grey2,
-                ),
-              ),
-            ),
-            ...entry.value.map((user) => _CommunityUserCard(user: user)),
-          ],
-        ],
       ),
     );
   }
@@ -420,12 +385,17 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
 
 class _CommunityUserCard extends StatelessWidget {
   final CommunityCard user;
+  final bool isCurrentUser;
 
   const _CommunityUserCard({
     required this.user,
+    this.isCurrentUser = false,
   });
 
   String _getInitials() {
+    if (isCurrentUser) {
+      return 'community.you'.tr();
+    }
     final nameParts = user.name.split(' ');
     if (nameParts.length > 1) {
       return '${nameParts[0][0]}${nameParts[1][0]}'.toUpperCase();

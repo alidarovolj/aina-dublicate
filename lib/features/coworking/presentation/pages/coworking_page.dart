@@ -179,20 +179,27 @@ class CoworkingPage extends ConsumerWidget {
                         ),
                         // Events Section
                         SliverToBoxAdapter(
-                          child: EventsBlock(
-                            mallId: coworkingId.toString(),
-                            showTitle: true,
-                            showViewAll: true,
-                            showDivider: true,
-                            cardType: PromotionCardType.medium,
-                            onViewAllTap: () {
-                              context.pushNamed(
-                                'coworking_promotions',
-                                pathParameters: {'id': coworkingId.toString()},
-                                extra: {'initialTabIndex': 1},
+                          child: Consumer(
+                            builder: (context, ref, child) {
+                              return EventsBlock(
+                                mallId: coworkingId.toString(),
+                                showTitle: true,
+                                showViewAll: true,
+                                showDivider: true,
+                                cardType: PromotionCardType.medium,
+                                onViewAllTap: () {
+                                  context.pushNamed(
+                                    'coworking_promotions',
+                                    pathParameters: {
+                                      'id': coworkingId.toString()
+                                    },
+                                    extra: {'initialTabIndex': 1},
+                                  );
+                                },
+                                emptyBuilder: (context) =>
+                                    const SizedBox.shrink(),
                               );
                             },
-                            emptyBuilder: (context) => const SizedBox.shrink(),
                           ),
                         ),
                         // News Section
@@ -229,7 +236,7 @@ class CoworkingPage extends ConsumerWidget {
                   ),
                   CustomHeader(
                     title: coworking.name,
-                    type: HeaderType.pop,
+                    type: HeaderType.close,
                     onBack: () {
                       context.go('/home');
                     },

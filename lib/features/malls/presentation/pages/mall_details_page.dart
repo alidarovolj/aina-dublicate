@@ -392,9 +392,9 @@ class MallDetailsPage extends ConsumerWidget {
                     ),
                     CustomHeader(
                       title: mall.name,
-                      type: HeaderType.pop,
+                      type: HeaderType.close,
                       onBack: () {
-                        context.pop();
+                        context.go('/home');
                       },
                     ),
                   ],

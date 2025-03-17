@@ -69,9 +69,9 @@ class AuthWarningModal {
                   );
 
                   if (building.type == 'coworking') {
-                    context.push('/coworking/$mallId/profile');
+                    context.pushReplacement('/coworking/$mallId/profile');
                   } else {
-                    context.pushNamed('mall_profile',
+                    context.pushReplacementNamed('mall_profile',
                         pathParameters: {'id': mallId});
                   }
                 },

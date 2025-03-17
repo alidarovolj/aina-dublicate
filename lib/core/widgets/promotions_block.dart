@@ -90,10 +90,10 @@ class PromotionsBlock extends ConsumerWidget {
           children: [
             if (showTitle || showViewAll)
               Padding(
-                padding: const EdgeInsets.only(
-                    left: AppLength.xs,
-                    bottom: AppLength.xs,
-                    top: AppLength.xs),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppLength.xs,
+                  vertical: AppLength.xs,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -122,14 +122,18 @@ class PromotionsBlock extends ConsumerWidget {
                                 color: AppColors.textDarkGrey,
                               ),
                             ),
-                            SvgPicture.asset(
-                              'lib/core/assets/icons/chevron-right.svg',
-                              width: 24,
-                              height: 24,
-                              colorFilter: const ColorFilter.mode(
-                                AppColors.textDarkGrey,
-                                BlendMode.srcIn,
-                              ),
+                            Row(
+                              children: [
+                                SvgPicture.asset(
+                                  'lib/core/assets/icons/chevron-right.svg',
+                                  width: 24,
+                                  height: 24,
+                                  colorFilter: const ColorFilter.mode(
+                                    AppColors.textDarkGrey,
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),

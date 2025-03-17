@@ -9,8 +9,8 @@
     "active": "Active",
     "history": "History",
     "auth_required": "Sign in to see your bookings",
-    "authorize": "Authorize",
-    "no_bookings": "You don't have any bookings yet, but it's easy to fix! Book something right now.",
+    "authorize": "Sign in",
+    "no_bookings": "You don't have any bookings yet, \n but that's easy to fix! \nBook something right now.",
     "book_coworking": "Book a coworking space",
     "book_conference": "Book a conference room"
   },
@@ -25,31 +25,31 @@
     "card": {
       "phone_label": "Phone",
       "email_label": "Email",
-      "personal_info": "Personal data",
+      "personal_info": "Personal info",
       "company_label": "Company",
       "employment": {
-        "CONTRACT": "Contract",
+        "FULL_TIME": "Full-time",
         "CASUAL": "Casual",
-        "FULL_TIME": "Full time",
-        "PART_TIME": "Part time"
+        "PART_TIME": "Part-time",
+        "CONTRACT": "Contract"
       },
-      "title": "Community Card",
+      "title": "Community card",
       "status": {
         "approved": "Approved for publication",
         "in_community": "in community",
         "review": "Your card is under review",
-        "unapproved": "Your card is not approved"
+        "unapproved": "Your card was not approved"
       },
       "visibility": {
-        "title": "Visibility Settings",
+        "title": "Visibility settings",
         "show_card": "Show my card in community",
         "show_phone": "Show my phone number",
         "apply": "Apply",
         "success": "Visibility settings updated"
       },
       "main": {
-        "title": "Basic information",
-        "name": "Full name",
+        "title": "Main information",
+        "name": "First and last name",
         "position": "Position",
         "about": "About me",
         "company": "Company"
@@ -60,7 +60,8 @@
         "whatsapp": "WhatsApp",
         "linkedin": "LinkedIn",
         "email": "Email",
-        "phone": "Phone"
+        "phone": "Phone",
+        "company": "Company"
       },
       "work": {
         "title": "Work"
@@ -68,8 +69,8 @@
       "image": {
         "title": "Image",
         "add": "Add image",
-        "select": "Click to select an image",
-        "error_picking": "Error picking image: {}",
+        "select": "Click to select image",
+        "error_picking": "Error selecting image: {}",
         "added": "Photo added"
       },
       "button": {
@@ -98,12 +99,13 @@
           "visibility": "Error updating visibility settings: {}",
           "saving": "Error saving data: {}"
         },
-        "update_success": "Changes saved"
+        "update_success": "Changes saved",
+        "success": "Community card successfully created"
       },
       "validation": {
-        "required_fields": "Please fill in the required fields",
-        "name_required": "Enter your name",
-        "position_required": "Enter your position"
+        "required_fields": "Please fill in required fields",
+        "name_required": "Enter name",
+        "position_required": "Enter position"
       }
     }
   },
@@ -124,7 +126,7 @@
   "events": {
     "title": "Events",
     "details_title": "Event",
-    "no_active_events": "There are no active events at the moment",
+    "no_active_events": "No active events at the moment",
     "views_count": "Views: {}",
     "no_events": "No events",
     "error": {
@@ -163,14 +165,15 @@
     "processing": "Please wait...",
     "success": {
       "title": "Your receipt has been registered. Congratulations!",
-      "message": "Coupon numbers for participation in the draw: {tickets}\n\nThe number is stored in your profile, in the \"Coupons\" section.",
+      "message": "Coupon numbers for the draw: {tickets}\n\nThe number is saved in your profile, in the «Coupons» section.",
       "to_profile": "To profile",
+      "to_tickets": "Coupons",
       "back_to_promotion": "Back to promotion"
     },
     "error": {
       "unknown": "Unknown error",
       "processing": "An error occurred while processing the QR code",
-      "back": "Go Back"
+      "back": "Go back"
     }
   },
   "receipt": {
@@ -178,7 +181,7 @@
     "back_to_promotions": "Back to promotions",
     "scan_again": "Scan again",
     "success_title": "Your receipt has been registered. Congratulations!",
-    "success_message": "Coupon numbers for participation in the drawing: {}\n\nThe number is stored in your profile, in the 'Coupons' section.",
+    "success_message": "Coupon numbers for the draw: {}\n\nThe number is stored in your profile, in the «Coupons» section.",
     "to_profile": "To profile"
   },
   "shops": {
@@ -194,89 +197,92 @@
     "phone_number": "(000) 000 00 00",
     "get_code": "Get code",
     "code_send_error": "Error sending code",
-    "terms_prefix": "By clicking the button, you accept the terms of ",
+    "terms_prefix": "By clicking the button, you accept the ",
     "terms_of_service": "terms of service",
     "terms_and": " and ",
     "privacy_policy": "privacy policy",
     "enter_sms_code": "Enter SMS code",
     "sms_sent_to": "We sent you a message to ",
-    "with_login_code": " with login code",
+    "with_login_code": " with a login code",
     "resend_code": "Resend code",
     "resend_code_timer": "Resend code in 00:{}",
     "server_no_response": "No response from server",
     "code_send_error_with_code": "Error sending code: {}",
-    "request_error": "An error occurred while executing the request",
+    "request_error": "An error occurred while processing the request",
     "server_connection_error": "Server connection error",
     "invalid_status_code": "Invalid status code: {}",
     "error": "Authorization error: {}",
-    "service_auth_required": "To order a service, please register in the app",
-    "service_biometric_required": "To order a service, you need to pass biometric verification",
+    "service_auth_required": "Please register in the app to order the service",
+    "service_biometric_required": "Biometric verification is required to order the service",
     "register": "Register",
-    "verify_biometric": "Pass verification",
+    "verify_biometric": "Verify biometrics",
     "warning": {
-      "profile_incomplete_message": "Before scanning the QR, please make sure your first and last name in your profile are correct. This is a mandatory requirement for participating in the promotion.",
+      "profile_incomplete_message": "Before scanning QR, please ensure your name and surname are correct in your profile. This is a mandatory condition for participation in the promotion.",
       "auth_required_message": "Authorization is required to participate in the promotion",
-      "to_profile": "To Profile",
+      "to_profile": "To profile",
       "scan": "Scan",
-      "login": "Login"
+      "login": "Sign in"
     }
   },
   "about": {
-    "title": "About",
+    "title": "About app",
     "version": "Version {}",
     "company": "MP Solutions LLP",
     "license_agreement": "License agreement",
     "public_offer": "Public offer",
     "privacy_policy": "Privacy policy",
     "delete_profile": "Delete profile",
-    "account_deleted_success": "Your account has been successfully deleted"
+    "account_deleted_success": "Your account has been successfully deleted",
+    "personal_data_consent": "Consent to the collection and processing of personal data"
   },
   "profile": {
     "mall_title": "Mall profile",
     "load_error": "Failed to load profile data",
-    "personal_info": "Personal data",
+    "personal_info": "Personal info",
     "coupons": "Coupons",
     "contact_us": "Contact us",
     "about_app": "About app",
     "switch_to_coworking": "Switch to Aina Coworking profile",
     "settings": {
       "edit": {
-        "title": "Personal Information",
+        "title": "Personal data",
         "phone": "Phone",
         "main_info": "Main",
-        "firstname": "First Name*",
-        "lastname": "Last Name*",
-        "patronymic": "Middle Name",
+        "firstname": "First name*",
+        "lastname": "Last name*",
+        "patronymic": "Middle name",
         "email": "E-mail",
-        "car_number": "Car Number (for parking payment)*",
+        "car_number": "Car number (for parking payment)*",
         "car_number_note": "*Car number can be changed no more than once per day",
         "required_field": "Required field",
         "min_length": "Minimum 5 characters",
         "validation_error": "Please fix the errors in the form",
-        "save_success": "Changes saved successfully",
+        "save_success": "Changes saved",
         "update_error": "Error saving data",
-        "uploading_avatar": "Uploading avatar...",
-        "avatar_updated": "Avatar updated successfully",
-        "avatar_error": "Error uploading avatar",
-        "removing_avatar": "Removing avatar...",
-        "avatar_removed": "Avatar removed successfully",
+        "uploading_avatar": "Uploading photo...",
+        "avatar_updated": "Profile photo updated",
+        "avatar_error": "Error uploading photo",
+        "removing_avatar": "Removing photo...",
+        "avatar_removed": "Profile photo removed",
         "add_avatar": "Add photo",
         "change_avatar": "Change photo",
         "remove_avatar": "Remove photo",
         "gender": {
           "title": "Gender",
-          "female": "F",
-          "male": "M",
-          "not_specified": "N/A"
+          "female": "Female",
+          "male": "Male",
+          "not_specified": "Not specified"
         },
         "settings": "Settings",
         "logout": {
-          "title": "Logout",
-          "message": "Are you sure you want to log out of account {}?",
+          "title": "Sign out",
+          "message": "Do you want to sign out of account {}?",
           "cancel": "Cancel",
-          "confirm": "Logout"
+          "confirm": "Sign out"
         },
-        "update_success": "Changes saved"
+        "update_success": "Changes saved",
+        "firstname_placeholder": "First name",
+        "lastname_placeholder": "Last name"
       }
     }
   },
@@ -288,10 +294,12 @@
     "receipt_amount": "Receipt amount: {} ₸",
     "organization": "Organization: {}",
     "purchase_date": "Purchase date: {}",
-    "registration_date": "Receipt registration date: {}"
+    "registration_date": "Receipt registration date: {}",
+    "auth_required": "Please sign in to view your coupons",
+    "authorize": "Sign in"
   },
   "coworking": {
-    "title": "Coworking Promenade",
+    "title": "Coworking",
     "error": "Error: {}",
     "no_coworkings": "No available coworking spaces at the moment",
     "promotions_title": "Promotions {}",
@@ -306,7 +314,7 @@
     },
     "calendar": {
       "select_date": "Select date",
-      "page_title": "Select date",
+      "page_title": "Date selection",
       "weekdays": {
         "mon": "Mon",
         "tue": "Tue",
@@ -323,21 +331,21 @@
       "proceed_to_payment": "Proceed to payment",
       "reserved_date": "Selected date is already reserved",
       "reserved_info": "Reserved dates are marked in yellow",
-      "overlap_error": "Selected period overlaps with existing reservation",
+      "overlap_error": "Selected period overlaps with an existing reservation",
       "go_back": "Go back",
       "order_error": "Error creating order"
     },
     "profile": {
-      "title": "Coworking Profile",
-      "personal_info": "Personal data",
-      "biometric": "Biometric",
-      "community_card": "Community Card",
-      "limit_accounts": "Limit Accounts",
-      "contact_us": "Contact Us",
-      "about_app": "About App"
+      "title": "Coworking profile",
+      "personal_info": "Personal info",
+      "biometric": "Biometric data",
+      "community_card": "Community card",
+      "limit_accounts": "Limit accounts",
+      "contact_us": "Contact us",
+      "about_app": "About app"
     },
     "time_selection": {
-      "title": "Select time (min. {} h)",
+      "title": "Select time (min. {} h.)",
       "start": "Start",
       "end": "End",
       "not_selected": "Not selected",
@@ -346,15 +354,16 @@
       "start_date": "Start date:",
       "end_date": "End date:",
       "confirm": "Confirm",
-      "min_duration_error": "Minimum booking duration: {} hours",
+      "min_duration_error": "Minimum booking time: {} hours",
       "error": {
-        "title": "Select time",
-        "intersection": "Selected time range is not available",
-        "back": "Select again"
-      }
+        "title": "Error",
+        "calculation": "Error calculating booking time",
+        "back": "Back"
+      },
+      "special_price": "Special price"
     },
     "edit_data": {
-      "title": "Personal Information",
+      "title": "Personal data",
       "phone": "Phone",
       "firstname": "First name*",
       "lastname": "Last name*",
@@ -374,9 +383,9 @@
       "language": "Language",
       "select_language": "Select language",
       "account": "Account",
-      "logout": "Log out",
-      "logout_title": "Log out",
-      "logout_message": "Are you sure you want to log out?",
+      "logout": "Sign out",
+      "logout_title": "Sign out",
+      "logout_message": "Are you sure you want to sign out?",
       "update_success": "Changes saved"
     }
   },
@@ -384,8 +393,8 @@
     "title": "AINA QR",
     "processing": "Please wait...",
     "scan_title": "Scan QR",
-    "auth_required": "To scan the receipt, please register in the app. Make sure your name and surname are filled in correctly in your profile. This is a mandatory condition for participation in the promotion.",
-    "profile_required": "Before scanning the receipt, please make sure your name and surname are correct in your profile. This is a mandatory condition for participation in the promotion.",
+    "auth_required": "Please register in the app to scan receipts. Make sure your name and surname are filled in correctly in your profile. This is a mandatory condition for participation in the promotion.",
+    "profile_required": "Before scanning the receipt, please ensure your name and surname are correct in your profile. This is a mandatory condition for participation in the promotion.",
     "register": "Register",
     "to_profile": "To profile",
     "scan": "Scan",
@@ -397,7 +406,13 @@
     "back_to_promotions": "Back to promotions",
     "scan_again": "Scan again",
     "receipt_success_title": "Your receipt has been registered. Congratulations!",
-    "receipt_success_message": "Coupon numbers for participation in the drawing: {}\n\nThe number is stored in your profile, in the 'Coupons' section."
+    "receipt_success_message": "Coupon numbers for the draw: {}\n\nThe number is stored in your profile, in the «Coupons» section.",
+    "camera": {
+      "permission_title": "Camera access required",
+      "permission_denied": "Camera permission is required. Please enable camera access in device settings.",
+      "permission_required": "Please allow camera access for taking photos. You can enable it in Settings.",
+      "initialization_error": "Camera initialization error"
+    }
   },
   "stores": {
     "title": "Stores",
@@ -417,7 +432,7 @@
   },
   "biometry": {
     "title": "Biometric data",
-    "description": "To purchase a tariff and enter the coworking space, add your personal data and set up face recognition (biometry)",
+    "description": "To purchase a tariff and enter the coworking space, add your personal data and set up face recognition (biometrics)",
     "add_photo": "Add photo",
     "added": "Photo added",
     "save": "Save and verify",
@@ -428,16 +443,9 @@
     "camera": {
       "description": "Position your face in the center of the oval and take a photo",
       "permission_denied": "Camera access is required for verification",
+      "permission_required": "Please allow camera access for taking photos. You can enable it in Settings.",
+      "permission_title": "Camera access required",
       "initialization_error": "Camera initialization error"
-    }
-  },
-  "camera": {
-    "permission_title": "Camera Access Required",
-    "permission_denied": "Camera access is required. Please enable camera access in device settings.",
-    "permission_required": "Please allow camera access to take a photo. You can enable it in Settings.",
-    "initialization_error": "Failed to initialize camera",
-    "initialization": {
-      "error": "Camera initialization error"
     }
   },
   "orders": {
@@ -468,18 +476,18 @@
       "refunded": "Refunded",
       "completed": "Completed"
     },
-    "payment": {
-      "error": "An error occurred during payment. Please try again"
-    },
-    "fiscal": {
-      "error_launch": "Failed to open fiscal receipt",
-      "error_download": "Error downloading fiscal receipt",
-      "error_no_url": "Fiscal receipt is not available"
-    },
     "rules": {
       "loading": "Loading rules...",
       "error_loading": "Error loading rules",
-      "not_available": "Usage rules are not available"
+      "not_available": "Terms of use not available"
+    },
+    "fiscal": {
+      "error_launch": "Could not open fiscal receipt",
+      "error_download": "Error downloading fiscal receipt",
+      "error_no_url": "Fiscal receipt URL is missing"
+    },
+    "payment": {
+      "error": "Payment error"
     }
   },
   "common": {
@@ -490,27 +498,33 @@
     "settings": "Settings",
     "confirm": "Confirm",
     "save": "Save",
-    "discard": "Discard",
-    "logout": "Logout",
+    "discard": "Don't save",
+    "logout": "Sign out",
     "delete": "Delete",
     "support": "Support",
     "refresh": "Refresh",
     "tap_to_refresh": "Tap to refresh",
     "error_loading_data": "Error loading data",
     "error": {
-      "general": "Something went wrong, please try again later"
+      "general": "Something went wrong, please try again later."
+    }
+  },
+  "stories": {
+    "error": {
+      "server": "Failed to load data. Please try again later",
+      "loading": "Failed to load data. Please try again later"
     }
   },
   "limits": {
-    "title": "Limit Accounts",
+    "title": "Limit accounts",
     "status": "Valid until",
-    "meeting_room": "Meeting Room",
+    "meeting_room": "Meeting room",
     "print": "Print",
     "hour": "h",
     "pages": "pages",
     "remaining": "Remaining",
     "free": "Free",
-    "no_quotas": "You have no limit accounts",
+    "no_quotas": "You don't have any limit accounts",
     "quotas": {
       "title": "Quotas",
       "active": "Active",
@@ -522,7 +536,7 @@
       "discount": "Discount",
       "status": {
         "paid": "Paid",
-        "pending": "Pending",
+        "pending": "Pending payment",
         "cancelled": "Cancelled",
         "refunded": "Refunded"
       }
@@ -530,48 +544,57 @@
   },
   "communication": {
     "modal": {
-      "title": "Contact Us",
+      "title": "Contact us",
       "whatsapp": {
-        "button_text": "Write to WhatsApp",
+        "button_text": "Write in WhatsApp",
         "description": "Questions about tariffs, payment, booking issues, app functionality, etc.",
-        "error": "Failed to open WhatsApp"
+        "error": "Could not open WhatsApp"
       },
       "create_request": {
-        "button_text": "Create Request",
+        "button_text": "Create request",
         "description": "Questions about office rental, repairs, cleaning, event organization, etc."
       }
     }
   },
   "contact_admin": {
-    "title": "Contact Us",
+    "title": "Feedback",
     "category_label": "Category",
     "category_placeholder": "Select category",
     "comment_label": "Comment",
     "comment_placeholder": "Describe your question",
     "phone_label": "Contact phone",
     "phone_placeholder": "Enter phone number",
-    "response_note": "We will contact you soon",
-    "submit_button": "Submit",
-    "success": "Your message has been successfully sent",
+    "response_note": "We will contact you shortly",
+    "submit_button": "Send",
+    "success": "Your message has been sent successfully",
     "errors": {
       "required": "Required field"
     }
   },
+  "camera": {
+    "permission_title": "Camera access required",
+    "permission_required": "Please allow camera access for taking photos. You can enable it in Settings.",
+    "permission_denied": "Camera access is required for verification",
+    "initialization": {
+      "error": "Camera initialization error"
+    }
+  },
   "modals": {
     "save_changes": {
-      "title": "Save Changes",
-      "message": "You have unsaved changes. Would you like to save them?"
+      "title": "Save changes",
+      "message": "You have unsaved changes. Do you want to save them?",
+      "save": "Save"
     },
     "validation_error": {
       "title": "Warning",
-      "message": "There are errors in the form. All entered data will be lost if you exit.",
+      "message": "There are errors in the form. All entered data will be lost when exiting.",
       "stay": "Fix errors",
       "discard": "Exit without saving"
     },
     "logout": {
-      "title": "Logout",
-      "message": "Confirm logout?",
-      "confirm": "Logout",
+      "title": "Sign out",
+      "message": "Confirm sign out?",
+      "confirm": "Sign out",
       "cancel": "Cancel"
     },
     "delete_profile": {
@@ -579,18 +602,18 @@
       "message": ""
     }
   },
-  "payment_accepted": "Payment Successful",
-  "payment_declined": "Payment Declined",
+  "payment_accepted": "Payment successful",
+  "payment_declined": "Payment declined",
   "invoice_id": "Order ID: ",
   "reference": "Reference: ",
   "close": "Close",
-  "try_again": "Try Again",
+  "try_again": "Try again",
   "error_payment_default": "An error occurred while processing the payment. Please try again.",
-  "payment_success_details": "You can view the details in\nthe \"Bookings\" section by tapping on your order.",
-  "return_to_order": "Return to Order",
+  "payment_declined_details": "You can try to pay again\nor come back later.",
+  "payment_success_details": "You can view the details in\nthe «Bookings» section by clicking on your order.",
+  "return_to_order": "Return to order",
   "go_to_bookings": "Go to Bookings",
   "go_to_home": "Go to Home",
-  "payment_declined_details": "You can try to pay again\nor come back later.",
   "update": {
     "new_version": "New version available",
     "description": "To access all features, please update the app",
@@ -600,14 +623,14 @@
   },
   "payment": {
     "connecting": "Connecting to payment service...",
-    "retry_attempt": "Retrying connection to payment service (Attempt {} of {})...",
-    "check_internet": "Please check your internet connection",
-    "connection_error": "Failed to connect to payment service. Please check your internet connection and try again."
+    "retry_attempt": "Reconnecting to payment service (Attempt {} of {})...",
+    "check_internet": "Check internet connection",
+    "connection_error": "Could not connect to payment service. Please check your internet connection and try again."
   },
-  "language": "Language Selection",
+  "language": "Language selection",
   "errors": {
     "delete_profile": "Error deleting profile",
-    "unauthorized": "Session expired. Please log in again.",
+    "unauthorized": "Session expired. Please sign in again.",
     "mall_id_not_found": "Error: Building ID not found",
     "promotion_id_not_found": "Error: Promotion ID not found",
     "buildings_data_unavailable": "Error: Buildings data unavailable"
@@ -615,18 +638,10 @@
   "menu": {
     "title": "Menu",
     "join_aina": "Join AINA",
-    "authorize": "Log in",
+    "authorize": "Sign in",
     "contact_us": "Contact us",
     "about": "About app",
     "notifications": "Notifications"
-  },
-  "notifications": {
-    "title": "Notifications",
-    "empty": "You have no notifications yet",
-    "error": "Error loading notifications",
-    "retry": "Retry",
-    "today": "Today",
-    "yesterday": "Yesterday"
   },
   "categories": {
     "title": "Categories",
@@ -637,22 +652,24 @@
     "capacity_value": "up to {} people",
     "price": "Price:",
     "price_value": "{} ₸ / hour",
-    "book": "Book now",
+    "book": "Book",
     "similar_services": "Similar services:"
   },
-  "stories": {
-    "error": {
-      "server": "Failed to load data. Please try again later",
-      "loading": "Failed to load data. Please try again later"
-    }
+  "notifications": {
+    "title": "Notifications",
+    "empty": "You don't have any notifications yet",
+    "error": "Error loading notifications",
+    "retry": "Retry",
+    "today": "Today",
+    "yesterday": "Yesterday"
   },
   "no_internet": {
     "title": "Something went wrong!",
-    "description": "Please check your internet connection or try again later.",
+    "description": "Check your internet connection or try again later.",
     "reload": "Reload"
   },
   "exit": {
-    "title": "Exit App",
+    "title": "Exit app",
     "message": "Are you sure you want to exit the app?",
     "cancel": "Cancel",
     "confirm": "Exit"

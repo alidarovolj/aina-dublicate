@@ -9,6 +9,7 @@ final communityCardsProvider =
     FutureProvider.family<List<CommunityCard>, String?>((ref, search) async {
   final token = ref.read(authProvider).token;
   int? userCardId;
+  CommunityCard? userCard;
 
   try {
     debugPrint('Fetching community cards with search: $search');
@@ -26,6 +27,8 @@ final communityCardsProvider =
           userCardResponse.data['success'] == true &&
           userCardResponse.data['data'] != null) {
         userCardId = userCardResponse.data['data']['id'] as int?;
+        // Save user's card for later
+        userCard = CommunityCard.fromJson(userCardResponse.data['data']);
       }
     }
 
@@ -50,9 +53,15 @@ final communityCardsProvider =
     final responseData = response.data['data'];
     debugPrint('Response data type: ${responseData.runtimeType}');
 
+    final validItems = <CommunityCard>[];
+
+    // Add user's card first if it exists and is approved
+    if (userCard != null) {
+      validItems.add(userCard);
+    }
+
     if (responseData is List) {
       debugPrint('Processing list of ${responseData.length} cards');
-      final validItems = <CommunityCard>[];
 
       for (var i = 0; i < responseData.length; i++) {
         final item = responseData[i];
@@ -64,7 +73,7 @@ final communityCardsProvider =
           continue;
         }
 
-        // Skip user's own card only if user is authenticated
+        // Skip user's own card since we already added it
         if (token != null && item['id'] == userCardId) {
           debugPrint('Skipping user\'s own card with id: $userCardId');
           continue;
@@ -82,6 +91,28 @@ final communityCardsProvider =
       }
 
       debugPrint('Returning ${validItems.length} valid cards');
+      return validItems;
+    } else if (responseData is Map<String, dynamic> &&
+        responseData['data'] is List) {
+      final dataList = responseData['data'] as List;
+
+      for (var item in dataList) {
+        if (item is Map<String, dynamic>) {
+          // Skip user's own card since we already added it
+          if (token != null && item['id'] == userCardId) {
+            debugPrint('Skipping user\'s own card with id: $userCardId');
+            continue;
+          }
+
+          try {
+            final card = CommunityCard.fromJson(item);
+            validItems.add(card);
+          } catch (e) {
+            debugPrint('Error parsing card: $e');
+          }
+        }
+      }
+
       return validItems;
     }
 

@@ -89,6 +89,21 @@ class MainCustomTabBar extends StatelessWidget {
                     BlendMode.srcIn,
                   ),
                   child: SvgPicture.asset(
+                    "lib/core/assets/icons/tabbar_coupon.svg",
+                    width: 28,
+                    height: 28,
+                  ),
+                ),
+                text: 'tickets.title'.tr()),
+            Tab(
+                icon: ColorFiltered(
+                  colorFilter: ColorFilter.mode(
+                    tabController.index == 4
+                        ? AppColors.white
+                        : AppColors.darkGrey,
+                    BlendMode.srcIn,
+                  ),
+                  child: SvgPicture.asset(
                     "lib/core/assets/icons/menu.svg",
                     width: 28,
                     height: 28,

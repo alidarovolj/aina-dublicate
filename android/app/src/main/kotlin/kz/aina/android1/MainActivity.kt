@@ -28,6 +28,10 @@ class MainActivity: FlutterActivity() {
     }
 
     override fun onBackPressed() {
-        finishAffinity()
+        if (canPopRoute) {
+            super.onBackPressed()
+        } else {
+            finishAffinity()
+        }
     }
 } 

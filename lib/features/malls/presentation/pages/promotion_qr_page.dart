@@ -46,10 +46,10 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
   @override
   void reassemble() {
     super.reassemble();
-    if (controller != null) {
-      controller!.pauseCamera();
-      controller!.resumeCamera();
+    if (Platform.isAndroid) {
+      controller?.pauseCamera();
     }
+    controller?.resumeCamera();
   }
 
   Future<void> _handleQrCode(String? code) async {
@@ -160,18 +160,10 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
               .tr(namedArgs: {'tickets': tickets.join(", ")}),
           buttons: [
             ModalButton(
-              label: 'qr.success.to_profile'.tr(),
+              label: 'qr.success.to_tickets'.tr(),
               onPressed: () async {
-                if (building.type == 'coworking') {
-                  print(
-                      '🚀 Navigating to coworking profile: /coworking/${widget.mallId}/profile');
-                  context.push('/coworking/${widget.mallId}/profile');
-                } else {
-                  print(
-                      '🚀 Navigating to mall profile: mall_profile with id: ${widget.mallId}');
-                  context.pushNamed('mall_profile',
-                      pathParameters: {'id': widget.mallId});
-                }
+                context.pushReplacement('/tickets/${widget.mallId}',
+                    extra: {'isFromQr': true});
               },
               textColor: AppColors.secondary,
               backgroundColor: Colors.white,
@@ -253,6 +245,13 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
               QRView(
                 key: qrKey,
                 onQRViewCreated: _onQRViewCreated,
+                overlay: QrScannerOverlayShape(
+                  borderColor: Colors.white,
+                  borderRadius: 10,
+                  borderLength: 30,
+                  borderWidth: 10,
+                  cutOutSize: MediaQuery.of(context).size.width * 0.8,
+                ),
               ),
               CustomHeader(
                 title: 'qr.title'.tr(),
@@ -262,25 +261,43 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
                     controller?.pauseCamera();
                     controller?.dispose();
                   } catch (e) {
-                    // Ignore camera errors during disposal
+                    print('Camera disposal error: $e');
                   }
                   if (mounted) {
                     context.pop();
                   }
                 },
               ),
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SvgPicture.asset(
-                      'lib/core/assets/images/qr.svg',
-                      width: 200,
-                      height: 200,
-                    ),
-                  ],
+              Positioned(
+                bottom: 20,
+                right: 20,
+                child: FloatingActionButton(
+                  backgroundColor: Colors.black.withOpacity(0.5),
+                  onPressed: () async {
+                    try {
+                      await controller?.flipCamera();
+                    } catch (e) {
+                      print('Camera flip error: $e');
+                    }
+                  },
+                  child: const Icon(
+                    Icons.flip_camera_ios,
+                    color: Colors.white,
+                  ),
                 ),
               ),
+              // Center(
+              //   child: Column(
+              //     mainAxisAlignment: MainAxisAlignment.center,
+              //     children: [
+              //       SvgPicture.asset(
+              //         'lib/core/assets/images/qr.svg',
+              //         width: 200,
+              //         height: 200,
+              //       ),
+              //     ],
+              //   ),
+              // ),
               if (_isProcessing)
                 Container(
                   color: Colors.black.withOpacity(0.5),
@@ -322,7 +339,7 @@ class _PromotionQrPageState extends ConsumerState<PromotionQrPage> {
       controller?.pauseCamera();
       controller?.dispose();
     } catch (e) {
-      // Ignore camera errors during disposal
+      print('Camera disposal error: $e');
     }
     super.dispose();
   }

@@ -16,6 +16,7 @@ import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
+import 'package:aina_flutter/core/providers/requests/settings_provider.dart';
 
 class CommunityCardPage extends ConsumerStatefulWidget {
   const CommunityCardPage({super.key});
@@ -306,10 +307,17 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
           onPressed: () async {
             Navigator.of(context).pop();
             // Открываем WhatsApp
-            const whatsappUrl =
-                'https://wa.me/77777777777'; // Замените на реальный номер
+            final settingsAsync = ref.read(settingsProvider);
+            final whatsappUrl = settingsAsync.when(
+              data: (settings) => settings.whatsappLinkPromenade,
+              loading: () => 'https://wa.me/77777777777', // fallback URL
+              error: (_, __) => 'https://wa.me/77777777777', // fallback URL
+            );
             try {
-              await launchUrl(Uri.parse(whatsappUrl));
+              await launchUrl(
+                Uri.parse(whatsappUrl),
+                mode: LaunchMode.externalApplication,
+              );
             } catch (e) {
               if (mounted) {
                 BaseSnackBar.show(
@@ -517,7 +525,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            const Icon(Icons.check_circle_outline),
+            const Icon(Icons.check_circle_outline, color: Colors.green),
             const SizedBox(width: 8),
             Expanded(
               child: RichText(

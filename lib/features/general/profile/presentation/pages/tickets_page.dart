@@ -4,10 +4,17 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/core/providers/requests/auth/user.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:go_router/go_router.dart';
+import 'package:aina_flutter/core/widgets/custom_button.dart';
+import 'package:aina_flutter/core/providers/auth_provider.dart';
+import 'package:shimmer/shimmer.dart';
 
 class TicketsPage extends ConsumerStatefulWidget {
+  final bool? isFromQr;
+
   const TicketsPage({
     super.key,
+    this.isFromQr,
   });
 
   @override
@@ -23,6 +30,109 @@ class _TicketsPageState extends ConsumerState<TicketsPage> {
     });
   }
 
+  Widget _buildUnauthorizedState() {
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Text(
+                'tickets.auth_required'.tr(),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: CustomButton(
+            label: 'tickets.authorize'.tr(),
+            type: ButtonType.filled,
+            isFullWidth: true,
+            onPressed: () {
+              context.push('/login');
+            },
+          ),
+        ),
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+
+  Widget _buildTicketSkeleton() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: 3,
+        itemBuilder: (context, index) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 200,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: 150,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  width: 120,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  width: 180,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _handleBack(BuildContext context) {
+    if (widget.isFromQr == true) {
+      context.go('/home');
+    } else {
+      context.pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final ticketsAsync = ref.watch(userTicketsProvider);
@@ -34,15 +144,18 @@ class _TicketsPageState extends ConsumerState<TicketsPage> {
           child: Stack(
             children: [
               Container(
-                color: AppColors.appBg,
+                color: Colors.white,
                 margin: const EdgeInsets.only(top: 64),
                 child: ticketsAsync.when(
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                  error: (error, stack) => Center(
-                    child: Text('tickets.error'.tr(args: [error.toString()])),
-                  ),
+                  loading: () => _buildTicketSkeleton(),
+                  error: (error, stack) {
+                    if (error.toString().contains('401')) {
+                      return _buildUnauthorizedState();
+                    }
+                    return Center(
+                      child: Text('tickets.error'.tr(args: [error.toString()])),
+                    );
+                  },
                   data: (tickets) {
                     if (tickets.isEmpty) {
                       return Center(
@@ -51,7 +164,7 @@ class _TicketsPageState extends ConsumerState<TicketsPage> {
                     }
 
                     return ListView.builder(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(16),
                       itemCount: tickets.length,
                       itemBuilder: (context, index) {
                         final ticket = tickets[index];
@@ -166,7 +279,7 @@ class _TicketsPageState extends ConsumerState<TicketsPage> {
               ),
               CustomHeader(
                 title: 'tickets.title'.tr(),
-                type: HeaderType.pop,
+                onBack: () => _handleBack(context),
               ),
             ],
           ),

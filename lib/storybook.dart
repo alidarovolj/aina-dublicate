@@ -16,7 +16,6 @@ import 'package:aina_flutter/core/widgets/base_modal.dart';
 import 'package:aina_flutter/core/widgets/error_dialog.dart';
 import 'package:aina_flutter/core/widgets/custom_tabbar.dart';
 import 'package:aina_flutter/core/widgets/category_card.dart';
-import 'package:aina_flutter/core/widgets/qr_scanner_modal.dart';
 import 'package:aina_flutter/core/widgets/loader_modal.dart';
 import 'package:aina_flutter/core/widgets/language_switcher.dart';
 import 'package:aina_flutter/features/coworking/presentation/widgets/conference_tariff_card.dart';

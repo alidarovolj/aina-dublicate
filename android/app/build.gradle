@@ -41,16 +41,16 @@ android {
             storePassword 'android'
         }
         release {
-            keyAlias 'release'
-            keyPassword 'your_key_password'
+            keyAlias 'aina'
+            keyPassword 'ec03537c'
             storeFile file('release.keystore')
-            storePassword 'your_store_password'
+            storePassword 'ec03537c'
         }
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'

@@ -1,4 +1,3 @@
-import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -7,15 +6,19 @@ import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/providers/requests/promotion_details_provider.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
-import 'package:aina_flutter/features/general/scanner/widgets/auth_warning_modal.dart';
-import 'package:aina_flutter/core/providers/auth/auth_state.dart';
-import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:aina_flutter/core/services/amplitude_service.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:aina_flutter/core/widgets/custom_button.dart';
+import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
+import 'package:aina_flutter/core/widgets/base_slider.dart';
+import 'package:aina_flutter/core/types/slides.dart' as slides;
+import 'package:aina_flutter/features/general/scanner/widgets/auth_warning_modal.dart';
+import 'package:aina_flutter/core/providers/auth/auth_state.dart';
+import 'package:go_router/go_router.dart';
+import 'package:aina_flutter/core/services/amplitude_service.dart';
 import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
 
 class PromotionDetailsPage extends ConsumerWidget {
@@ -318,6 +321,30 @@ class PromotionDetailsPage extends ConsumerWidget {
                                 isFullWidth: true,
                                 backgroundColor: AppColors.primary,
                               ),
+                              if (promotion.images.isNotEmpty) ...[
+                                const SizedBox(height: AppLength.sm),
+                                CarouselWithIndicator(
+                                  slideList: promotion.images
+                                      .map((image) => slides.Slide(
+                                            id: image.id,
+                                            name: promotion.title,
+                                            previewImage: slides.PreviewImage(
+                                              id: image.id,
+                                              uuid: image.uuid,
+                                              url: image.url,
+                                              urlOriginal: image.urlOriginal,
+                                              orderColumn: image.orderColumn,
+                                              collectionName:
+                                                  image.collectionName,
+                                            ),
+                                            order: image.orderColumn,
+                                          ))
+                                      .toList(),
+                                  showIndicators: true,
+                                  showGradient: false,
+                                  height: 200,
+                                ),
+                              ],
                               if (promotion.bottomBody != null &&
                                   promotion.bottomBody!.isNotEmpty) ...[
                                 const SizedBox(height: AppLength.sm),

@@ -206,7 +206,7 @@ class _MenuPageState extends ConsumerState<MenuPage> {
                                       .map((coworking) => _buildMenuItem(
                                             context,
                                             '${'buildings.coworking'.tr()} ${coworking.name}',
-                                            () => context.push(
+                                            () => context.pushReplacement(
                                                 '/coworking/${coworking.id}'),
                                           )),
                                 ],
@@ -215,8 +215,8 @@ class _MenuPageState extends ConsumerState<MenuPage> {
                                       .map((mall) => _buildMenuItem(
                                             context,
                                             '${'buildings.mall'.tr()} ${mall.name}',
-                                            () => context
-                                                .push('/malls/${mall.id}'),
+                                            () => context.pushReplacement(
+                                                '/malls/${mall.id}'),
                                           )),
                                 ],
                                 if (isAuthenticated) ...[

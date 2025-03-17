@@ -27,7 +27,7 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:supportsRtl="true"
-        android:enableOnBackInvokedCallback="true"
+        android:enableOnBackInvokedCallback="false"
         android:theme="@style/NormalTheme"
         android:hardwareAccelerated="true"
         android:allowBackup="true"
@@ -45,6 +45,7 @@
             android:screenOrientation="portrait"
             android:excludeFromRecents="false"
             android:finishOnTaskLaunch="false"
+            android:clearTaskOnLaunch="false"
             android:stateNotNeeded="true">
             <!-- Specifies an Android theme for the activity during initialization -->
             <meta-data

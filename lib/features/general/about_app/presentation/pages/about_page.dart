@@ -208,7 +208,8 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                                       () {
                                     _launchURL(settings.userAgreementFile?.url);
                                   }),
-                                  _buildLink('about.public_offer'.tr(), () {
+                                  _buildLink('about.personal_data_consent'.tr(),
+                                      () {
                                     _launchURL(settings.publicOfferFile?.url);
                                   }),
                                   _buildLink('about.privacy_policy'.tr(), () {

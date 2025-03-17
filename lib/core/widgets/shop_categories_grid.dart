@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
@@ -123,6 +124,8 @@ class _ShopCategoriesGridState extends ConsumerState<ShopCategoriesGrid> {
           padding: const EdgeInsets.only(
             left: AppLength.xs,
             right: AppLength.xs,
+            bottom: AppLength.xs,
+            top: AppLength.xs,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -143,6 +146,11 @@ class _ShopCategoriesGridState extends ConsumerState<ShopCategoriesGrid> {
                     );
                   }
                 },
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 child: Row(
                   children: [
                     Text(
@@ -152,9 +160,14 @@ class _ShopCategoriesGridState extends ConsumerState<ShopCategoriesGrid> {
                         color: Colors.grey[600],
                       ),
                     ),
-                    Icon(
-                      Icons.chevron_right,
-                      color: Colors.grey[600],
+                    SvgPicture.asset(
+                      'lib/core/assets/icons/chevron-right.svg',
+                      width: 24,
+                      height: 24,
+                      colorFilter: const ColorFilter.mode(
+                        AppColors.textDarkGrey,
+                        BlendMode.srcIn,
+                      ),
                     ),
                   ],
                 ),
@@ -247,7 +260,7 @@ class _ShopCategoriesGridState extends ConsumerState<ShopCategoriesGrid> {
               ..sort((a, b) => a.order.compareTo(b.order));
 
             return Padding(
-              padding: const EdgeInsets.all(AppLength.xs),
+              padding: const EdgeInsets.symmetric(horizontal: AppLength.xs),
               child: GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),

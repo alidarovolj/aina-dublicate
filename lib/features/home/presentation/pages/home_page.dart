@@ -240,18 +240,21 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
                     ),
                     SliverToBoxAdapter(
                       child: bannersAsync.when(
-                        loading: () => Shimmer.fromColors(
-                          baseColor: Colors.grey[100]!,
-                          highlightColor: Colors.grey[300]!,
-                          child: Container(
-                            height: 200,
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: AppLength.xs,
-                              vertical: AppLength.xs,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(8),
+                        loading: () => RepaintBoundary(
+                          child: Shimmer.fromColors(
+                            period: const Duration(milliseconds: 1500),
+                            baseColor: Colors.grey[100]!,
+                            highlightColor: Colors.grey[300]!,
+                            child: Container(
+                              height: 200,
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: AppLength.xs,
+                                vertical: AppLength.xs,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
                           ),
                         ),

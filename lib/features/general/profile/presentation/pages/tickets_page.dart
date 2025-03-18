@@ -159,7 +159,18 @@ class _TicketsPageState extends ConsumerState<TicketsPage> {
                   data: (tickets) {
                     if (tickets.isEmpty) {
                       return Center(
-                        child: Text('tickets.no_tickets'.tr()),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                          child: Text(
+                            'tickets.no_tickets'.tr(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
                       );
                     }
 

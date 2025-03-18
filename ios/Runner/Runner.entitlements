@@ -8,6 +8,8 @@
 	<array>
 		<string>applinks:app.aina-fashion.kz</string>
 		<string>applinks:*.app.aina-fashion.kz</string>
+		<string>webcredentials:app.aina-fashion.kz</string>
+		<string>app.aina-fashion.kz</string>
 	</array>
 </dict>
 </plist>

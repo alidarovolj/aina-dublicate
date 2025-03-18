@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "YOUR_TEAM_ID.kz.aina.ios",
+        "paths": [
+          "/deeplink*",
+          "/orders*",
+          "/payment*",
+          "NOT /api/*",
+          "*"
+        ]
+      }
+    ]
+  }
+}

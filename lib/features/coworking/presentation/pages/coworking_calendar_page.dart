@@ -365,13 +365,37 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
       setState(() {
         selectedDate = date;
         endDate = calculatedEndDate;
-        final startTimeAt = tariffDetails.startTimeAt ?? '00:00:00';
+        final startTimeAt = tariffDetails.startTimeAt != null &&
+                tariffDetails.startTimeAt!.isNotEmpty
+            ? tariffDetails.startTimeAt
+            : '00:00:00';
+        final rawEndTimeAt = (tariffDetails.endTimeAt != null &&
+                tariffDetails.endTimeAt!.isNotEmpty
+            ? tariffDetails.endTimeAt
+            : '23:59:59')!;
+
+        // Parse end time and subtract one second
+        final endTimeParts = rawEndTimeAt.split(':');
+        final endHour = int.parse(endTimeParts[0]);
+        final endMinute = int.parse(endTimeParts[1]);
+        final endSecond = int.parse(endTimeParts[2]);
+
+        final adjustedEndTime = DateTime(
+          calculatedEndDate.year,
+          calculatedEndDate.month,
+          calculatedEndDate.day,
+          endHour,
+          endMinute,
+          endSecond,
+        ).subtract(const Duration(seconds: 1));
+
+        final endTimeAt = DateFormat('HH:mm:ss').format(adjustedEndTime);
 
         // Set the form values with proper time formatting
         formData['start_at'] =
             '${DateFormat('yyyy-MM-dd').format(date)} $startTimeAt';
         formData['end_at'] =
-            '${DateFormat('yyyy-MM-dd').format(calculatedEndDate)} 21:59:59';
+            '${DateFormat('yyyy-MM-dd').format(calculatedEndDate)} $endTimeAt';
         total = tariffDetails.price;
       });
     } catch (e) {
@@ -395,10 +419,10 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
         );
         break;
       case 'day':
-        endDate = startDate.add(Duration(days: duration));
+        endDate = startDate.add(Duration(days: duration - 1));
         break;
       case 'week':
-        endDate = startDate.add(Duration(days: duration * 7));
+        endDate = startDate.add(Duration(days: (duration * 7) - 1));
         break;
       case 'month':
         // Add months by calculating the target month and year
@@ -408,26 +432,28 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
           targetMonth -= 12;
           targetYear++;
         }
-        endDate = DateTime(targetYear, targetMonth, startDate.day);
+        // Subtract one day to get the end of the previous month
+        endDate = DateTime(targetYear, targetMonth, startDate.day)
+            .subtract(const Duration(days: 1));
         break;
       case 'year':
-        // Для годовой подписки добавляем указанное количество лет
+        // Для годовой подписки добавляем указанное количество лет и вычитаем один день
         endDate = DateTime(
           startDate.year + duration,
           startDate.month,
           startDate.day,
-        );
+        ).subtract(const Duration(days: 1));
         break;
       default:
         endDate = startDate;
     }
 
-    // Устанавливаем время на 23:59:59 предыдущего дня
+    // Возвращаем только дату без установки времени, так как время будет взято из тарифа
     return DateTime(
       endDate.year,
       endDate.month,
       endDate.day,
-    ).subtract(const Duration(seconds: 1));
+    );
   }
 
   bool _isDateReserved(DateTime date) {
@@ -829,7 +855,7 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
                                     _buildInfoRow(
                                       '${'coworking.calendar.start_date'.tr()}:',
                                       formData['start_at'].isNotEmpty
-                                          ? DateFormat('dd:MM:yyyy HH:mm')
+                                          ? DateFormat('dd.MM.yyyy HH:mm:ss')
                                               .format(DateTime.parse(
                                                   formData['start_at']))
                                           : 'coworking.calendar.not_selected'
@@ -839,7 +865,7 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
                                     _buildInfoRow(
                                       '${'coworking.calendar.end_date'.tr()}:',
                                       formData['end_at'].isNotEmpty
-                                          ? DateFormat('dd:MM:yyyy HH:mm')
+                                          ? DateFormat('dd.MM.yyyy HH:mm:ss')
                                               .format(DateTime.parse(
                                                   formData['end_at']))
                                           : 'coworking.calendar.not_selected'

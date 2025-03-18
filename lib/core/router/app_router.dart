@@ -57,7 +57,7 @@ import 'package:aina_flutter/features/general/no_internet/presentation/pages/no_
 class AppRouter {
   static final router = GoRouter(
     navigatorKey: app.navigatorKey,
-    initialLocation: '/home',
+    initialLocation: '/',
     observers: [
       ChuckerFlutter.navigatorObserver,
       app.routeObserver,

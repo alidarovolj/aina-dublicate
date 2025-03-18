@@ -144,7 +144,7 @@ class BiometricService {
     });
 
     try {
-      await _dio.post('/promenade/profile/biometric',
+      await _dio.post('/api/promenade/profile/biometric',
           data: formData, cancelToken: _cancelToken);
     } on DioException catch (e) {
       if (CancelToken.isCancel(e)) {

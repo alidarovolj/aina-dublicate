@@ -6,7 +6,9 @@ class CustomTextField extends StatelessWidget {
   final String hintText;
   final bool enabled;
   final Function(String)? onChanged;
+  final VoidCallback? onUnfocus;
   final TextInputType? keyboardType;
+  final FocusNode? focusNode;
   final bool obscureText;
   final Widget? suffix;
   final String? errorText;
@@ -26,7 +28,9 @@ class CustomTextField extends StatelessWidget {
     required this.hintText,
     this.enabled = true,
     this.onChanged,
+    this.onUnfocus,
     this.keyboardType,
+    this.focusNode,
     this.obscureText = false,
     this.suffix,
     this.errorText,
@@ -47,6 +51,9 @@ class CustomTextField extends StatelessWidget {
       controller: controller,
       enabled: enabled,
       onChanged: onChanged,
+      onEditingComplete: onUnfocus,
+      onSubmitted: (_) => onUnfocus?.call(),
+      focusNode: focusNode,
       keyboardType: keyboardType,
       obscureText: obscureText,
       maxLines: maxLines,

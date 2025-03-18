@@ -31,6 +31,8 @@ class _CoworkingBiometricPageState
     extends ConsumerState<CoworkingBiometricPage> {
   final _firstnameController = TextEditingController();
   final _lastnameController = TextEditingController();
+  final _firstnameFocus = FocusNode();
+  final _lastnameFocus = FocusNode();
   bool _isLoading = false;
   bool _showTariffsModal = false;
 
@@ -39,6 +41,20 @@ class _CoworkingBiometricPageState
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialData();
+      _setupFocusListeners();
+    });
+  }
+
+  void _setupFocusListeners() {
+    _firstnameFocus.addListener(() {
+      if (!_firstnameFocus.hasFocus) {
+        _saveInfo();
+      }
+    });
+    _lastnameFocus.addListener(() {
+      if (!_lastnameFocus.hasFocus) {
+        _saveInfo();
+      }
     });
   }
 
@@ -46,6 +62,8 @@ class _CoworkingBiometricPageState
   void dispose() {
     _firstnameController.dispose();
     _lastnameController.dispose();
+    _firstnameFocus.dispose();
+    _lastnameFocus.dispose();
     super.dispose();
   }
 
@@ -81,10 +99,6 @@ class _CoworkingBiometricPageState
   }
 
   Future<void> _saveInfo() async {
-    if (_firstnameController.text.isEmpty || _lastnameController.text.isEmpty) {
-      return;
-    }
-
     setState(() {
       _isLoading = true;
     });
@@ -96,6 +110,13 @@ class _CoworkingBiometricPageState
         lastname: _lastnameController.text,
       );
       ref.invalidate(biometricDataProvider);
+      if (mounted) {
+        BaseSnackBar.show(
+          context,
+          message: 'biometry.success_save'.tr(),
+          type: SnackBarType.success,
+        );
+      }
     } catch (e) {
       _showError(e.toString());
     } finally {
@@ -299,9 +320,7 @@ class _CoworkingBiometricPageState
                                       hintText:
                                           'coworking.edit_data.firstname'.tr(),
                                       enabled: data.biometricStatus != 'VALID',
-                                      onChanged: (_) => _saveInfo(),
-                                      isValid:
-                                          _firstnameController.text.isNotEmpty,
+                                      focusNode: _firstnameFocus,
                                     ),
                                     const SizedBox(height: 12),
                                     CustomTextField(
@@ -309,14 +328,10 @@ class _CoworkingBiometricPageState
                                       hintText:
                                           'coworking.edit_data.lastname'.tr(),
                                       enabled: data.biometricStatus != 'VALID',
-                                      onChanged: (_) => _saveInfo(),
-                                      isValid:
-                                          _lastnameController.text.isNotEmpty,
+                                      focusNode: _lastnameFocus,
                                     ),
                                     const SizedBox(height: 24),
-                                    if (data.biometric != null &&
-                                        _lastnameController.text.isNotEmpty &&
-                                        _firstnameController.text.isNotEmpty)
+                                    if (data.biometric != null)
                                       Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
@@ -333,7 +348,10 @@ class _CoworkingBiometricPageState
                                             child: Material(
                                               color: Colors.transparent,
                                               child: InkWell(
-                                                onTap: _openCamera,
+                                                onTap: data.biometricStatus !=
+                                                        'VALID'
+                                                    ? _openCamera
+                                                    : null,
                                                 borderRadius:
                                                     BorderRadius.circular(4),
                                                 child: Container(
@@ -366,17 +384,13 @@ class _CoworkingBiometricPageState
                                           ),
                                         ],
                                       )
-                                    else if (_lastnameController
-                                            .text.isNotEmpty &&
-                                        _firstnameController.text.isNotEmpty)
+                                    else
                                       CustomButton(
                                         onPressed: _openCamera,
                                         label: 'biometry.add_photo'.tr(),
                                         isFullWidth: true,
                                       ),
-                                    if (_firstnameController.text.isNotEmpty &&
-                                        _lastnameController.text.isNotEmpty &&
-                                        data.biometric != null &&
+                                    if (data.biometric != null &&
                                         data.biometricStatus != 'VALID')
                                       Padding(
                                         padding: const EdgeInsets.only(top: 40),
@@ -402,31 +416,6 @@ class _CoworkingBiometricPageState
                   ),
                 ],
               ),
-              if (_isLoading && biometricDataAsync.hasValue)
-                Positioned.fill(
-                  top: 64,
-                  child: Container(
-                    color: Colors.white,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const CircularProgressIndicator(
-                            color: AppColors.secondary,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'biometry.waiting'.tr(),
-                            style: const TextStyle(
-                              color: AppColors.secondary,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
               CustomHeader(
                 title: 'biometry.title'.tr(),
                 type: HeaderType.pop,

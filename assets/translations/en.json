@@ -447,7 +447,8 @@
       "permission_required": "Please allow camera access for taking photos. You can enable it in Settings.",
       "permission_title": "Camera access required",
       "initialization_error": "Camera initialization error"
-    }
+    },
+    "success_save": "Personal information saved successfully"
   },
   "orders": {
     "detail": {

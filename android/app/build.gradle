@@ -43,7 +43,7 @@ android {
         release {
             keyAlias 'aina'
             keyPassword 'ec03537c'
-            storeFile file('release.keystore')
+            storeFile file('../../android_keys/android-key.jks')
             storePassword 'ec03537c'
         }
     }

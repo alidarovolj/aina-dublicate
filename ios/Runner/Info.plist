@@ -25,12 +25,12 @@
 		<key>CFBundleURLTypes</key>
 		<array>
 			<dict>
-				<key>CFBundleURLName</key>
-				<string>kz.aina.ios</string>
 				<key>CFBundleURLSchemes</key>
 				<array>
 					<string>aina</string>
 				</array>
+				<key>CFBundleURLName</key>
+				<string>kz.aina.ios</string>
 			</dict>
 		</array>
 		<key>CFBundleVersion</key>
@@ -146,5 +146,7 @@
 		<false/>
 		<key>UIStatusBarStyle</key>
 		<string>UIStatusBarStyleLightContent</string>
+		<key>FlutterDeepLinkingEnabled</key>
+		<true/>
 	</dict>
 </plist>

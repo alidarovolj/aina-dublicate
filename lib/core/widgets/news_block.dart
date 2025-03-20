@@ -60,7 +60,11 @@ class NewsBlock extends ConsumerWidget {
           children: [
             if (showTitle || showViewAll)
               Padding(
-                padding: const EdgeInsets.all(AppLength.xs),
+                padding: const EdgeInsets.only(
+                  left: AppLength.xs,
+                  bottom: AppLength.xs,
+                  top: AppLength.xs,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

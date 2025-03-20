@@ -7,6 +7,7 @@ import 'package:aina_flutter/core/providers/requests/news_provider.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:aina_flutter/core/types/news_params.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class NewsListPage extends ConsumerStatefulWidget {
   final String? buildingId;
@@ -189,8 +190,8 @@ class _NewsListPageState extends ConsumerState<NewsListPage> {
                 ),
               ),
             ),
-            const CustomHeader(
-              title: 'Новости',
+            CustomHeader(
+              title: 'news.title'.tr(),
               type: HeaderType.pop,
             ),
           ],

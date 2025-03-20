@@ -176,7 +176,12 @@ class _StoresListState extends ConsumerState<StoresList> {
     if (stores.isEmpty) {
       return SliverFillRemaining(
         child: Center(
-          child: Text('stores.empty'.tr()),
+          child: Text(
+            'stores.empty'.tr(),
+            style: const TextStyle(
+              color: Colors.black,
+            ),
+          ),
         ),
       );
     }

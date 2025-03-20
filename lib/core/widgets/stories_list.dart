@@ -167,7 +167,9 @@ class _StoryListState extends ConsumerState<StoryList>
             child: Container(
               height: 120,
               padding: const EdgeInsets.symmetric(
-                  vertical: AppLength.xs, horizontal: AppLength.xs),
+                vertical: AppLength.xs,
+                horizontal: AppLength.xs,
+              ),
               decoration: const BoxDecoration(
                 color: AppColors.primary,
               ),
@@ -176,8 +178,6 @@ class _StoryListState extends ConsumerState<StoryList>
                 itemCount: storiesList.length,
                 itemBuilder: (context, index) {
                   final story = storiesList[index];
-                  // print(
-                  // 'Story $index: ${story.name}, ${story.previewImage}');
                   return Container(
                     width: 80,
                     margin: const EdgeInsets.only(right: AppLength.four),
@@ -201,23 +201,46 @@ class _StoryListState extends ConsumerState<StoryList>
                               height: 68,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: story.read
-                                      ? AppColors.primary
-                                      : AppColors.secondary,
-                                  width: 2,
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: story.read
+                                      ? [
+                                          AppColors.primary,
+                                          AppColors.primary.withOpacity(0.8),
+                                        ]
+                                      : [
+                                          AppColors.secondary,
+                                          AppColors.secondary.withOpacity(0.8),
+                                        ],
                                 ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (story.read
+                                            ? AppColors.primary
+                                            : AppColors.secondary)
+                                        .withOpacity(0.3),
+                                    blurRadius: 8,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(2.0),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(100),
-                                  child: Image.network(
-                                    story.previewImage ?? '',
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            const Icon(Icons.error),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: AppColors.primary,
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(100),
+                                    child: Image.network(
+                                      story.previewImage ?? '',
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const Icon(Icons.error),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -255,7 +278,9 @@ class _StoryListState extends ConsumerState<StoryList>
         child: Container(
           height: 120,
           padding: const EdgeInsets.symmetric(
-              vertical: AppLength.xs, horizontal: AppLength.xs),
+            vertical: AppLength.xs,
+            horizontal: AppLength.xs,
+          ),
           decoration: const BoxDecoration(
             color: AppColors.primary,
           ),
@@ -277,10 +302,13 @@ class _StoryListState extends ConsumerState<StoryList>
                         decoration: BoxDecoration(
                           color: Colors.grey[300],
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.grey[700]!,
-                            width: 2,
-                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey[700]!.withOpacity(0.3),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -329,11 +357,12 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
   late int currentStoryIndex;
   late int currentInnerStoryIndex = 0;
   late PageController _pageController;
+  late PageController _groupPageController;
   late AnimationController _progressController;
-  late AnimationController _transitionController;
-  late Animation<Offset> _slideAnimation;
-  bool _isForward = true;
+  late AnimationController _uiAnimationController;
+  late Animation<double> _uiFadeAnimation;
   late List<StoryItem> currentStories = [];
+  Map<int, Story?> _preloadedStories = {};
 
   @override
   void initState() {
@@ -341,6 +370,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
     currentStoryIndex = widget.initialIndex;
     currentStories = widget.stories[currentStoryIndex].stories ?? [];
     _pageController = PageController(initialPage: 0);
+    _groupPageController = PageController(initialPage: currentStoryIndex);
     _progressController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 5),
@@ -350,33 +380,26 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
         }
       });
 
-    _transitionController = AnimationController(
+    _uiAnimationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 200),
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.0),
-      end: const Offset(0.0, 0.0),
+    _uiFadeAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
     ).animate(CurvedAnimation(
-      parent: _transitionController,
-      curve: Curves.easeOut,
+      parent: _uiAnimationController,
+      curve: Curves.easeInOut,
     ));
 
     _markCurrentStoryAsRead();
     _progressController.forward();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchStoryDetails();
-    });
-  }
-
-  void _fetchStoryDetails() {
-    final currentStory = currentStories[currentInnerStoryIndex];
-    if (currentStory.id != null) {
-      // Invalidate the previous state and fetch new details
-      ref.invalidate(storyDetailProvider(currentStory.id!));
-    }
+    // Загружаем текущую историю сразу
+    _loadCurrentStory();
+    // Остальные истории загружаем в фоне
+    _preloadRemainingStories();
   }
 
   void _markCurrentStoryAsRead() {
@@ -385,22 +408,65 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
     }
   }
 
+  Future<void> _loadCurrentStory() async {
+    final currentStory = currentStories[currentInnerStoryIndex];
+    if (currentStory.id != null) {
+      final storyDetails =
+          await ref.read(storyDetailProvider(currentStory.id!).future);
+      if (mounted) {
+        setState(() {
+          _preloadedStories[currentStory.id!] = storyDetails;
+        });
+      }
+    }
+  }
+
+  Future<void> _preloadRemainingStories() async {
+    for (var story in widget.stories) {
+      for (var innerStory in story.stories ?? []) {
+        if (innerStory.id != null &&
+            !_preloadedStories.containsKey(innerStory.id)) {
+          final storyDetails =
+              await ref.read(storyDetailProvider(innerStory.id!).future);
+          if (mounted) {
+            setState(() {
+              _preloadedStories[innerStory.id!] = storyDetails;
+            });
+          }
+        }
+      }
+    }
+  }
+
   Future<void> handleNextStory() async {
     if (currentInnerStoryIndex < currentStories.length - 1) {
       setState(() {
         currentInnerStoryIndex++;
       });
-      _pageController.nextPage(
+      // Предзагружаем следующую историю если она еще не загружена
+      final nextStory = currentStories[currentInnerStoryIndex];
+      if (nextStory.id != null &&
+          !_preloadedStories.containsKey(nextStory.id)) {
+        _loadCurrentStory();
+      }
+      await _pageController.animateToPage(
+        currentInnerStoryIndex,
         duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
+        curve: Curves.easeInOut,
       );
-      _fetchStoryDetails();
       _progressController.reset();
       _progressController.forward();
     } else if (currentStoryIndex < widget.stories.length - 1) {
-      _isForward = true;
+      await _uiAnimationController.forward();
+
       final nextStoryIndex = currentStoryIndex + 1;
       final nextStories = widget.stories[nextStoryIndex].stories ?? [];
+
+      await _groupPageController.animateToPage(
+        nextStoryIndex,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
 
       setState(() {
         currentStoryIndex = nextStoryIndex;
@@ -408,11 +474,19 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
         currentInnerStoryIndex = 0;
       });
 
-      _pageController.jumpToPage(0);
-      _fetchStoryDetails();
+      // Предзагружаем первую историю в новой группе если она еще не загружена
+      final nextStory = currentStories[0];
+      if (nextStory.id != null &&
+          !_preloadedStories.containsKey(nextStory.id)) {
+        _loadCurrentStory();
+      }
+
+      _pageController = PageController(initialPage: 0);
       _markCurrentStoryAsRead();
       _progressController.reset();
       _progressController.forward();
+
+      await _uiAnimationController.reverse();
     } else {
       context.pop();
     }
@@ -423,17 +497,24 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
       setState(() {
         currentInnerStoryIndex--;
       });
-      _pageController.previousPage(
+      await _pageController.animateToPage(
+        currentInnerStoryIndex,
         duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
+        curve: Curves.easeInOut,
       );
-      _fetchStoryDetails();
       _progressController.reset();
       _progressController.forward();
     } else if (currentStoryIndex > 0) {
-      _isForward = false;
+      await _uiAnimationController.forward();
+
       final prevStoryIndex = currentStoryIndex - 1;
       final prevStories = widget.stories[prevStoryIndex].stories ?? [];
+
+      await _groupPageController.animateToPage(
+        prevStoryIndex,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
 
       setState(() {
         currentStoryIndex = prevStoryIndex;
@@ -441,11 +522,126 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
         currentInnerStoryIndex = prevStories.length - 1;
       });
 
-      _pageController.jumpToPage(prevStories.length - 1);
-      _fetchStoryDetails();
+      _pageController = PageController(initialPage: prevStories.length - 1);
       _progressController.reset();
       _progressController.forward();
+
+      await _uiAnimationController.reverse();
     }
+  }
+
+  Widget _buildStoryContent(StoryItem story) {
+    return Container(
+      color: Colors.black,
+      child: Stack(
+        children: [
+          // Размытый фон для заполнения всего экрана
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.black,
+              image: DecorationImage(
+                image: NetworkImage(story.previewImage ?? ''),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: Container(
+                color: Colors.black.withOpacity(0.15),
+              ),
+            ),
+          ),
+          // Основное изображение с отступами
+          Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: MediaQuery.of(context).size.height * 0.03,
+              ),
+              child: Stack(
+                children: [
+                  // Основное изображение
+                  Image.network(
+                    story.previewImage ?? '',
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Icon(Icons.error, color: Colors.white)),
+                  ),
+                  // Размытие по краям
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 40,
+                    child: ClipRect(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                        child: Container(
+                          color: Colors.transparent,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 40,
+                    child: ClipRect(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                        child: Container(
+                          color: Colors.transparent,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Тень сверху
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 120,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.4),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Тень снизу
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 120,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.4),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -453,16 +649,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
     final paddingTop = MediaQuery.of(context).padding.top;
     final screenWidth = MediaQuery.of(context).size.width;
     final currentStory = currentStories[currentInnerStoryIndex];
-
-    final storyDetails = ref.watch(
-      storyDetailProvider(currentStory.id ?? -1),
-    );
-
-    final button = storyDetails.when(
-      data: (data) => data?.button,
-      loading: () => null,
-      error: (error, stack) => null,
-    );
+    final button = _preloadedStories[currentStory.id ?? -1]?.button;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -470,247 +657,222 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
         children: [
           PageView.builder(
             physics: const NeverScrollableScrollPhysics(),
-            controller: _pageController,
-            itemCount: currentStories.length,
-            itemBuilder: (context, index) {
-              final story = currentStories[index];
-              return GestureDetector(
-                onTapDown: (details) {
-                  _progressController.stop();
-                },
-                onTapUp: (details) {
-                  // Переключаем историю только при коротком нажатии
-                  if (details.globalPosition.dx < screenWidth / 2) {
-                    handlePreviousStory();
-                  } else {
-                    handleNextStory();
+            controller: _groupPageController,
+            itemCount: widget.stories.length,
+            itemBuilder: (context, groupIndex) {
+              final groupStories = widget.stories[groupIndex].stories ?? [];
+              if (groupIndex == currentStoryIndex) {
+                return PageView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  controller: _pageController,
+                  itemCount: groupStories.length,
+                  itemBuilder: (context, index) {
+                    final story = groupStories[index];
+                    return _buildStoryContent(story);
+                  },
+                );
+              } else {
+                return PageView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: groupStories.length,
+                  itemBuilder: (context, index) {
+                    final story = groupStories[index];
+                    return _buildStoryContent(story);
+                  },
+                );
+              }
+            },
+          ),
+          // GestureDetector для обработки тапов
+          Positioned.fill(
+            child: GestureDetector(
+              onTapDown: (details) {
+                _progressController.stop();
+              },
+              onTapUp: (details) {
+                if (details.globalPosition.dx < screenWidth / 2) {
+                  handlePreviousStory();
+                } else {
+                  handleNextStory();
+                }
+                _progressController.forward();
+              },
+              onTapCancel: () {
+                _progressController.forward();
+              },
+              onLongPressStart: (_) {
+                _progressController.stop();
+              },
+              onLongPressEnd: (_) {
+                _progressController.forward();
+              },
+              onLongPressMoveUpdate: (_) {
+                _progressController.stop();
+              },
+              onHorizontalDragEnd: (details) {
+                if (details.primaryVelocity == null) return;
+
+                // Если скорость свайпа меньше определенного порога, игнорируем
+                if (details.primaryVelocity!.abs() < 200) return;
+
+                if (details.primaryVelocity! > 0) {
+                  // Свайп вправо - к предыдущей группе
+                  if (currentStoryIndex > 0) {
+                    _uiAnimationController.forward();
+                    final prevStoryIndex = currentStoryIndex - 1;
+                    final prevStories =
+                        widget.stories[prevStoryIndex].stories ?? [];
+
+                    _groupPageController
+                        .animateToPage(
+                      prevStoryIndex,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    )
+                        .then((_) {
+                      setState(() {
+                        currentStoryIndex = prevStoryIndex;
+                        currentStories = prevStories;
+                        currentInnerStoryIndex = 0;
+                      });
+                      _pageController = PageController(initialPage: 0);
+                      _progressController.reset();
+                      _progressController.forward();
+                      _uiAnimationController.reverse();
+                    });
                   }
-                  _progressController.forward();
-                },
-                onTapCancel: () {
-                  _progressController.forward();
-                },
-                onLongPressStart: (_) {
-                  // Только пауза при длительном нажатии
-                  _progressController.stop();
-                },
-                onLongPressEnd: (_) {
-                  // Продолжение при отпускании без переключения истории
-                  _progressController.forward();
-                },
-                onLongPressMoveUpdate: (_) {
-                  // Поддерживаем паузу при движении пальца
-                  _progressController.stop();
-                },
-                child: Container(
-                  color: Colors.black,
-                  child: Stack(
+                } else {
+                  // Свайп влево - к следующей группе
+                  if (currentStoryIndex < widget.stories.length - 1) {
+                    _uiAnimationController.forward();
+                    final nextStoryIndex = currentStoryIndex + 1;
+                    final nextStories =
+                        widget.stories[nextStoryIndex].stories ?? [];
+
+                    _groupPageController
+                        .animateToPage(
+                      nextStoryIndex,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    )
+                        .then((_) {
+                      setState(() {
+                        currentStoryIndex = nextStoryIndex;
+                        currentStories = nextStories;
+                        currentInnerStoryIndex = 0;
+                      });
+                      _pageController = PageController(initialPage: 0);
+                      _progressController.reset();
+                      _progressController.forward();
+                      _uiAnimationController.reverse();
+                    });
+                  }
+                }
+              },
+            ),
+          ),
+          // Верхняя панель с прогрессом и информацией
+          FadeTransition(
+            opacity: _uiFadeAnimation,
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.only(
+                top: paddingTop + 8,
+                left: 16,
+                right: 16,
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: List.generate(
+                      currentStories.length,
+                      (index) => Expanded(
+                        child: Container(
+                          height: 2,
+                          margin: const EdgeInsets.symmetric(horizontal: 2),
+                          child: ValueListenableBuilder<double>(
+                            valueListenable: _progressController,
+                            builder: (context, value, child) {
+                              return LinearProgressIndicator(
+                                value: index < currentInnerStoryIndex
+                                    ? 1.0
+                                    : (index == currentInnerStoryIndex
+                                        ? value
+                                        : 0.0),
+                                backgroundColor: Colors.grey.withOpacity(0.5),
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                    Colors.white),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Размытый фон для заполнения всего экрана
-                      Container(
-                        width: double.infinity,
-                        height: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.black,
-                          image: DecorationImage(
-                            image: NetworkImage(story.previewImage ?? ''),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                          child: Container(
-                            color: Colors.black.withOpacity(0.15),
-                          ),
-                        ),
-                      ),
-                      // Основное изображение с отступами
-                      Center(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            vertical: MediaQuery.of(context).size.height * 0.03,
-                          ),
-                          child: Stack(
-                            children: [
-                              // Основное изображение
-                              Image.network(
-                                story.previewImage ?? '',
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Center(
-                                        child: Icon(Icons.error,
-                                            color: Colors.white)),
-                              ),
-                              // Размытие по краям
-                              Positioned(
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                height: 40,
-                                child: ClipRect(
-                                  child: BackdropFilter(
-                                    filter:
-                                        ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                                    child: Container(
-                                      color: Colors.transparent,
-                                    ),
-                                  ),
+                      Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              image: DecorationImage(
+                                image: NetworkImage(
+                                  widget.stories[currentStoryIndex]
+                                          .previewImage ??
+                                      '',
                                 ),
+                                fit: BoxFit.cover,
                               ),
-                              Positioned(
-                                bottom: 0,
-                                left: 0,
-                                right: 0,
-                                height: 40,
-                                child: ClipRect(
-                                  child: BackdropFilter(
-                                    filter:
-                                        ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                                    child: Container(
-                                      color: Colors.transparent,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      // Тень сверху
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: 120,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.black.withOpacity(0.4),
-                                Colors.transparent,
-                              ],
                             ),
                           ),
-                        ),
-                      ),
-                      // Тень снизу
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        height: 120,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                              colors: [
-                                Colors.black.withOpacity(0.4),
-                                Colors.transparent,
-                              ],
+                          const SizedBox(width: 8),
+                          Text(
+                            widget.stories[currentStoryIndex].name ?? '',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
                     ],
                   ),
-                ),
-              );
-            },
-          ),
-          Positioned(
-            top: paddingTop + 8,
-            left: 16,
-            right: 16,
-            child: Column(
-              children: [
-                Row(
-                  children: List.generate(
-                    currentStories.length,
-                    (index) => Expanded(
-                      child: Container(
-                        height: 2,
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        child: ValueListenableBuilder<double>(
-                          valueListenable: _progressController,
-                          builder: (context, value, child) {
-                            return LinearProgressIndicator(
-                              value: index < currentInnerStoryIndex
-                                  ? 1.0
-                                  : (index == currentInnerStoryIndex
-                                      ? value
-                                      : 0.0),
-                              backgroundColor: Colors.grey.withOpacity(0.5),
-                              valueColor: const AlwaysStoppedAnimation<Color>(
-                                  Colors.white),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            image: DecorationImage(
-                              image: NetworkImage(
-                                widget.stories[currentStoryIndex]
-                                        .previewImage ??
-                                    '',
-                              ),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          widget.stories[currentStoryIndex].name ?? '',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () => Navigator.of(context).pop(),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
+          // Кнопка внизу экрана
           if (button != null)
             Positioned(
               bottom: MediaQuery.of(context).padding.bottom + 20,
               left: 16,
               right: 16,
-              child: CustomButton(
-                button: button,
-                type: ButtonType.bordered,
-                isFullWidth: true,
-                backgroundColor: Colors.white,
-                textColor: Colors.black,
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  ButtonNavigationHandler.handleNavigation(
-                      context, ref, button);
-                },
+              child: FadeTransition(
+                opacity: _uiFadeAnimation,
+                child: CustomButton(
+                  button: button,
+                  type: ButtonType.bordered,
+                  isFullWidth: true,
+                  backgroundColor: Colors.white,
+                  textColor: Colors.black,
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    ButtonNavigationHandler.handleNavigation(
+                        context, ref, button);
+                  },
+                ),
               ),
             ),
         ],
@@ -722,7 +884,8 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
   void dispose() {
     _progressController.dispose();
     _pageController.dispose();
-    _transitionController.dispose();
+    _groupPageController.dispose();
+    _uiAnimationController.dispose();
     super.dispose();
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -26,6 +27,12 @@ class CoworkingServiceDetailsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.light,
+    ));
+
     final gallerySlides = [
       if (service.image != null)
         ...service.gallery.map(
@@ -46,14 +53,14 @@ class CoworkingServiceDetailsPage extends ConsumerWidget {
     ];
 
     return Container(
-      color: AppColors.primary,
+      color: Colors.black,
       child: SafeArea(
-        child: Stack(
-          children: [
-            Container(
-              color: Colors.white,
-              margin: const EdgeInsets.only(top: 64),
-              child: SingleChildScrollView(
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          body: Stack(
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.only(top: 64),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -65,7 +72,7 @@ class CoworkingServiceDetailsPage extends ConsumerWidget {
                     ),
                     if (service.description?.isNotEmpty == true)
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         child: Html(
                           data: service.description,
                           style: {
@@ -133,12 +140,12 @@ class CoworkingServiceDetailsPage extends ConsumerWidget {
                   ],
                 ),
               ),
-            ),
-            CustomHeader(
-              title: service.title,
-              type: HeaderType.pop,
-            ),
-          ],
+              CustomHeader(
+                title: service.title,
+                type: HeaderType.pop,
+              ),
+            ],
+          ),
         ),
       ),
     );

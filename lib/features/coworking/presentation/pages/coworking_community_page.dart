@@ -162,32 +162,66 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
                     if (token != null) ...[
                       userCardAsync?.when(
                             data: (userCard) {
-                              if (userCard['status'] != 'APPROVED') {
-                                return Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: CustomButton(
-                                    label: 'community.create_card'.tr(),
-                                    onPressed: () {
-                                      context.pushNamed(
-                                        'community_card',
-                                        pathParameters: {
-                                          'id': widget.coworkingId.toString()
-                                        },
-                                      );
-                                    },
-                                    isFullWidth: true,
-                                    type: ButtonType.bordered,
-                                    backgroundColor: AppColors.bgLight,
-                                    textColor: AppColors.primary,
-                                  ),
-                                );
-                              }
-                              return const SizedBox.shrink();
+                              return Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: CustomButton(
+                                  label: (userCard['status'] == 'APPROVED' ||
+                                          userCard['status'] == 'REJECTED')
+                                      ? 'community.edit_card'.tr()
+                                      : 'community.create_card'.tr(),
+                                  onPressed: () {
+                                    context.pushNamed(
+                                      'community_card',
+                                      pathParameters: {
+                                        'id': widget.coworkingId.toString()
+                                      },
+                                    );
+                                  },
+                                  isFullWidth: true,
+                                  type: ButtonType.bordered,
+                                  backgroundColor: AppColors.bgLight,
+                                  textColor: AppColors.primary,
+                                ),
+                              );
                             },
                             loading: () => const SizedBox.shrink(),
-                            error: (_, __) => const SizedBox.shrink(),
+                            error: (_, __) => Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: CustomButton(
+                                label: 'community.create_card'.tr(),
+                                onPressed: () {
+                                  context.pushNamed(
+                                    'community_card',
+                                    pathParameters: {
+                                      'id': widget.coworkingId.toString()
+                                    },
+                                  );
+                                },
+                                isFullWidth: true,
+                                type: ButtonType.bordered,
+                                backgroundColor: AppColors.bgLight,
+                                textColor: AppColors.primary,
+                              ),
+                            ),
                           ) ??
-                          const SizedBox.shrink(),
+                          Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: CustomButton(
+                              label: 'community.create_card'.tr(),
+                              onPressed: () {
+                                context.pushNamed(
+                                  'community_card',
+                                  pathParameters: {
+                                    'id': widget.coworkingId.toString()
+                                  },
+                                );
+                              },
+                              isFullWidth: true,
+                              type: ButtonType.bordered,
+                              backgroundColor: AppColors.bgLight,
+                              textColor: AppColors.primary,
+                            ),
+                          ),
                     ],
                     Expanded(
                       child: communityCardsAsync.when(
@@ -208,7 +242,12 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
                           CommunityCard? userCard;
                           if (token != null && cards.isNotEmpty) {
                             try {
-                              userCard = cards.first;
+                              final firstCard = cards.first;
+                              // Only show user card if status is APPROVED or REJECTED
+                              if (firstCard.status == 'APPROVED' ||
+                                  firstCard.status == 'REJECTED') {
+                                userCard = firstCard;
+                              }
                             } catch (e) {
                               debugPrint('Error finding user card: $e');
                             }

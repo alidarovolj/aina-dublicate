@@ -22,6 +22,7 @@
     "copied": "Copied to clipboard",
     "you": "You",
     "create_card": "Create personal card",
+    "edit_card": "Edit personal card",
     "card": {
       "phone_label": "Phone",
       "email_label": "Email",
@@ -38,7 +39,7 @@
         "approved": "Approved for publication",
         "in_community": "in community",
         "review": "Your card is under review",
-        "unapproved": "Your card was not approved"
+        "unapproved": "Your card is not approved"
       },
       "visibility": {
         "title": "Visibility settings",
@@ -49,7 +50,7 @@
       },
       "main": {
         "title": "Main information",
-        "name": "First and last name",
+        "name": "Full name",
         "position": "Position",
         "about": "About me",
         "company": "Company"
@@ -60,8 +61,7 @@
         "whatsapp": "WhatsApp",
         "linkedin": "LinkedIn",
         "email": "Email",
-        "phone": "Phone",
-        "company": "Company"
+        "phone": "Phone"
       },
       "work": {
         "title": "Work"
@@ -69,8 +69,8 @@
       "image": {
         "title": "Image",
         "add": "Add image",
-        "select": "Click to select image",
-        "error_picking": "Error selecting image: {}",
+        "select": "Tap to select image",
+        "error_picking": "Error picking image: {}",
         "added": "Photo added"
       },
       "button": {
@@ -87,12 +87,12 @@
       },
       "submit": {
         "note": "After saving, the card will be sent for review",
-        "button": "Send for review",
+        "button": "Submit for review",
         "confirmation": {
-          "title": "Send card for review?",
+          "title": "Submit card for review?",
           "message": "After submission, the card will be reviewed by a moderator before publication in the community",
           "cancel": "Cancel",
-          "confirm": "Send"
+          "confirm": "Submit"
         },
         "errors": {
           "loading": "Error loading data: {}",
@@ -103,9 +103,9 @@
         "success": "Community card successfully created"
       },
       "validation": {
-        "required_fields": "Please fill in required fields",
-        "name_required": "Enter name",
-        "position_required": "Enter position"
+        "required_fields": "Please fill in the required fields",
+        "name_required": "Enter your name",
+        "position_required": "Enter your position"
       }
     }
   },
@@ -187,7 +187,8 @@
   "shops": {
     "title": "Shops",
     "view_all": "All",
-    "error": "Error: {}"
+    "error": "Error: {}",
+    "empty": "No stores available"
   },
   "auth": {
     "title": "Authorization",
@@ -388,6 +389,9 @@
       "logout_title": "Sign out",
       "logout_message": "Are you sure you want to sign out?",
       "update_success": "Changes saved"
+    },
+    "conference": {
+      "no_halls": "No available halls at the moment"
     }
   },
   "scanner": {
@@ -420,6 +424,7 @@
     "error": "Error: {}",
     "search_placeholder": "Enter store name",
     "no_stores": "No stores in this category",
+    "empty": "No stores available",
     "loading": "Loading...",
     "category_title": "{} in {}",
     "working_hours": "Working hours",
@@ -464,12 +469,22 @@
       "payment_confirmation": "By paying for the service, you agree to the",
       "rules": "terms of use",
       "history": "History",
-      "history_title": "Order history",
-      "back_to_order": "Back to order",
+      "history_title": "Order History",
+      "back_to_order": "Back to Order",
       "pay": "Pay",
       "download_fiscal": "Download fiscal receipt",
       "download_qr": "Show QR",
-      "wait_payment": "Waiting for payment..."
+      "wait_payment": "Waiting for payment...",
+      "history_statuses": {
+        "created": "Order created",
+        "modified": "Order modified",
+        "pending_payment": "Pending payment",
+        "access_granted": "Access granted to ACMS",
+        "status_paid": "Status changed to Paid",
+        "status_completed": "Status changed to Completed",
+        "status_refunded": "Status changed to Refunded",
+        "status_cancelled": "Status changed to Cancelled"
+      }
     },
     "status": {
       "paid": "Paid",

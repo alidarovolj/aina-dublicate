@@ -132,7 +132,6 @@ class _CategoryStoresPageState extends ConsumerState<CategoryStoresPage> {
               ),
               CustomHeader(
                 title: 'stores.category_title'.tr(args: [
-                  widget.title,
                   buildingsAsync.when(
                     data: (buildings) {
                       final malls = buildings['mall'] ?? [];
@@ -166,7 +165,8 @@ class _CategoryStoresPageState extends ConsumerState<CategoryStoresPage> {
                     },
                     loading: () => '',
                     error: (_, __) => '',
-                  )
+                  ),
+                  widget.title,
                 ]),
                 type: HeaderType.pop,
               ),

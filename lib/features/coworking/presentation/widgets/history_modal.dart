@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/features/coworking/domain/models/order_response.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class HistoryModal extends StatelessWidget {
   final List<OrderHistory> history;
@@ -31,9 +32,9 @@ class HistoryModal extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'История заказа',
-              style: TextStyle(
+            Text(
+              'orders.detail.history_title'.tr(),
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF1A1A1A),
@@ -80,7 +81,7 @@ class HistoryModal extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      item.message,
+                                      _getTranslatedMessage(item.message),
                                       style: const TextStyle(
                                         fontSize: 16,
                                         color: Color(0xFF1A1A1A),
@@ -108,7 +109,7 @@ class HistoryModal extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             CustomButton(
-              label: 'Назад к заказу',
+              label: 'orders.detail.back_to_order'.tr(),
               onPressed: () => Navigator.of(context).pop(),
               isFullWidth: true,
               type: ButtonType.normal,
@@ -119,6 +120,29 @@ class HistoryModal extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getTranslatedMessage(String message) {
+    // Маппинг русских сообщений на ключи перевода
+    final messageToKey = {
+      'Заказ создан': 'orders.detail.history_statuses.created',
+      'Заказ изменен': 'orders.detail.history_statuses.modified',
+      'Ожидает оплаты': 'orders.detail.history_statuses.pending_payment',
+      'Выдан доступ в СКУД': 'orders.detail.history_statuses.access_granted',
+      'Статус изменен на Оплачен': 'orders.detail.history_statuses.status_paid',
+      'Статус изменен на Завершен':
+          'orders.detail.history_statuses.status_completed',
+      'Статус изменен на Возврат':
+          'orders.detail.history_statuses.status_refunded',
+      'Статус изменен на Отменен':
+          'orders.detail.history_statuses.status_cancelled',
+    };
+
+    final translationKey = messageToKey[message];
+    if (translationKey != null) {
+      return translationKey.tr();
+    }
+    return message; // Возвращаем оригинальное сообщение, если перевод не найден
   }
 }
 

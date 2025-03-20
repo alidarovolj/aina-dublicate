@@ -149,12 +149,17 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
 
   Future<void> _updateVisibility() async {
     try {
+      setState(() {
+        _isLoading = true;
+      });
+
       await ref.read(communityCardServiceProvider).updateVisibility({
         'page_visible': _pageVisible,
         'phone_visible': _phoneVisible,
         'image_visible': _imageVisible,
       });
-      await _loadData();
+
+      // Instead of reloading all data, just update the success message
       if (!mounted) return;
       BaseSnackBar.show(
         context,
@@ -169,6 +174,12 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
             'community.card.submit.errors.visibility'.tr(args: [e.toString()]),
         type: SnackBarType.error,
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

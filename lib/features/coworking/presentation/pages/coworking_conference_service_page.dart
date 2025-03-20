@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/core/styles/constants.dart';
 import 'package:aina_flutter/core/widgets/custom_header.dart';
 import 'package:aina_flutter/features/coworking/domain/models/coworking_service.dart';
@@ -70,31 +71,46 @@ class CoworkingConferenceServicePage extends ConsumerWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.only(top: 64),
-                child: ListView.builder(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                  itemCount: tariffs.length,
-                  itemBuilder: (context, index) {
-                    final tariff = tariffs[index];
-                    return ConferenceTariffCard(
-                      tariff: tariff,
-                      coworkingId: coworkingId,
-                      serviceId: service.id,
-                      onDetailsTap: () {
-                        context.pushNamed(
-                          'coworking_calendar',
-                          pathParameters: {
-                            'id': coworkingId.toString(),
-                            'tariffId': tariff.id.toString(),
-                          },
-                          queryParameters: {
-                            'type': 'conference',
-                          },
-                        );
-                      },
-                    );
-                  },
-                ),
+                child: tariffs.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'coworking.conference.no_halls'.tr(),
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 16),
+                        itemCount: tariffs.length,
+                        itemBuilder: (context, index) {
+                          final tariff = tariffs[index];
+                          return ConferenceTariffCard(
+                            tariff: tariff,
+                            coworkingId: coworkingId,
+                            serviceId: service.id,
+                            onDetailsTap: () {
+                              context.pushNamed(
+                                'coworking_calendar',
+                                pathParameters: {
+                                  'id': coworkingId.toString(),
+                                  'tariffId': tariff.id.toString(),
+                                },
+                                queryParameters: {
+                                  'type': 'conference',
+                                },
+                              );
+                            },
+                          );
+                        },
+                      ),
               ),
               CustomHeader(
                 title: service.title,

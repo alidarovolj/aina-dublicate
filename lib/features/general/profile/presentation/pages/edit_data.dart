@@ -48,9 +48,6 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
   };
   bool _isLoading = false;
   bool _hasChanges = false;
-  bool isFirstNameValid = true;
-  bool isLastNameValid = true;
-  bool isLicensePlateValid = true;
   bool isEmailValid = true;
 
   @override
@@ -467,41 +464,15 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                         CustomInputField(
                           controller: firstNameController,
                           placeholder: 'profile.settings.edit.firstname'.tr(),
-                          isRequired: true,
                           focusNode: focusNodes['firstName'],
-                          hasError: !isFirstNameValid,
-                          errorText: !isFirstNameValid
-                              ? 'profile.settings.edit.required_field'.tr()
-                              : null,
-                          onChanged: (value) {
-                            final isValid = value.trim().isNotEmpty;
-                            if (isValid != isFirstNameValid) {
-                              setState(() {
-                                isFirstNameValid = isValid;
-                              });
-                            }
-                            _hasChanges = true;
-                          },
+                          onChanged: (_) => {_hasChanges = true},
                         ),
 
                         CustomInputField(
                           controller: lastNameController,
                           placeholder: 'profile.settings.edit.lastname'.tr(),
-                          isRequired: true,
                           focusNode: focusNodes['lastName'],
-                          hasError: !isLastNameValid,
-                          errorText: !isLastNameValid
-                              ? 'profile.settings.edit.required_field'.tr()
-                              : null,
-                          onChanged: (value) {
-                            final isValid = value.trim().isNotEmpty;
-                            if (isValid != isLastNameValid) {
-                              setState(() {
-                                isLastNameValid = isValid;
-                              });
-                            }
-                            _hasChanges = true;
-                          },
+                          onChanged: (_) => {_hasChanges = true},
                         ),
                         CustomInputField(
                           controller: patronymicController,
@@ -521,30 +492,7 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                           controller: licensePlateController,
                           placeholder: 'profile.settings.edit.car_number'.tr(),
                           focusNode: focusNodes['licensePlate'],
-                          isRequired: true,
-                          hasError: !isLicensePlateValid,
-                          errorText: !isLicensePlateValid
-                              ? licensePlateController.text.trim().isEmpty
-                                  ? 'profile.settings.edit.required_field'.tr()
-                                  : 'profile.settings.edit.min_length'.tr()
-                              : null,
-                          onChanged: (value) {
-                            final isValid = value.trim().length >= 5;
-                            if (isValid != isLicensePlateValid) {
-                              setState(() {
-                                isLicensePlateValid = isValid;
-                              });
-                            }
-                            _hasChanges = true;
-                          },
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'profile.settings.edit.car_number_note'.tr(),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textDarkGrey,
-                          ),
+                          onChanged: (_) => {_hasChanges = true},
                         ),
                         const SizedBox(height: 16),
 
@@ -623,13 +571,7 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
   }
 
   bool _validateFields() {
-    setState(() {
-      isFirstNameValid = firstNameController.text.trim().isNotEmpty;
-      isLastNameValid = lastNameController.text.trim().isNotEmpty;
-      isLicensePlateValid = licensePlateController.text.trim().length >= 5;
-    });
-
-    return isFirstNameValid && isLastNameValid && isLicensePlateValid;
+    return true;
   }
 
   void _markDirty() {
@@ -643,34 +585,6 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
 
   Future<bool> _onWillPop() async {
     if (_hasChanges) {
-      if (!_validateFields()) {
-        // Show warning modal about validation errors
-        bool shouldExit = false;
-        await BaseModal.show(
-          context,
-          title: 'modals.validation_error.title'.tr(),
-          message: 'modals.validation_error.message'.tr(),
-          buttons: [
-            ModalButton(
-              label: 'modals.validation_error.stay'.tr(),
-              type: ButtonType.filled,
-              onPressed: () {},
-            ),
-            ModalButton(
-              label: 'modals.validation_error.discard'.tr(),
-              type: ButtonType.normal,
-              backgroundColor: Colors.white,
-              textColor: Colors.red,
-              onPressed: () {
-                shouldExit = true;
-              },
-            ),
-          ],
-        );
-
-        return shouldExit;
-      }
-
       bool? result;
       await BaseModal.show(
         context,

@@ -14,6 +14,7 @@ import 'package:aina_flutter/core/providers/requests/auth/profile.dart'
     as profile;
 import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
 import 'package:aina_flutter/core/widgets/price_text.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // Определяем миксин прямо в этом файле
 mixin AuthCheckMixin {
@@ -217,117 +218,93 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
 
   Widget _buildServiceItem(
       BuildContext context, WidgetRef ref, Service service, int coworkingId) {
-    print(
-        '🏗️ Построение элемента услуги: ${service.title}, ID: ${service.id}, Type: ${service.type}');
-    print('🖼️ Изображение: ${service.image != null ? 'Есть' : 'Отсутствует'}');
-
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(4),
-        color: Colors.white,
-      ),
-      clipBehavior: Clip.antiAlias,
+      margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
-        borderRadius: BorderRadius.circular(4),
         onTap: () async {
-          print('Service type: ${service.type}');
-          print('Service subtype: ${service.subtype}');
-
           if (service.type == 'DEFAULT') {
-            // Для услуг типа DEFAULT переходим сразу на страницу календаря с валидацией
             _navigateToCalendar(context, service, coworkingId);
           } else if (service.subtype == 'COWORKING') {
-            print('Routing to coworking service details');
             context.push(
               '/coworking/$coworkingId/services/${service.id}',
             );
           } else {
-            print('Routing to conference service');
             context.push(
               '/coworking/$coworkingId/conference-services/${service.id}',
             );
           }
         },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            if (service.image != null)
-              Stack(
-                children: [
-                  AspectRatio(
-                    aspectRatio: 16 / 9,
-                    child: Image.network(
-                      service.image!.url,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                    ),
-                  ),
-                  Positioned(
-                    left: 8,
-                    top: 8,
-                    child: SvgPicture.asset(
-                      'lib/core/assets/icons/linked-arrow.svg',
-                      width: 28,
-                      height: 28,
-                    ),
-                  ),
-                  Positioned(
-                    left: 12,
-                    right: 12,
-                    bottom: 12,
-                    child: Text(
-                      service.title.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: 0.5,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            else
-              // Если изображения нет, показываем только заголовок
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
+            // Изображение с градиентом
+            Container(
+              height: 200,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                image: service.image != null
+                    ? DecorationImage(
+                        image: NetworkImage(service.image!.url),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+                color: service.image == null ? Colors.grey[100] : null,
+              ),
+              child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SvgPicture.asset(
-                      'lib/core/assets/icons/linked-arrow.svg',
-                      width: 28,
-                      height: 28,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      service.title.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: 0.5,
-                        color: Colors.black,
-                      ),
-                    ),
-                    if (service.price != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: PriceText(
-                          price: service.price.toString(),
-                          fontSize: 13,
-                          color: Colors.black54,
-                          withPerHour: true,
-                        ),
-                      ),
-                  ],
+                  borderRadius: BorderRadius.circular(8),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.7),
+                    ],
+                    stops: const [0.5, 1.0],
+                  ),
                 ),
               ),
+            ),
+            // Иконка стрелки
+            Positioned(
+              left: 8,
+              top: 8,
+              child: SvgPicture.asset(
+                'lib/core/assets/icons/linked-arrow.svg',
+                width: 28,
+                height: 28,
+              ),
+            ),
+            // Текстовый контент
+            Positioned(
+              bottom: 16,
+              left: 16,
+              right: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    service.title.toUpperCase(),
+                    style: GoogleFonts.lora(
+                      fontSize: 17,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (service.price != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: PriceText(
+                        price: service.price.toString(),
+                        fontSize: 13,
+                        color: Colors.white70,
+                        withPerHour: true,
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

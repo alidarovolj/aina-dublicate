@@ -15,6 +15,7 @@ import 'package:aina_flutter/core/widgets/custom_button.dart';
 import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
 import 'package:aina_flutter/core/widgets/base_slider.dart';
 import 'package:aina_flutter/core/types/slides.dart' as slides;
+import 'package:aina_flutter/core/types/button_config.dart';
 
 class EventDetailsPage extends ConsumerWidget {
   final int id;
@@ -48,10 +49,11 @@ class EventDetailsPage extends ConsumerWidget {
             child: Shimmer.fromColors(
               baseColor: Colors.grey[200]!,
               highlightColor: Colors.grey[300]!,
-              child: Container(
-                height: 240,
-                width: double.infinity,
-                color: Colors.white,
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Container(
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -172,9 +174,8 @@ class EventDetailsPage extends ConsumerWidget {
                   child: CustomScrollView(
                     slivers: [
                       SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: 240,
-                          width: double.infinity,
+                        child: AspectRatio(
+                          aspectRatio: 16 / 9,
                           child: Image.network(
                             promotion.previewImage.url,
                             fit: BoxFit.cover,
@@ -232,7 +233,21 @@ class EventDetailsPage extends ConsumerWidget {
                               if (promotion.button != null) ...[
                                 const SizedBox(height: AppLength.sm),
                                 CustomButton(
-                                  button: promotion.button,
+                                  button: ButtonConfig(
+                                    label: promotion.button!.label,
+                                    isInternal: promotion.button!.isInternal,
+                                    internal: promotion.button!.internal != null
+                                        ? ButtonInternal(
+                                            model: promotion
+                                                .button!.internal!.model,
+                                            id: promotion.button!.internal!.id,
+                                            buildingType: promotion
+                                                .button!.internal!.buildingType,
+                                            isAuthRequired: promotion.button!
+                                                .internal!.isAuthRequired,
+                                          )
+                                        : null,
+                                  ),
                                   isFullWidth: true,
                                   backgroundColor: AppColors.primary,
                                 ),

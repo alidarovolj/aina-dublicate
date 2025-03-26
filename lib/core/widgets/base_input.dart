@@ -14,6 +14,7 @@ class BaseInput extends StatelessWidget {
   final Widget? suffix;
   final void Function(String)? onChanged;
   final void Function(String)? onSubmitted;
+  final int? maxLength;
 
   const BaseInput({
     super.key,
@@ -29,6 +30,7 @@ class BaseInput extends StatelessWidget {
     this.suffix,
     this.onChanged,
     this.onSubmitted,
+    this.maxLength,
   });
 
   @override
@@ -53,6 +55,7 @@ class BaseInput extends StatelessWidget {
           obscureText: obscureText,
           maxLines: maxLines,
           minLines: minLines,
+          maxLength: maxLength,
           onChanged: onChanged,
           onFieldSubmitted: onSubmitted,
           style: const TextStyle(color: AppColors.primary),

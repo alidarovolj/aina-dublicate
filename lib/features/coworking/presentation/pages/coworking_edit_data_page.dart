@@ -17,6 +17,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:aina_flutter/core/widgets/avatar_edit_widget.dart';
 import 'package:aina_flutter/core/widgets/base_radio.dart';
 import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
+import 'package:dio/dio.dart';
 
 // Добавляем провайдер для кэш-ключа
 final profileCacheKeyProvider = StateProvider<int>((ref) => 0);
@@ -92,44 +93,11 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
   }
 
   bool validateFields() {
-    setState(() {
-      isFirstNameValid = firstNameController.text.trim().isNotEmpty;
-      isLastNameValid = lastNameController.text.trim().isNotEmpty;
-    });
-
-    return isFirstNameValid && isLastNameValid;
+    return true;
   }
 
   Future<bool> _onWillPop() async {
     if (_isDirty) {
-      if (!validateFields()) {
-        // Show warning modal about validation errors
-        bool shouldExit = false;
-        await BaseModal.show(
-          context,
-          title: 'modals.validation_error.title'.tr(),
-          message: 'modals.validation_error.message'.tr(),
-          buttons: [
-            ModalButton(
-              label: 'modals.validation_error.stay'.tr(),
-              type: ButtonType.filled,
-              onPressed: () {},
-            ),
-            ModalButton(
-              label: 'modals.validation_error.discard'.tr(),
-              type: ButtonType.normal,
-              backgroundColor: Colors.white,
-              textColor: Colors.red,
-              onPressed: () {
-                shouldExit = true;
-              },
-            ),
-          ],
-        );
-
-        return shouldExit; // Only exit if user explicitly chose to discard
-      }
-
       // If validation passes, show save changes modal
       bool? result;
       await BaseModal.show(
@@ -216,10 +184,26 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
     } catch (e) {
       // Show error modal
       if (mounted) {
+        String errorMessage = 'coworking.edit_data.update_error'.tr();
+        if (e is DioException && e.response?.data != null) {
+          final responseData = e.response?.data as Map<String, dynamic>;
+          if (responseData['message'] != null) {
+            errorMessage = responseData['message'];
+          } else if (responseData['errors'] != null) {
+            final errors = responseData['errors'] as Map<String, dynamic>;
+            if (errors.isNotEmpty) {
+              final firstError = errors.values.first as List;
+              if (firstError.isNotEmpty) {
+                errorMessage = firstError.first;
+              }
+            }
+          }
+        }
+
         await BaseModal.show(
           context,
           title: 'coworking.edit_data.error'.tr(),
-          message: 'coworking.edit_data.update_error'.tr(),
+          message: errorMessage,
           buttons: [
             ModalButton(
               label: 'common.ok'.tr(),
@@ -531,39 +515,13 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
                           CustomInputField(
                             controller: firstNameController,
                             placeholder: 'coworking.edit_data.firstname'.tr(),
-                            isRequired: true,
-                            hasError: !isFirstNameValid,
-                            errorText: !isFirstNameValid
-                                ? 'coworking.edit_data.required_field'.tr()
-                                : null,
-                            onChanged: (value) {
-                              final isValid = value.trim().isNotEmpty;
-                              if (isValid != isFirstNameValid) {
-                                setState(() {
-                                  isFirstNameValid = isValid;
-                                });
-                              }
-                              _isDirty = true;
-                            },
+                            onChanged: (_) => {_isDirty = true},
                           ),
 
                           CustomInputField(
                             controller: lastNameController,
                             placeholder: 'coworking.edit_data.lastname'.tr(),
-                            isRequired: true,
-                            hasError: !isLastNameValid,
-                            errorText: !isLastNameValid
-                                ? 'coworking.edit_data.required_field'.tr()
-                                : null,
-                            onChanged: (value) {
-                              final isValid = value.trim().isNotEmpty;
-                              if (isValid != isLastNameValid) {
-                                setState(() {
-                                  isLastNameValid = isValid;
-                                });
-                              }
-                              _isDirty = true;
-                            },
+                            onChanged: (_) => {_isDirty = true},
                           ),
 
                           CustomInputField(
@@ -575,41 +533,16 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
                           CustomInputField(
                             controller: emailController,
                             placeholder: 'coworking.edit_data.email'.tr(),
-                            isRequired: true,
-                            hasError: !isEmailValid,
-                            errorText: !isEmailValid
-                                ? 'coworking.edit_data.invalid_email'.tr()
-                                : null,
                             keyboardType: TextInputType.emailAddress,
-                            onChanged: (value) {
-                              final isValid = value.trim().contains('@');
-                              if (isValid != isEmailValid) {
-                                setState(() {
-                                  isEmailValid = isValid;
-                                });
-                              }
-                              _isDirty = true;
-                            },
+                            onChanged: (_) => {_isDirty = true},
                           ),
 
                           CustomInputField(
                             controller: iinController,
                             placeholder: 'coworking.edit_data.iin'.tr(),
-                            isRequired: true,
-                            hasError: !isIINValid,
-                            errorText: !isIINValid
-                                ? 'coworking.edit_data.invalid_iin'.tr()
-                                : null,
                             keyboardType: TextInputType.number,
-                            onChanged: (value) {
-                              final isValid = value.trim().length == 12;
-                              if (isValid != isIINValid) {
-                                setState(() {
-                                  isIINValid = isValid;
-                                });
-                              }
-                              _isDirty = true;
-                            },
+                            maxLength: 12,
+                            onChanged: (_) => {_isDirty = true},
                           ),
                           const SizedBox(height: 24),
 

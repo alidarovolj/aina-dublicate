@@ -11,6 +11,9 @@ import 'package:aina_flutter/core/widgets/base_slider.dart';
 import 'package:aina_flutter/core/types/slides.dart' as slides;
 import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
+import 'package:aina_flutter/core/utils/button_navigation_handler.dart';
 
 class NewsDetailsPage extends ConsumerWidget {
   final int id;
@@ -19,6 +22,20 @@ class NewsDetailsPage extends ConsumerWidget {
     super.key,
     required this.id,
   });
+
+  Future<void> _launchUrl(String? url) async {
+    if (url == null) return;
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _handleButtonClick(
+      BuildContext context, WidgetRef ref, ButtonConfig? button) {
+    if (button == null) return;
+    ButtonNavigationHandler.handleNavigation(context, ref, button);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -41,9 +58,8 @@ class NewsDetailsPage extends ConsumerWidget {
                   child: CustomScrollView(
                     slivers: [
                       SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: 240,
-                          width: double.infinity,
+                        child: AspectRatio(
+                          aspectRatio: 16 / 9,
                           child: Image.network(
                             news.previewImage.url,
                             fit: BoxFit.cover,
@@ -113,18 +129,47 @@ class NewsDetailsPage extends ConsumerWidget {
                                   height: 200,
                                 ),
                               ],
-                              if (news.button != null) ...[
+                              if (news.button != null &&
+                                  news.button!.label != null) ...[
                                 const SizedBox(height: AppLength.sm),
                                 CustomButton(
-                                  button: news.button != null
-                                      ? ButtonConfig(
-                                          label: news.button!.label,
-                                          link: news.button!.link,
-                                          isInternal: news.button!.isInternal,
-                                        )
-                                      : null,
+                                  button: ButtonConfig(
+                                    label: news.button!.label!,
+                                    isInternal:
+                                        news.button!.isInternal ?? false,
+                                    internal: news.button!.internal != null
+                                        ? ButtonInternal(
+                                            model: news.button!.internal!.model,
+                                            id: news.button!.internal!.id,
+                                            buildingType: news
+                                                .button!.internal!.buildingType,
+                                            isAuthRequired: news.button!
+                                                .internal!.isAuthRequired,
+                                          )
+                                        : null,
+                                  ),
                                   isFullWidth: true,
                                   backgroundColor: AppColors.primary,
+                                  onPressed: () => _handleButtonClick(
+                                    context,
+                                    ref,
+                                    ButtonConfig(
+                                      label: news.button!.label!,
+                                      isInternal:
+                                          news.button!.isInternal ?? false,
+                                      internal: news.button!.internal != null
+                                          ? ButtonInternal(
+                                              model:
+                                                  news.button!.internal!.model,
+                                              id: news.button!.internal!.id,
+                                              buildingType: news.button!
+                                                  .internal!.buildingType,
+                                              isAuthRequired: news.button!
+                                                  .internal!.isAuthRequired,
+                                            )
+                                          : null,
+                                    ),
+                                  ),
                                 ),
                               ],
                               if (news.bottomBody != null &&
@@ -172,10 +217,11 @@ class NewsDetailsPage extends ConsumerWidget {
             child: Shimmer.fromColors(
               baseColor: Colors.grey[200]!,
               highlightColor: Colors.grey[300]!,
-              child: Container(
-                height: 240,
-                width: double.infinity,
-                color: Colors.white,
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Container(
+                  color: Colors.white,
+                ),
               ),
             ),
           ),

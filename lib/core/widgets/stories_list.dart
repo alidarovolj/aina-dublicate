@@ -16,6 +16,7 @@ import 'package:aina_flutter/core/services/amplitude_service.dart';
 import 'dart:ui' show ImageFilter;
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:math' show pi, cos;
 
 class StoryList extends ConsumerStatefulWidget {
   const StoryList({super.key});
@@ -364,6 +365,26 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
   late List<StoryItem> currentStories = [];
   Map<int, Story?> _preloadedStories = {};
 
+  // Добавляем переменные для отслеживания свайпа
+  double _dragOffset = 0.0;
+  bool _isDragging = false;
+
+  // Добавляем контроллер для анимации куба
+  late AnimationController _cubeController;
+  late Animation<double> _cubeAnimation;
+  bool _isAnimating = false;
+
+  // Добавляем метод для расчета трансформации
+  double _calculateScale() {
+    // Начинаем уменьшать с 1.0 до 0.8
+    return 1.0 + (_dragOffset.abs() / 1000).clamp(0.0, 0.2);
+  }
+
+  double _calculateOpacity() {
+    // Уменьшаем прозрачность от 1.0 до 0.0
+    return (1.0 - (_dragOffset.abs() / 400).clamp(0.0, 1.0));
+  }
+
   @override
   void initState() {
     super.initState();
@@ -400,6 +421,16 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
     _loadCurrentStory();
     // Остальные истории загружаем в фоне
     _preloadRemainingStories();
+
+    _cubeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _cubeAnimation = CurvedAnimation(
+      parent: _cubeController,
+      curve: Curves.easeInOut,
+    );
   }
 
   void _markCurrentStoryAsRead() {
@@ -438,22 +469,75 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
     }
   }
 
+  Widget _buildCubeItem(
+      Widget child, bool isNext, Animation<double> animation) {
+    final rotationY =
+        isNext ? animation.value * -pi / 2 : animation.value * pi / 2;
+    final opacity = cos(rotationY).abs();
+    final transform = Matrix4.identity()
+      ..setEntry(3, 2, 0.003) // Добавляем перспективу
+      ..rotateY(rotationY);
+
+    return Transform(
+      transform: transform,
+      alignment: isNext ? Alignment.centerLeft : Alignment.centerRight,
+      child: Opacity(
+        opacity: opacity,
+        child: child,
+      ),
+    );
+  }
+
+  Future<void> _animateCubeTransition(bool isNext) async {
+    if (_isAnimating) return;
+    _isAnimating = true;
+
+    await _cubeController.forward();
+    _cubeController.reset();
+    _isAnimating = false;
+  }
+
+  // Модифицируем PageView.builder для основного контента
+  Widget _buildPageView() {
+    return AnimatedBuilder(
+      animation: _cubeAnimation,
+      builder: (context, child) {
+        final groupStories = widget.stories[currentStoryIndex].stories ?? [];
+        final currentStory = groupStories[currentInnerStoryIndex];
+
+        Widget currentPage = _buildStoryContent(currentStory);
+        Widget? nextPage;
+        Widget? prevPage;
+
+        if (currentInnerStoryIndex < groupStories.length - 1) {
+          nextPage =
+              _buildStoryContent(groupStories[currentInnerStoryIndex + 1]);
+        }
+        if (currentInnerStoryIndex > 0) {
+          prevPage =
+              _buildStoryContent(groupStories[currentInnerStoryIndex - 1]);
+        }
+
+        return Stack(
+          children: [
+            _buildCubeItem(currentPage, false, _cubeAnimation),
+            if (nextPage != null)
+              _buildCubeItem(nextPage, true, _cubeAnimation),
+            if (prevPage != null)
+              _buildCubeItem(prevPage, false, _cubeAnimation),
+          ],
+        );
+      },
+    );
+  }
+
+  // Модифицируем методы переключения историй
   Future<void> handleNextStory() async {
     if (currentInnerStoryIndex < currentStories.length - 1) {
+      await _animateCubeTransition(true);
       setState(() {
         currentInnerStoryIndex++;
       });
-      // Предзагружаем следующую историю если она еще не загружена
-      final nextStory = currentStories[currentInnerStoryIndex];
-      if (nextStory.id != null &&
-          !_preloadedStories.containsKey(nextStory.id)) {
-        _loadCurrentStory();
-      }
-      await _pageController.animateToPage(
-        currentInnerStoryIndex,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
       _progressController.reset();
       _progressController.forward();
     } else if (currentStoryIndex < widget.stories.length - 1) {
@@ -494,14 +578,10 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
 
   Future<void> handlePreviousStory() async {
     if (currentInnerStoryIndex > 0) {
+      await _animateCubeTransition(false);
       setState(() {
         currentInnerStoryIndex--;
       });
-      await _pageController.animateToPage(
-        currentInnerStoryIndex,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
       _progressController.reset();
       _progressController.forward();
     } else if (currentStoryIndex > 0) {
@@ -653,229 +733,233 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          PageView.builder(
-            physics: const NeverScrollableScrollPhysics(),
-            controller: _groupPageController,
-            itemCount: widget.stories.length,
-            itemBuilder: (context, groupIndex) {
-              final groupStories = widget.stories[groupIndex].stories ?? [];
-              if (groupIndex == currentStoryIndex) {
-                return PageView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  controller: _pageController,
-                  itemCount: groupStories.length,
-                  itemBuilder: (context, index) {
-                    final story = groupStories[index];
-                    return _buildStoryContent(story);
+      body: Transform.scale(
+        scale: _calculateScale(),
+        child: Opacity(
+          opacity: _calculateOpacity(),
+          child: Stack(
+            children: [
+              _buildPageView(), // Заменяем старый PageView на новый с эффектом куба
+              // GestureDetector для обработки тапов
+              Positioned.fill(
+                child: GestureDetector(
+                  onTapDown: (details) {
+                    _progressController.stop();
                   },
-                );
-              } else {
-                return PageView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: groupStories.length,
-                  itemBuilder: (context, index) {
-                    final story = groupStories[index];
-                    return _buildStoryContent(story);
+                  onTapUp: (details) {
+                    if (!_isDragging) {
+                      if (details.globalPosition.dx < screenWidth / 2) {
+                        handlePreviousStory();
+                      } else {
+                        handleNextStory();
+                      }
+                      _progressController.forward();
+                    }
                   },
-                );
-              }
-            },
-          ),
-          // GestureDetector для обработки тапов
-          Positioned.fill(
-            child: GestureDetector(
-              onTapDown: (details) {
-                _progressController.stop();
-              },
-              onTapUp: (details) {
-                if (details.globalPosition.dx < screenWidth / 2) {
-                  handlePreviousStory();
-                } else {
-                  handleNextStory();
-                }
-                _progressController.forward();
-              },
-              onTapCancel: () {
-                _progressController.forward();
-              },
-              onLongPressStart: (_) {
-                _progressController.stop();
-              },
-              onLongPressEnd: (_) {
-                _progressController.forward();
-              },
-              onLongPressMoveUpdate: (_) {
-                _progressController.stop();
-              },
-              onHorizontalDragEnd: (details) {
-                if (details.primaryVelocity == null) return;
-
-                // Если скорость свайпа меньше определенного порога, игнорируем
-                if (details.primaryVelocity!.abs() < 200) return;
-
-                if (details.primaryVelocity! > 0) {
-                  // Свайп вправо - к предыдущей группе
-                  if (currentStoryIndex > 0) {
-                    _uiAnimationController.forward();
-                    final prevStoryIndex = currentStoryIndex - 1;
-                    final prevStories =
-                        widget.stories[prevStoryIndex].stories ?? [];
-
-                    _groupPageController
-                        .animateToPage(
-                      prevStoryIndex,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    )
-                        .then((_) {
-                      setState(() {
-                        currentStoryIndex = prevStoryIndex;
-                        currentStories = prevStories;
-                        currentInnerStoryIndex = 0;
-                      });
-                      _pageController = PageController(initialPage: 0);
-                      _progressController.reset();
+                  onTapCancel: () {
+                    if (!_isDragging) {
                       _progressController.forward();
-                      _uiAnimationController.reverse();
-                    });
-                  }
-                } else {
-                  // Свайп влево - к следующей группе
-                  if (currentStoryIndex < widget.stories.length - 1) {
-                    _uiAnimationController.forward();
-                    final nextStoryIndex = currentStoryIndex + 1;
-                    final nextStories =
-                        widget.stories[nextStoryIndex].stories ?? [];
+                    }
+                  },
+                  onVerticalDragStart: (_) {
+                    _isDragging = true;
+                    _progressController.stop();
+                  },
+                  onVerticalDragUpdate: (details) {
+                    // Теперь обрабатываем только свайп вверх (отрицательное значение)
+                    if (details.primaryDelta! > 0) return;
 
-                    _groupPageController
-                        .animateToPage(
-                      nextStoryIndex,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    )
-                        .then((_) {
-                      setState(() {
-                        currentStoryIndex = nextStoryIndex;
-                        currentStories = nextStories;
-                        currentInnerStoryIndex = 0;
-                      });
-                      _pageController = PageController(initialPage: 0);
-                      _progressController.reset();
-                      _progressController.forward();
-                      _uiAnimationController.reverse();
+                    setState(() {
+                      _dragOffset += details.primaryDelta!;
                     });
-                  }
-                }
-              },
-            ),
-          ),
-          // Верхняя панель с прогрессом и информацией
-          FadeTransition(
-            opacity: _uiFadeAnimation,
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.only(
-                top: paddingTop + 8,
-                left: 16,
-                right: 16,
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: List.generate(
-                      currentStories.length,
-                      (index) => Expanded(
-                        child: Container(
-                          height: 2,
-                          margin: const EdgeInsets.symmetric(horizontal: 2),
-                          child: ValueListenableBuilder<double>(
-                            valueListenable: _progressController,
-                            builder: (context, value, child) {
-                              return LinearProgressIndicator(
-                                value: index < currentInnerStoryIndex
-                                    ? 1.0
-                                    : (index == currentInnerStoryIndex
-                                        ? value
-                                        : 0.0),
-                                backgroundColor: Colors.grey.withOpacity(0.5),
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                    Colors.white),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              image: DecorationImage(
-                                image: NetworkImage(
-                                  widget.stories[currentStoryIndex]
-                                          .previewImage ??
-                                      '',
-                                ),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            widget.stories[currentStoryIndex].name ?? '',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white),
-                        onPressed: () => Navigator.of(context).pop(),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Кнопка внизу экрана
-          if (button != null)
-            Positioned(
-              bottom: MediaQuery.of(context).padding.bottom + 20,
-              left: 16,
-              right: 16,
-              child: FadeTransition(
-                opacity: _uiFadeAnimation,
-                child: CustomButton(
-                  button: button,
-                  type: ButtonType.bordered,
-                  isFullWidth: true,
-                  backgroundColor: Colors.white,
-                  textColor: Colors.black,
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    ButtonNavigationHandler.handleNavigation(
-                        context, ref, button);
+                  },
+                  onVerticalDragEnd: (details) {
+                    _isDragging = false;
+
+                    // Проверяем скорость свайпа вверх (отрицательное значение)
+                    if (_dragOffset.abs() > 100 ||
+                        (details.primaryVelocity ?? 0) < -300) {
+                      // Закрываем историю если достаточно оттянули или быстро свайпнули вверх
+                      Navigator.of(context).pop();
+                    } else {
+                      // Возвращаем на место с анимацией
+                      setState(() {
+                        _dragOffset = 0;
+                      });
+                      _progressController.forward();
+                    }
+                  },
+                  onHorizontalDragEnd: (details) {
+                    if (details.primaryVelocity == null) return;
+
+                    // Если скорость свайпа меньше определенного порога, игнорируем
+                    if (details.primaryVelocity!.abs() < 200) return;
+
+                    if (details.primaryVelocity! > 0) {
+                      // Свайп вправо - к предыдущей группе
+                      if (currentStoryIndex > 0) {
+                        _uiAnimationController.forward();
+                        final prevStoryIndex = currentStoryIndex - 1;
+                        final prevStories =
+                            widget.stories[prevStoryIndex].stories ?? [];
+
+                        _groupPageController
+                            .animateToPage(
+                          prevStoryIndex,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        )
+                            .then((_) {
+                          setState(() {
+                            currentStoryIndex = prevStoryIndex;
+                            currentStories = prevStories;
+                            currentInnerStoryIndex = 0;
+                          });
+                          _pageController = PageController(initialPage: 0);
+                          _progressController.reset();
+                          _progressController.forward();
+                          _uiAnimationController.reverse();
+                        });
+                      }
+                    } else {
+                      // Свайп влево - к следующей группе
+                      if (currentStoryIndex < widget.stories.length - 1) {
+                        _uiAnimationController.forward();
+                        final nextStoryIndex = currentStoryIndex + 1;
+                        final nextStories =
+                            widget.stories[nextStoryIndex].stories ?? [];
+
+                        _groupPageController
+                            .animateToPage(
+                          nextStoryIndex,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        )
+                            .then((_) {
+                          setState(() {
+                            currentStoryIndex = nextStoryIndex;
+                            currentStories = nextStories;
+                            currentInnerStoryIndex = 0;
+                          });
+                          _pageController = PageController(initialPage: 0);
+                          _progressController.reset();
+                          _progressController.forward();
+                          _uiAnimationController.reverse();
+                        });
+                      }
+                    }
                   },
                 ),
               ),
-            ),
-        ],
+              // Верхняя панель с прогрессом и информацией
+              FadeTransition(
+                opacity: _uiFadeAnimation,
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.only(
+                    top: paddingTop + 8,
+                    left: 16,
+                    right: 16,
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: List.generate(
+                          currentStories.length,
+                          (index) => Expanded(
+                            child: Container(
+                              height: 2,
+                              margin: const EdgeInsets.symmetric(horizontal: 2),
+                              child: ValueListenableBuilder<double>(
+                                valueListenable: _progressController,
+                                builder: (context, value, child) {
+                                  return LinearProgressIndicator(
+                                    value: index < currentInnerStoryIndex
+                                        ? 1.0
+                                        : (index == currentInnerStoryIndex
+                                            ? value
+                                            : 0.0),
+                                    backgroundColor:
+                                        Colors.grey.withOpacity(0.5),
+                                    valueColor:
+                                        const AlwaysStoppedAnimation<Color>(
+                                            Colors.white),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  image: DecorationImage(
+                                    image: NetworkImage(
+                                      widget.stories[currentStoryIndex]
+                                              .previewImage ??
+                                          '',
+                                    ),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                widget.stories[currentStoryIndex].name ?? '',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white),
+                            onPressed: () => Navigator.of(context).pop(),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Кнопка внизу экрана
+              if (button != null)
+                Positioned(
+                  bottom: MediaQuery.of(context).padding.bottom + 20,
+                  left: 16,
+                  right: 16,
+                  child: FadeTransition(
+                    opacity: _uiFadeAnimation,
+                    child: CustomButton(
+                      button: button,
+                      type: ButtonType.bordered,
+                      isFullWidth: true,
+                      backgroundColor: Colors.white,
+                      textColor: Colors.black,
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        ButtonNavigationHandler.handleNavigation(
+                            context, ref, button);
+                      },
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -886,6 +970,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
     _pageController.dispose();
     _groupPageController.dispose();
     _uiAnimationController.dispose();
+    _cubeController.dispose();
     super.dispose();
   }
 }

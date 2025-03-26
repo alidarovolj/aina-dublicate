@@ -20,6 +20,9 @@ import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/core/services/amplitude_service.dart';
 import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
+import 'package:aina_flutter/core/types/button_config.dart';
+import 'package:intl/intl.dart';
+import 'package:aina_flutter/core/types/promotion.dart';
 
 class PromotionDetailsPage extends ConsumerWidget {
   final int id;
@@ -43,6 +46,22 @@ class PromotionDetailsPage extends ConsumerWidget {
     }
   }
 
+  String _formattedDateRange(Promotion promotion) {
+    if (promotion.startAt == null && promotion.endAt == null) {
+      return 'promotions.unlimited'.tr();
+    }
+    if (promotion.startAt != null && promotion.endAt != null) {
+      return '${'promotions.from_date'.tr()} ${DateFormat('dd.MM.yyyy').format(promotion.startAt!)} ${'promotions.until_date'.tr()} ${DateFormat('dd.MM.yyyy').format(promotion.endAt!)}';
+    }
+    if (promotion.startAt != null) {
+      return '${'promotions.from_date'.tr()} ${DateFormat('dd.MM.yyyy').format(promotion.startAt!)}';
+    }
+    if (promotion.endAt != null) {
+      return '${'promotions.until_date'.tr()} ${DateFormat('dd.MM.yyyy').format(promotion.endAt!)}';
+    }
+    return '';
+  }
+
   Widget _buildSkeleton() {
     return Container(
       color: AppColors.white,
@@ -53,10 +72,11 @@ class PromotionDetailsPage extends ConsumerWidget {
             child: Shimmer.fromColors(
               baseColor: Colors.grey[200]!,
               highlightColor: Colors.grey[300]!,
-              child: Container(
-                height: 240,
-                width: double.infinity,
-                color: Colors.white,
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Container(
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -180,9 +200,8 @@ class PromotionDetailsPage extends ConsumerWidget {
                   child: CustomScrollView(
                     slivers: [
                       SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: 240,
-                          width: double.infinity,
+                        child: AspectRatio(
+                          aspectRatio: 16 / 9,
                           child: Image.network(
                             promotion.previewImage.url,
                             fit: BoxFit.cover,
@@ -213,7 +232,7 @@ class PromotionDetailsPage extends ConsumerWidget {
                                   ),
                                   const SizedBox(width: AppLength.xs),
                                   Text(
-                                    promotion.formattedDateRange,
+                                    _formattedDateRange(promotion),
                                     style: const TextStyle(
                                       fontSize: 15,
                                       color: AppColors.textDarkGrey,
@@ -221,28 +240,119 @@ class PromotionDetailsPage extends ConsumerWidget {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: AppLength.sm),
-                              Html(
-                                data: promotion.subtitle,
-                                style: {
-                                  "body": Style(
-                                    fontSize: FontSize(15),
-                                    lineHeight: const LineHeight(1.5),
-                                    margin: Margins.zero,
-                                    padding: HtmlPaddings.zero,
-                                    color: AppColors.textDarkGrey,
+                              if (promotion.file != null) ...[
+                                const SizedBox(height: AppLength.sm),
+                                TextButton(
+                                  onPressed: () {
+                                    if (promotion.file?.url != null) {
+                                      _launchUrl(promotion.file!.url!);
+                                    }
+                                  },
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'promotions.view_terms'.tr(),
+                                        style: TextStyle(
+                                          color: AppColors.blueGrey,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      )
+                                    ],
                                   ),
-                                  "a": Style(
-                                    color: Colors.blue,
-                                    textDecoration: TextDecoration.underline,
-                                  ),
-                                },
-                                onLinkTap: (url, context, attributes) {
-                                  if (url != null) _launchUrl(url);
-                                },
-                              ),
+                                ),
+                              ],
                               const SizedBox(height: AppLength.sm),
-                              if (promotion.type != 'DEFAULT')
+                              if (promotion.type == 'QR' && promotion.isQr)
+                                CustomButton(
+                                  label: 'promotions.scan_qr'.tr(),
+                                  isFullWidth: true,
+                                  backgroundColor: AppColors.primary,
+                                  onPressed: () {
+                                    AmplitudeService().logEvent(
+                                      'scan_pageinfo_click',
+                                      eventProperties: {
+                                        'Platform': _getPlatform(),
+                                      },
+                                    );
+
+                                    final authState = ref.read(authProvider);
+                                    final mallId =
+                                        promotion.building?.id.toString();
+
+                                    if (mallId == null) {
+                                      BaseSnackBar.show(
+                                        context,
+                                        message:
+                                            'promotions.error.no_mall'.tr(),
+                                        type: SnackBarType.error,
+                                      );
+                                      return;
+                                    }
+
+                                    if (!authState.isAuthenticated) {
+                                      AuthWarningModal.show(
+                                        context,
+                                        promotionId: id.toString(),
+                                        mallId: mallId,
+                                      );
+                                    } else if (!authState.hasCompletedProfile) {
+                                      AuthWarningModal.show(
+                                        context,
+                                        isProfileIncomplete: true,
+                                        promotionId: id.toString(),
+                                        mallId: mallId,
+                                      );
+                                    } else {
+                                      context.pushNamed(
+                                        'promotion_qr',
+                                        pathParameters: {
+                                          'promotionId':
+                                              promotion.id.toString(),
+                                        },
+                                        queryParameters: {
+                                          'mallId': mallId,
+                                        },
+                                      );
+                                    }
+                                  },
+                                )
+                              else if (promotion.type == 'SERVICE_PURCHASE')
+                                CustomButton(
+                                  label: 'coworking.tariffs.title'.tr(),
+                                  isFullWidth: true,
+                                  backgroundColor: AppColors.primary,
+                                  onPressed: () {
+                                    print(
+                                        '=== DEBUG: Service Purchase Button Pressed ===');
+                                    print(
+                                        'Building ID: ${promotion.building?.id}');
+                                    print(
+                                        'Building Type: ${promotion.building?.type}');
+                                    print('Promotion Type: ${promotion.type}');
+
+                                    if (promotion.building?.id != null) {
+                                      print(
+                                          'Attempting navigation to coworking_details');
+                                      print(
+                                          'Path Parameters: id=${promotion.building!.id}');
+                                      print('Extra Parameters: initialTab=1');
+
+                                      context.pushReplacementNamed(
+                                        'coworking_services',
+                                        pathParameters: {
+                                          'id':
+                                              promotion.building!.id.toString(),
+                                        },
+                                      );
+                                    } else {
+                                      print('ERROR: Building ID is null');
+                                    }
+                                  },
+                                )
+                              else if (promotion.type == 'RAFFLE' &&
+                                  promotion.isQr)
                                 CustomButton(
                                   label: 'promotions.scan_qr'.tr(),
                                   isFullWidth: true,
@@ -298,6 +408,26 @@ class PromotionDetailsPage extends ConsumerWidget {
                                 ),
                               const SizedBox(height: AppLength.sm),
                               Html(
+                                data: promotion.subtitle,
+                                style: {
+                                  "body": Style(
+                                    fontSize: FontSize(15),
+                                    lineHeight: const LineHeight(1.5),
+                                    margin: Margins.zero,
+                                    padding: HtmlPaddings.zero,
+                                    color: AppColors.textDarkGrey,
+                                  ),
+                                  "a": Style(
+                                    color: Colors.blue,
+                                    textDecoration: TextDecoration.underline,
+                                  ),
+                                },
+                                onLinkTap: (url, context, attributes) {
+                                  if (url != null) _launchUrl(url);
+                                },
+                              ),
+                              const SizedBox(height: AppLength.sm),
+                              Html(
                                 data: promotion.body,
                                 style: {
                                   "body": Style(
@@ -317,7 +447,30 @@ class PromotionDetailsPage extends ConsumerWidget {
                                 },
                               ),
                               CustomButton(
-                                button: promotion.button,
+                                button: promotion.button != null
+                                    ? ButtonConfig(
+                                        label: promotion.button!.label,
+                                        isInternal:
+                                            promotion.button!.isInternal,
+                                        internal:
+                                            promotion.button!.internal != null
+                                                ? ButtonInternal(
+                                                    model: promotion.button!
+                                                        .internal!.model,
+                                                    id: promotion
+                                                        .button!.internal!.id,
+                                                    buildingType: promotion
+                                                        .button!
+                                                        .internal!
+                                                        .buildingType,
+                                                    isAuthRequired: promotion
+                                                        .button!
+                                                        .internal!
+                                                        .isAuthRequired,
+                                                  )
+                                                : null,
+                                      )
+                                    : null,
                                 isFullWidth: true,
                                 backgroundColor: AppColors.primary,
                               ),

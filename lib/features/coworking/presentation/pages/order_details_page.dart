@@ -632,12 +632,22 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
                     type: ButtonType.normal,
                   ),
                 ),
+              if (order!.fiscalLinkUrl != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: CustomButton(
+                    label: 'orders.detail.download_fiscal'.tr(),
+                    onPressed: _downloadFiscal,
+                    isFullWidth: true,
+                    type: ButtonType.normal,
+                  ),
+                ),
               if (order!.service?.type != 'COWORKING' &&
                   order!.status != 'PENDING' &&
                   order!.status != 'CANCELLED' &&
                   order!.status == 'PAID')
                 Padding(
-                  padding: const EdgeInsets.only(top: 10),
+                  padding: const EdgeInsets.only(top: 20),
                   child: CustomButton(
                     label: 'orders.detail.download_qr'.tr(),
                     onPressed: () async {
@@ -649,10 +659,8 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
                         }
                       } catch (e) {
                         if (mounted) {
-                          BaseSnackBar.show(
-                            context,
-                            message: 'common.error.general'.tr(),
-                            type: SnackBarType.error,
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error: $e')),
                           );
                         }
                       }

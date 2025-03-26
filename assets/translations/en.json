@@ -147,7 +147,11 @@
     "error.no_mall": "Could not determine the mall",
     "no_active_promotions": "No active promotions at the moment",
     "scan_qr": "Scan QR code",
-    "moskva": "Moscow"
+    "moskva": "Moscow",
+    "view_terms": "View full promotion terms",
+    "unlimited": "Unlimited",
+    "from_date": "From",
+    "until_date": "Until"
   },
   "mall_selector": {
     "select_mall": "Select mall",
@@ -388,7 +392,9 @@
       "logout": "Sign out",
       "logout_title": "Sign out",
       "logout_message": "Are you sure you want to sign out?",
-      "update_success": "Changes saved"
+      "update_success": "Changes saved",
+      "error": "Error",
+      "update_error": "Error updating data"
     },
     "conference": {
       "no_halls": "No available halls at the moment"
@@ -510,7 +516,7 @@
   "common": {
     "currency": "₸",
     "close": "Close",
-    "ok": "Back to biometrics",
+    "ok": "Close",
     "cancel": "Cancel",
     "settings": "Settings",
     "confirm": "Confirm",

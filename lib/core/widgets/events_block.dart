@@ -107,11 +107,18 @@ class EventsBlock extends ConsumerWidget {
             error.toString().contains('Internal Server Error');
 
         return ErrorRefreshWidget(
+          height: cardType == PromotionCardType.medium
+              ? 201
+              : cardType == PromotionCardType.small
+                  ? 94
+                  : 200,
           onRefresh: () {
             print('🔄 Refreshing events...');
             Future.microtask(() async {
               try {
-                ref.refresh(mallEventsPromotionProvider(mallId!));
+                if (mallId != null) {
+                  ref.refresh(mallEventsPromotionProvider(mallId!));
+                }
               } catch (e) {
                 print('❌ Error refreshing events: $e');
               }
@@ -122,12 +129,13 @@ class EventsBlock extends ConsumerWidget {
               : 'events.error.loading'.tr(),
           refreshText: 'common.refresh'.tr(),
           icon: Icons.warning_amber_rounded,
+          isCompact: cardType == PromotionCardType.small,
           isServerError: true,
         );
       },
       data: (events) {
         if (events.isEmpty) {
-          return const SizedBox.shrink();
+          return emptyBuilder?.call(context) ?? const SizedBox.shrink();
         }
 
         final sortedEvents = _sortPromotions(events).cast<Promotion>();
@@ -160,17 +168,7 @@ class EventsBlock extends ConsumerWidget {
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        onPressed: () {
-                          if (onViewAllTap != null) {
-                            onViewAllTap?.call();
-                          } else if (mallId != null) {
-                            context.pushNamed(
-                              'mall_promotions',
-                              pathParameters: {'id': mallId.toString()},
-                              extra: {'initialTabIndex': 1},
-                            );
-                          }
-                        },
+                        onPressed: onViewAllTap,
                         child: Row(
                           children: [
                             Text(

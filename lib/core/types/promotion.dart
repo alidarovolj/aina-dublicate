@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:aina_flutter/core/types/button_config.dart';
 import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class PreviewImage {
   final int id;
@@ -108,6 +110,7 @@ class Promotion {
   final ButtonConfig? button;
   final Building? building;
   final String? type;
+  final PreviewImage? file;
 
   Promotion({
     required this.id,
@@ -130,6 +133,7 @@ class Promotion {
     this.button,
     this.building,
     this.type,
+    this.file,
   });
 
   factory Promotion.fromJson(Map<String, dynamic> json) {
@@ -184,6 +188,11 @@ class Promotion {
         building = Building.fromJson(json['building'] as Map<String, dynamic>);
       }
 
+      PreviewImage? file;
+      if (json['file'] != null) {
+        file = PreviewImage.fromJson(json['file'] as Map<String, dynamic>);
+      }
+
       return Promotion(
         id: json['id'] as int,
         name: json['name'] as String? ?? '',
@@ -216,6 +225,7 @@ class Promotion {
             : null,
         building: building,
         type: json['type'] as String?,
+        file: file,
       );
     } catch (e) {
       // print('Error parsing promotion: $e');
@@ -226,7 +236,7 @@ class Promotion {
 
   String get formattedDateRange {
     if (startAt == null && endAt == null) {
-      return 'Бессрочно';
+      return 'promotions.unlimited'.tr();
     }
 
     final dateFormat = DateFormat('dd.MM.yyyy');
@@ -236,9 +246,9 @@ class Promotion {
     if (startAt != null && endAt != null) {
       return '$startStr - $endStr';
     } else if (startAt != null) {
-      return 'С $startStr';
+      return 'promotions.from_date'.tr(args: [startStr]);
     } else {
-      return 'До $endStr';
+      return 'promotions.until_date'.tr(args: [endStr]);
     }
   }
 }

@@ -13,7 +13,7 @@ void main() async {
         Locale('kk'),
         Locale('en'),
       ],
-      path: 'assets/translations',
+      path: 'lib/app/assets/translations',
       fallbackLocale: const Locale('ru'),
       child: const StorybookApp(),
     ),

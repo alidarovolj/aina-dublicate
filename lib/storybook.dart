@@ -1,58 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:storybook_flutter/storybook_flutter.dart';
-import 'package:aina_flutter/core/styles/constants.dart';
-import 'package:aina_flutter/features/coworking/domain/models/coworking_service.dart'
+import 'package:aina_flutter/app/styles/constants.dart';
+import 'package:aina_flutter/pages/coworking/domain/models/coworking_service.dart'
     as coworking;
-import 'package:aina_flutter/core/widgets/custom_button.dart';
-import 'package:aina_flutter/core/widgets/custom_text_field.dart';
-import 'package:aina_flutter/core/widgets/custom_toggle.dart';
-import 'package:aina_flutter/core/widgets/custom_header.dart';
-import 'package:aina_flutter/core/widgets/custom_input_field.dart';
-import 'package:aina_flutter/core/widgets/section_widget.dart';
-import 'package:aina_flutter/core/widgets/description_block.dart';
-import 'package:aina_flutter/core/widgets/communication_modal.dart';
-import 'package:aina_flutter/core/widgets/feedback_form_modal.dart';
-import 'package:aina_flutter/core/widgets/base_modal.dart';
-import 'package:aina_flutter/core/widgets/error_dialog.dart';
-import 'package:aina_flutter/core/widgets/custom_tabbar.dart';
-import 'package:aina_flutter/core/widgets/category_card.dart';
-import 'package:aina_flutter/core/widgets/loader_modal.dart';
-import 'package:aina_flutter/core/widgets/language_switcher.dart';
-import 'package:aina_flutter/features/coworking/presentation/widgets/conference_tariff_card.dart';
-import 'package:aina_flutter/features/coworking/presentation/widgets/booking_card.dart';
-import 'package:aina_flutter/features/coworking/domain/models/order_response.dart';
-import 'package:aina_flutter/core/types/service.dart';
-import 'package:aina_flutter/features/malls/widgets/mall_info_block.dart';
-import 'package:aina_flutter/features/home/widgets/shop_categories_grid.dart';
-import 'package:aina_flutter/features/home/widgets/categories_grid.dart';
-import 'package:aina_flutter/features/malls/widgets/mall_selector.dart';
-import 'package:aina_flutter/features/malls/widgets/mall_details_header.dart';
-import 'package:aina_flutter/features/home/widgets/stories_list.dart';
-import 'package:aina_flutter/features/home/widgets/buildings_list.dart';
-import 'package:aina_flutter/features/home/widgets/main_tabbar_screen.dart';
+import 'package:aina_flutter/widgets/custom_button.dart';
+import 'package:aina_flutter/widgets/custom_text_field.dart';
+import 'package:aina_flutter/widgets/custom_toggle.dart';
+import 'package:aina_flutter/widgets/custom_header.dart';
+import 'package:aina_flutter/widgets/custom_input_field.dart';
+import 'package:aina_flutter/widgets/section_widget.dart';
+import 'package:aina_flutter/widgets/description_block.dart';
+import 'package:aina_flutter/widgets/base_modal.dart';
+import 'package:aina_flutter/widgets/error_dialog.dart';
+import 'package:aina_flutter/widgets/custom_tabbar.dart';
+import 'package:aina_flutter/widgets/category_card.dart';
+import 'package:aina_flutter/widgets/loader_modal.dart';
+import 'package:aina_flutter/widgets/language_switcher.dart';
+import 'package:aina_flutter/pages/coworking/presentation/widgets/conference_tariff_card.dart';
+import 'package:aina_flutter/pages/coworking/presentation/widgets/booking_card.dart';
+import 'package:aina_flutter/pages/coworking/domain/models/order_response.dart';
+import 'package:aina_flutter/shared/types/service.dart';
+import 'package:aina_flutter/pages/malls/widgets/mall_info_block.dart';
+import 'package:aina_flutter/pages/home/widgets/shop_categories_grid.dart';
+import 'package:aina_flutter/pages/home/widgets/categories_grid.dart';
+import 'package:aina_flutter/pages/malls/widgets/mall_selector.dart';
+import 'package:aina_flutter/pages/malls/widgets/mall_details_header.dart';
+import 'package:aina_flutter/pages/home/widgets/stories_list.dart';
+import 'package:aina_flutter/pages/home/widgets/buildings_list.dart';
+import 'package:aina_flutter/pages/home/widgets/main_tabbar_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:aina_flutter/features/general/payment/widgets/payment_webview.dart';
-import 'package:aina_flutter/core/widgets/price_text.dart';
-import 'package:aina_flutter/core/widgets/gender_selector.dart';
-import 'package:aina_flutter/core/widgets/base_input.dart';
-import 'package:aina_flutter/core/widgets/base_radio.dart';
-import 'package:aina_flutter/core/widgets/base_textarea.dart';
-import 'package:aina_flutter/core/widgets/no_internet_widget.dart';
-import 'package:aina_flutter/core/widgets/service_card.dart';
-import 'package:aina_flutter/core/widgets/upper_header.dart';
-import 'package:aina_flutter/features/general/scanner/widgets/auth_warning_modal.dart';
-import 'package:aina_flutter/core/services/amplitude_service.dart';
-import 'package:aina_flutter/core/widgets/base_snack_bar.dart';
-import 'package:aina_flutter/core/widgets/error_refresh_widget.dart';
-import 'package:aina_flutter/core/widgets/main_custom_tabbar.dart';
-import 'package:aina_flutter/core/widgets/coworking_custom_tabbar.dart';
-import 'package:aina_flutter/features/general/scanner/widgets/receipt_success_modal.dart';
-import 'package:aina_flutter/features/general/scanner/widgets/receipt_error_modal.dart';
-import 'package:aina_flutter/features/general/scanner/widgets/qr_response_modal.dart';
-import 'package:aina_flutter/features/general/scanner/widgets/qr_processing_loader.dart';
+import 'package:aina_flutter/pages/general/payment/widgets/payment_webview.dart';
+import 'package:aina_flutter/widgets/price_text.dart';
+import 'package:aina_flutter/widgets/gender_selector.dart';
+import 'package:aina_flutter/widgets/base_input.dart';
+import 'package:aina_flutter/widgets/base_textarea.dart';
+import 'package:aina_flutter/widgets/no_internet_widget.dart';
+import 'package:aina_flutter/widgets/service_card.dart';
+import 'package:aina_flutter/widgets/upper_header.dart';
+import 'package:aina_flutter/pages/general/scanner/widgets/auth_warning_modal.dart';
+import 'package:aina_flutter/shared/services/amplitude_service.dart';
+import 'package:aina_flutter/widgets/base_snack_bar.dart';
+import 'package:aina_flutter/widgets/error_refresh_widget.dart';
+import 'package:aina_flutter/widgets/main_custom_tabbar.dart';
+import 'package:aina_flutter/widgets/coworking_custom_tabbar.dart';
+import 'package:aina_flutter/pages/general/scanner/widgets/receipt_success_modal.dart';
+import 'package:aina_flutter/pages/general/scanner/widgets/receipt_error_modal.dart';
+import 'package:aina_flutter/pages/general/scanner/widgets/qr_response_modal.dart';
+import 'package:aina_flutter/pages/general/scanner/widgets/qr_processing_loader.dart';
 
 class StorybookApp extends StatelessWidget {
   const StorybookApp({super.key});
@@ -697,7 +693,7 @@ class StorybookApp extends StatelessWidget {
                         barrierDismissible: false,
                         builder: (context) => const LoaderModal(
                           title: 'Загрузка данных...',
-                          imagePath: 'lib/core/assets/images/logos/main.png',
+                          imagePath: 'lib/app/assets/images/logos/main.png',
                         ),
                       );
 

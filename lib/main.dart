@@ -1,25 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'core/api/firebase_setup.dart';
-// import 'core/utils/notification_utils.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'app.dart';
+import 'app/app.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-// import 'package:aina_flutter/core/providers/auth/auth_state.dart';
 import 'package:flutter/services.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'core/widgets/restart_widget.dart';
-import 'package:aina_flutter/core/api/firebase_setup.dart';
-import 'package:aina_flutter/core/utils/notification_utils.dart';
+import 'widgets/restart_widget.dart';
+import 'package:aina_flutter/shared/api/firebase_setup.dart';
+import 'package:aina_flutter/shared/utils/notification_utils.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'firebase_options.dart';
-import 'core/services/amplitude_service.dart';
+import 'shared/services/amplitude_service.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:aina_flutter/core/api/api_client.dart';
+import 'package:aina_flutter/shared/api/api_client.dart';
 import 'dart:io' show Platform;
 import 'dart:convert';
 
@@ -76,7 +73,6 @@ Future<void> main() async {
 
     // Check auth and fetch profile
     String? token = await StorageService.getToken();
-    print('🔍 Token: $token');
 
     // Try to get saved user data
     String? savedUserDataStr = prefs.getString('user_data');
@@ -89,35 +85,28 @@ Future<void> main() async {
             jsonDecode(savedUserDataStr) as Map<String, dynamic>;
         userId = savedUserData['id'] ?? 0;
         deviceId = savedUserData['device_id'] ?? 0;
-        print(
-            '📱 Found saved user data - userId: $userId, deviceId: $deviceId');
       } catch (e) {
-        print('⚠️ Error parsing saved user data: $e');
+        debugPrint('⚠️ Error parsing saved user data: $e');
       }
     }
 
     if (token != null) {
       try {
-        print('🔍 Token found, fetching profile...');
         final response = await ApiClient().dio.get('/api/promenade/profile');
-        print('📡 API Response: ${response.data}');
 
         if (response.data['success'] == true && response.data['data'] != null) {
           final userData = response.data['data'] as Map<String, dynamic>;
-          print('👤 User data received: $userData');
 
           userId = userData['id'] ?? userId;
           deviceId = userData['device_id'] ?? deviceId;
-          print('📊 Updated IDs - userId: $userId, deviceId: $deviceId');
 
           await prefs.setString('user_data', jsonEncode(userData));
-          print('💾 Fresh user data saved to preferences');
         }
       } catch (e) {
-        print('❌ Error loading profile: $e');
+        debugPrint('❌ Error loading profile: $e');
       }
     } else {
-      print('⚠️ No token found');
+      debugPrint('⚠️ No token found');
     }
 
     // Send event if we have valid user data
@@ -129,12 +118,6 @@ Future<void> main() async {
         platform = 'android';
       }
 
-      print('📤 Sending Amplitude event with data:');
-      print('   - user_id: $userId');
-      print('   - device_id: $deviceId');
-      print('   - platform: $platform');
-      print('   - source: main');
-
       await AmplitudeService().logEvent(
         'main_click',
         eventProperties: {
@@ -145,7 +128,7 @@ Future<void> main() async {
         },
       );
     } else {
-      print('⚠️ Skipping Amplitude event - no valid user data');
+      debugPrint('⚠️ Skipping Amplitude event - no valid user data');
     }
 
     // Initialize Sentry and run the app
@@ -157,7 +140,7 @@ Future<void> main() async {
       appRunner: () => runApp(
         EasyLocalization(
           supportedLocales: const [Locale('ru'), Locale('kk'), Locale('en')],
-          path: 'assets/translations',
+          path: 'lib/app/assets/translations',
           fallbackLocale: const Locale('ru'),
           startLocale: initialLocale,
           child: const RestartWidget(
@@ -169,8 +152,8 @@ Future<void> main() async {
       ),
     );
   } catch (e, stackTrace) {
-    print('❌ Critical error during app initialization: $e');
-    print('Stack trace: $stackTrace');
+    debugPrint('❌ Critical error during app initialization: $e');
+    debugPrint('Stack trace: $stackTrace');
 
     // Показываем пользователю сообщение об ошибке
     runApp(
@@ -239,17 +222,8 @@ Future<void> initializeRemoteConfig() async {
 
     // Получение значений при запуске
     await remoteConfig.fetchAndActivate();
-
-    print('✅ Remote Config успешно инициализирован');
-    print(
-        '📱 current_ios_version: ${remoteConfig.getString('current_ios_version')}');
-    print(
-        '📱 current_android_version: ${remoteConfig.getString('current_android_version')}');
-    print('📱 min_ios_version: ${remoteConfig.getString('min_ios_version')}');
-    print(
-        '📱 min_android_version: ${remoteConfig.getString('min_android_version')}');
   } catch (e) {
-    print('❌ Ошибка при инициализации Remote Config: $e');
+    debugPrint('❌ Ошибка при инициализации Remote Config: $e');
     // В случае ошибки используем значения по умолчанию
   }
 }

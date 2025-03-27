@@ -1,6 +1,6 @@
 flutter_native_splash:
   color: "#000000"
-  image: lib/core/assets/images/logo-superapp.png
+  image: lib/app/assets/images/logo-superapp.png
   android: true
   ios: true
   web: false
@@ -9,5 +9,5 @@ flutter_native_splash:
   android_gravity: center
   ios_content_mode: scaleAspectFit
   fullscreen: false
-  image_dark: lib/core/assets/images/logo-superapp.png
+  image_dark: lib/app/assets/images/logo-superapp.png
   android_screen_orientation: portrait

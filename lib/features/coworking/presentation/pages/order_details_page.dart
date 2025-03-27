@@ -659,8 +659,10 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
                         }
                       } catch (e) {
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error: $e')),
+                          BaseSnackBar.show(
+                            context,
+                            message: 'orders.qr.error'.tr(),
+                            type: SnackBarType.error,
                           );
                         }
                       }

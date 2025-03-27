@@ -511,6 +511,9 @@
     },
     "payment": {
       "error": "Payment error"
+    },
+    "qr": {
+      "error": "Failed to load QR code. Please try again later"
     }
   },
   "common": {

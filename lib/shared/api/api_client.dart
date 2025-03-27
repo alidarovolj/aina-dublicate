@@ -284,7 +284,7 @@ class ApiClient {
       requestHeader: false,
       responseBody: false,
       responseHeader: false,
-      error: true,
+      error: false,
     ));
   }
 
@@ -317,13 +317,5 @@ class ApiClient {
       _enforceMaxCacheSize();
       _updateController.add(response.requestOptions.uri.toString());
     }
-  }
-
-  String _generateCurlCommand(RequestOptions options) {
-    final headers = options.headers.entries
-        .map((e) => "-H '${e.key}: ${e.value}'")
-        .join(' ');
-    final data = options.data != null ? "--data '${options.data}'" : '';
-    return "curl -X ${options.method} '${options.uri}' $headers $data";
   }
 }

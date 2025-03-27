@@ -2,7 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io' show Platform;
-import 'package:aina_flutter/processes/navigation/index.dart';
+import 'package:aina_flutter/shared/navigation/index.dart';
 
 class DeepLinkService {
   static const platform = MethodChannel('kz.aina/deep_links');

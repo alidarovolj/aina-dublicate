@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:aina_flutter/processes/navigation/index.dart';
+import 'package:aina_flutter/shared/navigation/index.dart';
 import 'styles/theme.dart';
 import 'package:aina_flutter/shared/api/api_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,9 +9,9 @@ import 'package:aina_flutter/shared/types/promenade_profile.dart';
 import 'package:aina_flutter/app/providers/auth/auth_state.dart';
 import 'package:dio/dio.dart';
 import 'package:aina_flutter/app/providers/update_notifier_provider.dart';
-import 'package:aina_flutter/widgets/update_overlay.dart';
+import 'package:aina_flutter/entities/update_overlay.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
-import 'package:aina_flutter/widgets/connectivity_wrapper.dart';
+import 'package:aina_flutter/entities/connectivity_wrapper.dart';
 
 // Global navigator key for accessing navigation from anywhere
 final navigatorKey = GlobalKey<NavigatorState>();

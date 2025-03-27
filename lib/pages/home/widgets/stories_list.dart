@@ -5,7 +5,7 @@ import 'package:aina_flutter/app/styles/constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/app/providers/requests/stories_provider.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:aina_flutter/widgets/error_refresh_widget.dart';
+import 'package:aina_flutter/entities/error_refresh_widget.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 class StoryList extends ConsumerStatefulWidget {

@@ -156,7 +156,6 @@ flutter:
     - lib/app/assets/icons/sections/
     - lib/app/assets/icons/profile/
     - lib/app/assets/icons/pin.png
-    - lib/app/assets/images/promos/
     - lib/app/assets/images/
     - lib/app/assets/images/biometry/
     - lib/app/assets/images/logo.png

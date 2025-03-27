@@ -1,6 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:aina_flutter/firebase_options.dart';
+import 'package:aina_flutter/shared/services/firebase_options.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'dart:io' show Platform;
 
@@ -28,9 +28,6 @@ Future<void> initializeFirebase() async {
         sound: true,
         provisional: true, // This enables provisional authorization
       );
-
-      // Check if APNs token is available
-      final apnsToken = await messaging.getAPNSToken();
     }
 
     // Set up background message handler

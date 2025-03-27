@@ -1,8 +1,9 @@
-import 'package:aina_flutter/entities/custom_tabbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'custom_tabbar.dart';
 import 'package:aina_flutter/app/providers/auth/auth_state.dart';
+import 'package:aina_flutter/shared/navigation/index.dart';
 
 class MainTabBarScreen extends ConsumerStatefulWidget {
   final Widget child;
@@ -19,7 +20,7 @@ class MainTabBarScreen extends ConsumerStatefulWidget {
 }
 
 class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, RouteAware {
   late TabController _tabController;
 
   final Map<String, int> _routesToTabIndex = {
@@ -71,12 +72,30 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
   void didUpdateWidget(MainTabBarScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentRoute != widget.currentRoute) {
-      _updateTabIndex();
+      // Clean query parameters from route before normalization
+      final routeWithoutQuery = widget.currentRoute.split('?')[0];
+      final normalizedRoute = _normalizeRoute(routeWithoutQuery);
+      final index = _routesToTabIndex[normalizedRoute] ?? 0;
+
+      // Обновляем индекс таба только если он отличается от текущего
+      if (_tabController.index != index) {
+        setState(() {
+          _tabController.index = index;
+        });
+      }
     }
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
   void _updateTabIndex() {
-    final normalizedRoute = _normalizeRoute(widget.currentRoute);
+    // Clean query parameters from route before normalization
+    final routeWithoutQuery = widget.currentRoute.split('?')[0];
+    final normalizedRoute = _normalizeRoute(routeWithoutQuery);
     final index = _routesToTabIndex[normalizedRoute] ?? 0;
     if (_tabController.index != index) {
       _tabController.index = index;
@@ -85,47 +104,43 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
 
   void _navigateToTab(int index) {
     final route = _tabIndexToRoutes[index];
+
     if (route != null && widget.currentRoute != route) {
-      // Schedule navigation for next frame
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // Handle profile tab navigation with auth check
+        // Clean query parameters from current route
+        final currentRouteBase = widget.currentRoute.split('?')[0];
+        final parts = currentRouteBase.split('/');
+
         if (index == 3) {
-          final authState = ref.read(authProvider.notifier);
-          if (!authState.canAccessProfile) {
-            context.push('/login');
+          // Profile tab
+          final authState = ref.read(authProvider);
+          if (!authState.isAuthenticated) {
+            context.pushNamed('login');
             return;
           }
-          // Extract current mall ID if we're in a mall route
-          final parts = widget.currentRoute.split('/');
+
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
             context.push('/malls/$mallId/profile');
             return;
           }
-          // If not in mall route, go to malls first
           context.push('/malls');
           return;
         }
 
-        // Special handling for stores tab
         if (index == 2) {
-          // Extract current mall ID if we're in a mall route
-          final parts = widget.currentRoute.split('/');
+          // Stores tab
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
-            if (!widget.currentRoute.endsWith('/stores')) {
-              context.push('/malls/$mallId/stores');
-            }
+            context.push('/malls/$mallId/stores');
             return;
           }
-          // If not in a mall route, go to stores
           context.push('/stores');
           return;
         }
 
-        // Special handling for malls tab when in stores or profile
         if (index == 0) {
-          final parts = widget.currentRoute.split('/');
+          // Malls tab
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
             context.push('/malls/$mallId');
@@ -135,45 +150,65 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
           return;
         }
 
-        // Special handling for promotions tab
         if (index == 1) {
-          // Extract current mall ID if we're in a mall route
-          final parts = widget.currentRoute.split('/');
+          // Promotions tab
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
-            if (!widget.currentRoute.endsWith('/promotions')) {
-              context.push('/malls/$mallId/promotions');
-            }
+            context.push('/malls/$mallId/promotions');
             return;
           }
-          // If not in a mall route, go to malls first
           context.push('/malls');
           return;
         }
 
-        if (index == 4) {
-          final authState = ref.read(authProvider);
-          if (!authState.isAuthenticated) {
-            context.push('/login');
-            return;
-          }
-        }
         context.push(route);
       });
+    } else {
+      debugPrint('⚠️ Navigation skipped: same route or null');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: widget.child,
-      bottomNavigationBar: CustomTabBar(tabController: _tabController),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+
+        final normalizedRoute = _normalizeRoute(widget.currentRoute);
+        final currentIndex = _routesToTabIndex[normalizedRoute] ?? 0;
+
+        if (currentIndex != 0) {
+          _navigateToTab(0);
+        } else {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        body: widget.child,
+        bottomNavigationBar: CustomTabBar(tabController: _tabController),
+      ),
     );
   }
 
   @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _tabController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Обновляем индекс при возврате на эту страницу
+    final routeWithoutQuery = widget.currentRoute.split('?')[0];
+    final normalizedRoute = _normalizeRoute(routeWithoutQuery);
+    final index = _routesToTabIndex[normalizedRoute] ?? 0;
+
+    if (_tabController.index != index) {
+      setState(() {
+        _tabController.index = index;
+      });
+    }
   }
 }

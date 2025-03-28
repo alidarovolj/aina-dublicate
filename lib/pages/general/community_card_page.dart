@@ -250,7 +250,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
         if (_employment != null) MapEntry('employment', _employment!),
       ]);
 
-      // Add avatar and image as MultipartFile if they were changed
+      // Add avatar and image as MultipartFile if they were changed and not deleted
       if (_avatarFile != null) {
         formData.files.add(
           MapEntry(
@@ -258,7 +258,11 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
             await MultipartFile.fromFile(_avatarFile!.path),
           ),
         );
+      } else if (_avatarUrl == null) {
+        // Если фото было удалено (нет ни файла, ни URL), отправляем пустое значение
+        formData.fields.add(const MapEntry('avatar', ''));
       }
+
       if (_imageFile != null) {
         formData.files.add(
           MapEntry(
@@ -266,6 +270,9 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
             await MultipartFile.fromFile(_imageFile!.path),
           ),
         );
+      } else if (_imageUrl == null) {
+        // Если фото было удалено (нет ни файла, ни URL), отправляем пустое значение
+        formData.fields.add(const MapEntry('image', ''));
       }
 
       await ref

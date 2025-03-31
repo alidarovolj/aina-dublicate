@@ -40,10 +40,13 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
   final _buttonLinkController = TextEditingController();
   final _textTitleController = TextEditingController();
   final _textContentController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final _descriptionController = TextEditingController();
+  final Map<String, dynamic> _form = {};
 
-  bool _pageVisible = false;
-  bool _phoneVisible = false;
-  bool _imageVisible = false;
+  bool _pageVisible = true;
+  bool _phoneVisible = true;
+  bool _imageVisible = true;
   bool _showImageInput = false;
   bool _showButton = false;
   bool _showText = false;
@@ -90,15 +93,16 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
     _buttonLinkController.dispose();
     _textTitleController.dispose();
     _textContentController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
   Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-    });
-
     try {
+      setState(() {
+        _isLoading = true;
+      });
+
       final data = await ref
           .read(communityCardServiceProvider)
           .getCommunityCard(forceRefresh: true);
@@ -119,6 +123,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
         _buttonTitleController.text = data['button_title'] ?? '';
         _buttonLinkController.text = data['button_link'] ?? '';
         _employment = data['employment'];
+        _form['company'] = data['company'];
 
         // Handle avatar and image separately
         _avatarUrl = data['avatar']?['url'];
@@ -1146,6 +1151,17 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
                                     color: Colors.grey[600],
                                     fontSize: 14,
                                   ),
+                                ),
+                                const SizedBox(height: 8),
+                                CustomTextField(
+                                  controller: _companyController,
+                                  hintText: 'community.card.company_label'.tr(),
+                                  enabled: _status != 'REVIEW',
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _form['company'] = value;
+                                    });
+                                  },
                                 ),
                                 const SizedBox(height: 16),
                                 CustomDropdown<Map<String, String?>>(

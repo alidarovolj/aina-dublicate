@@ -97,7 +97,7 @@ class _StoryListState extends ConsumerState<StoryList>
           barrierDismissible: true,
           barrierLabel:
               MaterialLocalizations.of(context).modalBarrierDismissLabel,
-          barrierColor: AppColors.primary.withOpacity(0.5),
+          barrierColor: AppColors.primary.withAlpha(128),
           transitionDuration: const Duration(milliseconds: 300),
           pageBuilder: (context, animation, secondaryAnimation) {
             return StoryDetailsPage(

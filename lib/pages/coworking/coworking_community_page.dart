@@ -297,15 +297,39 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
                           );
                         },
                         loading: () => _buildSkeletonLoader(),
-                        error: (error, stack) => Center(
-                          child: Text(
-                            'community.error'.tr(args: [error.toString()]),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: AppColors.textDarkGrey,
+                        error: (error, stack) {
+                          // Если ошибка 401, показываем пустой список вместо сообщения об ошибке
+                          if (error.toString().contains('401')) {
+                            return SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Text(
+                                      'community.other_members'.tr(),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.grey2,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                          // Для других ошибок показываем сообщение об ошибке
+                          return Center(
+                            child: Text(
+                              'community.error'.tr(args: [error.toString()]),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: AppColors.textDarkGrey,
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
                     ),
                   ],

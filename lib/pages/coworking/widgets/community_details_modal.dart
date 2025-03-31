@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:aina_flutter/app/styles/constants.dart';
 import 'package:aina_flutter/features/coworking/domain/models/community_card.dart';
+import 'package:aina_flutter/widgets/base_snack_bar.dart';
 
 class CommunityDetailsModal extends StatelessWidget {
   final CommunityCard user;
@@ -26,11 +27,10 @@ class CommunityDetailsModal extends StatelessWidget {
 
   void _copyToClipboard(BuildContext context, String text) {
     Clipboard.setData(ClipboardData(text: text)).then((_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('community.copied'.tr()),
-          duration: const Duration(seconds: 2),
-        ),
+      BaseSnackBar.show(
+        context,
+        message: 'community.copied'.tr(),
+        type: SnackBarType.neutral,
       );
     });
   }

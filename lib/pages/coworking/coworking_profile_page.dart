@@ -298,27 +298,23 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
                                           if (!mounted) return;
                                           ScaffoldMessenger.of(context)
                                               .clearSnackBars();
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                  'profile.settings.edit.avatar_removed'
-                                                      .tr()),
-                                              backgroundColor: Colors.green,
-                                            ),
+                                          BaseSnackBar.show(
+                                            context,
+                                            message:
+                                                'profile.settings.edit.avatar_removed'
+                                                    .tr(),
+                                            type: SnackBarType.success,
                                           );
                                         } catch (e) {
                                           if (!mounted) return;
                                           ScaffoldMessenger.of(context)
                                               .clearSnackBars();
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                  'profile.settings.edit.avatar_error'
-                                                      .tr()),
-                                              backgroundColor: Colors.red,
-                                            ),
+                                          BaseSnackBar.show(
+                                            context,
+                                            message:
+                                                'profile.settings.edit.avatar_error'
+                                                    .tr(),
+                                            type: SnackBarType.error,
                                           );
                                         } finally {
                                           if (mounted) {

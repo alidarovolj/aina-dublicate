@@ -144,13 +144,23 @@ class _HomePromotionsPageState extends ConsumerState<HomePromotionsPage>
                                 showDivider: false,
                                 cardType: PromotionCardType.full,
                                 showGradient: true,
-                                emptyBuilder: (context) => Text(
-                                  'promotions.no_active_promotions'.tr(),
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    color: AppColors.textDarkGrey,
+                                emptyBuilder: (context) => SizedBox(
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.7,
+                                  child: Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16),
+                                      child: Text(
+                                        'promotions.no_active_promotions'.tr(),
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          color: AppColors.textDarkGrey,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
                                   ),
-                                  textAlign: TextAlign.center,
                                 ),
                               ),
                             ),
@@ -201,14 +211,25 @@ class _HomePromotionsPageState extends ConsumerState<HomePromotionsPage>
                                     },
                                     data: (List<Promotion> events) {
                                       if (events.isEmpty) {
-                                        return Center(
-                                          child: Text(
-                                            'events.no_active_events'.tr(),
-                                            style: const TextStyle(
-                                              fontSize: 15,
-                                              color: AppColors.textDarkGrey,
+                                        return SizedBox(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.7,
+                                          child: Center(
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 16),
+                                              child: Text(
+                                                'events.no_active_events'.tr(),
+                                                style: const TextStyle(
+                                                  fontSize: 15,
+                                                  color: AppColors.textDarkGrey,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
                                             ),
-                                            textAlign: TextAlign.center,
                                           ),
                                         );
                                       }

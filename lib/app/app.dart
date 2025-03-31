@@ -69,6 +69,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       ApiClient().updateLocaleFromContext(context);
       // Initialize deep link service
       _deepLinkService = DeepLinkService(context);
+      debugPrint(_deepLinkService.toString());
 
       // Fetch promenade profile if user is authenticated
       try {
@@ -139,27 +140,32 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'AINA',
-      debugShowCheckedModeBanner: false,
-      localizationsDelegates: context.localizationDelegates +
-          [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-      supportedLocales: context.supportedLocales,
-      locale: context.locale,
-      theme: AppTheme.theme,
-      builder: (context, child) {
-        // Оборачиваем все приложение в UpdateOverlay и ConnectivityWrapper
-        return UpdateOverlay(
-          child: ConnectivityWrapper(
-            child: child ?? const SizedBox.shrink(),
-          ),
-        );
-      },
-      routerConfig: RouterService.router,
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        physics: const BouncingScrollPhysics(),
+      ),
+      child: MaterialApp.router(
+        title: 'AINA',
+        debugShowCheckedModeBanner: false,
+        localizationsDelegates: context.localizationDelegates +
+            [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+        supportedLocales: context.supportedLocales,
+        locale: context.locale,
+        theme: AppTheme.theme,
+        builder: (context, child) {
+          // Оборачиваем все приложение в UpdateOverlay и ConnectivityWrapper
+          return UpdateOverlay(
+            child: ConnectivityWrapper(
+              child: child ?? const SizedBox.shrink(),
+            ),
+          );
+        },
+        routerConfig: RouterService.router,
+      ),
     );
   }
 }

@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "kz.aina.android1",
+    "sha256_cert_fingerprints": [
+      "FE:60:E1:57:83:43:90:F0:E9:82:77:52:60:7A:F3:50:00:BB:0E:47:BB:A0:3F:77:97:84:03:B5:A4:C2:41:56"
+    ]
+  }
+}] 

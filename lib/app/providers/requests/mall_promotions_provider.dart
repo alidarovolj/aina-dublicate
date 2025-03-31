@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/shared/api/api_client.dart';
 import 'package:aina_flutter/shared/types/promotion.dart';
@@ -19,7 +20,9 @@ final mallPromotionsProvider = FutureProvider.family<List<Promotion>, String>(
           try {
             final promotion = Promotion.fromJson(json);
             parsedPromotions.add(promotion);
-          } catch (e) {}
+          } catch (e) {
+            debugPrint('❌ Ошибка при парсинге промо: $e');
+          }
         }
         return parsedPromotions;
       }

@@ -45,6 +45,30 @@ class CommunityCardService {
       throw Exception('Failed to update visibility: $e');
     }
   }
+
+  Future<void> removeMedia(String collectionName) async {
+    try {
+      await _apiClient.dio.post(
+        '/api/promenade/community-card/remove-media',
+        data: {
+          'collection_name': collectionName,
+        },
+      );
+    } catch (e) {
+      throw Exception('Failed to remove media: $e');
+    }
+  }
+
+  Future<void> uploadMedia(FormData formData) async {
+    try {
+      await _apiClient.dio.post(
+        '/api/promenade/community-card/upload-media',
+        data: formData,
+      );
+    } catch (e) {
+      throw Exception('Failed to upload media: $e');
+    }
+  }
 }
 
 final communityCardServiceProvider = Provider<CommunityCardService>(

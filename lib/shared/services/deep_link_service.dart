@@ -32,6 +32,11 @@ class DeepLinkService {
     try {
       final uri = Uri.parse(link);
 
+      // Extract UTM parameters regardless of the path
+      // final utmSource = uri.queryParameters['utm_source'];
+      // final utmMedium = uri.queryParameters['utm_medium'];
+      // final utmCampaign = uri.queryParameters['utm_campaign'];
+
       // Remove leading slash if present for easier comparison
       final path = uri.path.startsWith('/') ? uri.path.substring(1) : uri.path;
 
@@ -50,8 +55,6 @@ class DeepLinkService {
       // Use the global router instance instead of context
       RouterService.router.go(path);
     } catch (e) {
-      debugPrint('Error: $e');
-
       try {
         RouterService.router.go('/home');
       } catch (e2) {
@@ -72,27 +75,35 @@ class DeepLinkService {
     if (await canLaunchUrl(marketUri)) {
       await launchUrl(marketUri, mode: LaunchMode.externalApplication);
     } else {
-      debugPrint('❌ Could not launch market URL');
+      print('❌ Could not launch market URL');
     }
   }
 
   void _navigateToPath(String path, Map<String, String> params) {
     try {
+      print('🎯 START _navigateToPath with path: $path');
+      print('📝 Parameters: $params');
+
       switch (path) {
         case '':
         case 'home':
+          print('🏠 Home path matched');
           _safeNavigate('/home');
           break;
 
         case 'deeplink':
+          final targetUrl = params['url'];
+          print('🔗 Deeplink path matched, target URL: $targetUrl');
           _safeNavigate('/home');
           break;
 
         case 'orders':
           final orderId = params['id'];
           if (orderId != null) {
+            print('📦 Navigating to order: $orderId');
             _safeNavigate('/orders/$orderId');
           } else {
+            print('⚠️ No order ID, going to orders list');
             _safeNavigate('/orders');
           }
           break;
@@ -101,8 +112,11 @@ class DeepLinkService {
           final status = params['status'];
           final orderId = params['order_id'];
           if (status == 'success' && orderId != null) {
+            print('💳 Payment success, navigating to order: $orderId');
             _safeNavigate('/orders/$orderId');
           } else {
+            print(
+                '⚠️ Payment status not success or no order ID, going to home');
             _safeNavigate('/home');
           }
           break;
@@ -111,8 +125,10 @@ class DeepLinkService {
         case String p when p.startsWith('success-payment'):
           final orderId = params['order_id'];
           if (orderId != null) {
+            print('💳 Payment success, navigating to order: $orderId');
             _safeNavigate('/orders/$orderId');
           } else {
+            print('⚠️ Success payment but no order ID, going to home');
             _safeNavigate('/home');
           }
           break;
@@ -121,16 +137,22 @@ class DeepLinkService {
         case String p when p.startsWith('failure-payment'):
           final orderId = params['order_id'];
           if (orderId != null) {
+            print('❌ Payment failed, navigating to order: $orderId');
             _safeNavigate('/orders/$orderId');
           } else {
+            print('⚠️ Failed payment but no order ID, going to home');
             _safeNavigate('/home');
           }
           break;
 
         default:
+          print('⚠️ No specific path match, going to home');
           _safeNavigate('/home');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ Error in _navigateToPath:');
+      print('Error: $e');
+      print('Stack trace: $stackTrace');
       _safeNavigate('/home');
     }
   }

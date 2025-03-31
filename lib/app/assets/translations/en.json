@@ -71,7 +71,11 @@
         "add": "Add image",
         "select": "Tap to select image",
         "error_picking": "Error picking image: {}",
-        "added": "Photo added"
+        "added": "Photo added",
+        "removed": "Photo successfully removed",
+        "error_removing": "Error removing photo: {}",
+        "upload_error": "Error uploading photo",
+        "remove_error": "Error removing photo"
       },
       "button": {
         "title": "Button",

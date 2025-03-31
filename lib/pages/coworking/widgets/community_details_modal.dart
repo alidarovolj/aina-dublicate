@@ -124,12 +124,14 @@ class CommunityDetailsModal extends StatelessWidget {
                 child: Column(
                   children: [
                     // Social links
-                    if (user.whatsapp != null ||
-                        user.telegram != null ||
-                        user.linkedin != null)
+                    if ((user.whatsapp != null &&
+                            user.whatsapp!.numeric.isNotEmpty) ||
+                        (user.telegram != null && user.telegram!.isNotEmpty) ||
+                        (user.linkedin != null && user.linkedin!.isNotEmpty))
                       Row(
                         children: [
-                          if (user.whatsapp != null)
+                          if (user.whatsapp != null &&
+                              user.whatsapp!.numeric.isNotEmpty)
                             Expanded(
                               child: InkWell(
                                 onTap: () => _launchUrl(
@@ -153,8 +155,11 @@ class CommunityDetailsModal extends StatelessWidget {
                                 ),
                               ),
                             ),
-                          if (user.telegram != null) ...[
-                            const SizedBox(width: 12),
+                          if (user.telegram != null &&
+                              user.telegram!.isNotEmpty) ...[
+                            if (user.whatsapp != null &&
+                                user.whatsapp!.numeric.isNotEmpty)
+                              const SizedBox(width: 12),
                             Expanded(
                               child: InkWell(
                                 onTap: () => _launchUrl(user.telegram!),
@@ -178,8 +183,13 @@ class CommunityDetailsModal extends StatelessWidget {
                               ),
                             ),
                           ],
-                          if (user.linkedin != null) ...[
-                            const SizedBox(width: 12),
+                          if (user.linkedin != null &&
+                              user.linkedin!.isNotEmpty) ...[
+                            if ((user.whatsapp != null &&
+                                    user.whatsapp!.numeric.isNotEmpty) ||
+                                (user.telegram != null &&
+                                    user.telegram!.isNotEmpty))
+                              const SizedBox(width: 12),
                             Expanded(
                               child: InkWell(
                                 onTap: () => _launchUrl(user.linkedin!),
@@ -207,12 +217,15 @@ class CommunityDetailsModal extends StatelessWidget {
                       ),
                     const SizedBox(height: 24),
                     // Contact info
-                    if (user.phone != null || user.email != null)
+                    if ((user.phone != null &&
+                            user.phone!.numeric.isNotEmpty) ||
+                        (user.email != null && user.email!.isNotEmpty))
                       Container(
                         padding: const EdgeInsets.only(left: 28),
                         child: Column(
                           children: [
-                            if (user.phone != null)
+                            if (user.phone != null &&
+                                user.phone!.numeric.isNotEmpty)
                               Padding(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 0),
@@ -261,7 +274,7 @@ class CommunityDetailsModal extends StatelessWidget {
                                   ],
                                 ),
                               ),
-                            if (user.email != null)
+                            if (user.email != null && user.email!.isNotEmpty)
                               Padding(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 6),
@@ -315,20 +328,21 @@ class CommunityDetailsModal extends StatelessWidget {
                       ),
                     const SizedBox(height: 24),
                     // Additional info blocks
-                    if (user.info != null ||
-                        user.company != null ||
-                        user.textTitle != null)
+                    if ((user.info != null && user.info!.isNotEmpty) ||
+                        (user.company != null && user.company!.isNotEmpty) ||
+                        (user.textTitle != null && user.textTitle!.isNotEmpty))
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 0),
                         child: Column(
                           children: [
-                            if (user.info != null)
+                            if (user.info != null && user.info!.isNotEmpty)
                               _buildInfoBlock(
                                 'personal',
                                 'community.card.personal_info'.tr(),
                                 user.info!,
                               ),
-                            if (user.company != null) ...[
+                            if (user.company != null &&
+                                user.company!.isNotEmpty) ...[
                               const SizedBox(height: 24),
                               _buildWorkBlock(
                                 user.company!,
@@ -336,7 +350,9 @@ class CommunityDetailsModal extends StatelessWidget {
                               ),
                             ],
                             if (user.textTitle != null &&
-                                user.textContent != null) ...[
+                                user.textTitle!.isNotEmpty &&
+                                user.textContent != null &&
+                                user.textContent!.isNotEmpty) ...[
                               const SizedBox(height: 24),
                               _buildInfoBlock(
                                 'personal',
@@ -347,20 +363,22 @@ class CommunityDetailsModal extends StatelessWidget {
                           ],
                         ),
                       ),
-                    if (user.image?.url != null) ...[
+                    if (user.image?.url != null &&
+                        user.image!.url.isNotEmpty) ...[
                       const SizedBox(height: 24),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(4),
                         child: Image.network(
                           user.image!.url,
                           width: double.infinity,
-                          height: 350,
-                          fit: BoxFit.cover,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ],
                     if (user.buttonTitle != null &&
-                        user.buttonLink != null) ...[
+                        user.buttonTitle!.isNotEmpty &&
+                        user.buttonLink != null &&
+                        user.buttonLink!.isNotEmpty) ...[
                       const SizedBox(height: 24),
                       InkWell(
                         onTap: () => _launchUrl(user.buttonLink!),

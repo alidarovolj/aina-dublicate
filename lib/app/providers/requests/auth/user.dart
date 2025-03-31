@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/shared/api/api_client.dart'; // Импорт ApiClient
 import 'package:aina_flutter/shared/services/storage_service.dart';
+import 'package:flutter/foundation.dart';
 
 // Провайдер для отправки запроса
 final requestCodeProvider =
@@ -173,6 +174,8 @@ class RequestCodeService {
         throw Exception('No auth token found');
       }
 
+      debugPrint('🔑 Making request with token: ${token.substring(0, 20)}...');
+
       final response = await _dio.get(
         '/api/aina/my-tickets',
         options: Options(
@@ -185,6 +188,9 @@ class RequestCodeService {
         ),
       );
 
+      debugPrint('📡 Response status code: ${response.statusCode}');
+      debugPrint('📦 Raw response data: ${response.data}');
+
       if (response.statusCode != 200) {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -195,6 +201,7 @@ class RequestCodeService {
 
       return response;
     } catch (e) {
+      debugPrint('❌ Error in userTickets: $e');
       rethrow;
     }
   }
@@ -294,22 +301,100 @@ class Ticket {
   });
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
-    return Ticket(
-      id: json['id'],
-      promotionName: json['promotion']?['name'],
-      promotionImage: json['promotion']?['preview_image']?['url'],
-      promotionType: json['promotion']?['type'],
-      createdAt: DateTime.parse(json['created_at']),
-      ticketNo: json['ticket_no'],
-      receiptNo: json['receipt_no'],
-      organization: json['organization']?['name'],
-      amount: json['amount'] != null
-          ? double.parse(json['amount'].toString())
-          : null,
-      purchaseDate: json['purchase_date'] != null
-          ? DateTime.parse(json['purchase_date'])
-          : null,
-    );
+    try {
+      debugPrint('🎫 Parsing ticket: $json');
+
+      // Проверка id
+      final id = json['id'] as int?;
+      if (id == null) {
+        debugPrint('❌ Ticket ID is null');
+        throw Exception('Ticket ID is required');
+      }
+
+      // Проверка created_at
+      final createdAt = json['created_at'] as String?;
+      if (createdAt == null) {
+        debugPrint('❌ Created at is null');
+        throw Exception('Created at is required');
+      }
+
+      // Проверка ticket_no
+      final ticketNo = json['ticket_no'] as int?;
+      if (ticketNo == null) {
+        debugPrint('❌ Ticket number is null');
+        throw Exception('Ticket number is required');
+      }
+
+      // Проверка promotion (теперь опционально)
+      final promotion = json['promotion'] as Map<String, dynamic>?;
+      String? promotionName;
+      String? promotionImage;
+      String? promotionType;
+
+      if (promotion != null) {
+        promotionName = promotion['name'] as String?;
+        final previewImage =
+            promotion['preview_image'] as Map<String, dynamic>?;
+        promotionImage = previewImage?['url'] as String?;
+        promotionType = promotion['type'] as String?;
+      }
+
+      // Проверка receipt_no
+      final receiptNo = json['receipt_no'] as String?;
+
+      // Проверка organization
+      final organization = json['organization'] as Map<String, dynamic>?;
+      final organizationName = organization?['name'] as String?;
+
+      // Проверка amount
+      double? amount;
+      if (json['amount'] != null) {
+        amount = double.tryParse(json['amount'].toString());
+        if (amount == null) {
+          debugPrint('❌ Invalid amount format: ${json['amount']}');
+        }
+      }
+
+      // Проверка purchase_date
+      DateTime? purchaseDate;
+      if (json['purchase_date'] != null) {
+        try {
+          purchaseDate = DateTime.parse(json['purchase_date']);
+        } catch (e) {
+          debugPrint(
+              '❌ Invalid purchase date format: ${json['purchase_date']}');
+        }
+      }
+
+      debugPrint('✅ Successfully parsed ticket data:');
+      debugPrint('   ID: $id');
+      if (promotionName != null) debugPrint('   Promotion: $promotionName');
+      if (promotionType != null) debugPrint('   Type: $promotionType');
+      debugPrint('   Ticket No: $ticketNo');
+      debugPrint('   Created At: $createdAt');
+      if (receiptNo != null) debugPrint('   Receipt No: $receiptNo');
+      if (organizationName != null) {
+        debugPrint('   Organization: $organizationName');
+      }
+      if (amount != null) debugPrint('   Amount: $amount');
+      if (purchaseDate != null) debugPrint('   Purchase Date: $purchaseDate');
+
+      return Ticket(
+        id: id,
+        promotionName: promotionName,
+        promotionImage: promotionImage,
+        promotionType: promotionType,
+        createdAt: DateTime.parse(createdAt),
+        ticketNo: ticketNo,
+        receiptNo: receiptNo,
+        organization: organizationName,
+        amount: amount,
+        purchaseDate: purchaseDate,
+      );
+    } catch (e) {
+      debugPrint('❌ Error parsing ticket: $e');
+      rethrow;
+    }
   }
 }
 
@@ -324,12 +409,44 @@ final userTicketsProvider = FutureProvider<List<Ticket>>((ref) async {
     final response = await requestService.userTickets();
 
     if (response == null || response.statusCode != 200) {
+      debugPrint('❌ Failed to fetch tickets: ${response?.statusCode}');
       return [];
     }
 
-    final data = response.data['data'] as List;
-    return data.map((ticket) => Ticket.fromJson(ticket)).toList();
+    final data = response.data;
+    debugPrint('📦 Response data type: ${data.runtimeType}');
+    debugPrint('📦 Response data keys: ${data.keys.toList()}');
+    debugPrint('📦 Success value: ${data['success']}');
+    debugPrint('📦 Data value type: ${data['data']?.runtimeType}');
+
+    if (data == null || data['success'] != true || data['data'] == null) {
+      debugPrint('❌ Invalid tickets data format');
+      return [];
+    }
+
+    final ticketsData = data['data'] as List;
+    debugPrint('🎫 Found ${ticketsData.length} tickets');
+
+    final tickets = <Ticket>[];
+    for (var ticketData in ticketsData) {
+      try {
+        final ticket = Ticket.fromJson(ticketData);
+        tickets.add(ticket);
+      } catch (e) {
+        debugPrint('❌ Failed to parse ticket: $e');
+        continue;
+      }
+    }
+
+    debugPrint('✅ Successfully parsed ${tickets.length} tickets');
+    if (tickets.isNotEmpty) {
+      debugPrint(
+          '✅ First ticket parsed: ${tickets.first.id} - ${tickets.first.promotionName}');
+    }
+
+    return tickets;
   } catch (e) {
+    debugPrint('❌ Error in userTicketsProvider: $e');
     if (e.toString().contains('401')) {
       throw Exception('401');
     }

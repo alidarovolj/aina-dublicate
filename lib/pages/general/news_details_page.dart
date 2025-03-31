@@ -12,7 +12,6 @@ import 'package:aina_flutter/shared/types/slides.dart' as slides;
 import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/shared/utils/button_navigation_handler.dart';
 
 class NewsDetailsPage extends ConsumerWidget {

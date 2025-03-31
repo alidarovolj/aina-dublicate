@@ -12,6 +12,7 @@ import 'package:aina_flutter/app/providers/update_notifier_provider.dart';
 import 'package:aina_flutter/entities/update_overlay.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:aina_flutter/entities/connectivity_wrapper.dart';
+import 'package:aina_flutter/shared/services/deep_link_service.dart';
 
 // Global navigator key for accessing navigation from anywhere
 final navigatorKey = GlobalKey<NavigatorState>();
@@ -55,6 +56,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  late final DeepLinkService _deepLinkService;
+
   @override
   void initState() {
     super.initState();
@@ -65,7 +68,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
       ApiClient().updateLocaleFromContext(context);
       // Initialize deep link service
-      // _deepLinkService = DeepLinkService(context);
+      _deepLinkService = DeepLinkService(context);
 
       // Fetch promenade profile if user is authenticated
       try {

@@ -36,51 +36,28 @@ class MainActivity: FlutterActivity() {
     }
 
     private fun handleIntent(intent: Intent) {
-        try {
-            Log.d(TAG, "handleIntent called with action: ${intent.action}")
-            val data = when {
-                intent.data != null -> intent.data
-                intent.getStringExtra(Intent.EXTRA_TEXT) != null -> Uri.parse(intent.getStringExtra(Intent.EXTRA_TEXT))
-                else -> null
-            }
-
-            if (data != null) {
-                Log.d(TAG, "Deep link data found:")
-                Log.d(TAG, "  - Scheme: ${data.scheme}")
-                Log.d(TAG, "  - Host: ${data.host}")
-                Log.d(TAG, "  - Path: ${data.path}")
-                Log.d(TAG, "  - Query: ${data.query}")
-                
-                // Check if this is a deep link to our app
-                if (data.scheme == "aina" || data.host == "app.aina-fashion.kz") {
-                    // Try to resolve the intent to check if our app can handle it
-                    if (packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY) != null) {
-                        deepLinkChannel?.invokeMethod("handleDeepLink", data.toString())
-                    } else {
-                        Log.d(TAG, "App not installed, redirecting to market")
-                        val marketIntent = Intent(Intent.ACTION_VIEW).apply {
-                            this.data = Uri.parse("market://details?id=kz.aina.android1")
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                        startActivity(marketIntent)
-                    }
-                }
+        Log.d(TAG, "Handling intent: $intent")
+        
+        // Get the action and data from the intent
+        val action = intent.action
+        val data = intent.data
+        
+        if (action == Intent.ACTION_VIEW && data != null) {
+            Log.d(TAG, "Deep link received: ${data.toString()}")
+            Log.d(TAG, "Deep link scheme: ${data.scheme}")
+            Log.d(TAG, "Deep link host: ${data.host}")
+            Log.d(TAG, "Deep link path: ${data.path}")
+            Log.d(TAG, "Deep link query: ${data.query}")
+            
+            // Check if the app link is from our domain
+            if (data.host == "app.aina-fashion.kz") {
+                Log.d(TAG, "Sending deep link to Flutter: ${data.toString()}")
+                deepLinkChannel?.invokeMethod("handleDeepLink", data.toString())
             } else {
-                Log.d(TAG, "No deep link data in intent")
-                Log.d(TAG, "Intent extras: ${intent.extras?.keySet()?.joinToString()}")
+                Log.d(TAG, "Ignoring deep link - wrong host: ${data.host}")
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error handling deep link", e)
-            // В случае ошибки, пробуем открыть маркет
-            try {
-                val marketIntent = Intent(Intent.ACTION_VIEW).apply {
-                    data = Uri.parse("market://details?id=kz.aina.android1")
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                startActivity(marketIntent)
-            } catch (e: Exception) {
-                Log.e(TAG, "Error opening market", e)
-            }
+        } else {
+            Log.d(TAG, "Not a VIEW intent or no data")
         }
     }
 

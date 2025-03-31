@@ -17,6 +17,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:aina_flutter/widgets/base_snack_bar.dart';
 import 'package:aina_flutter/app/providers/requests/settings_provider.dart';
+import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 
 class CommunityCardPage extends ConsumerStatefulWidget {
   const CommunityCardPage({super.key});
@@ -29,10 +30,10 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
   final _nameController = TextEditingController();
   final _positionController = TextEditingController();
   final _telegramController = TextEditingController();
-  final _whatsappController = TextEditingController();
+  final _whatsappController = MaskedTextController(mask: '+7 (000) 000-00-00');
   final _linkedinController = TextEditingController();
   final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
+  final _phoneController = MaskedTextController(mask: '+7 (000) 000-00-00');
   final _infoController = TextEditingController();
   final _companyController = TextEditingController();
   final _buttonTitleController = TextEditingController();
@@ -55,6 +56,8 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
   String? _employment;
   bool _isLoading = false;
   bool _showValidation = false;
+  bool _isAvatarLoading = false;
+  bool _isImageLoading = false;
 
   final List<Map<String, String?>> _employmentOptions = [
     {'label': 'community.card.work.title'.tr(), 'value': null},
@@ -108,9 +111,9 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
         _infoController.text = data['info'] ?? '';
         _emailController.text = data['email'] ?? '';
         _telegramController.text = data['telegram'] ?? '';
-        _whatsappController.text = data['whatsapp']?['numeric'] ?? '';
+        _whatsappController.text = data['whatsapp']?['masked'] ?? '';
         _linkedinController.text = data['linkedin'] ?? '';
-        _phoneController.text = data['phone']?['numeric'] ?? '';
+        _phoneController.text = data['phone']?['masked'] ?? '';
         _textTitleController.text = data['text_title'] ?? '';
         _textContentController.text = data['text_content'] ?? '';
         _buttonTitleController.text = data['button_title'] ?? '';
@@ -139,8 +142,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
       });
       BaseSnackBar.show(
         context,
-        message:
-            'community.card.submit.errors.loading'.tr(args: [e.toString()]),
+        message: 'common.error.general'.tr(),
         type: SnackBarType.error,
       );
     }
@@ -169,8 +171,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
       if (!mounted) return;
       BaseSnackBar.show(
         context,
-        message:
-            'community.card.submit.errors.visibility'.tr(args: [e.toString()]),
+        message: 'common.error.general'.tr(),
         type: SnackBarType.error,
       );
     } finally {
@@ -224,6 +225,135 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
     );
   }
 
+  Future<void> _pickAvatar() async {
+    final ImagePicker picker = ImagePicker();
+    try {
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        setState(() {
+          _avatarFile = image;
+          _avatarUrl = null;
+        });
+
+        if (!mounted) return;
+        BaseSnackBar.show(
+          context,
+          message: 'community.card.image.added'.tr(),
+          type: SnackBarType.success,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      BaseSnackBar.show(
+        context,
+        message: 'common.error.general'.tr(),
+        type: SnackBarType.error,
+      );
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    try {
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        setState(() {
+          _imageFile = image;
+          _imageUrl = null;
+        });
+
+        if (!mounted) return;
+        BaseSnackBar.show(
+          context,
+          message: 'community.card.image.added'.tr(),
+          type: SnackBarType.success,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      BaseSnackBar.show(
+        context,
+        message: 'common.error.general'.tr(),
+        type: SnackBarType.error,
+      );
+    }
+  }
+
+  Future<void> _removeAvatar() async {
+    try {
+      setState(() {
+        _isAvatarLoading = true;
+      });
+
+      await ref
+          .read(communityCardServiceProvider)
+          .removeMedia('community_card_avatar');
+
+      setState(() {
+        _avatarUrl = null;
+        _avatarFile = null;
+      });
+
+      if (!mounted) return;
+      BaseSnackBar.show(
+        context,
+        message: 'community.card.image.removed'.tr(),
+        type: SnackBarType.success,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      BaseSnackBar.show(
+        context,
+        message: 'common.error.general'.tr(),
+        type: SnackBarType.error,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isAvatarLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _removeImage() async {
+    try {
+      setState(() {
+        _isImageLoading = true;
+      });
+
+      await ref
+          .read(communityCardServiceProvider)
+          .removeMedia('community_card_image');
+
+      setState(() {
+        _imageUrl = null;
+        _imageFile = null;
+        _showImageInput = false;
+      });
+
+      if (!mounted) return;
+      BaseSnackBar.show(
+        context,
+        message: 'community.card.image.removed'.tr(),
+        type: SnackBarType.success,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      BaseSnackBar.show(
+        context,
+        message: 'common.error.general'.tr(),
+        type: SnackBarType.error,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isImageLoading = false;
+        });
+      }
+    }
+  }
+
   Future<void> _saveData() async {
     setState(() {
       _isLoading = true;
@@ -237,10 +367,11 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
         MapEntry('name', _nameController.text),
         MapEntry('position', _positionController.text),
         MapEntry('telegram', _telegramController.text),
-        MapEntry('whatsapp', _whatsappController.text),
+        MapEntry(
+            'whatsapp', _whatsappController.text.replaceAll(RegExp(r'\D'), '')),
         MapEntry('linkedin', _linkedinController.text),
         MapEntry('email', _emailController.text),
-        MapEntry('phone', _phoneController.text),
+        MapEntry('phone', _phoneController.text.replaceAll(RegExp(r'\D'), '')),
         MapEntry('info', _infoController.text),
         MapEntry('company', _companyController.text),
         MapEntry('button_title', _buttonTitleController.text),
@@ -259,7 +390,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
           ),
         );
       } else if (_avatarUrl == null) {
-        // Если фото было удалено (нет ни файла, ни URL), отправляем пустое значение
+        // If avatar was deleted (no file and no URL), send empty value
         formData.fields.add(const MapEntry('avatar', ''));
       }
 
@@ -271,7 +402,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
           ),
         );
       } else if (_imageUrl == null) {
-        // Если фото было удалено (нет ни файла, ни URL), отправляем пустое значение
+        // If image was deleted (no file and no URL), send empty value
         formData.fields.add(const MapEntry('image', ''));
       }
 
@@ -299,7 +430,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
       if (!mounted) return;
       BaseSnackBar.show(
         context,
-        message: 'community.card.submit.errors.saving'.tr(args: [e.toString()]),
+        message: 'common.error.general'.tr(),
         type: SnackBarType.error,
       );
     } finally {
@@ -358,75 +489,6 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
         ),
       ],
     );
-  }
-
-  Future<void> _pickAvatar() async {
-    final ImagePicker picker = ImagePicker();
-    try {
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        setState(() {
-          _avatarFile = image;
-          // Clear the URL since we have a local file
-          _avatarUrl = null;
-        });
-        if (!mounted) return;
-        BaseSnackBar.show(
-          context,
-          message: 'community.card.image.added'.tr(),
-          type: SnackBarType.success,
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      BaseSnackBar.show(
-        context,
-        message: 'community.card.image.error_picking'.tr(args: [e.toString()]),
-        type: SnackBarType.error,
-      );
-    }
-  }
-
-  Future<void> _removeAvatar() async {
-    setState(() {
-      _avatarUrl = null;
-      _avatarFile = null;
-    });
-  }
-
-  Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    try {
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        setState(() {
-          _imageFile = image;
-          // Clear the URL since we have a local file
-          _imageUrl = null;
-        });
-        if (!mounted) return;
-        BaseSnackBar.show(
-          context,
-          message: 'community.card.image.added'.tr(),
-          type: SnackBarType.success,
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      BaseSnackBar.show(
-        context,
-        message: 'community.card.image.error_picking'.tr(args: [e.toString()]),
-        type: SnackBarType.error,
-      );
-    }
-  }
-
-  Future<void> _removeImage() async {
-    setState(() {
-      _imageUrl = null;
-      _imageFile = null;
-      _showImageInput = false;
-    });
   }
 
   Widget _buildStatusWidget() {
@@ -578,6 +640,14 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
   }
 
   Widget _buildAvatarImage() {
+    if (_isAvatarLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD4B33E)),
+        ),
+      );
+    }
+
     if (_avatarFile != null) {
       return Image.file(
         File(_avatarFile!.path),
@@ -588,7 +658,6 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
         _avatarUrl!,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          // Return placeholder on error
           return Center(
             child: SvgPicture.asset(
               'lib/app/assets/icons/person_add.svg',
@@ -617,6 +686,14 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
   }
 
   Widget _buildMainImage() {
+    if (_isImageLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD4B33E)),
+        ),
+      );
+    }
+
     if (_imageFile != null) {
       return Image.file(
         File(_imageFile!.path),
@@ -631,7 +708,6 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
         width: double.infinity,
         height: double.infinity,
         errorBuilder: (context, error, stackTrace) {
-          // Return placeholder on error
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

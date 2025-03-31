@@ -13,7 +13,6 @@ import 'package:aina_flutter/pages/general/news_details_page.dart';
 import 'package:aina_flutter/pages/general/news_list_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/pages/home/home_page.dart';
-import 'package:aina_flutter/storybook.dart';
 import 'package:aina_flutter/entities/home_tabbar_screen.dart';
 import 'package:aina_flutter/entities/main_tabbar_screen.dart';
 import 'package:aina_flutter/pages/general/code_page.dart';
@@ -21,7 +20,6 @@ import 'package:aina_flutter/pages/malls/mall_details_page.dart';
 import 'package:aina_flutter/pages/malls/promotions_page.dart';
 import 'package:aina_flutter/pages/malls/stores_page.dart';
 import 'package:aina_flutter/pages/malls/promotion_qr_page.dart';
-import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:aina_flutter/pages/coworking/coworking_page.dart';
 import 'package:aina_flutter/pages/coworking/coworking_bookings_page.dart';
 import 'package:aina_flutter/entities/coworking_tabbar_screen.dart';
@@ -42,7 +40,6 @@ import 'package:aina_flutter/pages/coworking/coworking_order_details_page.dart';
 import 'package:aina_flutter/features/coworking/domain/services/order_service.dart';
 import 'package:aina_flutter/app/providers/api_client_provider.dart';
 import 'package:aina_flutter/pages/general/community_card_page.dart';
-import 'package:aina_flutter/app/app.dart' as app;
 import 'package:aina_flutter/pages/coworking/coworking_limit_accounts_page.dart';
 import 'package:aina_flutter/pages/coworking/coworking_edit_data_page.dart';
 import 'package:aina_flutter/pages/coworking/coworking_conference_service_page.dart';
@@ -406,8 +403,6 @@ class AppRouter {
                         error: (error, stack) =>
                             Center(child: Text('Error: $error')),
                         data: (tariff) {
-                          print(
-                              'Loaded tariff details - ID: ${tariff.id}, Title: ${tariff.title}');
                           return ConferenceRoomDetailsPage(
                             tariff: tariff,
                             coworkingId: coworkingId,

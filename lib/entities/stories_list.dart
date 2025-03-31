@@ -71,10 +71,11 @@ class _StoryListState extends ConsumerState<StoryList>
       if (stories != null && index < stories.length) {
         setState(() {
           stories[index].read = true;
+          // print("Story ${index + 1} marked as read");
         });
       }
     } catch (e) {
-      debugPrint('❌ Ошибка при отметке истории как прочитанной: $e');
+      print('❌ Ошибка при отметке истории как прочитанной: $e');
     }
   }
 
@@ -354,7 +355,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
   late int currentStoryIndex;
   late int currentInnerStoryIndex = 0;
   late PageController _pageController;
-  PageController? _groupPageController;
+  late PageController _groupPageController;
   late AnimationController _progressController;
   late AnimationController _uiAnimationController;
   late Animation<double> _uiFadeAnimation;
@@ -387,14 +388,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
     currentStoryIndex = widget.initialIndex;
     currentStories = widget.stories[currentStoryIndex].stories ?? [];
     _pageController = PageController(initialPage: 0);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        setState(() {
-          _groupPageController = PageController(initialPage: currentStoryIndex);
-        });
-      }
-    });
-
+    _groupPageController = PageController(initialPage: currentStoryIndex);
     _progressController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 5),
@@ -491,115 +485,99 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
     );
   }
 
+  Future<void> _animateCubeTransition(bool isNext) async {
+    if (_isAnimating) return;
+    _isAnimating = true;
+
+    await _cubeController.forward();
+    _cubeController.reset();
+    _isAnimating = false;
+  }
+
+  // Модифицируем PageView.builder для основного контента
   Widget _buildPageView() {
     return AnimatedBuilder(
       animation: _cubeAnimation,
       builder: (context, child) {
-        return PageView.builder(
-          controller: _pageController,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: currentStories.length,
-          onPageChanged: (index) {
-            setState(() {
-              currentInnerStoryIndex = index;
-            });
-          },
-          itemBuilder: (context, index) {
-            final groupStories =
-                widget.stories[currentStoryIndex].stories ?? [];
-            final currentStory = groupStories[index];
-            final currentPage = _buildStoryContent(currentStory);
-            final nextPage = index < groupStories.length - 1
-                ? _buildStoryContent(groupStories[index + 1])
-                : null;
-            final prevPage =
-                index > 0 ? _buildStoryContent(groupStories[index - 1]) : null;
+        final groupStories = widget.stories[currentStoryIndex].stories ?? [];
+        final currentStory = groupStories[currentInnerStoryIndex];
 
-            return Stack(
-              children: [
-                // Текущая страница с анимацией куба
-                _buildCubeItem(currentPage, false, _cubeAnimation),
-                // Следующая страница появляется только при анимации вперед
-                if (nextPage != null && _cubeAnimation.value > 0)
-                  _buildCubeItem(nextPage, true, _cubeAnimation),
-                // Предыдущая страница появляется только при анимации назад
-                if (prevPage != null && _cubeAnimation.value > 0)
-                  _buildCubeItem(prevPage, false, _cubeAnimation),
-              ],
-            );
-          },
+        Widget currentPage = _buildStoryContent(currentStory);
+        Widget? nextPage;
+        Widget? prevPage;
+
+        if (currentInnerStoryIndex < groupStories.length - 1) {
+          nextPage =
+              _buildStoryContent(groupStories[currentInnerStoryIndex + 1]);
+        }
+        if (currentInnerStoryIndex > 0) {
+          prevPage =
+              _buildStoryContent(groupStories[currentInnerStoryIndex - 1]);
+        }
+
+        return Stack(
+          children: [
+            _buildCubeItem(currentPage, false, _cubeAnimation),
+            if (nextPage != null)
+              _buildCubeItem(nextPage, true, _cubeAnimation),
+            if (prevPage != null)
+              _buildCubeItem(prevPage, false, _cubeAnimation),
+          ],
         );
       },
     );
   }
 
+  // Модифицируем методы переключения историй
   Future<void> handleNextStory() async {
     if (currentInnerStoryIndex < currentStories.length - 1) {
-      // Запускаем анимацию затухания UI
+      await _animateCubeTransition(true);
+      setState(() {
+        currentInnerStoryIndex++;
+      });
+      _progressController.reset();
+      _progressController.forward();
+    } else if (currentStoryIndex < widget.stories.length - 1) {
       await _uiAnimationController.forward();
 
-      if (mounted) {
-        // Запускаем анимацию куба
-        await _cubeController.forward();
-
-        // Обновляем состояние
-        setState(() {
-          currentInnerStoryIndex++;
-        });
-
-        // Анимируем PageView
-        await _pageController.animateToPage(
-          currentInnerStoryIndex,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-
-        // Возвращаем UI в видимое состояние
-        await _uiAnimationController.reverse();
-
-        _progressController.reset();
-        _progressController.forward();
-      }
-    } else if (currentStoryIndex < widget.stories.length - 1) {
       final nextStoryIndex = currentStoryIndex + 1;
       final nextStories = widget.stories[nextStoryIndex].stories ?? [];
 
-      // Запускаем анимацию затухания UI
-      await _uiAnimationController.forward();
-
-      if (mounted) {
-        // Запускаем анимацию куба
-        await _cubeController.forward();
-
-        // Обновляем состояние
+      // Check if the controller is attached before animating
+      if (_groupPageController.hasClients) {
+        await _groupPageController.animateToPage(
+          nextStoryIndex,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      } else {
+        // If not attached, just update the state
         setState(() {
           currentStoryIndex = nextStoryIndex;
           currentStories = nextStories;
           currentInnerStoryIndex = 0;
         });
-
-        // Анимируем PageView
-        await _pageController.animateToPage(
-          0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-
-        // Возвращаем UI в видимое состояние
-        await _uiAnimationController.reverse();
-
-        _progressController.reset();
-        _progressController.forward();
-
-        // Предзагружаем первую историю в новой группе если она еще не загружена
-        final nextStory = currentStories[0];
-        if (nextStory.id != null &&
-            !_preloadedStories.containsKey(nextStory.id)) {
-          _loadCurrentStory();
-        }
-
-        _markCurrentStoryAsRead();
       }
+
+      setState(() {
+        currentStoryIndex = nextStoryIndex;
+        currentStories = nextStories;
+        currentInnerStoryIndex = 0;
+      });
+
+      // Предзагружаем первую историю в новой группе если она еще не загружена
+      final nextStory = currentStories[0];
+      if (nextStory.id != null &&
+          !_preloadedStories.containsKey(nextStory.id)) {
+        _loadCurrentStory();
+      }
+
+      _pageController = PageController(initialPage: 0);
+      _markCurrentStoryAsRead();
+      _progressController.reset();
+      _progressController.forward();
+
+      await _uiAnimationController.reverse();
     } else {
       context.pop();
     }
@@ -607,62 +585,35 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
 
   Future<void> handlePreviousStory() async {
     if (currentInnerStoryIndex > 0) {
-      // Запускаем анимацию затухания UI
+      await _animateCubeTransition(false);
+      setState(() {
+        currentInnerStoryIndex--;
+      });
+      _progressController.reset();
+      _progressController.forward();
+    } else if (currentStoryIndex > 0) {
       await _uiAnimationController.forward();
 
-      if (mounted) {
-        // Запускаем анимацию куба
-        await _cubeController.forward();
-
-        // Обновляем состояние
-        setState(() {
-          currentInnerStoryIndex--;
-        });
-
-        // Анимируем PageView
-        await _pageController.animateToPage(
-          currentInnerStoryIndex,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-
-        // Возвращаем UI в видимое состояние
-        await _uiAnimationController.reverse();
-
-        _progressController.reset();
-        _progressController.forward();
-      }
-    } else if (currentStoryIndex > 0) {
       final prevStoryIndex = currentStoryIndex - 1;
       final prevStories = widget.stories[prevStoryIndex].stories ?? [];
 
-      // Запускаем анимацию затухания UI
-      await _uiAnimationController.forward();
+      await _groupPageController.animateToPage(
+        prevStoryIndex,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
 
-      if (mounted) {
-        // Запускаем анимацию куба
-        await _cubeController.forward();
+      setState(() {
+        currentStoryIndex = prevStoryIndex;
+        currentStories = prevStories;
+        currentInnerStoryIndex = prevStories.length - 1;
+      });
 
-        // Обновляем состояние
-        setState(() {
-          currentStoryIndex = prevStoryIndex;
-          currentStories = prevStories;
-          currentInnerStoryIndex = prevStories.length - 1;
-        });
+      _pageController = PageController(initialPage: prevStories.length - 1);
+      _progressController.reset();
+      _progressController.forward();
 
-        // Анимируем PageView
-        await _pageController.animateToPage(
-          prevStories.length - 1,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-
-        // Возвращаем UI в видимое состояние
-        await _uiAnimationController.reverse();
-
-        _progressController.reset();
-        _progressController.forward();
-      }
+      await _uiAnimationController.reverse();
     }
   }
 
@@ -795,7 +746,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
           opacity: _calculateOpacity(),
           child: Stack(
             children: [
-              _buildPageView(),
+              _buildPageView(), // Заменяем старый PageView на новый с эффектом куба
               // GestureDetector для обработки тапов
               Positioned.fill(
                 child: GestureDetector(
@@ -822,17 +773,23 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
                     _progressController.stop();
                   },
                   onVerticalDragUpdate: (details) {
+                    // Теперь обрабатываем только свайп вверх (отрицательное значение)
                     if (details.primaryDelta! > 0) return;
+
                     setState(() {
                       _dragOffset += details.primaryDelta!;
                     });
                   },
                   onVerticalDragEnd: (details) {
                     _isDragging = false;
+
+                    // Проверяем скорость свайпа вверх (отрицательное значение)
                     if (_dragOffset.abs() > 100 ||
                         (details.primaryVelocity ?? 0) < -300) {
+                      // Закрываем историю если достаточно оттянули или быстро свайпнули вверх
                       Navigator.of(context).pop();
                     } else {
+                      // Возвращаем на место с анимацией
                       setState(() {
                         _dragOffset = 0;
                       });
@@ -841,12 +798,62 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
                   },
                   onHorizontalDragEnd: (details) {
                     if (details.primaryVelocity == null) return;
+
+                    // Если скорость свайпа меньше определенного порога, игнорируем
                     if (details.primaryVelocity!.abs() < 200) return;
 
                     if (details.primaryVelocity! > 0) {
-                      handlePreviousStory();
+                      // Свайп вправо - к предыдущей группе
+                      if (currentStoryIndex > 0) {
+                        _uiAnimationController.forward();
+                        final prevStoryIndex = currentStoryIndex - 1;
+                        final prevStories =
+                            widget.stories[prevStoryIndex].stories ?? [];
+
+                        _groupPageController
+                            .animateToPage(
+                          prevStoryIndex,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        )
+                            .then((_) {
+                          setState(() {
+                            currentStoryIndex = prevStoryIndex;
+                            currentStories = prevStories;
+                            currentInnerStoryIndex = 0;
+                          });
+                          _pageController = PageController(initialPage: 0);
+                          _progressController.reset();
+                          _progressController.forward();
+                          _uiAnimationController.reverse();
+                        });
+                      }
                     } else {
-                      handleNextStory();
+                      // Свайп влево - к следующей группе
+                      if (currentStoryIndex < widget.stories.length - 1) {
+                        _uiAnimationController.forward();
+                        final nextStoryIndex = currentStoryIndex + 1;
+                        final nextStories =
+                            widget.stories[nextStoryIndex].stories ?? [];
+
+                        _groupPageController
+                            .animateToPage(
+                          nextStoryIndex,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        )
+                            .then((_) {
+                          setState(() {
+                            currentStoryIndex = nextStoryIndex;
+                            currentStories = nextStories;
+                            currentInnerStoryIndex = 0;
+                          });
+                          _pageController = PageController(initialPage: 0);
+                          _progressController.reset();
+                          _progressController.forward();
+                          _uiAnimationController.reverse();
+                        });
+                      }
                     }
                   },
                 ),
@@ -968,7 +975,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
   void dispose() {
     _progressController.dispose();
     _pageController.dispose();
-    _groupPageController?.dispose();
+    _groupPageController.dispose();
     _uiAnimationController.dispose();
     _cubeController.dispose();
     super.dispose();

@@ -131,43 +131,81 @@ class _CategoryStoresPageState extends ConsumerState<CategoryStoresPage> {
                 ),
               ),
               CustomHeader(
-                title: 'stores.category_title'.tr(args: [
-                  buildingsAsync.when(
-                    data: (buildings) {
-                      final malls = buildings['mall'] ?? [];
-                      final mall = malls.firstWhere(
-                        (m) => m.id.toString() == widget.buildingId,
-                        orElse: () => malls.isNotEmpty
-                            ? malls.first
-                            : Building(
-                                id: 0,
-                                name: '',
-                                type: '',
-                                phone: '',
-                                latitude: '',
-                                longitude: '',
-                                description: '',
-                                workingHours: '',
-                                address: '',
-                                createdAt: '',
-                                previewImage: PreviewImage(
-                                  id: 0,
-                                  uuid: '',
-                                  url: '',
-                                  urlOriginal: '',
-                                  orderColumn: 0,
-                                  collectionName: '',
-                                ),
-                                images: [],
-                              ),
-                      );
-                      return mall.name;
-                    },
-                    loading: () => '',
-                    error: (_, __) => '',
-                  ),
-                  widget.title,
-                ]),
+                title: context.locale.languageCode == 'kk'
+                    ? 'stores.category_title'.tr(args: [
+                        buildingsAsync.when(
+                          data: (buildings) {
+                            final malls = buildings['mall'] ?? [];
+                            final mall = malls.firstWhere(
+                              (m) => m.id.toString() == widget.buildingId,
+                              orElse: () => malls.isNotEmpty
+                                  ? malls.first
+                                  : Building(
+                                      id: 0,
+                                      name: '',
+                                      type: '',
+                                      phone: '',
+                                      latitude: '',
+                                      longitude: '',
+                                      description: '',
+                                      workingHours: '',
+                                      address: '',
+                                      createdAt: '',
+                                      previewImage: PreviewImage(
+                                        id: 0,
+                                        uuid: '',
+                                        url: '',
+                                        urlOriginal: '',
+                                        orderColumn: 0,
+                                        collectionName: '',
+                                      ),
+                                      images: [],
+                                    ),
+                            );
+                            return mall.name;
+                          },
+                          loading: () => '',
+                          error: (_, __) => '',
+                        ),
+                        widget.title,
+                      ])
+                    : 'stores.category_title'.tr(args: [
+                        widget.title,
+                        buildingsAsync.when(
+                          data: (buildings) {
+                            final malls = buildings['mall'] ?? [];
+                            final mall = malls.firstWhere(
+                              (m) => m.id.toString() == widget.buildingId,
+                              orElse: () => malls.isNotEmpty
+                                  ? malls.first
+                                  : Building(
+                                      id: 0,
+                                      name: '',
+                                      type: '',
+                                      phone: '',
+                                      latitude: '',
+                                      longitude: '',
+                                      description: '',
+                                      workingHours: '',
+                                      address: '',
+                                      createdAt: '',
+                                      previewImage: PreviewImage(
+                                        id: 0,
+                                        uuid: '',
+                                        url: '',
+                                        urlOriginal: '',
+                                        orderColumn: 0,
+                                        collectionName: '',
+                                      ),
+                                      images: [],
+                                    ),
+                            );
+                            return mall.name;
+                          },
+                          loading: () => '',
+                          error: (_, __) => '',
+                        ),
+                      ]),
                 type: HeaderType.pop,
               ),
             ],

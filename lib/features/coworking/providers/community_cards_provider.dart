@@ -10,10 +10,13 @@ final communityCardsProvider =
   final token = ref.read(authProvider).token;
   int? userCardId;
   CommunityCard? userCard;
+  final currentPage = ref.watch(communityCardsPageProvider);
+  final hasMorePages = ref.watch(communityCardsHasMoreProvider);
+  final isLoadingMore = ref.watch(communityCardsLoadingMoreProvider);
 
   try {
-    // Get user's card to filter it out only if user is authenticated
-    if (token != null) {
+    // Get user's card to filter it out only if user is authenticated and it's the first page
+    if (token != null && currentPage == 1) {
       final userCardResponse = await ApiClient().dio.get(
             '/api/promenade/community-card',
             options: Options(
@@ -25,15 +28,23 @@ final communityCardsProvider =
           userCardResponse.data['success'] == true &&
           userCardResponse.data['data'] != null) {
         userCardId = userCardResponse.data['data']['id'] as int?;
-        // Save user's card for later
         userCard = CommunityCard.fromJson(userCardResponse.data['data']);
+      }
+    } else if (token != null) {
+      // For subsequent pages, get userCardId from the first page's data
+      final existingItems = ref.read(communityCardsListProvider) ?? [];
+      if (existingItems.isNotEmpty) {
+        userCardId = existingItems.first.id;
       }
     }
 
     final response = await ApiClient().dio.get(
           '/api/promenade/community-cards',
-          queryParameters:
-              search != null && search.isNotEmpty ? {'name': search} : null,
+          queryParameters: {
+            if (search != null && search.isNotEmpty) 'name': search,
+            'page': currentPage,
+            'per_page': 100,
+          },
           options: Options(
             headers: {'force-refresh': 'true'},
           ),
@@ -46,11 +57,17 @@ final communityCardsProvider =
     }
 
     final responseData = response.data['data'];
+    final pagination = response.data['pagination'] as Map<String, dynamic>;
+
+    // Update pagination state
+    ref.read(communityCardsHasMoreProvider.notifier).state =
+        pagination['has_next_page'] ?? false;
+    ref.read(communityCardsLoadingMoreProvider.notifier).state = false;
 
     final validItems = <CommunityCard>[];
 
-    // Add user's card first if it exists and is approved
-    if (userCard != null) {
+    // Add user's card first if it exists and is approved (only on first page)
+    if (currentPage == 1 && userCard != null) {
       validItems.add(userCard);
     }
 
@@ -76,33 +93,28 @@ final communityCardsProvider =
           debugPrint('Stack trace: $stackTrace');
         }
       }
-
-      return validItems;
-    } else if (responseData is Map<String, dynamic> &&
-        responseData['data'] is List) {
-      final dataList = responseData['data'] as List;
-
-      for (var item in dataList) {
-        if (item is Map<String, dynamic>) {
-          // Skip user's own card since we already added it
-          if (token != null && item['id'] == userCardId) {
-            continue;
-          }
-
-          try {
-            final card = CommunityCard.fromJson(item);
-            validItems.add(card);
-          } catch (e) {
-            debugPrint('Error parsing card: $e');
-          }
-        }
-      }
-
-      return validItems;
     }
 
-    throw Exception('Unexpected data format in API response');
+    // Update the list of all cards
+    if (currentPage == 1) {
+      ref.read(communityCardsListProvider.notifier).state = validItems;
+      return validItems;
+    } else {
+      // Для последующих страниц добавляем новые элементы к существующим
+      final existingItems = ref.read(communityCardsListProvider) ?? [];
+      final updatedItems = [...existingItems, ...validItems];
+      ref.read(communityCardsListProvider.notifier).state = updatedItems;
+      return updatedItems;
+    }
   } catch (e) {
+    ref.read(communityCardsLoadingMoreProvider.notifier).state = false;
     throw Exception('Failed to fetch community cards: $e');
   }
 });
+
+// Providers for pagination state
+final communityCardsPageProvider = StateProvider<int>((ref) => 1);
+final communityCardsHasMoreProvider = StateProvider<bool>((ref) => true);
+final communityCardsLoadingMoreProvider = StateProvider<bool>((ref) => false);
+final communityCardsListProvider =
+    StateProvider<List<CommunityCard>?>((ref) => null);

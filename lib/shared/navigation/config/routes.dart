@@ -51,9 +51,11 @@ import 'package:aina_flutter/pages/home/home_bookings_page.dart';
 import 'package:aina_flutter/pages/general/notifications_page.dart';
 import 'package:aina_flutter/pages/general/no_internet_page.dart';
 import 'package:aina_flutter/shared/navigation/ui/transitions/custom_transitions.dart';
+import 'package:chucker_flutter/chucker_flutter.dart';
 
 class AppRouter {
   static final router = GoRouter(
+    observers: [ChuckerFlutter.navigatorObserver],
     routes: [
       GoRoute(
         path: '/',

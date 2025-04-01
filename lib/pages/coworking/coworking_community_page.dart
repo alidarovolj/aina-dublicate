@@ -29,7 +29,11 @@ class CoworkingCommunityPage extends ConsumerStatefulWidget {
 class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
     with RouteAware {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   String _searchQuery = '';
+  int _currentPage = 1;
+  bool _hasMorePages = true;
+  bool _isLoadingMore = false;
 
   @override
   void didChangeDependencies() {
@@ -40,20 +44,53 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     // Используем Future.microtask чтобы избежать setState во время build
     Future.microtask(() {
       final token = ref.read(authProvider).token;
       if (token != null) {
+        _resetPagination();
         ref.invalidate(communityCardsProvider);
         ref.invalidate(communityCardProvider);
       }
     });
   }
 
+  void _resetPagination() {
+    ref.read(communityCardsPageProvider.notifier).state = 1;
+    ref.read(communityCardsHasMoreProvider.notifier).state = true;
+    ref.read(communityCardsLoadingMoreProvider.notifier).state = false;
+    ref.read(communityCardsListProvider.notifier).state = null;
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      if (!_isLoadingMore && _hasMorePages) {
+        _isLoadingMore = true;
+        ref.read(communityCardsLoadingMoreProvider.notifier).state = true;
+        ref.read(communityCardsPageProvider.notifier).state++;
+        // Загружаем следующую страницу без обновления всего списка
+        ref.invalidate(communityCardsProvider(_searchQuery));
+      }
+    }
+  }
+
+  void _onSearchChanged(String value) {
+    debugPrint('Search value changed to: $value');
+    setState(() {
+      _searchQuery = value;
+    });
+    _resetPagination();
+    ref.invalidate(communityCardsProvider);
+  }
+
   @override
   void dispose() {
-    routeObserver.unsubscribe(this);
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _searchController.dispose();
+    routeObserver.unsubscribe(this);
     super.dispose();
   }
 
@@ -84,9 +121,22 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
   @override
   Widget build(BuildContext context) {
     final token = ref.watch(authProvider).token;
+    final currentPage = ref.watch(communityCardsPageProvider);
+    final hasMorePages = ref.watch(communityCardsHasMoreProvider);
+    final isLoadingMore = ref.watch(communityCardsLoadingMoreProvider);
     final communityCardsAsync = ref.watch(communityCardsProvider(_searchQuery));
     final userCardAsync =
-        token != null ? ref.watch(communityCardProvider(true)) : null;
+        token != null ? ref.watch(communityCardProvider(false)) : null;
+    final cards = ref.watch(communityCardsListProvider) ?? [];
+
+    debugPrint('Current search query: $_searchQuery');
+    debugPrint('Cards length: ${cards.length}');
+    debugPrint('Community cards async state: $communityCardsAsync');
+
+    // Update local state from providers
+    _currentPage = currentPage;
+    _hasMorePages = hasMorePages;
+    _isLoadingMore = isLoadingMore;
 
     return GestureDetector(
       onHorizontalDragEnd: (details) {
@@ -152,11 +202,7 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
                             vertical: 12,
                           ),
                         ),
-                        onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value;
-                          });
-                        },
+                        onChanged: _onSearchChanged,
                       ),
                     ),
                     if (token != null) ...[
@@ -165,8 +211,9 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
                               return Padding(
                                 padding: const EdgeInsets.all(12),
                                 child: CustomButton(
-                                  label: (userCard['status'] == 'APPROVED' ||
-                                          userCard['status'] == 'REJECTED')
+                                  label: (userCard != null &&
+                                          (userCard['status'] == 'APPROVED' ||
+                                              userCard['status'] == 'REJECTED'))
                                       ? 'community.edit_card'.tr()
                                       : 'community.create_card'.tr(),
                                   onPressed: () {
@@ -225,7 +272,9 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
                     ],
                     Expanded(
                       child: communityCardsAsync.when(
-                        data: (cards) {
+                        data: (_) {
+                          debugPrint(
+                              'Rendering data state with cards: ${cards.length}');
                           if (cards.isEmpty) {
                             return Center(
                               child: Text(
@@ -239,24 +288,28 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
                           }
 
                           // Разделяем карточки на карточку пользователя и остальные
+                          List<CommunityCard> otherCards = List.from(cards);
                           CommunityCard? userCard;
+
                           if (token != null && cards.isNotEmpty) {
                             try {
                               final firstCard = cards.first;
-                              // Only show user card if status is APPROVED or REJECTED
                               if (firstCard.status == 'APPROVED' ||
                                   firstCard.status == 'REJECTED') {
                                 userCard = firstCard;
+                                otherCards = cards.skip(1).toList();
                               }
                             } catch (e) {
                               debugPrint('Error finding user card: $e');
                             }
                           }
 
-                          final otherCards = cards.skip(1).toList();
                           final groupedCards = _groupCards(otherCards);
+                          debugPrint(
+                              'Grouped cards: ${groupedCards.length} groups');
 
                           return SingleChildScrollView(
+                            controller: _scrollController,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -277,27 +330,49 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
                                     isCurrentUser: true,
                                   ),
                                 ],
-                                for (var entry in groupedCards.entries) ...[
-                                  Padding(
-                                    padding: const EdgeInsets.all(12),
+                                if (groupedCards.isNotEmpty) ...[
+                                  for (var entry in groupedCards.entries) ...[
+                                    Padding(
+                                      padding: const EdgeInsets.all(12),
+                                      child: Text(
+                                        entry.key,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.grey2,
+                                        ),
+                                      ),
+                                    ),
+                                    ...entry.value.map((user) =>
+                                        _CommunityUserCard(user: user)),
+                                  ],
+                                ] else if (userCard == null) ...[
+                                  Center(
                                     child: Text(
-                                      entry.key,
+                                      'community.empty'.tr(),
                                       style: const TextStyle(
                                         fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppColors.grey2,
+                                        color: AppColors.textDarkGrey,
                                       ),
                                     ),
                                   ),
-                                  ...entry.value.map(
-                                      (user) => _CommunityUserCard(user: user)),
                                 ],
+                                if (_isLoadingMore)
+                                  const Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ),
                               ],
                             ),
                           );
                         },
-                        loading: () => _buildSkeletonLoader(),
+                        loading: () => const Center(
+                          child: CircularProgressIndicator(),
+                        ),
                         error: (error, stack) {
+                          debugPrint('Error state: $error');
                           // Если ошибка 401, показываем пустой список вместо сообщения об ошибке
                           if (error.toString().contains('401')) {
                             return SingleChildScrollView(
@@ -503,18 +578,14 @@ class _CommunityUserCard extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppColors.primary,
+                    color: AppColors.appBg,
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Center(
-                    child: Text(
-                      _getInitials(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                  child: Image.asset(
+                    'lib/app/assets/icons/plain_user.png',
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.cover,
                   ),
                 ),
               const SizedBox(width: 12),

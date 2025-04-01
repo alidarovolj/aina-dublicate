@@ -77,15 +77,11 @@ class CommunityDetailsModal extends StatelessWidget {
                       color: AppColors.primary,
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: Center(
-                      child: Text(
-                        user.name.substring(0, 1).toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 32,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                    child: Image.asset(
+                      'lib/app/assets/icons/plain_user.png',
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
                     ),
                   ),
                 const SizedBox(width: 12),

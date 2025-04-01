@@ -1,3 +1,5 @@
+import 'package:aina_flutter/shared/models/service_image.dart';
+
 class Service {
   final int id;
   final String title;
@@ -72,46 +74,6 @@ class Service {
       'price': price,
       'category_id': categoryId,
       'category': category?.toJson(),
-    };
-  }
-}
-
-class ServiceImage {
-  final int id;
-  final String uuid;
-  final String url;
-  final String urlOriginal;
-  final int orderColumn;
-  final String collectionName;
-
-  ServiceImage({
-    required this.id,
-    required this.uuid,
-    required this.url,
-    required this.urlOriginal,
-    required this.orderColumn,
-    required this.collectionName,
-  });
-
-  factory ServiceImage.fromJson(Map<String, dynamic> json) {
-    return ServiceImage(
-      id: json['id'] as int,
-      uuid: json['uuid'] as String,
-      url: json['url'] as String,
-      urlOriginal: json['urlOriginal'] as String,
-      orderColumn: json['order_column'] as int,
-      collectionName: json['collection_name'] as String,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'uuid': uuid,
-      'url': url,
-      'urlOriginal': urlOriginal,
-      'order_column': orderColumn,
-      'collection_name': collectionName,
     };
   }
 }

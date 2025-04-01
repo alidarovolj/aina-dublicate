@@ -8,7 +8,7 @@ import 'package:aina_flutter/app/app.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/app/providers/auth/auth_state.dart';
 import 'package:aina_flutter/shared/services/storage_service.dart';
-import 'package:aina_flutter/widgets/base_snack_bar.dart';
+import 'package:aina_flutter/shared/ui/widgets/base_snack_bar.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 // Cache entry class to store response with metadata

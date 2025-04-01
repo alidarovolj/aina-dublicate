@@ -9,9 +9,9 @@ import 'package:aina_flutter/shared/types/promenade_profile.dart';
 import 'package:aina_flutter/app/providers/auth/auth_state.dart';
 import 'package:dio/dio.dart';
 import 'package:aina_flutter/app/providers/update_notifier_provider.dart';
-import 'package:aina_flutter/entities/update_overlay.dart';
+import 'package:aina_flutter/shared/ui/blocks/update_overlay.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
-import 'package:aina_flutter/entities/connectivity_wrapper.dart';
+import 'package:aina_flutter/shared/ui/blocks/connectivity_wrapper.dart';
 import 'package:aina_flutter/shared/services/deep_link_service.dart';
 
 // Global navigator key for accessing navigation from anywhere

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/shared/types/service.dart';
 import 'package:aina_flutter/shared/api/api_client.dart';
 import 'package:flutter/foundation.dart';
+import 'package:aina_flutter/shared/models/service_image.dart';
 
 // Класс для услуг типа DEFAULT
 class DefaultService extends Service {

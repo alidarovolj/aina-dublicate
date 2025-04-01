@@ -8,7 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/services.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'entities/restart_widget.dart';
+import 'shared/ui/widgets/restart_widget.dart';
 import 'package:aina_flutter/shared/api/firebase_setup.dart';
 import 'package:aina_flutter/shared/utils/notification_utils.dart';
 import 'package:firebase_core/firebase_core.dart';

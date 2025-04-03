@@ -703,5 +703,11 @@
     "message": "Are you sure you want to exit the app?",
     "cancel": "Cancel",
     "confirm": "Exit"
+  },
+  "organizations": {
+    "title": "Business and Shops",
+    "view_all": "All",
+    "error": "Error loading organizations: {}",
+    "empty": "No organizations available"
   }
 }

@@ -18,6 +18,8 @@ import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:aina_flutter/app/providers/requests/news_provider.dart';
 import 'package:aina_flutter/shared/types/news_params.dart';
+import 'package:aina_flutter/features/coworking/ui/widgets/organizations_section.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class CoworkingPage extends ConsumerWidget {
   final int coworkingId;
@@ -139,6 +141,28 @@ class CoworkingPage extends ConsumerWidget {
                         ),
                         const SliverToBoxAdapter(
                           child: SizedBox(height: 12),
+                        ),
+                        // Organization Section
+                        SliverToBoxAdapter(
+                          child: OrganizationsSection(
+                            coworkingId: coworkingId,
+                            showTitle: true,
+                            showViewAll: false,
+                            showDivider: true,
+                            onViewAllTap: () {
+                              context.pushNamed(
+                                'category_stores',
+                                pathParameters: {
+                                  'mallId': coworkingId.toString(),
+                                  'categoryId': '',
+                                },
+                                queryParameters: {
+                                  'title': 'organizations.title'.tr(),
+                                },
+                              );
+                            },
+                            emptyBuilder: (context) => const SizedBox.shrink(),
+                          ),
                         ),
                         // Promotions Section
                         SliverToBoxAdapter(

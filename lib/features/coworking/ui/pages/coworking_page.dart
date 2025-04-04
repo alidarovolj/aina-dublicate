@@ -147,14 +147,14 @@ class CoworkingPage extends ConsumerWidget {
                           child: OrganizationsSection(
                             coworkingId: coworkingId,
                             showTitle: true,
-                            showViewAll: false,
+                            showViewAll: true,
                             showDivider: true,
                             onViewAllTap: () {
                               context.pushNamed(
                                 'category_stores',
                                 pathParameters: {
                                   'mallId': coworkingId.toString(),
-                                  'categoryId': '',
+                                  'categoryId': '0',
                                 },
                                 queryParameters: {
                                   'title': 'organizations.title'.tr(),

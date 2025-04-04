@@ -15,14 +15,20 @@ class CategoryStoresService {
     int perPage = 15,
   }) async {
     try {
+      Map<String, dynamic> queryParams = {
+        'building_id': buildingId,
+        'page': page,
+        'per_page': perPage,
+      };
+
+      // Добавляем параметр категории только если он не равен '0'
+      if (categoryId != '0' && categoryId.isNotEmpty) {
+        queryParams['category_ids[0]'] = categoryId;
+      }
+
       final response = await _dio.get(
         '/api/aina/organizations',
-        queryParameters: {
-          'building_id': buildingId,
-          'category_ids[0]': categoryId,
-          'per_page': perPage,
-          'page': page,
-        },
+        queryParameters: queryParams,
       );
       return response;
     } catch (e) {

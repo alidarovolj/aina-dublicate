@@ -2,13 +2,6 @@
 
 Мобильное приложение Aina, разработанное на Flutter для платформ iOS и Android. Приложение предоставляет пользователям возможность взаимодействия с торговыми центрами, коворкингами и другими объектами.
 
-![alt text](@https://is2-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/d6/00/fb/d600fb42-d449-38f0-10a2-2734c9b69343/1290_2796_2.png/0x0ss.png)
-
-![alt text](@https://is2-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/96/ac/bf/96acbfc9-0afe-a973-1edd-5109a347b185/1290_2796_1.png/0x0ss.png)
-
-![alt text](@https://is2-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/fd/e1/2e/fde12e17-da6f-9d46-0981-b48eeb2c079a/1290_2796_3.png/0x0ss.png)
-
-![alt text](@https://is2-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/46/7c/87/467c878b-0e74-da64-a531-63341ba40ff9/1290_2796_4.png/0x0ss.png)
 
 ## Основные функции
 

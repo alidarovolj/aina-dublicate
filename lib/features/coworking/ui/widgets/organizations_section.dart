@@ -18,14 +18,14 @@ class OrganizationsSection extends ConsumerWidget {
   final Widget Function(BuildContext)? emptyBuilder;
 
   const OrganizationsSection({
-    Key? key,
+    super.key,
     required this.coworkingId,
     this.onViewAllTap,
     this.showTitle = true,
     this.showViewAll = true,
     this.showDivider = true,
     this.emptyBuilder,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

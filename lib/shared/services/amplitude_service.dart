@@ -1,4 +1,7 @@
 import 'package:amplitude_flutter/amplitude.dart';
+import 'package:amplitude_flutter/configuration.dart';
+import 'package:amplitude_flutter/events/base_event.dart';
+import 'package:amplitude_flutter/events/identify.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
@@ -10,11 +13,11 @@ class AmplitudeService {
   factory AmplitudeService() => _instance;
   AmplitudeService._internal();
 
-  final Amplitude _amplitude = Amplitude.getInstance();
+  late Amplitude _amplitude;
   bool _isInitialized = false;
 
-  // Константы для настройки Amplitude
-  static const int _minIdLength = 1; // Минимальная длина идентификаторов
+  // Constants for Amplitude configuration
+  static const int _minIdLength = 1; // Minimum length for identifiers
   static const String _apiEndpoint = 'https://api2.amplitude.com/2/httpapi';
 
   Future<void> init() async {
@@ -28,13 +31,15 @@ class AmplitudeService {
     }
 
     try {
-      // Настройка Amplitude перед инициализацией
-      await _amplitude.setServerUrl('https://api2.amplitude.com');
-      await _amplitude.enableCoppaControl();
-      await _amplitude.trackingSessionEvents(true);
+      // Initialize with Configuration object
+      _amplitude = Amplitude(Configuration(
+        apiKey: apiKey,
+        serverUrl: 'https://api2.amplitude.com',
+        minIdLength: _minIdLength,
+      ));
 
-      // Инициализация с API ключом
-      await _amplitude.init(apiKey);
+      // Wait for initialization to complete
+      await _amplitude.isBuilt;
 
       _isInitialized = true;
     } catch (e) {
@@ -47,9 +52,8 @@ class AmplitudeService {
       return;
     }
 
-    // Проверяем длину userId
+    // Ensure userId has minimum length
     if (userId != null && userId.length < _minIdLength) {
-      // Если ID слишком короткий, добавляем префикс для достижения минимальной длины
       userId = _ensureMinLength(userId);
     }
 
@@ -62,23 +66,24 @@ class AmplitudeService {
       return;
     }
 
-    // Проверяем и корректируем идентификаторы в свойствах события
+    // Validate and correct event properties
     final validatedProperties = _validateEventProperties(eventProperties);
 
-    // Если в свойствах есть user_id, устанавливаем его через setUserId и удаляем из свойств
+    // If userId is in properties, set it and remove from event properties
     if (validatedProperties != null &&
         validatedProperties.containsKey('user_id')) {
       final userId = validatedProperties['user_id'].toString();
       await setUserId(userId);
 
-      // Создаем копию свойств без user_id
+      // Create a copy of properties without user_id
       final cleanProperties = Map<String, dynamic>.from(validatedProperties);
       cleanProperties.remove('user_id');
 
       try {
-        await _amplitude.logEvent(eventName, eventProperties: cleanProperties);
+        await _amplitude
+            .track(BaseEvent(eventName, eventProperties: cleanProperties));
 
-        // Для важных событий можно добавить прямую отправку через HTTP API для валидации
+        // For important events, add direct validation
         if (eventName == 'main_click' ||
             eventName == 'content_type' ||
             eventName == 'subcategory_click') {
@@ -88,13 +93,11 @@ class AmplitudeService {
         debugPrint('ERROR logging event: $e');
       }
     } else {
-      // Если user_id нет в свойствах, просто отправляем событие
-
       try {
-        await _amplitude.logEvent(eventName,
-            eventProperties: validatedProperties);
+        await _amplitude
+            .track(BaseEvent(eventName, eventProperties: validatedProperties));
 
-        // Для важных событий можно добавить прямую отправку через HTTP API для валидации
+        // For important events, add direct validation
         if (eventName == 'main_click' ||
             eventName == 'content_type' ||
             eventName == 'subcategory_click') {
@@ -106,16 +109,16 @@ class AmplitudeService {
     }
   }
 
-  // Метод для валидации отправки события через HTTP API
+  // Method for validating event sent via HTTP API
   Future<void> _validateEventSent(
       String eventName, Map<String, dynamic>? eventProperties) async {
     try {
       final apiKey = dotenv.env['AMPLITUDE_API_KEY'] ?? '';
 
-      // Получаем текущий userId из Amplitude SDK
+      // Get current userId
       String? currentUserId = await _amplitude.getUserId();
 
-      // Генерируем deviceId, если его нет в свойствах
+      // Generate deviceId if not in properties
       String deviceId;
       if (eventProperties?.containsKey('device_id') == true) {
         deviceId = _ensureMinLength(eventProperties!['device_id'].toString());
@@ -123,14 +126,14 @@ class AmplitudeService {
         deviceId = 'device_${DateTime.now().millisecondsSinceEpoch}';
       }
 
-      // Используем текущий userId из SDK или генерируем новый
+      // Use current userId or generate a new one
       String userId =
           currentUserId ?? 'user_${DateTime.now().millisecondsSinceEpoch}';
 
-      // Убедимся, что userId имеет минимальную длину
+      // Ensure minimum length
       userId = _ensureMinLength(userId);
 
-      // Создаем копию свойств события без user_id и device_id, так как они будут в корне события
+      // Create a clean copy of event properties
       final Map<String, dynamic> cleanProperties = {};
       eventProperties?.forEach((key, value) {
         if (key != 'user_id' && key != 'device_id') {
@@ -172,14 +175,14 @@ class AmplitudeService {
     }
   }
 
-  // Метод для проверки и корректировки свойств события
+  // Method for validating event properties
   Map<String, dynamic>? _validateEventProperties(
       Map<String, dynamic>? properties) {
     if (properties == null) return null;
 
     final validatedProperties = Map<String, dynamic>.from(properties);
 
-    // Проверяем user_id
+    // Check and validate user_id
     if (validatedProperties.containsKey('user_id')) {
       final userId = validatedProperties['user_id'].toString();
       if (userId.length < _minIdLength) {
@@ -187,7 +190,7 @@ class AmplitudeService {
       }
     }
 
-    // Проверяем device_id
+    // Check and validate device_id
     if (validatedProperties.containsKey('device_id')) {
       final deviceId = validatedProperties['device_id'].toString();
       if (deviceId.length < _minIdLength) {
@@ -198,10 +201,10 @@ class AmplitudeService {
     return validatedProperties;
   }
 
-  // Метод для обеспечения минимальной длины идентификаторов
+  // Method to ensure minimum length for identifiers
   String _ensureMinLength(String id) {
     if (id.length >= _minIdLength) return id;
-    // Добавляем префикс для достижения минимальной длины
+    // Add prefix to reach minimum length
     return 'id_$id';
   }
 
@@ -209,7 +212,14 @@ class AmplitudeService {
     if (!_isInitialized) {
       return;
     }
-    await _amplitude.setUserProperties(properties);
+
+    final identify = Identify();
+
+    properties.forEach((key, value) {
+      identify.set(key, value);
+    });
+
+    await _amplitude.identify(identify);
   }
 
   Future<void> trackMainClick({
@@ -217,11 +227,11 @@ class AmplitudeService {
     required int deviceId,
     required String source,
   }) async {
-    // Обеспечиваем минимальную длину идентификаторов
+    // Ensure minimum length for identifiers
     final validUserId = _ensureMinLength(userId.toString());
     final validDeviceId = _ensureMinLength(deviceId.toString());
 
-    // Используем новый метод для отправки события с правильной установкой user_id
+    // Use new method for sending event with proper user_id
     await logEventWithUserId(
       'main_click',
       userId: validUserId,
@@ -237,7 +247,7 @@ class AmplitudeService {
     );
   }
 
-  // Метод для отправки события с правильной установкой user_id
+  // Method for sending event with proper user_id
   Future<void> logEventWithUserId(
     String eventName, {
     required String userId,
@@ -247,32 +257,32 @@ class AmplitudeService {
       await init();
     }
 
-    // Убедимся, что userId имеет минимальную длину
+    // Ensure userId has minimum length
     final validUserId = _ensureMinLength(userId);
 
-    // Устанавливаем user_id в Amplitude SDK
+    // Set userId in Amplitude
     await setUserId(validUserId);
 
-    // Создаем копию свойств без user_id, если они есть
+    // Create a clean copy of properties without user_id
     Map<String, dynamic>? cleanProperties;
     if (eventProperties != null) {
       cleanProperties = Map<String, dynamic>.from(eventProperties);
-      cleanProperties.remove(
-          'user_id'); // Удаляем user_id из свойств, так как он уже установлен через setUserId
+      cleanProperties.remove('user_id'); // Remove user_id from properties
     }
 
-    // Отправляем событие
-    await _amplitude.logEvent(eventName, eventProperties: cleanProperties);
+    // Send the event
+    await _amplitude
+        .track(BaseEvent(eventName, eventProperties: cleanProperties));
   }
 
-  // Метод для проверки отправки событий
+  // Method for testing event sending
   Future<void> validateEventSending() async {
     if (!_isInitialized) {
       await init();
     }
 
     try {
-      // Отправляем тестовое событие
+      // Send a test event
       await logEvent(
         'test_validation_event',
         eventProperties: {
@@ -289,7 +299,7 @@ class AmplitudeService {
     }
   }
 
-  // Метод для получения текущего user_id
+  // Method to get current user_id
   Future<String?> getCurrentUserId() async {
     if (!_isInitialized) {
       await init();

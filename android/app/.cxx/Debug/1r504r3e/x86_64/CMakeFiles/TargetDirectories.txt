@@ -1,0 +1,2 @@
+/Users/olzhasfront/Documents/Projects/aina_flutter/android/app/.cxx/Debug/1r504r3e/x86_64/CMakeFiles/edit_cache.dir
+/Users/olzhasfront/Documents/Projects/aina_flutter/android/app/.cxx/Debug/1r504r3e/x86_64/CMakeFiles/rebuild_cache.dir

@@ -5,6 +5,7 @@
 import FlutterMacOS
 import Foundation
 
+import amplitude_flutter
 import connectivity_plus
 import file_selector_macos
 import firebase_analytics
@@ -25,6 +26,7 @@ import url_launcher_macos
 import webview_flutter_wkwebview
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
+  AmplitudeFlutterPlugin.register(with: registry.registrar(forPlugin: "AmplitudeFlutterPlugin"))
   ConnectivityPlugin.register(with: registry.registrar(forPlugin: "ConnectivityPlugin"))
   FileSelectorPlugin.register(with: registry.registrar(forPlugin: "FileSelectorPlugin"))
   FLTFirebaseAnalyticsPlugin.register(with: registry.registrar(forPlugin: "FLTFirebaseAnalyticsPlugin"))

@@ -35,10 +35,10 @@ android {
 
     signingConfigs {
         debug {
-            keyAlias 'androiddebugkey'
-            keyPassword 'android'
-            storeFile file('debug.keystore')
-            storePassword 'android'
+            keyAlias 'aina'
+            keyPassword 'ec03537c'
+            storeFile file('../../android_keys/android-key.jks')
+            storePassword 'ec03537c'
         }
         release {
             keyAlias 'aina'

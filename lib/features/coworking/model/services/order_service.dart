@@ -85,13 +85,14 @@ class OrderService {
     }
   }
 
-  Future<String> initiatePayment(String orderId) async {
+  Future<String> initiatePayment(String orderId, String paymentMethodId) async {
     try {
       final response = await _apiClient.dio.post(
         '/api/aina/payments/pay',
         data: {
           'payable_type': 'ORDER',
           'payable_id': int.parse(orderId),
+          'payment_method_id': paymentMethodId,
           'success_back_link':
               'https://app.aina-fashion.kz/success-payment?order_id=$orderId',
           'failure_back_link':
@@ -101,6 +102,12 @@ class OrderService {
 
       if (response.data['success'] == true && response.data['data'] != null) {
         final paymentData = response.data['data'];
+
+        // If this is a quota payment (no payment data returned)
+        if (paymentData == null || paymentData.isEmpty) {
+          return '';
+        }
+
         final auth = paymentData['auth'];
 
         return '''
@@ -289,6 +296,40 @@ class OrderService {
       throw Exception('Failed to initiate payment: Invalid response format');
     } on DioException catch (e) {
       throw Exception('Failed to initiate payment: ${e.message}');
+    }
+  }
+
+  Future<Map<String, dynamic>> initiateContractPayment(
+      String orderId, String paymentMethodId) async {
+    try {
+      final response = await _apiClient.dio.post(
+        '/api/aina/payments/pay',
+        data: {
+          'payable_type': 'ORDER',
+          'payable_id': int.parse(orderId),
+          'payment_method_id': paymentMethodId,
+          'success_back_link': '',
+          'failure_back_link': '',
+        },
+      );
+
+      if (response.data['success'] == true) {
+        return response.data;
+      }
+      throw Exception(
+          'Failed to initiate contract payment: Invalid response format');
+    } on DioException catch (e) {
+      throw Exception('Failed to initiate contract payment: ${e.message}');
+    }
+  }
+
+  Future<void> payWithQuota(String orderId) async {
+    try {
+      await _apiClient.dio.post(
+        '/api/promenade/orders/$orderId/pay-with-quota',
+      );
+    } on DioException catch (e) {
+      throw Exception('Failed to pay with quota: ${e.message}');
     }
   }
 

@@ -129,6 +129,10 @@ class _BookingCardState extends State<BookingCard> {
   }
 
   String _getImageUrl() {
+    if (widget.order.company?.previewImage?.url != null) {
+      return widget.order.company!.previewImage!.url;
+    }
+
     final service = widget.order.service;
     final serviceImage = service?.image;
     final categoryImage = service?.category?.image;
@@ -139,7 +143,7 @@ class _BookingCardState extends State<BookingCard> {
     if (serviceImage?.url != null) {
       return serviceImage!.url;
     }
-    return 'https://placeholder.com/64x64';
+    return 'https://via.placeholder.com/64x64';
   }
 
   @override
@@ -221,6 +225,17 @@ class _BookingCardState extends State<BookingCard> {
                     width: 64,
                     height: 64,
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 64,
+                        height: 64,
+                        color: Colors.grey[200],
+                        child: const Icon(
+                          Icons.image_not_supported_outlined,
+                          color: Colors.grey,
+                        ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -229,7 +244,16 @@ class _BookingCardState extends State<BookingCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (categoryTitle != null)
+                      if (widget.order.company != null)
+                        Text(
+                          widget.order.company?.name ?? '',
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF1A1A1A), // almost-black
+                          ),
+                        )
+                      else if (categoryTitle != null)
                         Text(
                           categoryTitle,
                           style: const TextStyle(
@@ -274,14 +298,15 @@ class _BookingCardState extends State<BookingCard> {
                               ],
                             ),
                           ),
-                          Text(
-                            '${NumberFormat('#,###', 'ru-RU').format(widget.order.total)} ${'common.currency'.tr()}',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF4D4D4D),
+                          if (widget.order.paymentMethod?.type != 'CONTRACT')
+                            Text(
+                              '${NumberFormat('#,###', 'ru-RU').format(widget.order.total)} ${'common.currency'.tr()}',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF4D4D4D),
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ],

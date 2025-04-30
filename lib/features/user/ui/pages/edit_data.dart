@@ -39,16 +39,19 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
   final TextEditingController patronymicController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController licensePlateController = TextEditingController();
+  final TextEditingController iinController = TextEditingController();
   final Map<String, FocusNode> focusNodes = {
     'firstName': FocusNode(),
     'lastName': FocusNode(),
     'patronymic': FocusNode(),
     'email': FocusNode(),
     'licensePlate': FocusNode(),
+    'iin': FocusNode(),
   };
   bool _isLoading = false;
   bool _hasChanges = false;
   bool isEmailValid = true;
+  bool isIINValid = true;
 
   @override
   void initState() {
@@ -63,11 +66,25 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
     final userData = await ref.read(userProvider.future);
     if (!mounted) return;
 
+    debugPrint('Loading user data: ${userData.toString()}');
+
+    // Отключим слушателей перед заполнением полей
+    firstNameController.removeListener(_onFieldChanged);
+    lastNameController.removeListener(_onFieldChanged);
+    patronymicController.removeListener(_onFieldChanged);
+    emailController.removeListener(_onFieldChanged);
+    licensePlateController.removeListener(_onFieldChanged);
+    iinController.removeListener(_onFieldChanged);
+
+    // Заполняем поля
     firstNameController.text = userData.firstName ?? '';
     lastNameController.text = userData.lastName ?? '';
     patronymicController.text = userData.patronymic ?? '';
     emailController.text = userData.email ?? '';
     licensePlateController.text = userData.licensePlate ?? '';
+
+    // Поскольку в классе UserProfile нет поля iin, получим его из API Promenade
+    await _loadAdditionalUserData();
 
     // Convert API gender value to translation key
     final gender = switch (userData.gender?.toUpperCase()) {
@@ -78,12 +95,60 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
 
     ref.read(selectedGenderProvider.notifier).state = gender;
 
-    // Add listeners to track changes
+    // Add listeners to track changes после заполнения всех полей
     firstNameController.addListener(_onFieldChanged);
     lastNameController.addListener(_onFieldChanged);
     patronymicController.addListener(_onFieldChanged);
     emailController.addListener(_onFieldChanged);
     licensePlateController.addListener(_onFieldChanged);
+    iinController.addListener(_onFieldChanged);
+
+    // Сбрасываем флаг изменений после загрузки всех данных
+    if (mounted) {
+      setState(() {
+        _hasChanges = false;
+      });
+    }
+  }
+
+  Future<void> _loadAdditionalUserData() async {
+    try {
+      // Получаем данные профиля напрямую через API Promenade
+      final profileService = ref.read(promenadeProfileProvider);
+      final userData = await profileService.getProfile(forceRefresh: true);
+
+      debugPrint('Loaded additional profile data: $userData');
+
+      if (userData.containsKey('iin')) {
+        // Отключаем слушателя на время заполнения поля, чтобы не установить флаг _hasChanges
+        iinController.removeListener(_onFieldChanged);
+        iinController.text = userData['iin'] ?? '';
+        // Возвращаем слушателя обратно
+        iinController.addListener(_onFieldChanged);
+        debugPrint('Loaded IIN from additional API: ${userData['iin']}');
+      } else {
+        debugPrint('IIN not found in additional user data');
+        // Отключаем слушателя на время заполнения поля
+        iinController.removeListener(_onFieldChanged);
+        iinController.text = '';
+        // Возвращаем слушателя обратно
+        iinController.addListener(_onFieldChanged);
+      }
+    } catch (e) {
+      debugPrint('Error loading additional user data: $e');
+      // Отключаем слушателя на время заполнения поля
+      iinController.removeListener(_onFieldChanged);
+      iinController.text = '';
+      // Возвращаем слушателя обратно
+      iinController.addListener(_onFieldChanged);
+    }
+
+    // Сбрасываем флаг изменений после загрузки данных
+    if (mounted) {
+      setState(() {
+        _hasChanges = false;
+      });
+    }
   }
 
   void _onFieldChanged() {
@@ -178,6 +243,7 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
             email: emailController.text,
             licensePlate: licensePlateController.text,
             gender: gender,
+            iin: iinController.text,
           );
 
       if (!mounted) return;
@@ -222,6 +288,7 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
     patronymicController.dispose();
     emailController.dispose();
     licensePlateController.dispose();
+    iinController.dispose();
     for (var node in focusNodes.values) {
       node.removeListener(_onFieldChanged);
       node.dispose();
@@ -492,6 +559,16 @@ class _EditDataPageState extends ConsumerState<EditDataPage> {
                           controller: licensePlateController,
                           placeholder: 'profile.settings.edit.car_number'.tr(),
                           focusNode: focusNodes['licensePlate'],
+                          onChanged: (_) => {_hasChanges = true},
+                        ),
+                        const SizedBox(height: 16),
+
+                        CustomInputField(
+                          controller: iinController,
+                          placeholder: 'coworking.edit_data.iin'.tr(),
+                          focusNode: focusNodes['iin'],
+                          keyboardType: TextInputType.number,
+                          maxLength: 12,
                           onChanged: (_) => {_hasChanges = true},
                         ),
                         const SizedBox(height: 16),

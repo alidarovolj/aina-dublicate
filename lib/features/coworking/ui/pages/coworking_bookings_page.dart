@@ -390,9 +390,15 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
 
     return ordersAsync.when(
       loading: () => _buildSkeletonLoader(),
-      error: (error, stack) => Center(
-        child: Text('Error: $error'),
-      ),
+      error: (error, stack) {
+        // Проверяем на 401 ошибку
+        if (error.toString().contains('401')) {
+          return _buildUnauthorizedState();
+        }
+        return Center(
+          child: Text('Error: $error'),
+        );
+      },
       data: (orders) {
         final list = isActive ? orders['active']! : orders['inactive']!;
         if (list.isEmpty) {

@@ -41,6 +41,7 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
   final TextEditingController patronymicController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController iinController = TextEditingController();
+  final TextEditingController licensePlateController = TextEditingController();
   String selectedGender = 'NONE';
   bool _isDirty = false;
   bool _isLoading = false;
@@ -51,6 +52,7 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
   bool isLastNameValid = true;
   bool isEmailValid = true;
   bool isIINValid = true;
+  bool isLicensePlateValid = true;
 
   @override
   void initState() {
@@ -68,12 +70,17 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
           .read(promenadeProfileProvider)
           .getProfile(forceRefresh: true);
 
+      debugPrint('Loaded profile data: $userData');
+      debugPrint(
+          'IIN: ${userData['iin']}, license_plate: ${userData['license_plate']}');
+
       if (mounted) {
         firstNameController.text = userData['firstname'] ?? '';
         lastNameController.text = userData['lastname'] ?? '';
         patronymicController.text = userData['patronymic'] ?? '';
         emailController.text = userData['email'] ?? '';
         iinController.text = userData['iin'] ?? '';
+        licensePlateController.text = userData['license_plate'] ?? '';
         selectedGender = userData['gender'] ?? 'NONE';
 
         // Update user data in auth state
@@ -88,6 +95,7 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
             DateTime.now().millisecondsSinceEpoch;
       }
     } catch (e) {
+      debugPrint('❌ Ошибка при загрузке данных пользователя: $e');
       // Handle error
     }
   }
@@ -156,6 +164,7 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
             email: emailController.text.trim(),
             gender: selectedGender,
             iin: iinController.text.trim(),
+            licensePlate: licensePlateController.text.trim(),
           );
 
       // Update user data in auth state
@@ -448,6 +457,7 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
     patronymicController.dispose();
     emailController.dispose();
     iinController.dispose();
+    licensePlateController.dispose();
     super.dispose();
   }
 
@@ -542,6 +552,14 @@ class _CoworkingEditDataPageState extends ConsumerState<CoworkingEditDataPage> {
                             placeholder: 'coworking.edit_data.iin'.tr(),
                             keyboardType: TextInputType.number,
                             maxLength: 12,
+                            onChanged: (_) => {_isDirty = true},
+                          ),
+                          const SizedBox(height: 16),
+
+                          CustomInputField(
+                            controller: licensePlateController,
+                            placeholder:
+                                'profile.settings.edit.car_number'.tr(),
                             onChanged: (_) => {_isDirty = true},
                           ),
                           const SizedBox(height: 24),

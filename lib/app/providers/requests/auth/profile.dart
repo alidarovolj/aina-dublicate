@@ -23,6 +23,7 @@ class ProfileProvider {
     required String email,
     required String licensePlate,
     required String gender,
+    String? iin,
   }) async {
     try {
       final formData = FormData.fromMap({
@@ -32,6 +33,7 @@ class ProfileProvider {
         'email': email,
         'license_plate': licensePlate,
         'gender': gender,
+        if (iin != null) 'iin': iin,
       });
 
       final response = await _apiClient.dio.post(
@@ -120,6 +122,7 @@ class PromenadeProfileService {
     String? email,
     String? gender,
     String? iin,
+    String? licensePlate,
     File? avatar,
   }) async {
     try {
@@ -130,6 +133,7 @@ class PromenadeProfileService {
         if (email != null) 'email': email,
         if (gender != null) 'gender': gender,
         if (iin != null) 'iin': iin,
+        if (licensePlate != null) 'license_plate': licensePlate,
       };
 
       if (avatar != null) {

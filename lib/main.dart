@@ -22,8 +22,8 @@ import 'dart:convert';
 
 Future<void> main() async {
   try {
-    // Ensure Flutter bindings are initialized
-    WidgetsFlutterBinding.ensureInitialized();
+    // Use SentryWidgetsFlutterBinding instead of WidgetsFlutterBinding
+    SentryWidgetsFlutterBinding.ensureInitialized();
 
     // Initialize Firebase first as it's required by other services
     await Firebase.initializeApp(

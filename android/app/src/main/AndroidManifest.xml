@@ -25,6 +25,7 @@
         android:theme="@style/NormalTheme"
         android:hardwareAccelerated="true"
         android:allowBackup="true"
+        android:usesCleartextTraffic="true"
         android:largeHeap="true">
         <!-- Main activity declaration -->
         <activity

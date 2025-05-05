@@ -432,6 +432,20 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
                                         );
                                       },
                                     ),
+                                    const SizedBox(height: 8),
+                                    _buildMenuItem(
+                                      'coworking.profile.limit_accounts'.tr(),
+                                      Icons.chevron_right,
+                                      backgroundColor: Colors.grey[200],
+                                      onTap: () {
+                                        context.pushNamed(
+                                          'coworking_limit_accounts',
+                                          pathParameters: {
+                                            'id': widget.coworkingId.toString()
+                                          },
+                                        );
+                                      },
+                                    ),
                                     const SizedBox(height: 24),
                                     _buildMenuItem(
                                       'coworking.profile.contact_us'.tr(),

@@ -79,10 +79,13 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
-    _updateTabIndex();
+    _updateTabFromRoute();
 
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) {
+        // Отслеживаем изменения таба в режиме реального времени
+        debugPrint(
+            '⚠️ Tab is changing from ${_tabController.previousIndex} to ${_tabController.index}');
         _navigateToTab(_tabController.index);
       }
     });
@@ -95,11 +98,26 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
   }
 
   @override
+  void didPop() {
+    debugPrint('⚠️ didPop called for route: ${widget.currentRoute}');
+    // При выходе со страницы обновляем индекс таба в соответствии с текущим маршрутом
+    _updateTabFromRoute();
+  }
+
+  @override
   void didPopNext() {
+    debugPrint('⚠️ didPopNext called for route: ${widget.currentRoute}');
     // Обновляем индекс при возврате на эту страницу
+    _updateTabFromRoute();
+  }
+
+  void _updateTabFromRoute() {
     final routeWithoutQuery = widget.currentRoute.split('?')[0];
     final normalizedRoute = _normalizeRoute(routeWithoutQuery);
     final index = _routesToTabIndex[normalizedRoute] ?? 0;
+
+    debugPrint(
+        '⚠️ _updateTabFromRoute: currentRoute: ${widget.currentRoute}, normalizedRoute: $normalizedRoute, index: $index, currentTabIndex: ${_tabController.index}');
 
     if (_tabController.index != index) {
       setState(() {
@@ -118,35 +136,52 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
       final normalizedRoute = _normalizeRoute(routeWithoutQuery);
       final index = _routesToTabIndex[normalizedRoute] ?? 0;
 
-      // Проверяем, находимся ли мы на странице деталей коворкинга
-      final parts = routeWithoutQuery.split('/');
-      final isDetailsPage = parts.length >= 3 &&
-          parts[1] == 'coworking' &&
-          (parts.length == 3 || parts[3] == 'details');
+      debugPrint(
+          '⚠️ didUpdateWidget: oldRoute: ${oldWidget.currentRoute}, newRoute: ${widget.currentRoute}, index: $index, current tab: ${_tabController.index}');
 
-      if (_tabController.index != index) {
-        setState(() {
-          _tabController.index = index;
+      // Проверяем, возвращаемся ли мы с экрана авторизации
+      final isComingFromLogin = oldWidget.currentRoute.startsWith('/login') &&
+          !widget.currentRoute.startsWith('/login');
+
+      // Проверка, не происходит ли переход на авторизацию
+      final isGoingToLogin = !oldWidget.currentRoute.startsWith('/login') &&
+          widget.currentRoute.startsWith('/login');
+
+      if (isGoingToLogin) {
+        // Запоминаем последний маршрут перед переходом на авторизацию
+        // Но не меняем индекс таба здесь (он будет изменен в _navigateToTab)
+        debugPrint(
+            '⚠️ Going to login screen from route: ${oldWidget.currentRoute}');
+      } else if (isComingFromLogin) {
+        debugPrint(
+            '⚠️ Coming back from login screen, actual route: ${widget.currentRoute}, needs tab index: $index');
+
+        // Принудительно обновляем индекс таба в соответствии с текущим маршрутом
+        // Используем Future.delayed для гарантии, что обновление произойдет после всех других событий
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted) {
+            setState(() {
+              _tabController.index = index;
+            });
+            debugPrint(
+                '⚠️ Delayed force tab index update to $index after login return');
+          }
         });
       } else {
-        debugPrint('⚠️ Tab index unchanged');
+        // Обычное обновление индекса таба при изменении маршрута
+        if (_tabController.index != index) {
+          setState(() {
+            _tabController.index = index;
+          });
+        } else {
+          debugPrint('⚠️ Tab index unchanged');
+        }
       }
     }
   }
 
-  void _updateTabIndex() {
-    final routeWithoutQuery = widget.currentRoute.split('?')[0];
-    final normalizedRoute = _normalizeRoute(routeWithoutQuery);
-    final index = _routesToTabIndex[normalizedRoute] ?? 0;
-
-    if (_tabController.index != index) {
-      setState(() {
-        _tabController.index = index;
-      });
-    } else {
-      debugPrint('⚠️ Tab index unchanged');
-    }
-  }
+  // Сохраняем индекс таба перед переходом на авторизацию
+  int _lastTabIndexBeforeAuth = 0;
 
   void _navigateToTab(int index) {
     final route = _tabIndexToRoutes[index];
@@ -188,9 +223,30 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
           case 4:
             final authState = ref.read(authProvider);
             if (!authState.isAuthenticated) {
+              // Сохраняем текущий индекс таба перед переходом на авторизацию
+              _lastTabIndexBeforeAuth = _tabController.index;
+              debugPrint(
+                  '⚠️ Saving last tab index before auth: $_lastTabIndexBeforeAuth (from current tab ${_tabController.index})');
+
+              // Сразу возвращаем таб к предыдущему активному состоянию
+              // чтобы при переходе на логин не оставался активным таб профиля
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  setState(() {
+                    // Возвращаемся к текущему маршруту, который представлен текущим индексом
+                    // Это решает проблему с активным табом профиля при перенаправлении на логин
+                    final currentIndex = _tabController.index;
+                    debugPrint(
+                        '⚠️ Immediately reverting tab to current route index: $currentIndex');
+                    _tabController.index = currentIndex;
+                  });
+                }
+              });
+
               // Сохраняем текущий маршрут для возврата после авторизации
               context.push(
                   '/login?redirect=${Uri.encodeComponent(currentRouteBase)}');
+
               return;
             }
             if (currentRouteBase == '/coworking/$coworkingId/profile') return;
@@ -207,6 +263,25 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
     final normalizedRoute = _normalizeRoute(widget.currentRoute);
     final currentIndex = _routesToTabIndex[normalizedRoute] ?? 0;
 
+    // В каждом билде проверяем соответствие индекса таба текущему маршруту
+    if (_tabController.index != currentIndex) {
+      debugPrint(
+          '⚠️ Tab index mismatch in build: controller index ${_tabController.index}, route index $currentIndex, currentRoute: ${widget.currentRoute}');
+
+      // Если мы не переходим на страницу логина и находимся на странице детального просмотра,
+      // то принудительно обновляем индекс таба
+      if (!widget.currentRoute.startsWith('/login') && isDetailsPage) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              _tabController.index = currentIndex;
+            });
+            debugPrint('⚠️ Forced tab index update to $currentIndex in build');
+          }
+        });
+      }
+    }
+
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) {
@@ -214,6 +289,28 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
 
         final coworkingId = _getCoworkingId();
         final currentRouteBase = widget.currentRoute.split('?')[0];
+
+        // Проверяем, не возвращаемся ли мы со страницы логина
+        if (widget.currentRoute.startsWith('/login')) {
+          debugPrint('⚠️ Physical back button pressed on login page');
+          // При физическом нажатии кнопки "назад" на странице логина
+          // восстанавливаем предыдущую активную вкладку
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              final routeWithoutQuery = widget.currentRoute.split('?')[0];
+              final normalizedRoute = _normalizeRoute(routeWithoutQuery);
+              final index = _routesToTabIndex[normalizedRoute] ?? 0;
+
+              debugPrint(
+                  '⚠️ Restoring tab to $index after physical back from login');
+              setState(() {
+                _tabController.index = index;
+              });
+            }
+          });
+          Navigator.of(context).pop();
+          return;
+        }
 
         if (currentIndex != 0) {
           if (coworkingId != null) {

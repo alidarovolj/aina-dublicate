@@ -258,7 +258,7 @@ class _HomePromotionsPageState extends ConsumerState<HomePromotionsPage>
             ),
             CustomHeader(
               title: 'promotions.title'.tr(),
-              type: HeaderType.close,
+              type: HeaderType.none,
             ),
           ],
         ),

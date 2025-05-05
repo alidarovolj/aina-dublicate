@@ -26,6 +26,7 @@ import 'package:aina_flutter/features/coworking/ui/coworking_tabbar_screen.dart'
 import 'package:aina_flutter/features/coworking/ui/pages/coworking_list_page.dart';
 import 'package:aina_flutter/features/coworking/ui/pages/coworking_promotions_page.dart';
 import 'package:aina_flutter/features/coworking/ui/pages/coworking_services_page.dart';
+import 'package:aina_flutter/features/home/ui/pages/home_tickets_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:aina_flutter/features/coworking/model/providers/coworking_service_provider.dart'
@@ -135,7 +136,7 @@ class AppRouter {
           GoRoute(
             path: '/tickets',
             name: 'home_tickets',
-            builder: (context, state) => const TicketsPage(),
+            builder: (context, state) => const HomeTicketsPage(),
           ),
           GoRoute(
             path: '/stores',
@@ -652,7 +653,25 @@ class AppRouter {
 
           // Check if we came from the calendar page
           final fromLocation = state.uri.toString();
-          final isFromCalendar = fromLocation.contains('calendar');
+          final referrer =
+              state.extra is Map ? (state.extra as Map)['referrer'] : null;
+
+          debugPrint('⚠️ order_details route - URI: ${state.uri}');
+          debugPrint('⚠️ order_details route - fromLocation: $fromLocation');
+          debugPrint('⚠️ order_details route - state.extra: ${state.extra}');
+          debugPrint('⚠️ order_details route - referrer: $referrer');
+
+          // The problem is that state.uri doesn't contain the information about previous route
+          // We need to add this information explicitly when navigating
+          final extraIsFromCalendar = state.extra is Map &&
+              (state.extra as Map)['isFromCalendar'] == true;
+          final isFromCalendar =
+              fromLocation.contains('calendar') || extraIsFromCalendar;
+
+          debugPrint(
+              '⚠️ order_details route - extraIsFromCalendar: $extraIsFromCalendar');
+          debugPrint(
+              '⚠️ order_details route - isFromCalendar: $isFromCalendar');
 
           return Consumer(
             builder: (context, ref, child) {

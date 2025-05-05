@@ -130,8 +130,6 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
     final hasMorePages = ref.watch(communityCardsHasMoreProvider);
     final isLoadingMore = ref.watch(communityCardsLoadingMoreProvider);
     final communityCardsAsync = ref.watch(communityCardsProvider(_searchQuery));
-    final userCardAsync =
-        token != null ? ref.watch(communityCardProvider(false)) : null;
     final cards = ref.watch(communityCardsListProvider) ?? [];
 
     debugPrint('Current search query: $_searchQuery');
@@ -142,6 +140,19 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
     _currentPage = currentPage;
     _hasMorePages = hasMorePages;
     _isLoadingMore = isLoadingMore;
+
+    // Если текущее состояние - ошибка 401, и список пуст, попробуем обновить данные
+    if (communityCardsAsync is AsyncError &&
+        communityCardsAsync.error.toString().contains('401') &&
+        cards.isEmpty) {
+      // Попытка перезагрузить данные для отображения списка других пользователей
+      Future.microtask(() {
+        if (mounted) {
+          _resetPagination();
+          ref.invalidate(communityCardsProvider);
+        }
+      });
+    }
 
     return GestureDetector(
       onHorizontalDragEnd: (details) {
@@ -241,9 +252,47 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
                             return null;
                           }).catchError((e) {
                             debugPrint('Error fetching user card: $e');
-                            return null;
+                            // Для ошибки 401 просто возвращаем null, но не блокируем отображение
+                            if (e is DioException &&
+                                e.response?.statusCode == 401) {
+                              debugPrint('401 error - not showing button');
+                              throw e; // Пробрасываем ошибку 401, чтобы кнопка не отображалась
+                            }
+                            // Другие ошибки пробрасываем дальше
+                            throw e;
                           }),
                           builder: (context, snapshot) {
+                            // При ошибке 401 не показываем кнопку вообще
+                            if (snapshot.hasError) {
+                              final error = snapshot.error;
+                              debugPrint('Error in user card snapshot: $error');
+                              if (error is DioException &&
+                                  error.response?.statusCode == 401) {
+                                // Не показываем кнопку при 401
+                                return const SizedBox.shrink();
+                              }
+
+                              // Для других ошибок показываем кнопку создания
+                              return Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: CustomButton(
+                                  label: 'community.create_card'.tr(),
+                                  onPressed: () {
+                                    context.pushNamed(
+                                      'community_card',
+                                      pathParameters: {
+                                        'id': widget.coworkingId.toString()
+                                      },
+                                    );
+                                  },
+                                  isFullWidth: true,
+                                  type: ButtonType.bordered,
+                                  backgroundColor: AppColors.bgLight,
+                                  textColor: AppColors.primary,
+                                ),
+                              );
+                            }
+
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
                               // Показываем скелетон для кнопки
@@ -346,25 +395,55 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
         }
 
         // Разделяем карточки на карточку пользователя и остальные
-        List<CommunityCard> otherCards = List.from(cards);
+        List<CommunityCard> otherCards = [];
         CommunityCard? userCard;
 
         if (token != null && cards.isNotEmpty) {
-          try {
-            final firstCard = cards.first;
-            debugPrint('First card status: ${firstCard.status}');
-            if (firstCard.status == 'APPROVED') {
-              debugPrint('Setting user card with status: ${firstCard.status}');
-              userCard = firstCard;
-              otherCards = cards.skip(1).toList();
+          // Фильтруем все карточки, исключая карточки пользователя с неправильным статусом
+          for (final card in cards) {
+            // Если это первая карточка и статус "APPROVED" - считаем её карточкой пользователя
+            if (userCard == null &&
+                card == cards.first &&
+                card.status == 'APPROVED') {
+              debugPrint('✅ Setting user card with status: ${card.status}');
+              userCard = card;
+            } else {
+              // Все остальные карточки добавляем в список других карточек
+              otherCards.add(card);
             }
-          } catch (e) {
-            debugPrint('Error finding user card: $e');
           }
+
+          // Если не нашли карточку пользователя со статусом APPROVED
+          if (userCard == null && cards.isNotEmpty) {
+            final firstCard = cards.first;
+            debugPrint(
+                '❌ Not showing user card because status is not APPROVED: ${firstCard.status}');
+          }
+        } else {
+          // Если нет токена или карточек, просто копируем весь список
+          otherCards = List.from(cards);
         }
 
         final groupedCards = _groupCards(otherCards);
         debugPrint('Grouped cards: ${groupedCards.length} groups');
+
+        // Проверка на случай, если карточка пользователя всё же попала в список с неправильным статусом
+        // Это может произойти, если карточка пользователя находится не первой в списке
+        if (userCard == null) {
+          // Проверим все карточки в группах, чтобы найти карточку пользователя с неправильным статусом
+          for (var entry in groupedCards.entries) {
+            for (var i = 0; i < entry.value.length; i++) {
+              final card = entry.value[i];
+              if (card.status != 'APPROVED' && card == cards.first) {
+                debugPrint(
+                    '⚠️ Found user card with wrong status in grouped cards: ${card.status}');
+                // Удаляем карточку пользователя с неправильным статусом из группы
+                entry.value.removeAt(i);
+                i--; // Регулируем индекс после удаления
+              }
+            }
+          }
+        }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -428,26 +507,72 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
       loading: () => _buildSkeletonLoader(),
       error: (error, stack) {
         debugPrint('Error state: $error');
-        // Если ошибка 401, показываем пустой список вместо сообщения об ошибке
+        // Если ошибка 401, пытаемся все равно отобразить список других пользователей,
+        // игнорируя ошибку для персональной карточки
         if (error.toString().contains('401')) {
-          return SizedBox(
-            height: 300,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(12),
+          // Пытаемся повторно загрузить данные, исключая персональную карточку
+          Future.microtask(() {
+            if (mounted) {
+              _resetPagination();
+              ref.invalidate(communityCardsProvider);
+            }
+          });
+
+          // Показываем загрузку пока обновляются данные
+          if (cards.isEmpty) {
+            return _buildSkeletonLoader();
+          }
+
+          // Если у нас уже есть какие-то карточки, отображаем их
+          final groupedCards = _groupCards(cards);
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Заголовок для других участников
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  'community.other_members'.tr(),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.grey2,
+                  ),
+                ),
+              ),
+
+              // Отображаем доступные карточки
+              if (groupedCards.isNotEmpty) ...[
+                for (var entry in groupedCards.entries) ...[
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      entry.key,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.grey2,
+                      ),
+                    ),
+                  ),
+                  ...entry.value.map((user) => _CommunityUserCard(user: user)),
+                ],
+              ] else ...[
+                const SizedBox(height: 100),
+                Center(
                   child: Text(
-                    'community.other_members'.tr(),
+                    'community.empty'.tr(),
                     style: const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.grey2,
+                      color: AppColors.textDarkGrey,
                     ),
                   ),
                 ),
               ],
-            ),
+
+              const SizedBox(height: 24),
+            ],
           );
         }
 

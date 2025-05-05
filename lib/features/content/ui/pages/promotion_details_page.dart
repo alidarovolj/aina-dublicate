@@ -21,6 +21,7 @@ import 'package:aina_flutter/shared/services/amplitude_service.dart';
 import 'package:aina_flutter/shared/ui/widgets/base_snack_bar.dart';
 import 'package:aina_flutter/shared/types/button_config.dart';
 import 'package:aina_flutter/shared/types/promotion.dart';
+import 'package:aina_flutter/app/providers/requests/auth/profile.dart';
 
 class PromotionDetailsPage extends ConsumerWidget {
   final int id;
@@ -267,7 +268,7 @@ class PromotionDetailsPage extends ConsumerWidget {
                                   label: 'promotions.scan_qr'.tr(),
                                   isFullWidth: true,
                                   backgroundColor: AppColors.primary,
-                                  onPressed: () {
+                                  onPressed: () async {
                                     AmplitudeService().logEvent(
                                       'scan_pageinfo_click',
                                       eventProperties: {
@@ -275,7 +276,6 @@ class PromotionDetailsPage extends ConsumerWidget {
                                       },
                                     );
 
-                                    final authState = ref.read(authProvider);
                                     final mallId =
                                         promotion.building?.id.toString();
 
@@ -289,30 +289,83 @@ class PromotionDetailsPage extends ConsumerWidget {
                                       return;
                                     }
 
+                                    // Проверяем авторизацию и получаем профиль пользователя
+                                    final authState = ref.read(authProvider);
                                     if (!authState.isAuthenticated) {
+                                      // Пользователь не авторизован, показываем модальное окно авторизации
                                       AuthWarningModal.show(
                                         context,
                                         promotionId: id.toString(),
                                         mallId: mallId,
                                       );
-                                    } else if (!authState.hasCompletedProfile) {
-                                      AuthWarningModal.show(
-                                        context,
-                                        isProfileIncomplete: true,
-                                        promotionId: id.toString(),
-                                        mallId: mallId,
-                                      );
-                                    } else {
-                                      context.pushNamed(
-                                        'promotion_qr',
-                                        pathParameters: {
-                                          'promotionId':
-                                              promotion.id.toString(),
-                                        },
-                                        queryParameters: {
-                                          'mallId': mallId,
-                                        },
-                                      );
+                                      return;
+                                    }
+
+                                    // Пользователь авторизован, делаем запрос на получение профиля
+                                    try {
+                                      final profileService =
+                                          ref.read(promenadeProfileProvider);
+                                      final profileData = await profileService
+                                          .getProfile(forceRefresh: true);
+
+                                      // Проверяем наличие имени и фамилии
+                                      final firstName =
+                                          profileData['firstname'];
+                                      final lastName = profileData['lastname'];
+
+                                      final hasNameInfo = firstName != null &&
+                                          firstName
+                                              .toString()
+                                              .trim()
+                                              .isNotEmpty &&
+                                          lastName != null &&
+                                          lastName.toString().trim().isNotEmpty;
+
+                                      if (hasNameInfo) {
+                                        // Имя и фамилия указаны, переходим сразу к QR-сканеру
+                                        if (context.mounted) {
+                                          context.pushNamed(
+                                            'promotion_qr',
+                                            pathParameters: {
+                                              'promotionId': id.toString(),
+                                            },
+                                            queryParameters: {
+                                              'mallId': mallId,
+                                            },
+                                          );
+                                        }
+                                      } else {
+                                        // Имя или фамилия не указаны, показываем предупреждение
+                                        if (context.mounted) {
+                                          AuthWarningModal.show(
+                                            context,
+                                            isProfileIncomplete: true,
+                                            promotionId: id.toString(),
+                                            mallId: mallId,
+                                          );
+                                        }
+                                      }
+                                    } catch (e) {
+                                      // Обработка ошибок, включая 401 (Unauthorized)
+                                      if (e.toString().contains('401')) {
+                                        if (context.mounted) {
+                                          AuthWarningModal.show(
+                                            context,
+                                            promotionId: id.toString(),
+                                            mallId: mallId,
+                                          );
+                                        }
+                                      } else {
+                                        // Другая ошибка при получении профиля
+                                        if (context.mounted) {
+                                          BaseSnackBar.show(
+                                            context,
+                                            message:
+                                                'common.error.general'.tr(),
+                                            type: SnackBarType.error,
+                                          );
+                                        }
+                                      }
                                     }
                                   },
                                 )
@@ -341,7 +394,7 @@ class PromotionDetailsPage extends ConsumerWidget {
                                   label: 'promotions.scan_qr'.tr(),
                                   isFullWidth: true,
                                   backgroundColor: AppColors.primary,
-                                  onPressed: () {
+                                  onPressed: () async {
                                     AmplitudeService().logEvent(
                                       'scan_pageinfo_click',
                                       eventProperties: {
@@ -349,7 +402,6 @@ class PromotionDetailsPage extends ConsumerWidget {
                                       },
                                     );
 
-                                    final authState = ref.read(authProvider);
                                     final mallId =
                                         promotion.building?.id.toString();
 
@@ -363,30 +415,83 @@ class PromotionDetailsPage extends ConsumerWidget {
                                       return;
                                     }
 
+                                    // Проверяем авторизацию и получаем профиль пользователя
+                                    final authState = ref.read(authProvider);
                                     if (!authState.isAuthenticated) {
+                                      // Пользователь не авторизован, показываем модальное окно авторизации
                                       AuthWarningModal.show(
                                         context,
                                         promotionId: id.toString(),
                                         mallId: mallId,
                                       );
-                                    } else if (!authState.hasCompletedProfile) {
-                                      AuthWarningModal.show(
-                                        context,
-                                        isProfileIncomplete: true,
-                                        promotionId: id.toString(),
-                                        mallId: mallId,
-                                      );
-                                    } else {
-                                      context.pushNamed(
-                                        'promotion_qr',
-                                        pathParameters: {
-                                          'promotionId':
-                                              promotion.id.toString(),
-                                        },
-                                        queryParameters: {
-                                          'mallId': mallId,
-                                        },
-                                      );
+                                      return;
+                                    }
+
+                                    // Пользователь авторизован, делаем запрос на получение профиля
+                                    try {
+                                      final profileService =
+                                          ref.read(promenadeProfileProvider);
+                                      final profileData = await profileService
+                                          .getProfile(forceRefresh: true);
+
+                                      // Проверяем наличие имени и фамилии
+                                      final firstName =
+                                          profileData['firstname'];
+                                      final lastName = profileData['lastname'];
+
+                                      final hasNameInfo = firstName != null &&
+                                          firstName
+                                              .toString()
+                                              .trim()
+                                              .isNotEmpty &&
+                                          lastName != null &&
+                                          lastName.toString().trim().isNotEmpty;
+
+                                      if (hasNameInfo) {
+                                        // Имя и фамилия указаны, переходим сразу к QR-сканеру
+                                        if (context.mounted) {
+                                          context.pushNamed(
+                                            'promotion_qr',
+                                            pathParameters: {
+                                              'promotionId': id.toString(),
+                                            },
+                                            queryParameters: {
+                                              'mallId': mallId,
+                                            },
+                                          );
+                                        }
+                                      } else {
+                                        // Имя или фамилия не указаны, показываем предупреждение
+                                        if (context.mounted) {
+                                          AuthWarningModal.show(
+                                            context,
+                                            isProfileIncomplete: true,
+                                            promotionId: id.toString(),
+                                            mallId: mallId,
+                                          );
+                                        }
+                                      }
+                                    } catch (e) {
+                                      // Обработка ошибок, включая 401 (Unauthorized)
+                                      if (e.toString().contains('401')) {
+                                        if (context.mounted) {
+                                          AuthWarningModal.show(
+                                            context,
+                                            promotionId: id.toString(),
+                                            mallId: mallId,
+                                          );
+                                        }
+                                      } else {
+                                        // Другая ошибка при получении профиля
+                                        if (context.mounted) {
+                                          BaseSnackBar.show(
+                                            context,
+                                            message:
+                                                'common.error.general'.tr(),
+                                            type: SnackBarType.error,
+                                          );
+                                        }
+                                      }
                                     }
                                   },
                                 ),

@@ -62,7 +62,7 @@ class ConferenceRoomDetailsPage extends ConsumerWidget with AuthCheckMixin {
       color: AppColors.primary,
       child: SafeArea(
         child: Scaffold(
-          backgroundColor: Colors.black,
+          backgroundColor: Colors.white,
           body: Stack(
             children: [
               SingleChildScrollView(

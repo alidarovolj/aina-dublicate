@@ -44,10 +44,10 @@ final homeOrdersProvider =
   ]);
 
   final Map<String, List<OrderResponse>> newResult = {
-    'active': (results[0])
+    'active': results[0]
         .map((item) => OrderResponse.fromJson(item as Map<String, dynamic>))
         .toList(),
-    'inactive': (results[1])
+    'inactive': results[1]
         .map((item) => OrderResponse.fromJson(item as Map<String, dynamic>))
         .toList(),
   };
@@ -413,9 +413,15 @@ class _HomeBookingsPageState extends ConsumerState<HomeBookingsPage>
 
     return ordersAsync.when(
       loading: () => _buildSkeletonLoader(),
-      error: (error, stack) => Center(
-        child: Text('Error: $error'),
-      ),
+      error: (error, stack) {
+        // Проверяем на 401 ошибку
+        if (error.toString().contains('401')) {
+          return _buildUnauthorizedState();
+        }
+        return Center(
+          child: Text('Error: $error'),
+        );
+      },
       data: (orders) {
         final list = isActive ? orders['active']! : orders['inactive']!;
         if (list.isEmpty) {

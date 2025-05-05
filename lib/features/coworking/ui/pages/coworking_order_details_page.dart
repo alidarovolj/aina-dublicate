@@ -24,6 +24,7 @@ import 'package:aina_flutter/app/app.dart';
 import 'package:flutter/gestures.dart';
 import 'package:aina_flutter/app/providers/requests/settings_provider.dart';
 import 'package:aina_flutter/shared/ui/widgets/base_snack_bar.dart';
+import 'package:go_router/go_router.dart';
 
 class OrderDetailsPage extends ConsumerStatefulWidget {
   final String orderId;
@@ -47,9 +48,29 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
   String timerText = '';
   Timer? timer;
 
+  // Метод для обработки навигации с экрана деталей заказа
+  void _handleBackNavigation() {
+    // Выводим в дебаг значение isFromCalendar при нажатии кнопки назад
+    debugPrint(
+        '⚠️ _handleBackNavigation - isFromCalendar: ${widget.isFromCalendar}');
+
+    if (widget.isFromCalendar) {
+      // При возврате с календаря используем прямой переход на home
+      debugPrint('⚠️ Navigating to home using go');
+      context.go('/home');
+    } else {
+      // Иначе обычный возврат назад
+      debugPrint('⚠️ Navigating back using pop');
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    // Выводим в дебаг значение isFromCalendar
+    debugPrint(
+        '⚠️ OrderDetailsPage - isFromCalendar: ${widget.isFromCalendar}');
     _loadOrderDetails();
     _loadSettings();
   }
@@ -345,46 +366,74 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final HeaderType headerType =
-        widget.isFromCalendar ? HeaderType.close : HeaderType.pop;
+    // Выводим в дебаг значение isFromCalendar при каждой перерисовке
+    debugPrint(
+        '⚠️ OrderDetailsPage build - isFromCalendar: ${widget.isFromCalendar}');
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Container(
-        color: AppColors.primary,
-        child: SafeArea(
-          bottom: false,
-          child: Stack(
-            children: [
-              Container(
-                color: AppColors.appBg,
-                margin: const EdgeInsets.only(top: 64),
-                child: isLoading || order == null
-                    ? _buildLoadingContent()
-                    : Column(
-                        children: [
-                          Expanded(
-                            child: RefreshIndicator(
-                              color: AppColors.primary,
-                              backgroundColor: Colors.white,
-                              onRefresh: () async {
-                                await _loadOrderDetails();
-                              },
-                              child: _buildOrderContentScrollable(),
+    // Важно: для HeaderType.close уже определен собственный обработчик в CustomHeader,
+    // который всегда вызывает context.go('/home'). Используем HeaderType.pop с нашим обработчиком.
+    final HeaderType headerType = HeaderType.pop;
+
+    // Добавляем обработчик физической кнопки назад
+    return PopScope(
+      canPop: !widget
+          .isFromCalendar, // Запрещаем стандартный pop при переходе из календаря
+      onPopInvoked: (didPop) {
+        debugPrint(
+            '⚠️ PopScope.onPopInvoked - didPop: $didPop, isFromCalendar: ${widget.isFromCalendar}');
+
+        if (didPop) return;
+
+        // Если переход из календаря, используем свою навигацию
+        if (widget.isFromCalendar) {
+          // Используем тот же метод навигации
+          debugPrint('⚠️ PopScope - Navigating to home using go');
+          context.go('/home');
+        } else {
+          debugPrint('⚠️ PopScope - Navigating back using pop');
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Container(
+          color: AppColors.primary,
+          child: SafeArea(
+            bottom: false,
+            child: Stack(
+              children: [
+                Container(
+                  color: AppColors.appBg,
+                  margin: const EdgeInsets.only(top: 64),
+                  child: isLoading || order == null
+                      ? _buildLoadingContent()
+                      : Column(
+                          children: [
+                            Expanded(
+                              child: RefreshIndicator(
+                                color: AppColors.primary,
+                                backgroundColor: Colors.white,
+                                onRefresh: () async {
+                                  await _loadOrderDetails();
+                                },
+                                child: _buildOrderContentScrollable(),
+                              ),
                             ),
-                          ),
-                          if (!isTestContract() && order != null)
-                            _buildButtonsBlock(),
-                        ],
-                      ),
-              ),
-              CustomHeader(
-                title: order != null
-                    ? '${'orders.detail.title'.tr()} №${order!.id}'
-                    : 'orders.detail.title'.tr(),
-                type: headerType,
-              ),
-            ],
+                            if (!isTestContract() && order != null)
+                              _buildButtonsBlock(),
+                          ],
+                        ),
+                ),
+                CustomHeader(
+                  title: order != null
+                      ? '${'orders.detail.title'.tr()} №${order!.id}'
+                      : 'orders.detail.title'.tr(),
+                  type: headerType,
+                  // Всегда используем наш обработчик, который проверяет isFromCalendar
+                  onBack: _handleBackNavigation,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -394,7 +443,7 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
   bool isTestContract() {
     if (order == null) return false;
     return order!.paymentMethod?.type == 'CONTRACT' &&
-        order!.paymentMethod?.name == 'Test';
+        order!.paymentMethod?.name == 'test';
   }
 
   Widget _buildLoadingContent() {
@@ -434,8 +483,7 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
   Widget _buildOrderContentScrollable() {
     if (order == null) return const SizedBox.shrink();
 
-    final bool isTestContract = order!.paymentMethod?.type == 'CONTRACT' &&
-        order!.paymentMethod?.name == 'Test';
+    final bool isContract = isTestContract();
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -481,10 +529,10 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
                     _buildInfoRow('orders.detail.end_date'.tr(),
                         _formatDateTime(order!.endAt)),
                     if (order!.service?.type != 'COWORKING') ...[
-                      if (!isTestContract)
+                      if (!isContract)
                         _buildInfoRow('orders.detail.duration'.tr(),
                             '${order!.duration} ч.'),
-                      if (order!.service?.price != null && !isTestContract)
+                      if (order!.service?.price != null && !isContract)
                         _buildInfoRow('orders.detail.price_per_hour'.tr(),
                             '${order!.service!.price} ₸'),
                     ],
@@ -501,7 +549,7 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
                   ],
                 ),
               ),
-              if (!isTestContract)
+              if (!isContract)
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
@@ -628,8 +676,10 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
   Widget _buildButtonsBlock() {
     if (order == null) return const SizedBox.shrink();
 
-    final bool isTestContract = order!.paymentMethod?.type == 'CONTRACT' &&
-        order!.paymentMethod?.name == 'Test';
+    // Если это тестовый контракт, не показываем никакие кнопки
+    if (isTestContract()) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
       padding: const EdgeInsets.only(

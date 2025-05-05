@@ -19,6 +19,29 @@ class AuthWarningModal {
     return 'unknown';
   }
 
+  /// Прямая навигация на QR сканер
+  static void _navigateToQrScanner(
+      BuildContext context, String promotionId, String mallId) {
+    // Логируем событие
+    AmplitudeService().logEvent(
+      'scan_direct_navigation',
+      eventProperties: {
+        'Platform': _getPlatform(),
+      },
+    );
+
+    // Переходим на экран QR сканера
+    context.pushNamed(
+      'promotion_qr',
+      pathParameters: {
+        'promotionId': promotionId,
+      },
+      queryParameters: {
+        'mallId': mallId,
+      },
+    );
+  }
+
   static Future<void> show(
     BuildContext context, {
     bool isProfileIncomplete = false,
@@ -33,113 +56,66 @@ class AuthWarningModal {
       );
     }
 
+    // Validate parameters
+    if (mallId == null || promotionId == null) {
+      debugPrint('⚠️ AuthWarningModal: mallId или promotionId отсутствуют');
+      return Future.value();
+    }
+
+    // Если неполный профиль, показываем соответствующую модалку
+    if (isProfileIncomplete) {
+      return BaseModal.show(
+        context,
+        message: 'auth.warning.profile_incomplete_message'.tr(),
+        buttons: [
+          ModalButton(
+            label: 'auth.warning.to_profile'.tr(),
+            onPressed: () {
+              final container = ProviderScope.containerOf(context);
+              final buildingsAsync = container.read(buildingsProvider);
+              final buildingsData = buildingsAsync.value;
+
+              if (buildingsData == null) {
+                showError(context, 'errors.buildings_data_unavailable'.tr());
+                return;
+              }
+
+              final buildings = [
+                ...buildingsData['mall'] ?? [],
+                ...buildingsData['coworking'] ?? []
+              ];
+
+              final building = buildings.firstWhere(
+                (b) => b.id.toString() == mallId,
+                orElse: () => buildings.first,
+              );
+
+              if (building.type == 'coworking') {
+                context.pushReplacement('/coworking/$mallId/profile');
+              } else {
+                context.pushReplacementNamed('mall_profile',
+                    pathParameters: {'id': mallId});
+              }
+            },
+            type: ButtonType.light,
+          ),
+        ],
+      );
+    }
+
+    // Нет авторизации, показываем модалку входа
     return BaseModal.show(
       context,
-      message: isProfileIncomplete
-          ? 'auth.warning.profile_incomplete_message'.tr()
-          : 'auth.warning.auth_required_message'.tr(),
-      buttons: isProfileIncomplete
-          ? [
-              ModalButton(
-                label: 'auth.warning.to_profile'.tr(),
-                onPressed: () async {
-                  if (mallId == null || mallId.isEmpty) {
-                    showError(context, 'errors.mall_id_not_found'.tr());
-                    return;
-                  }
-
-                  final container = ProviderScope.containerOf(context);
-                  final buildingsAsync = container.read(buildingsProvider);
-
-                  final buildingsData = buildingsAsync.value;
-                  if (buildingsData == null) {
-                    showError(
-                        context, 'errors.buildings_data_unavailable'.tr());
-                    return;
-                  }
-
-                  final buildings = [
-                    ...buildingsData['mall'] ?? [],
-                    ...buildingsData['coworking'] ?? []
-                  ];
-
-                  final building = buildings.firstWhere(
-                    (b) => b.id.toString() == mallId,
-                    orElse: () => buildings.first,
-                  );
-
-                  if (building.type == 'coworking') {
-                    context.pushReplacement('/coworking/$mallId/profile');
-                  } else {
-                    context.pushReplacementNamed('mall_profile',
-                        pathParameters: {'id': mallId});
-                  }
-                },
-                textColor: AppColors.secondary,
-                backgroundColor: Colors.white,
-              ),
-              ModalButton(
-                label: 'auth.warning.scan'.tr(),
-                type: ButtonType.light,
-                onPressed: () async {
-                  AmplitudeService().logEvent(
-                    'scan_verification_click',
-                    eventProperties: {
-                      'Platform': _getPlatform(),
-                    },
-                  );
-
-                  if (mallId == null || mallId.isEmpty) {
-                    showError(context, 'errors.mall_id_not_found'.tr());
-                    return;
-                  }
-
-                  if (promotionId == null || promotionId.isEmpty) {
-                    showError(context, 'errors.promotion_id_not_found'.tr());
-                    return;
-                  }
-
-                  final container = ProviderScope.containerOf(context);
-                  final buildingsAsync = container.read(buildingsProvider);
-
-                  final buildingsData = buildingsAsync.value;
-                  if (buildingsData == null) {
-                    showError(
-                        context, 'errors.buildings_data_unavailable'.tr());
-                    return;
-                  }
-
-                  final buildings = [
-                    ...buildingsData['mall'] ?? [],
-                    ...buildingsData['coworking'] ?? []
-                  ];
-
-                  final building = buildings.firstWhere(
-                    (b) => b.id.toString() == mallId,
-                    orElse: () => buildings.first,
-                  );
-
-                  context.pushNamed(
-                    'promotion_qr',
-                    pathParameters: {
-                      'promotionId': promotionId,
-                    },
-                    queryParameters: {
-                      'mallId': mallId,
-                    },
-                  );
-                },
-              ),
-            ]
-          : [
-              ModalButton(
-                label: 'auth.warning.login'.tr(),
-                type: ButtonType.light,
-                onPressed: () {
-                  context.push('/login');
-                },
-              ),
-            ],
+      message: 'auth.warning.auth_required_message'.tr(),
+      buttons: [
+        ModalButton(
+          label: 'auth.warning.login'.tr(),
+          type: ButtonType.light,
+          onPressed: () {
+            context.push('/login');
+          },
+        ),
+      ],
     );
   }
 }

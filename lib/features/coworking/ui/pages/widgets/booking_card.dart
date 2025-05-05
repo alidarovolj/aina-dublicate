@@ -253,6 +253,16 @@ class _BookingCardState extends State<BookingCard> {
                             color: Color(0xFF1A1A1A), // almost-black
                           ),
                         )
+                      else if (widget.order.paymentMethod?.type == 'CONTRACT' &&
+                          widget.order.paymentMethod?.name == 'test')
+                        Text(
+                          serviceTitle,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF1A1A1A), // almost-black
+                          ),
+                        )
                       else if (categoryTitle != null)
                         Text(
                           categoryTitle,
@@ -263,13 +273,15 @@ class _BookingCardState extends State<BookingCard> {
                           ),
                         ),
                       const SizedBox(height: 4),
-                      Text(
-                        serviceTitle,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF666666), // text-dark-grey
+                      if (!(widget.order.paymentMethod?.type == 'CONTRACT' &&
+                          widget.order.paymentMethod?.name == 'test'))
+                        Text(
+                          serviceTitle,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF666666), // text-dark-grey
+                          ),
                         ),
-                      ),
                       const SizedBox(height: 4),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,

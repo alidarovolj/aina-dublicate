@@ -735,6 +735,10 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
         pathParameters: {
           'id': order.id.toString(),
         },
+        extra: {
+          'referrer': 'calendar',
+          'isFromCalendar': true,
+        },
       );
     } catch (e) {
       // Error handling without print

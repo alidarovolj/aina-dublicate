@@ -293,6 +293,10 @@
         "firstname_placeholder": "First name",
         "lastname_placeholder": "Last name"
       }
+    },
+    "warning": {
+      "incomplete": "Please complete your full name to continue using the application",
+      "complete_profile": "Complete profile"
     }
   },
   "tickets": {

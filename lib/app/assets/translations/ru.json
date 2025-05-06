@@ -299,6 +299,10 @@
         "firstname_placeholder": "Имя",
         "lastname_placeholder": "Фамилия"
       }
+    },
+    "warning": {
+      "incomplete": "Для продолжения работы с приложением, заполните ФИО, пожалуйста",
+      "complete_profile": "Заполнить профиль"
     }
   },
   "tickets": {

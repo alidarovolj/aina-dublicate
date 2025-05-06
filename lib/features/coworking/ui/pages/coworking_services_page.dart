@@ -23,6 +23,32 @@ mixin AuthCheckMixin {
     return formatter.format(price).replaceAll(',', ' ');
   }
 
+  // Проверяем только авторизацию без биометрической верификации
+  Future<bool> checkAuth(BuildContext context, WidgetRef ref) async {
+    final authState = ref.read(authProvider);
+    final isAuthorized = authState.isAuthenticated;
+
+    if (!isAuthorized) {
+      BaseModal.show(
+        context,
+        message: 'auth.service_auth_required'.tr(),
+        buttons: [
+          ModalButton(
+            label: 'auth.register'.tr(),
+            onPressed: () {
+              context.pop();
+              context.pushNamed('login');
+            },
+          ),
+        ],
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  // Оставляем старый метод для обратной совместимости
   Future<bool> checkAuthAndBiometric(
       BuildContext context, WidgetRef ref, int coworkingId) async {
     final authState = ref.read(authProvider);
@@ -200,16 +226,19 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
         onTap: () async {
-          if (service.type == 'DEFAULT') {
-            _navigateToCalendar(context, service, coworkingId);
-          } else if (service.subtype == 'COWORKING') {
-            context.push(
-              '/coworking/$coworkingId/services/${service.id}',
-            );
-          } else {
-            context.push(
-              '/coworking/$coworkingId/conference-services/${service.id}',
-            );
+          // Сначала проверяем только авторизацию
+          if (await checkAuth(context, ref)) {
+            if (service.type == 'DEFAULT') {
+              _navigateToCalendar(context, service, coworkingId);
+            } else if (service.subtype == 'COWORKING') {
+              context.push(
+                '/coworking/$coworkingId/services/${service.id}',
+              );
+            } else {
+              context.push(
+                '/coworking/$coworkingId/conference-services/${service.id}',
+              );
+            }
           }
         },
         child: Stack(

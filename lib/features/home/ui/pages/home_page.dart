@@ -20,6 +20,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/shared/ui/blocks/home_promotions_block.dart';
 import 'package:aina_flutter/shared/ui/blocks/error_refresh_widget.dart';
+import 'package:aina_flutter/features/home/ui/widgets/profile_warning_banner.dart';
+import 'package:aina_flutter/app/providers/requests/stories_provider.dart';
+import 'package:dio/dio.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -48,6 +51,40 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
         _fetchData(forceRefresh: true);
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+
+    // Обновляем данные профиля при каждом построении страницы
+    if (mounted) {
+      _checkAuthAndFetchProfile();
+    }
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    if (!mounted) return;
+
+    // Всегда обновляем профиль при возврате на страницу
+    _checkAuthAndFetchProfile();
+
+    // Обновляем другие данные только если прошло достаточно времени
+    if (DateTime.now().difference(_lastUpdateTime) >
+        const Duration(seconds: 5)) {
+      Future.microtask(() async {
+        if (!mounted) return;
+        await _fetchData(forceRefresh: true);
+      });
+    }
   }
 
   // Метод для загрузки всех данных
@@ -115,31 +152,6 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     }
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context)!);
-  }
-
-  @override
-  void dispose() {
-    routeObserver.unsubscribe(this);
-    super.dispose();
-  }
-
-  @override
-  void didPopNext() {
-    if (!mounted) return;
-    // Обновляем только если прошло достаточно времени с последнего обновления
-    if (DateTime.now().difference(_lastUpdateTime) >
-        const Duration(seconds: 5)) {
-      Future.microtask(() async {
-        if (!mounted) return;
-        await _fetchData(forceRefresh: true);
-      });
-    }
-  }
-
   Future<void> _checkAuthAndFetchProfile() async {
     if (!mounted) return;
 
@@ -149,7 +161,19 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
 
       if (authState.isAuthenticated && authState.token != null) {
         try {
-          final response = await ApiClient().dio.get('/api/promenade/profile');
+          // Добавляем параметры для игнорирования кэша в API-клиенте
+          final response = await ApiClient().dio.get(
+                '/api/promenade/profile',
+                options: Options(
+                  extra: {
+                    'forceRefresh':
+                        true, // Указываем API-клиенту игнорировать кэш
+                    'cacheTime':
+                        0, // Устанавливаем время кэша в 0 для принудительного обновления
+                  },
+                ),
+              );
+
           if (!mounted) return;
 
           if (response.data['success'] == true &&
@@ -159,6 +183,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
               final authNotifier = ref.read(authProvider.notifier);
               if (!mounted) return;
               authNotifier.updateUserData(response.data['data']);
+              debugPrint('✅ Профиль пользователя успешно обновлен');
             } catch (e) {
               debugPrint('❌ Ошибка при обновлении данных пользователя: $e');
             }
@@ -172,9 +197,47 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     }
   }
 
+  // Check if profile is missing required data
+  bool _isProfileIncomplete(AuthState authState) {
+    if (!authState.isAuthenticated) return false;
+    if (authState.userData == null) return true;
+
+    final userData = authState.userData!;
+    final firstName = userData['firstname'] as String?;
+    final lastName = userData['lastname'] as String?;
+
+    return (firstName == null ||
+        firstName.isEmpty ||
+        lastName == null ||
+        lastName.isEmpty);
+  }
+
+  // Скелетон для ProfileWarningBanner
+  Widget _buildProfileWarningBannerSkeleton() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        margin: const EdgeInsets.only(
+          left: AppLength.xs,
+          right: AppLength.xs,
+          top: 16,
+        ),
+        height: 44, // Примерная высота баннера
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bannersAsync = ref.watch(bannersProvider);
+    final authState = ref.watch(authProvider);
+    final isProfileIncomplete = _isProfileIncomplete(authState);
+    final storiesAsync = ref.watch(storiesProvider);
 
     return PopScope(
       canPop: false,
@@ -288,6 +351,28 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
                         },
                       ),
                     ),
+                    // Добавляем скелетон или ProfileWarningBanner, в зависимости от состояния storiesAsync
+                    if (isProfileIncomplete)
+                      SliverToBoxAdapter(
+                        child: storiesAsync.when(
+                          loading: () => _buildProfileWarningBannerSkeleton(),
+                          error: (_, __) => const SizedBox.shrink(),
+                          data: (_) => ProfileWarningBanner(
+                            onEditProfileTap: () {
+                              // Используем ID по умолчанию для перехода к профилю
+                              const int defaultMallId = 1;
+
+                              // Переходим на правильный маршрут профиля с корректным ID
+                              context.pushNamed(
+                                'mall_profile',
+                                pathParameters: {
+                                  'id': defaultMallId.toString()
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ),
                     const SliverToBoxAdapter(
                       child: BuildingsList(),
                     ),

@@ -1,3 +1,9 @@
+import 'package:aina_flutter/app/providers/requests/auth/profile.dart';
+import 'package:aina_flutter/app/providers/requests/auth/user.dart';
+import 'package:aina_flutter/shared/api/api_client.dart';
+import 'package:aina_flutter/shared/ui/widgets/base_modal.dart';
+import 'package:aina_flutter/shared/ui/widgets/custom_button.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:aina_flutter/shared/types/slides.dart' as slides;
 import 'package:aina_flutter/app/styles/constants.dart';
@@ -21,7 +27,7 @@ import 'package:aina_flutter/shared/types/news_params.dart';
 import 'package:aina_flutter/features/coworking/ui/widgets/organizations_section.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-class CoworkingPage extends ConsumerWidget {
+class CoworkingPage extends ConsumerStatefulWidget {
   final int coworkingId;
 
   const CoworkingPage({
@@ -30,7 +36,106 @@ class CoworkingPage extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  CoworkingPageState createState() => CoworkingPageState();
+}
+
+class CoworkingPageState extends ConsumerState<CoworkingPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Метод будет вызван только один раз при создании состояния
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkOrder(context);
+    });
+  }
+
+  void _showModalMessage(BuildContext context, String message, String buttonTitle, VoidCallback onPressed) {
+    BaseModal.show(
+      context,
+      title: message,
+      message: '',
+      buttons: [
+        ModalButton(
+          label: buttonTitle,
+          onPressed: onPressed
+        ),
+      ],
+    );
+  }
+
+  Future<void> _checkOrder(BuildContext context) async {
+    try {
+      // Выполняем два запроса параллельно
+      final responses = await Future.wait([
+        ApiClient().dio.get(
+          '/api/promenade/profile',
+          options: Options(
+            extra: {
+              'forceRefresh': true,
+              'cacheTime': 0,
+            },
+          ),
+        ),
+        ApiClient().dio.get(
+          '/api/promenade/orders/active'
+        ),
+      ]);
+
+      final profileResponse = responses[0];
+      final ordersResponse = responses[1];
+
+      if (profileResponse.statusCode != 200 ||
+          ordersResponse.statusCode != 200) {
+        return;
+      }
+
+      if (profileResponse.data['success'] != true ||
+          ordersResponse.data['success'] != true) {
+        return;
+      }
+
+      if (profileResponse.data['data'] == null ||
+          ordersResponse.data['data'] == null) {
+        return;
+      }
+
+      var profile = profileResponse.data['data'];
+      var order = ordersResponse.data['data'];
+
+      if (profile['biometric_status'] != 'VALID') {
+        _showModalMessage(
+            context, 
+            'alerts.biometric_needed.message'.tr(),
+            'alerts.biometric_needed.button_title'.tr(), 
+             () {  
+              context.pushNamed('coworking_biometric', pathParameters: {'id': widget.coworkingId.toString()});
+             });
+        return;
+      }
+
+
+      var currentDate = DateTime.now();
+      var orderDate = DateTime.parse(order['access']['end_at']);
+
+      if (orderDate.difference(currentDate).inDays < 1) {
+        var formattedEndDate = DateFormat('dd.MM.yyyy hh:mm').format(orderDate);
+        _showModalMessage(
+            context, 'alerts.coworking_access_expired_soon.message'.tr(args: [formattedEndDate]), 'alerts.coworking_access_expired_soon.button_title'.tr(), () {  
+              context.pushNamed('coworking_bookings', pathParameters: {'id': widget.coworkingId.toString()});
+             });
+      } else {
+        var formattedEndDate = DateFormat('dd.MM.yyyy').format(orderDate);
+        _showModalMessage(
+            context, 'alerts.coworking_access_granted.message'.tr(args: [formattedEndDate]), 'alerts.coworking_access_granted.button_title'.tr(), (){});
+      }
+    } catch (e) {
+      // Обработка ошибок
+      print('Ошибка при выполнении запросов: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final buildingsAsync = ref.watch(buildingsProvider);
 
     return GestureDetector(
@@ -60,7 +165,7 @@ class CoworkingPage extends ConsumerWidget {
         error: (error, stack) => Center(child: Text('Error: $error')),
         data: (buildings) {
           final coworking = (buildings['coworking'] ?? [])
-              .firstWhere((building) => building.id == coworkingId);
+              .firstWhere((building) => building.id == widget.coworkingId);
 
           return Scaffold(
             backgroundColor: AppColors.primary,
@@ -136,7 +241,7 @@ class CoworkingPage extends ConsumerWidget {
                         // Services Section
                         SliverToBoxAdapter(
                           child: ServiceCard(
-                            coworkingId: coworkingId.toString(),
+                            coworkingId: widget.coworkingId.toString(),
                           ),
                         ),
                         const SliverToBoxAdapter(
@@ -145,7 +250,7 @@ class CoworkingPage extends ConsumerWidget {
                         // Organization Section
                         SliverToBoxAdapter(
                           child: OrganizationsSection(
-                            coworkingId: coworkingId,
+                            coworkingId: widget.coworkingId,
                             showTitle: true,
                             showViewAll: true,
                             showDivider: true,
@@ -153,7 +258,7 @@ class CoworkingPage extends ConsumerWidget {
                               context.pushNamed(
                                 'category_stores',
                                 pathParameters: {
-                                  'mallId': coworkingId.toString(),
+                                  'mallId': widget.coworkingId.toString(),
                                   'categoryId': '0',
                                 },
                                 queryParameters: {
@@ -171,7 +276,7 @@ class CoworkingPage extends ConsumerWidget {
                               final newsAsync = ref.watch(newsProvider(
                                 NewsParams(
                                   page: 1,
-                                  buildingId: coworkingId.toString(),
+                                  buildingId: widget.coworkingId.toString(),
                                 ),
                               ));
 
@@ -182,7 +287,7 @@ class CoworkingPage extends ConsumerWidget {
                                   false;
 
                               return PromotionsBlock(
-                                mallId: coworkingId.toString(),
+                                mallId: widget.coworkingId.toString(),
                                 showTitle: true,
                                 showViewAll: true,
                                 showDivider: true,
@@ -191,7 +296,7 @@ class CoworkingPage extends ConsumerWidget {
                                   context.pushNamed(
                                     'coworking_promotions',
                                     pathParameters: {
-                                      'id': coworkingId.toString()
+                                      'id': widget.coworkingId.toString()
                                     },
                                   );
                                 },
@@ -206,7 +311,7 @@ class CoworkingPage extends ConsumerWidget {
                           child: Consumer(
                             builder: (context, ref, child) {
                               return EventsBlock(
-                                mallId: coworkingId.toString(),
+                                mallId: widget.coworkingId.toString(),
                                 showTitle: true,
                                 showViewAll: true,
                                 showDivider: true,
@@ -215,7 +320,7 @@ class CoworkingPage extends ConsumerWidget {
                                   context.pushNamed(
                                     'coworking_promotions',
                                     pathParameters: {
-                                      'id': coworkingId.toString()
+                                      'id': widget.coworkingId.toString()
                                     },
                                     extra: {'initialTabIndex': 1},
                                   );
@@ -234,11 +339,11 @@ class CoworkingPage extends ConsumerWidget {
                             showDivider: false,
                             showGradient: true,
                             cardType: NewsCardType.full,
-                            buildingId: coworkingId.toString(),
+                            buildingId: widget.coworkingId.toString(),
                             onViewAllTap: () {
                               context.pushNamed(
                                 'coworking_news',
-                                pathParameters: {'id': coworkingId.toString()},
+                                pathParameters: {'id': widget.coworkingId.toString()},
                               );
                             },
                             emptyBuilder: (context) => const Center(

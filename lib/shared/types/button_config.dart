@@ -32,6 +32,7 @@ class ButtonInternal {
   final String? buildingType;
   final bool isAuthRequired;
   final bool? isQr;
+  final int? buildId;
 
   ButtonInternal({
     required this.model,
@@ -39,6 +40,7 @@ class ButtonInternal {
     this.buildingType,
     required this.isAuthRequired,
     this.isQr,
+    this.buildId,
   });
 
   factory ButtonInternal.fromJson(Map<String, dynamic> json) {
@@ -48,6 +50,7 @@ class ButtonInternal {
       buildingType: json['building_type'] as String?,
       isAuthRequired: json['is_auth_required'] as bool? ?? false,
       isQr: json['is_qr'] as bool?,
+      buildId: json['building_id'] as int?,
     );
   }
 }

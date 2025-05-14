@@ -489,6 +489,7 @@
       "download_fiscal": "Download fiscal receipt",
       "download_qr": "Show QR",
       "wait_payment": "Waiting for payment...",
+      "pay_with_quota": "Pay with quota",
       "history_statuses": {
         "created": "Order created",
         "modified": "Order modified",
@@ -733,5 +734,19 @@
     "view_all": "All",
     "error": "Error loading organizations: {}",
     "empty": "No organizations available"
+  },
+  "alerts": {
+    "biometric_needed": {
+      "message": "Biometrics are used to enter the coworking space. Please upload your biometric data: you can do this through the window to the right or in your profile.",
+      "button_title": "Add Biometric Data"
+    },
+    "coworking_access_granted": {
+      "message": "You have access to the coworking space until {}. You are free to visit and use all of its features.",
+      "button_title": "OK"
+    },
+    "coworking_access_expired_soon": {
+      "message": "Your coworking access expires on {}. You can book a place in the coworking section under Services.",
+      "button_title": "View Plans"
+    }
   }
 }

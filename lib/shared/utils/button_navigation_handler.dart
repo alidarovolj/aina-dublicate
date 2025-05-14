@@ -33,11 +33,7 @@ class ButtonNavigationHandler {
 
       final isAuthRequired = internal.isAuthRequired;
 
-      // Check auth if required
-      // final isAuthed = ref.read(authProvider).isAuthenticated;
-      const isAuthed = true; // Replace with actual auth check
-
-      if (!isAuthRequired || isAuthed) {
+      if (!isAuthRequired) {
         switch (model) {
           case 'Promotion':
             // Fetch promotion data if needed
@@ -63,6 +59,11 @@ class ButtonNavigationHandler {
           case 'News':
             context.pushNamed('news_details',
                 pathParameters: {'id': id.toString()});
+            break;
+          case 'Service':
+           // final build_id = internal.buildId;
+            context.pushNamed('coworking_services',
+                pathParameters: {'id': internal.buildId.toString()});
             break;
         }
       } else {

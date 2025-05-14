@@ -556,6 +556,7 @@ class PromotionDetailsPage extends ConsumerWidget {
                                                         .button!
                                                         .internal!
                                                         .isAuthRequired,
+                                                    buildId: promotion.button!.internal!.buildId,
                                                   )
                                                 : null,
                                       )

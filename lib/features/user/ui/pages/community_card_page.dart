@@ -958,7 +958,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
                                         children: [
                                           Container(
                                             width: 88,
-                                            height: 128,
+                                            height: 88,
                                             decoration: BoxDecoration(
                                               gradient: _avatarUrl == null &&
                                                       _avatarFile == null
@@ -975,6 +975,7 @@ class _CommunityCardPageState extends ConsumerState<CommunityCardPage> {
                                               borderRadius:
                                                   BorderRadius.circular(4),
                                             ),
+                                            clipBehavior: Clip.hardEdge,
                                             child: _buildAvatarImage(),
                                           ),
                                           if ((_avatarUrl != null ||

@@ -15,6 +15,7 @@ import 'package:sms_autofill/sms_autofill.dart';
 import 'package:aina_flutter/shared/ui/blocks/restart_widget.dart';
 import 'package:aina_flutter/shared/api/api_client.dart';
 import 'package:aina_flutter/shared/services/amplitude_service.dart';
+import 'package:aina_flutter/shared/utils/notification_utils.dart';
 import 'dart:io' show Platform;
 import 'package:aina_flutter/shared/ui/widgets/base_snack_bar.dart';
 
@@ -250,6 +251,9 @@ class CodeInputScreenState extends ConsumerState<CodeInputScreen>
               'Platform': platform,
             },
           );
+
+          // Send FCM token after successful authentication with user_id
+          await getAndSendDeviceTokenWithUserId(userId.toString());
         }
       } catch (e) {
         debugPrint('❌ Error getting user data: $e');

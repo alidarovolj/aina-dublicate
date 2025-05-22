@@ -59,7 +59,7 @@
 			<true/>
 			<key>NSExceptionDomains</key>
 			<dict>
-				<key>test-epay.homebank.kz</key>
+				<key>epay.homebank.kz</key>
 				<dict>
 					<key>NSExceptionAllowsInsecureHTTPLoads</key>
 					<true/>
@@ -112,7 +112,7 @@
 		</array>
 		<key>WKAppBoundDomains</key>
 		<array>
-			<string>test-epay.homebank.kz</string>
+			<string>epay.homebank.kz</string>
 			<string>stage-payment.mpservices.kz</string>
 			<string>app.aina-fashion.kz</string>
 			<string>devsuperapi.aina-fashion.kz</string>

@@ -30,6 +30,56 @@ class _StoryListState extends ConsumerState<StoryList> {
     }
   }
 
+  // Создаем статические истории, если с сервера ничего не пришло
+  List<Story> _getStaticStories() {
+    return [
+      Story(
+        id: 1,
+        name: "Акции",
+        read: false,
+        previewImage: 'lib/app/assets/images/stories/story1.jpg',
+        stories: [
+          StoryItem(
+            id: 1,
+            previewImage: 'lib/app/assets/images/stories/story1.jpg',
+          ),
+          StoryItem(
+            id: 2,
+            previewImage: 'lib/app/assets/images/stories/story2.jpg',
+          ),
+        ],
+      ),
+      Story(
+        id: 2,
+        name: "События",
+        read: false,
+        previewImage: 'lib/app/assets/images/stories/story3.jpg',
+        stories: [
+          StoryItem(
+            id: 3,
+            previewImage: 'lib/app/assets/images/stories/story3.jpg',
+          ),
+        ],
+      ),
+      Story(
+        id: 3,
+        name: "Новости",
+        read: false,
+        previewImage: 'lib/app/assets/images/stories/story4.jpg',
+        stories: [
+          StoryItem(
+            id: 4,
+            previewImage: 'lib/app/assets/images/stories/story4.jpg',
+          ),
+          StoryItem(
+            id: 5,
+            previewImage: 'lib/app/assets/images/stories/story5.jpg',
+          ),
+        ],
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final stories = ref.watch(storiesProvider);
@@ -71,8 +121,9 @@ class _StoryListState extends ConsumerState<StoryList> {
         );
       },
       data: (storiesList) {
+        // Если список пуст, используем статические истории
         if (storiesList.isEmpty) {
-          return const SizedBox.shrink();
+          return _buildStoriesList(_getStaticStories());
         }
 
         return _buildStoriesList(storiesList);
@@ -139,12 +190,7 @@ class _StoryListState extends ConsumerState<StoryList> {
                           padding: const EdgeInsets.all(2.0),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(100),
-                            child: Image.network(
-                              story.previewImage ?? '',
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.error),
-                            ),
+                            child: _buildStoryImage(story.previewImage),
                           ),
                         ),
                       ),
@@ -169,6 +215,27 @@ class _StoryListState extends ConsumerState<StoryList> {
         ),
       ),
     );
+  }
+
+  // Helper method to handle both network and asset images
+  Widget _buildStoryImage(String? imageUrl) {
+    if (imageUrl == null) {
+      return const Icon(Icons.error);
+    }
+
+    if (imageUrl.startsWith('http')) {
+      return Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+      );
+    } else {
+      return Image.asset(
+        imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+      );
+    }
   }
 
   Widget _buildSkeletonLoader() {
@@ -336,6 +403,29 @@ class _StoryDetailsPageState extends State<StoryDetailsPage>
     }
   }
 
+  // Helper method to handle both network and asset images
+  Widget _buildStoryImage(String? imageUrl) {
+    if (imageUrl == null) {
+      return const Center(child: Icon(Icons.error, color: Colors.white));
+    }
+
+    if (imageUrl.startsWith('http')) {
+      return Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) =>
+            const Center(child: Icon(Icons.error, color: Colors.white)),
+      );
+    } else {
+      return Image.asset(
+        imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) =>
+            const Center(child: Icon(Icons.error, color: Colors.white)),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final paddingTop = MediaQuery.of(context).padding.top;
@@ -370,12 +460,7 @@ class _StoryDetailsPageState extends State<StoryDetailsPage>
                 onTapUp: (details) {
                   _progressController.forward();
                 },
-                child: Image.network(
-                  story.previewImage ?? '',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => const Center(
-                      child: Icon(Icons.error, color: Colors.white)),
-                ),
+                child: _buildStoryImage(story.previewImage),
               );
             },
           ),
@@ -414,13 +499,8 @@ class _StoryDetailsPageState extends State<StoryDetailsPage>
                       height: 32,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        image: DecorationImage(
-                          image: NetworkImage(
-                            widget.stories[currentStoryIndex].previewImage ??
-                                '',
-                          ),
-                          fit: BoxFit.cover,
-                        ),
+                        image: _getDecorationImage(
+                            widget.stories[currentStoryIndex].previewImage),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -448,6 +528,27 @@ class _StoryDetailsPageState extends State<StoryDetailsPage>
         ],
       ),
     );
+  }
+
+  DecorationImage _getDecorationImage(String? imageUrl) {
+    if (imageUrl == null) {
+      return const DecorationImage(
+        image: AssetImage('lib/app/assets/images/stories/story1.jpg'),
+        fit: BoxFit.cover,
+      );
+    }
+
+    if (imageUrl.startsWith('http')) {
+      return DecorationImage(
+        image: NetworkImage(imageUrl),
+        fit: BoxFit.cover,
+      );
+    } else {
+      return DecorationImage(
+        image: AssetImage(imageUrl),
+        fit: BoxFit.cover,
+      );
+    }
   }
 
   @override

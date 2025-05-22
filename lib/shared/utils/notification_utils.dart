@@ -140,20 +140,27 @@ Future<void> getDeviceToken() async {
   }
 }
 
-Future<void> sendFCMToken(String token) async {
+Future<void> sendFCMToken(String token, {String? userId}) async {
   int maxAttempts = 3;
   int delaySeconds = 1;
 
   for (int attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       final deviceInfo = await getDeviceInfo();
+      final Map<String, dynamic> data = {
+        'key': deviceInfo.identifier,
+        'token': token,
+        'os': deviceInfo.operatingSystem,
+      };
+
+      // Add user_id to the request if provided
+      if (userId != null) {
+        data['user_id'] = userId;
+      }
+
       final response = await ApiClient().dio.post(
             '/api/aina/firebase/token',
-            data: {
-              'key': deviceInfo.identifier,
-              'token': token,
-              'os': deviceInfo.operatingSystem,
-            },
+            data: data,
             options: Options(
               headers: {'force-refresh': 'true'},
               validateStatus: (status) => status != null && status < 500,
@@ -183,6 +190,62 @@ Future<DeviceInfo> getDeviceInfo() async {
     identifier: Platform.isIOS ? 'ios_device' : 'android_device',
     operatingSystem: Platform.operatingSystem,
   );
+}
+
+// Add a new function to get and send FCM token with user ID
+Future<void> getAndSendDeviceTokenWithUserId(String userId) async {
+  try {
+    if (Platform.isIOS) {
+      // Set up notification presentation options
+      await FirebaseMessaging.instance
+          .setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      // Request full permissions first
+      final settings = await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+        announcement: true,
+        carPlay: true,
+        criticalAlert: true,
+      );
+
+      if (settings.authorizationStatus == AuthorizationStatus.authorized ||
+          settings.authorizationStatus == AuthorizationStatus.provisional) {
+        // Try to get FCM token directly
+        try {
+          String? fcmToken = await FirebaseMessaging.instance.getToken();
+          if (fcmToken != null) {
+            await sendFCMToken(fcmToken, userId: userId);
+            return;
+          } else {
+            debugPrint('FCM token is null (possibly running in simulator)');
+          }
+        } catch (e) {
+          debugPrint('Error getting FCM token: $e');
+        }
+      } else {
+        debugPrint(
+            'iOS notifications not authorized: ${settings.authorizationStatus}');
+      }
+    } else {
+      // Android token retrieval
+      String? fcmToken = await FirebaseMessaging.instance.getToken();
+
+      if (fcmToken != null) {
+        await sendFCMToken(fcmToken, userId: userId);
+      } else {
+        debugPrint('Failed to obtain FCM token on Android');
+      }
+    }
+  } catch (e) {
+    debugPrint('Error in getAndSendDeviceTokenWithUserId: $e');
+  }
 }
 
 class DeviceInfo {

@@ -5,10 +5,12 @@ import 'package:aina_flutter/shared/ui/widgets/custom_button.dart';
 
 class TariffsModal extends StatelessWidget {
   final VoidCallback onClose;
+  final int coworkingId;
 
   const TariffsModal({
     super.key,
     required this.onClose,
+    required this.coworkingId,
   });
 
   @override
@@ -32,7 +34,10 @@ class TariffsModal extends StatelessWidget {
             CustomButton(
               onPressed: () {
                 onClose();
-                context.push('/tariffs');
+                context.pushNamed(
+                  'coworking_services',
+                  pathParameters: {'id': coworkingId.toString()},
+                );
               },
               label: 'biometry.view_tariffs'.tr(),
               isFullWidth: true,

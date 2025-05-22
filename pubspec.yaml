@@ -2,7 +2,7 @@ name: aina_flutter
 description: "A new Flutter project."
 
 publish_to: "none"
-version: 4.1.1+91
+version: 4.1.3+93
 
 environment:
   sdk: ">=3.5.4 <4.0.0"
@@ -156,6 +156,7 @@ flutter:
     - lib/app/assets/icons/profile/
     - lib/app/assets/icons/pin.png
     - lib/app/assets/images/
+    - lib/app/assets/images/stories/
     - lib/app/assets/images/biometry/
     - lib/app/assets/images/logo.png
 

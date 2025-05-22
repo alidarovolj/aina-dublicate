@@ -423,6 +423,7 @@ class _CoworkingBiometricPageState
                 ),
               if (_showTariffsModal)
                 TariffsModal(
+                  coworkingId: widget.coworkingId,
                   onClose: () => setState(() => _showTariffsModal = false),
                 ),
             ],

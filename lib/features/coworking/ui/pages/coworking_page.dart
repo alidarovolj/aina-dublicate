@@ -49,16 +49,14 @@ class CoworkingPageState extends ConsumerState<CoworkingPage> {
     });
   }
 
-  void _showModalMessage(BuildContext context, String message, String buttonTitle, VoidCallback onPressed) {
+  void _showModalMessage(BuildContext context, String message,
+      String buttonTitle, VoidCallback onPressed) {
     BaseModal.show(
       context,
       title: message,
       message: '',
       buttons: [
-        ModalButton(
-          label: buttonTitle,
-          onPressed: onPressed
-        ),
+        ModalButton(label: buttonTitle, onPressed: onPressed),
       ],
     );
   }
@@ -68,17 +66,23 @@ class CoworkingPageState extends ConsumerState<CoworkingPage> {
       // Выполняем два запроса параллельно
       final responses = await Future.wait([
         ApiClient().dio.get(
-          '/api/promenade/profile',
-          options: Options(
-            extra: {
-              'forceRefresh': true,
-              'cacheTime': 0,
-            },
-          ),
-        ),
+              '/api/promenade/profile',
+              options: Options(
+                extra: {
+                  'forceRefresh': true,
+                  'cacheTime': 0,
+                },
+              ),
+            ),
         ApiClient().dio.get(
-          '/api/promenade/orders/active'
-        ),
+              '/api/promenade/orders/active',
+              options: Options(
+                extra: {
+                  'forceRefresh': true,
+                  'cacheTime': 0,
+                },
+              ),
+            ),
       ]);
 
       final profileResponse = responses[0];
@@ -103,31 +107,36 @@ class CoworkingPageState extends ConsumerState<CoworkingPage> {
       var order = ordersResponse.data['data'];
 
       if (profile['biometric_status'] != 'VALID') {
-        _showModalMessage(
-            context, 
-            'alerts.biometric_needed.message'.tr(),
-            'alerts.biometric_needed.button_title'.tr(), 
-             () {  
-              context.pushNamed('coworking_biometric', pathParameters: {'id': widget.coworkingId.toString()});
-             });
+        _showModalMessage(context, 'alerts.biometric_needed.message'.tr(),
+            'alerts.biometric_needed.button_title'.tr(), () {
+          context.pushNamed('coworking_biometric',
+              pathParameters: {'id': widget.coworkingId.toString()});
+        });
         return;
       }
-
 
       var currentDate = DateTime.now();
       var orderDate = DateTime.parse(order['access']['end_at']);
 
-      if (orderDate.difference(currentDate).inDays < 1) {
-        var formattedEndDate = DateFormat('dd.MM.yyyy hh:mm').format(orderDate);
-        _showModalMessage(
-            context, 'alerts.coworking_access_expired_soon.message'.tr(args: [formattedEndDate]), 'alerts.coworking_access_expired_soon.button_title'.tr(), () {  
-              context.pushNamed('coworking_bookings', pathParameters: {'id': widget.coworkingId.toString()});
-             });
-      } else {
-        var formattedEndDate = DateFormat('dd.MM.yyyy').format(orderDate);
-        _showModalMessage(
-            context, 'alerts.coworking_access_granted.message'.tr(args: [formattedEndDate]), 'alerts.coworking_access_granted.button_title'.tr(), (){});
-      }
+      // if (orderDate.difference(currentDate).inDays < 1) {
+      //   var formattedEndDate = DateFormat('dd.MM.yyyy hh:mm').format(orderDate);
+      //   _showModalMessage(
+      //       context,
+      //       'alerts.coworking_access_expired_soon.message'
+      //           .tr(args: [formattedEndDate]),
+      //       'alerts.coworking_access_expired_soon.button_title'.tr(), () {
+      //     context.pushNamed('coworking_bookings',
+      //         pathParameters: {'id': widget.coworkingId.toString()});
+      //   });
+      // } else {
+      //   var formattedEndDate = DateFormat('dd.MM.yyyy').format(orderDate);
+      //   _showModalMessage(
+      //       context,
+      //       'alerts.coworking_access_granted.message'
+      //           .tr(args: [formattedEndDate]),
+      //       'alerts.coworking_access_granted.button_title'.tr(),
+      //       () {});
+      // }
     } catch (e) {
       // Обработка ошибок
       print('Ошибка при выполнении запросов: $e');
@@ -343,7 +352,9 @@ class CoworkingPageState extends ConsumerState<CoworkingPage> {
                             onViewAllTap: () {
                               context.pushNamed(
                                 'coworking_news',
-                                pathParameters: {'id': widget.coworkingId.toString()},
+                                pathParameters: {
+                                  'id': widget.coworkingId.toString()
+                                },
                               );
                             },
                             emptyBuilder: (context) => const Center(

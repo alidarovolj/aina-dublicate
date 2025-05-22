@@ -748,5 +748,20 @@
       "message": "Your coworking access expires on {}. You can book a place in the coworking section under Services.",
       "button_title": "View Plans"
     }
+  },
+  "auth_qr": {
+    "title": "Authentication QR",
+    "processing": "Authenticating...",
+    "success": {
+      "title": "Authentication Successful",
+      "message": "You have been successfully authenticated",
+      "ok": "OK"
+    },
+    "error": {
+      "unknown": "Unknown error",
+      "processing": "An error occurred while processing the QR code",
+      "back": "Go back"
+    },
+    "auth_required": "Please sign in to access your personal account with a QR code"
   }
 }

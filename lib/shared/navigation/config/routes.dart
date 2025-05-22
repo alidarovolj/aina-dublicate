@@ -53,6 +53,7 @@ import 'package:aina_flutter/features/core/ui/pages/notifications_page.dart';
 import 'package:aina_flutter/features/core/ui/pages/no_internet_page.dart';
 import 'package:aina_flutter/shared/navigation/ui/transitions/custom_transitions.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
+import 'package:aina_flutter/features/user/ui/pages/auth_qr_scan_page.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -689,6 +690,11 @@ class AppRouter {
         path: '/no-internet',
         name: 'no_internet',
         builder: (context, state) => const NoInternetPage(),
+      ),
+      GoRoute(
+        path: '/auth-qr-scan',
+        name: 'auth_qr_scan',
+        builder: (context, state) => const AuthQrScanPage(),
       ),
     ],
   );

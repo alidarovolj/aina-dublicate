@@ -7,7 +7,7 @@ class CoworkingTariffDetails {
   final String title;
   final String subtitle;
   final int price;
-  final String timeUnit;
+  final String? timeUnit;
   final int? duration;
   final String? startDay;
   final String? startTimeAt;
@@ -29,8 +29,8 @@ class CoworkingTariffDetails {
     required this.title,
     required this.subtitle,
     required this.price,
-    required this.timeUnit,
-    required this.duration,
+    this.timeUnit,
+    this.duration,
     this.startDay,
     this.startTimeAt,
     this.endTimeAt,
@@ -53,8 +53,9 @@ class CoworkingTariffDetails {
       title: json['title'] as String,
       subtitle: json['subtitle'] as String,
       price: json['price'] as int,
-      timeUnit: json['time_unit'] as String,
-      duration: json['duration'] as int?,
+      timeUnit:
+          json['unit'] as String? ?? json['time_unit'] as String? ?? 'day',
+      duration: json['min_duration'] as int? ?? json['duration'] as int? ?? 1,
       startDay: json['start_day'] as String?,
       startTimeAt: json['start_time_at'] as String?,
       endTimeAt: json['end_time_at'] as String?,

@@ -8,7 +8,7 @@ import 'package:aina_flutter/shared/models/service_image.dart';
 class DefaultService extends Service {
   final String? timeUnit;
   final bool? isFixed;
-  final String? capacity;
+  final int? capacity;
 
   DefaultService({
     required super.id,
@@ -46,7 +46,7 @@ class DefaultService extends Service {
       price: json['price'] as int?,
       timeUnit: json['time_unit'] as String?,
       isFixed: json['is_fixed'] as bool?,
-      capacity: json['capacity'] as String?,
+      capacity: json['capacity'] as int?,
     );
   }
 }

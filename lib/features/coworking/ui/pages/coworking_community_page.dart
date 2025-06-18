@@ -15,6 +15,7 @@ import 'package:aina_flutter/app/providers/auth/auth_state.dart';
 import 'package:aina_flutter/shared/api/api_client.dart';
 import 'package:dio/dio.dart';
 import 'package:aina_flutter/shared/ui/blocks/error_refresh_widget.dart';
+import 'dart:async';
 
 class CoworkingCommunityPage extends ConsumerStatefulWidget {
   final int coworkingId;
@@ -31,8 +32,9 @@ class CoworkingCommunityPage extends ConsumerStatefulWidget {
 
 class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
     with RouteAware {
-  final TextEditingController _searchController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
+  final _scrollController = ScrollController();
+  final _searchController = TextEditingController();
+  Timer? _debounce;
   String _searchQuery = '';
   int _currentPage = 1;
   bool _hasMorePages = true;
@@ -48,17 +50,33 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    // Используем Future.microtask чтобы избежать setState во время build
-    Future.microtask(() {
-      final token = ref.read(authProvider).token;
-      if (token != null) {
-        _resetPagination();
-        // Принудительно обновляем данные карточки пользователя,
-        // указывая forceRefresh = true
-        ref.invalidate(communityCardProvider(true));
-        ref.invalidate(communityCardsProvider);
-      }
+    _searchController.addListener(() {
+      if (_debounce?.isActive ?? false) _debounce?.cancel();
+      _debounce = Timer(const Duration(milliseconds: 500), () {
+        if (_searchQuery != _searchController.text) {
+          setState(() {
+            _searchQuery = _searchController.text;
+          });
+          _resetPagination();
+        }
+      });
     });
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !_isLoadingMore &&
+        ref.read(communityCardsHasMoreProvider)) {
+      _loadMore();
+    }
+  }
+
+  void _loadMore() {
+    if (_isLoadingMore) return;
+
+    ref.read(communityCardsLoadingMoreProvider.notifier).state = true;
+    ref.read(communityCardsPageProvider.notifier).state++;
   }
 
   void _resetPagination() {
@@ -68,30 +86,9 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
     ref.read(communityCardsListProvider.notifier).state = null;
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      if (!_isLoadingMore && _hasMorePages) {
-        _isLoadingMore = true;
-        ref.read(communityCardsLoadingMoreProvider.notifier).state = true;
-        ref.read(communityCardsPageProvider.notifier).state++;
-        // Загружаем следующую страницу без обновления всего списка
-        ref.invalidate(communityCardsProvider(_searchQuery));
-      }
-    }
-  }
-
-  void _onSearchChanged(String value) {
-    debugPrint('Search value changed to: $value');
-    setState(() {
-      _searchQuery = value;
-    });
-    _resetPagination();
-    ref.invalidate(communityCardsProvider);
-  }
-
   @override
   void dispose() {
+    _debounce?.cancel();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _searchController.dispose();
@@ -103,8 +100,7 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
   void didPopNext() {
     final token = ref.read(authProvider).token;
     if (token != null) {
-      ref.invalidate(communityCardsProvider);
-      ref.invalidate(communityCardProvider);
+      _resetPagination();
     }
   }
 
@@ -119,8 +115,13 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
       groups[firstLetter]!.add(card);
     }
 
-    return Map.fromEntries(
-        groups.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
+    // Убираем пустые группы и сортируем
+    final filteredGroups = groups.entries
+        .where((entry) => entry.value.isNotEmpty)
+        .toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+
+    return Map.fromEntries(filteredGroups);
   }
 
   @override
@@ -130,6 +131,9 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
     final hasMorePages = ref.watch(communityCardsHasMoreProvider);
     final isLoadingMore = ref.watch(communityCardsLoadingMoreProvider);
     final communityCardsAsync = ref.watch(communityCardsProvider(_searchQuery));
+    final userCardAsync = token != null
+        ? ref.watch(communityCardProvider(false))
+        : const AsyncValue<Map<String, dynamic>?>.data(null);
     final cards = ref.watch(communityCardsListProvider) ?? [];
 
     debugPrint('Current search query: $_searchQuery');
@@ -229,7 +233,6 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
                               vertical: 12,
                             ),
                           ),
-                          onChanged: _onSearchChanged,
                         ),
                       ),
                       if (token != null) ...[
@@ -381,7 +384,7 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
         debugPrint('Rendering data state with cards: ${cards.length}');
         if (cards.isEmpty) {
           return SizedBox(
-            height: 300, // Минимальная высота для пустого списка
+            height: 300,
             child: Center(
               child: Text(
                 'community.empty'.tr(),
@@ -399,51 +402,29 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
         CommunityCard? userCard;
 
         if (token != null && cards.isNotEmpty) {
-          // Фильтруем все карточки, исключая карточки пользователя с неправильным статусом
-          for (final card in cards) {
-            // Если это первая карточка и статус "APPROVED" - считаем её карточкой пользователя
-            if (userCard == null &&
-                card == cards.first &&
-                card.status == 'APPROVED') {
-              debugPrint('✅ Setting user card with status: ${card.status}');
-              userCard = card;
-            } else {
-              // Все остальные карточки добавляем в список других карточек
-              otherCards.add(card);
-            }
-          }
+          // Первая карточка может быть карточкой пользователя
+          final firstCard = cards.first;
 
-          // Если не нашли карточку пользователя со статусом APPROVED
-          if (userCard == null && cards.isNotEmpty) {
-            final firstCard = cards.first;
-            debugPrint(
-                '❌ Not showing user card because status is not APPROVED: ${firstCard.status}');
+          // Проверяем, является ли первая карточка карточкой пользователя с правильным статусом
+          if (firstCard.status == 'APPROVED') {
+            userCard = firstCard;
+            // Остальные карточки добавляем в список других карточек (все карточки кроме первой)
+            otherCards = cards.skip(1).toList();
+          } else {
+            // Если первая карточка не принята, она не показывается как "Вы",
+            // но остальные карточки показываем (все карточки кроме первой)
+            otherCards = cards.skip(1).toList();
           }
         } else {
-          // Если нет токена или карточек, просто копируем весь список
-          otherCards = List.from(cards);
+          // Если нет токена, показываем все карточки
+          otherCards = cards.toList();
         }
 
         final groupedCards = _groupCards(otherCards);
         debugPrint('Grouped cards: ${groupedCards.length} groups');
-
-        // Проверка на случай, если карточка пользователя всё же попала в список с неправильным статусом
-        // Это может произойти, если карточка пользователя находится не первой в списке
-        if (userCard == null) {
-          // Проверим все карточки в группах, чтобы найти карточку пользователя с неправильным статусом
-          for (var entry in groupedCards.entries) {
-            for (var i = 0; i < entry.value.length; i++) {
-              final card = entry.value[i];
-              if (card.status != 'APPROVED' && card == cards.first) {
-                debugPrint(
-                    '⚠️ Found user card with wrong status in grouped cards: ${card.status}');
-                // Удаляем карточку пользователя с неправильным статусом из группы
-                entry.value.removeAt(i);
-                i--; // Регулируем индекс после удаления
-              }
-            }
-          }
-        }
+        debugPrint(
+            'User card: ${userCard?.name} with status: ${userCard?.status}');
+        debugPrint('Other cards count: ${otherCards.length}');
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -467,18 +448,20 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
             ],
             if (groupedCards.isNotEmpty) ...[
               for (var entry in groupedCards.entries) ...[
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text(
-                    entry.key,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.grey2,
+                if (entry.value.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      entry.key,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.grey2,
+                      ),
                     ),
                   ),
-                ),
-                ...entry.value.map((user) => _CommunityUserCard(user: user)),
+                  ...entry.value.map((user) => _CommunityUserCard(user: user)),
+                ],
               ],
             ] else if (userCard == null) ...[
               const SizedBox(height: 100),
@@ -499,7 +482,6 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
                   child: CircularProgressIndicator(),
                 ),
               ),
-            // Добавляем небольшой отступ внизу списка для лучшего отображения
             const SizedBox(height: 24),
           ],
         );

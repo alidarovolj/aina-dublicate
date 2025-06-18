@@ -4,6 +4,7 @@ import 'package:aina_flutter/features/coworking/model/models/community_card.dart
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:aina_flutter/app/providers/auth/auth_state.dart';
+import 'package:aina_flutter/app/providers/community_card_provider.dart';
 
 final communityCardsProvider =
     FutureProvider.family<List<CommunityCard>, String?>((ref, search) async {
@@ -18,18 +19,11 @@ final communityCardsProvider =
     // Get user's card to filter it out only if user is authenticated and it's the first page
     if (token != null && currentPage == 1) {
       try {
-        final userCardResponse = await ApiClient().dio.get(
-              '/api/promenade/community-card',
-              options: Options(
-                headers: {'force-refresh': 'true'},
-              ),
-            );
-
-        if (userCardResponse.data is Map<String, dynamic> &&
-            userCardResponse.data['success'] == true &&
-            userCardResponse.data['data'] != null) {
-          userCardId = userCardResponse.data['data']['id'] as int?;
-          userCard = CommunityCard.fromJson(userCardResponse.data['data']);
+        final userCardAsync =
+            await ref.watch(communityCardProvider(true).future);
+        if (userCardAsync != null) {
+          userCardId = userCardAsync['id'] as int?;
+          userCard = CommunityCard.fromJson(userCardAsync);
         }
       } catch (e) {
         // Логируем ошибку получения карточки пользователя, но продолжаем выполнение запроса списка
@@ -51,16 +45,13 @@ final communityCardsProvider =
     // Запрос списка карточек сообщества
     try {
       final response = await ApiClient().dio.get(
-            '/api/promenade/community-cards',
-            queryParameters: {
-              if (search != null && search.isNotEmpty) 'name': search,
-              'page': currentPage,
-              'per_page': 100,
-            },
-            options: Options(
-              headers: {'force-refresh': 'true'},
-            ),
-          );
+        '/api/promenade/community-cards',
+        queryParameters: {
+          if (search != null && search.isNotEmpty) 'name': search,
+          'page': currentPage,
+          'per_page': 100,
+        },
+      );
 
       if (response.data is! Map<String, dynamic> ||
           response.data['success'] != true ||
@@ -90,40 +81,38 @@ final communityCardsProvider =
             '❌ Not adding user card to list because status is not APPROVED: ${userCard.status}');
       }
 
-      if (responseData is List) {
-        for (var i = 0; i < responseData.length; i++) {
-          final item = responseData[i];
+      for (var i = 0; i < responseData.length; i++) {
+        final item = responseData[i];
 
-          if (item is! Map<String, dynamic>) {
-            continue;
-          }
+        if (item is! Map<String, dynamic>) {
+          continue;
+        }
 
-          // Skip user's own card since we already added it
-          if (token != null && item['id'] == userCardId) {
-            // Карточка пользователя может быть в списке - проверяем статус
-            if (item['status'] != 'APPROVED') {
-              debugPrint(
-                  '🚫 Filtering out user card from response data due to non-APPROVED status: ${item['status']}');
-              continue; // Пропускаем карточку пользователя, если статус не APPROVED
-            }
+        // Skip user's own card since we already added it
+        if (token != null && item['id'] == userCardId) {
+          // Карточка пользователя может быть в списке - проверяем статус
+          if (item['status'] != 'APPROVED') {
+            debugPrint(
+                '🚫 Filtering out user card from response data due to non-APPROVED status: ${item['status']}');
+            continue; // Пропускаем карточку пользователя, если статус не APPROVED
           }
+        }
 
-          try {
-            final card = CommunityCard.fromJson(item);
-            // Дополнительная проверка для карточки пользователя
-            if (userCardId != null &&
-                card.id == userCardId &&
-                card.status != 'APPROVED') {
-              debugPrint(
-                  '🚫 Found and filtered user card in general list with non-APPROVED status: ${card.status}');
-              continue; // Пропускаем карточку пользователя с неправильным статусом
-            }
-            validItems.add(card);
-          } catch (e, stackTrace) {
-            debugPrint('Error parsing item at index $i: $item');
-            debugPrint('Parse error: $e');
-            debugPrint('Stack trace: $stackTrace');
+        try {
+          final card = CommunityCard.fromJson(item);
+          // Дополнительная проверка для карточки пользователя
+          if (userCardId != null &&
+              card.id == userCardId &&
+              card.status != 'APPROVED') {
+            debugPrint(
+                '🚫 Found and filtered user card in general list with non-APPROVED status: ${card.status}');
+            continue; // Пропускаем карточку пользователя с неправильным статусом
           }
+          validItems.add(card);
+        } catch (e, stackTrace) {
+          debugPrint('Error parsing item at index $i: $item');
+          debugPrint('Parse error: $e');
+          debugPrint('Stack trace: $stackTrace');
         }
       }
 

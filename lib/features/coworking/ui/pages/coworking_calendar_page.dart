@@ -347,7 +347,7 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
       }
 
       // Для почасовой брони показываем модальное окно выбора времени
-      if (tariffDetails.timeUnit.toLowerCase() == 'hour') {
+      if ((tariffDetails.timeUnit ?? 'day').toLowerCase() == 'hour') {
         _showTimeSelectionModal(context, date, tariffDetails);
         return;
       }
@@ -357,12 +357,12 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
         endDate = calculatedEndDate;
         final startTimeAt = tariffDetails.startTimeAt != null &&
                 tariffDetails.startTimeAt!.isNotEmpty
-            ? tariffDetails.startTimeAt
+            ? tariffDetails.startTimeAt!
             : '00:00:00';
-        final rawEndTimeAt = (tariffDetails.endTimeAt != null &&
+        final rawEndTimeAt = tariffDetails.endTimeAt != null &&
                 tariffDetails.endTimeAt!.isNotEmpty
-            ? tariffDetails.endTimeAt
-            : '23:59:59')!;
+            ? tariffDetails.endTimeAt!
+            : '23:59:59';
 
         // Parse end time and subtract one second
         final endTimeParts = rawEndTimeAt.split(':');
@@ -395,7 +395,7 @@ class _CoworkingCalendarPageState extends ConsumerState<CoworkingCalendarPage> {
 
   DateTime _calculateEndDate(
       DateTime startDate, CoworkingTariffDetails tariffDetails) {
-    final timeUnit = tariffDetails.timeUnit.toLowerCase();
+    final timeUnit = (tariffDetails.timeUnit ?? 'day').toLowerCase();
     final duration = tariffDetails.duration ?? 1;
 
     DateTime endDate;

@@ -228,15 +228,21 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
         onTap: () async {
           // Сначала проверяем только авторизацию
           if (await checkAuth(context, ref)) {
+            // Проверяем, что у сервиса есть ID
+            if (service.id == null) {
+              debugPrint('Service ID is null, cannot navigate');
+              return;
+            }
+
             if (service.type == 'DEFAULT') {
               _navigateToCalendar(context, service, coworkingId);
-            } else if (service.subtype == 'COWORKING') {
+            } else if (service.type == 'COWORKING') {
               context.push(
-                '/coworking/$coworkingId/services/${service.id}',
+                '/coworking/$coworkingId/services/${service.id!}',
               );
             } else {
               context.push(
-                '/coworking/$coworkingId/conference-services/${service.id}',
+                '/coworking/$coworkingId/conference-services/${service.id!}',
               );
             }
           }
@@ -321,11 +327,16 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
   // Метод для перехода на страницу календаря
   void _navigateToCalendar(
       BuildContext context, Service service, int coworkingId) {
+    if (service.id == null) {
+      debugPrint('Service ID is null, cannot navigate to calendar');
+      return;
+    }
+
     context.pushNamed(
       'coworking_calendar',
       pathParameters: {
         'id': coworkingId.toString(),
-        'tariffId': service.id.toString(),
+        'tariffId': service.id!.toString(),
       },
       queryParameters: {
         'type': 'default',

@@ -90,14 +90,14 @@ class NoInternetPage extends ConsumerWidget {
                                   child: CustomButton(
                                     label: tr('no_internet.reload'),
                                     onPressed: () async {
+                                      if (!context.mounted) return;
                                       ref.invalidate(connectivityProvider);
                                       // Wait for the state to update
                                       await Future.delayed(
                                           const Duration(milliseconds: 100));
-                                      if (ref.read(connectivityProvider)) {
-                                        if (context.mounted) {
-                                          context.push('/home');
-                                        }
+                                      if (context.mounted &&
+                                          ref.read(connectivityProvider)) {
+                                        context.go('/home');
                                       }
                                     },
                                     type: ButtonType.normal,

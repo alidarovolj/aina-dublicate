@@ -1,13 +1,13 @@
 import 'package:aina_flutter/shared/models/service_image.dart';
 
 class Service {
-  final int id;
+  final int? id;
   final String title;
   final String? description;
   final String type;
   final String? subtype;
   final int? parentId;
-  final int sort;
+  final int? sort;
   final String? createdAt;
   final String? updatedAt;
   final ServiceImage? image;
@@ -15,15 +15,20 @@ class Service {
   final int? price;
   final int? categoryId;
   final Service? category;
+  final String? subtitle;
+  final String? unit;
+  final bool? isFixed;
+  final bool? isActive;
+  final int? capacity;
 
   Service({
-    required this.id,
+    this.id,
     required this.title,
     this.description,
     required this.type,
     this.subtype,
     this.parentId,
-    required this.sort,
+    this.sort,
     this.createdAt,
     this.updatedAt,
     this.image,
@@ -31,17 +36,22 @@ class Service {
     this.price,
     this.categoryId,
     this.category,
+    this.subtitle,
+    this.unit,
+    this.isFixed,
+    this.isActive,
+    this.capacity,
   });
 
   factory Service.fromJson(Map<String, dynamic> json) {
     return Service(
-      id: json['id'] as int,
+      id: json['id'] as int?,
       title: json['title'] as String,
       description: json['description'] as String?,
       type: json['type'] as String,
       subtype: json['subtype'] as String?,
       parentId: json['parent_id'] as int?,
-      sort: json['sort'] as int,
+      sort: json['sort'] as int?,
       createdAt: json['created_at'] as String?,
       updatedAt: json['updated_at'] as String?,
       image: json['image'] != null
@@ -55,6 +65,11 @@ class Service {
       category: json['category'] != null
           ? Service.fromJson(json['category'] as Map<String, dynamic>)
           : null,
+      subtitle: json['subtitle'] as String?,
+      unit: json['unit'] as String?,
+      isFixed: json['is_fixed'] as bool?,
+      isActive: json['is_active'] as bool?,
+      capacity: json['capacity'] as int?,
     );
   }
 
@@ -74,6 +89,11 @@ class Service {
       'price': price,
       'category_id': categoryId,
       'category': category?.toJson(),
+      'subtitle': subtitle,
+      'unit': unit,
+      'is_fixed': isFixed,
+      'is_active': isActive,
+      'capacity': capacity,
     };
   }
 }

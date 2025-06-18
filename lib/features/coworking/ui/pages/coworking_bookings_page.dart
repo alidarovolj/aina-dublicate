@@ -72,7 +72,7 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
   final _focusNode = FocusNode();
   bool _isInitialized = false;
 
-  static const _cacheValidDuration = Duration(minutes: 15);
+  static const _cacheValidDuration = Duration(hours: 1);
   DateTime? _lastRefreshTime;
 
   bool get _shouldRefresh {
@@ -137,20 +137,21 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
     // Cancel any existing timer
     _refreshTimer?.cancel();
 
-    // Only set up timer if we're on the active orders tab
+    // Only set up timer if we're on the active orders tab - увеличиваем интервал
     if (_tabController.index == 0) {
-      _refreshTimer = Timer.periodic(const Duration(minutes: 2), (timer) {
+      _refreshTimer = Timer.periodic(const Duration(minutes: 10), (timer) {
         if (mounted) {
-          _refreshData(force: true);
+          _refreshData(); // Убираем force: true
         }
       });
     }
   }
 
   void _handleFocusChange() {
-    if (_focusNode.hasFocus && _isInitialized && mounted && _shouldRefresh) {
-      _refreshData();
-    }
+    // Убираем автоматическое обновление при фокусе
+    // if (_focusNode.hasFocus && _isInitialized && mounted && _shouldRefresh) {
+    //   _refreshData();
+    // }
   }
 
   @override
@@ -162,13 +163,15 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
   @override
   void didPush() {
     super.didPush();
-    _refreshData(force: true);
+    // Убираем принудительное обновление
+    // _refreshData(force: true);
   }
 
   @override
   void didPopNext() {
     super.didPopNext();
-    _refreshData(force: true);
+    // Убираем принудительное обновление при возврате
+    // _refreshData(force: true);
   }
 
   void _handleTabChange() {
@@ -405,22 +408,29 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
           return _buildEmptyState();
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-          itemCount: list.length,
-          itemBuilder: (context, index) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: BookingCard(
-                order: list[index],
-                onTimerExpired: (orderId) {
-                  if (mounted) {
-                    _refreshData();
-                  }
-                },
-              ),
-            );
+        return RefreshIndicator(
+          onRefresh: () async {
+            _refreshData(force: true);
+            // Ждем небольшую задержку для UI
+            await Future.delayed(const Duration(milliseconds: 500));
           },
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            itemCount: list.length,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: BookingCard(
+                  order: list[index],
+                  onTimerExpired: (orderId) {
+                    if (mounted) {
+                      _refreshData();
+                    }
+                  },
+                ),
+              );
+            },
+          ),
         );
       },
     );

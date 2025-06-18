@@ -239,7 +239,8 @@ class PromotionDetailsPage extends ConsumerWidget {
                                   ),
                                 ],
                               ),
-                              if (promotion.file != null) ...[
+                              if (promotion.file != null &&
+                                  promotion.isActive) ...[
                                 const SizedBox(height: AppLength.sm),
                                 TextButton(
                                   onPressed: () {
@@ -263,7 +264,7 @@ class PromotionDetailsPage extends ConsumerWidget {
                                 ),
                               ],
                               const SizedBox(height: AppLength.sm),
-                              if (promotion.type == 'QR' && promotion.isQr)
+                              if (promotion.type == 'QR')
                                 CustomButton(
                                   label: 'promotions.scan_qr'.tr(),
                                   isFullWidth: true,
@@ -369,7 +370,8 @@ class PromotionDetailsPage extends ConsumerWidget {
                                     }
                                   },
                                 )
-                              else if (promotion.type == 'SERVICE_PURCHASE')
+                              else if (promotion.type == 'SERVICE_PURCHASE' &&
+                                  promotion.isActive)
                                 CustomButton(
                                   label: 'coworking.tariffs.title'.tr(),
                                   isFullWidth: true,
@@ -388,8 +390,7 @@ class PromotionDetailsPage extends ConsumerWidget {
                                     }
                                   },
                                 )
-                              else if (promotion.type == 'RAFFLE' &&
-                                  promotion.isQr)
+                              else if (promotion.type == 'RAFFLE')
                                 CustomButton(
                                   label: 'promotions.scan_qr'.tr(),
                                   isFullWidth: true,
@@ -535,35 +536,41 @@ class PromotionDetailsPage extends ConsumerWidget {
                                   if (url != null) _launchUrl(url);
                                 },
                               ),
-                              CustomButton(
-                                button: promotion.button != null
-                                    ? ButtonConfig(
-                                        label: promotion.button!.label,
-                                        isInternal:
-                                            promotion.button!.isInternal,
-                                        internal:
-                                            promotion.button!.internal != null
-                                                ? ButtonInternal(
-                                                    model: promotion.button!
-                                                        .internal!.model,
-                                                    id: promotion
-                                                        .button!.internal!.id,
-                                                    buildingType: promotion
-                                                        .button!
-                                                        .internal!
-                                                        .buildingType,
-                                                    isAuthRequired: promotion
-                                                        .button!
-                                                        .internal!
-                                                        .isAuthRequired,
-                                                    buildId: promotion.button!.internal!.buildId,
-                                                  )
-                                                : null,
-                                      )
-                                    : null,
-                                isFullWidth: true,
-                                backgroundColor: AppColors.primary,
-                              ),
+                              if (promotion.isActive)
+                                CustomButton(
+                                  button: promotion.button != null
+                                      ? ButtonConfig(
+                                          label: promotion.button!.label,
+                                          isInternal:
+                                              promotion.button!.isInternal,
+                                          internal:
+                                              promotion.button!.internal != null
+                                                  ? ButtonInternal(
+                                                      model: promotion.button!
+                                                          .internal!.model,
+                                                      id: promotion
+                                                          .button!.internal!.id,
+                                                      buildingType: promotion
+                                                          .button!
+                                                          .internal!
+                                                          .buildingType,
+                                                      isAuthRequired: promotion
+                                                          .button!
+                                                          .internal!
+                                                          .isAuthRequired,
+                                                      buildId: promotion
+                                                              .button!
+                                                              .internal!
+                                                              .buildId ??
+                                                          promotion
+                                                              .building?.id,
+                                                    )
+                                                  : null,
+                                        )
+                                      : null,
+                                  isFullWidth: true,
+                                  backgroundColor: AppColors.primary,
+                                ),
                               if (promotion.images.isNotEmpty) ...[
                                 const SizedBox(height: AppLength.sm),
                                 CarouselWithIndicator(

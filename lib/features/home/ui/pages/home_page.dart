@@ -117,18 +117,6 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
         }
       }
 
-      // Обновляем баннеры только если forceRefresh = true
-      if (mounted && forceRefresh) {
-        try {
-          ref.invalidate(bannersProvider);
-          await ref
-              .read(bannersProvider.notifier)
-              .fetchBanners(forceRefresh: true);
-        } catch (e) {
-          debugPrint('❌ Ошибка при загрузке баннеров: $e');
-        }
-      }
-
       // Проверяем аутентификацию и загружаем профиль
       if (mounted) {
         try {

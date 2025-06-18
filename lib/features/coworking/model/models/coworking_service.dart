@@ -43,7 +43,7 @@ class CoworkingService {
               .toList() ??
           [],
       price: json['price'] as int?,
-      timeUnit: json['time_unit'] as String?,
+      timeUnit: json['time_unit'] as String? ?? json['unit'] as String?,
       capacity: json['capacity'] as int?,
       subtitle: json['subtitle'] as String?,
       categoryId: json['category_id'] as int?,
@@ -108,13 +108,13 @@ class CoworkingTariff {
       isActive: json['is_active'] as bool? ?? true,
       categoryId: json['category_id'] as int,
       title: json['title'] as String,
-      subtitle: json['subtitle'] as String,
+      subtitle: json['subtitle'] as String? ?? '',
       price: json['price'] as int,
-      timeUnit: json['time_unit'] as String,
+      timeUnit: json['time_unit'] as String? ?? json['unit'] as String? ?? '',
       isFixed: json['is_fixed'] as bool? ?? false,
       image:
           json['image'] != null ? ServiceImage.fromJson(json['image']) : null,
-      description: json['description'] as String,
+      description: json['description'] as String? ?? '',
       capacity: json['capacity'] as int?,
     );
   }

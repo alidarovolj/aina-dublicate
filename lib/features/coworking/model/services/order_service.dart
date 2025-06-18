@@ -118,7 +118,7 @@ class OrderService {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: gap:">
     <title>Epay Payment</title>
-    <script src="https://epay.homebank.kz/payform/payment-api.js"></script>
+    <script src="https://test-epay.homebank.kz/payform/payment-api.js"></script>
     <style>
       body {
         margin: 0;

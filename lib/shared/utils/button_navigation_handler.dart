@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
-// Import your auth provider
+import 'package:aina_flutter/app/providers/auth/auth_state.dart';
 
 class ButtonNavigationHandler {
   static void handleNavigation(
@@ -33,42 +33,67 @@ class ButtonNavigationHandler {
 
       final isAuthRequired = internal.isAuthRequired;
 
-      if (!isAuthRequired) {
-        switch (model) {
-          case 'Promotion':
-            // Fetch promotion data if needed
-            // await ref.read(promotionProvider.notifier).fetchPromotion(id);
-
-            // Navigate based on type
-            if (internal.isQr == true) {
-              context.pushNamed('promotion_scanner',
-                  pathParameters: {'id': id.toString()});
-            } else {
-              context.pushNamed('promotion_details',
-                  pathParameters: {'id': id.toString()});
-            }
-            break;
-
-          case 'Event':
-            // Fetch event data if needed
-            // await ref.read(eventProvider.notifier).fetchEvent(id);
-            context.pushNamed('event_details',
-                pathParameters: {'id': id.toString()});
-            break;
-
-          case 'News':
-            context.pushNamed('news_details',
-                pathParameters: {'id': id.toString()});
-            break;
-          case 'Service':
-           // final build_id = internal.buildId;
-            context.pushNamed('coworking_services',
-                pathParameters: {'id': internal.buildId.toString()});
-            break;
+      // Check if user is authenticated when auth is required
+      if (isAuthRequired) {
+        final authState = ref.read(authProvider);
+        if (!authState.isAuthenticated) {
+          // User is not authenticated, redirect to login
+          context.pushNamed('login');
+          return;
         }
-      } else {
-        // Redirect to profile/auth if needed
-        context.pushNamed('profile');
+        // User is authenticated, continue with navigation
+      }
+
+      // Execute navigation logic
+      switch (model) {
+        case 'Promotion':
+          // Fetch promotion data if needed
+          // await ref.read(promotionProvider.notifier).fetchPromotion(id);
+
+          // Navigate based on type
+          if (internal.isQr == true) {
+            context.pushNamed('promotion_scanner',
+                pathParameters: {'id': id.toString()});
+          } else {
+            context.pushNamed('promotion_details',
+                pathParameters: {'id': id.toString()});
+          }
+          break;
+
+        case 'Event':
+          // Fetch event data if needed
+          // await ref.read(eventProvider.notifier).fetchEvent(id);
+          context.pushNamed('event_details',
+              pathParameters: {'id': id.toString()});
+          break;
+
+        case 'News':
+          context
+              .pushNamed('news_details', pathParameters: {'id': id.toString()});
+          break;
+        case 'Service':
+          // final build_id = internal.buildId;
+          context.pushNamed('coworking_services',
+              pathParameters: {'id': internal.buildId.toString()});
+          break;
+        case 'Category':
+          // For Category model, navigate based on building_type
+          final buildingType = internal.buildingType;
+          final buildingId = internal.buildId;
+
+          if (buildingType == 'coworking') {
+            if (buildingId != null) {
+              // Use building_id from internal if available
+              context.pushNamed('coworking_services',
+                  pathParameters: {'id': buildingId.toString()});
+            } else {
+              // If no building_id in internal, we need building context from promotion
+              // This will be handled by the calling context providing buildingId
+              debugPrint(
+                  'Category navigation: building_id is null, need building context');
+            }
+          }
+          break;
       }
     }
   }

@@ -93,6 +93,27 @@ class HomePromotionsBlock extends ConsumerWidget {
     );
   }
 
+  Widget _buildArchiveOverlay() {
+    return Positioned.fill(
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4),
+          color: Colors.black.withOpacity(0.7),
+        ),
+        child: const Center(
+          child: Text(
+            'В архиве',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildMediumCardList(BuildContext context, List<dynamic> promotions) {
     final limitedPromotions = maxElements != null
         ? promotions.take(maxElements!).toList()
@@ -130,6 +151,7 @@ class HomePromotionsBlock extends ConsumerWidget {
                     Stack(
                       children: [
                         _buildImageWithGradient(promotion.previewImage.url),
+                        if (!promotion.isActive) _buildArchiveOverlay(),
                         if (showArrow)
                           Positioned(
                             top: 8,
@@ -200,6 +222,7 @@ class HomePromotionsBlock extends ConsumerWidget {
                   height: 200,
                   borderRadius: 8,
                 ),
+                if (!promotion.isActive) _buildArchiveOverlay(),
                 if (showArrow)
                   Positioned(
                     top: 8,
@@ -318,6 +341,7 @@ class HomePromotionsBlock extends ConsumerWidget {
                           );
                         },
                       ),
+                      if (!promotion.isActive) _buildArchiveOverlay(),
                       if (showArrow)
                         Positioned(
                           top: 8,
@@ -491,7 +515,14 @@ class HomePromotionsBlock extends ConsumerWidget {
       return emptyBuilder?.call(context) ?? const SizedBox.shrink();
     }
 
-    final sortedPromotions = _sortPromotions(promotions);
+    // Сортируем промоакции: активные первыми
+    final sortedPromotions = _sortPromotions(promotions)
+      ..sort((a, b) {
+        // Сначала сортируем по статусу активности (активные первыми)
+        if (a.isActive && !b.isActive) return -1;
+        if (!a.isActive && b.isActive) return 1;
+        return 0;
+      });
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

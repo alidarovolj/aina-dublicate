@@ -70,9 +70,11 @@ class ServiceCard extends ConsumerWidget {
                       (s) => s.title.toLowerCase().contains('коворкинг'),
                       orElse: () => services.first,
                     );
-                    context.push(
-                      '/coworking/$coworkingId/services/${service.id}',
-                    );
+                    if (service.id != null) {
+                      context.push(
+                        '/coworking/$coworkingId/services/${service.id!}',
+                      );
+                    }
                   },
                   child: Container(
                     height: 120,
@@ -123,9 +125,11 @@ class ServiceCard extends ConsumerWidget {
                       (s) => s.title.toLowerCase().contains('конференц'),
                       orElse: () => services.last,
                     );
-                    context.push(
-                      '/coworking/$coworkingId/services/${service.id}',
-                    );
+                    if (service.id != null) {
+                      context.push(
+                        '/coworking/$coworkingId/services/${service.id!}',
+                      );
+                    }
                   },
                   child: Container(
                     height: 120,

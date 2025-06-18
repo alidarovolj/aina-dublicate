@@ -132,33 +132,29 @@ class _HomePromotionsPageState extends ConsumerState<HomePromotionsPage>
                       children: [
                         Container(
                           color: AppColors.appBg,
-                          child: RefreshIndicator(
-                            onRefresh: _loadData,
-                            child: SingleChildScrollView(
-                              padding:
-                                  const EdgeInsets.only(top: 8, bottom: 28),
-                              child: PromotionsBlock(
-                                onViewAllTap: () {},
-                                showTitle: false,
-                                showViewAll: false,
-                                showDivider: false,
-                                cardType: PromotionCardType.full,
-                                showGradient: true,
-                                emptyBuilder: (context) => SizedBox(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.7,
-                                  child: Center(
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16),
-                                      child: Text(
-                                        'promotions.no_active_promotions'.tr(),
-                                        style: const TextStyle(
-                                          fontSize: 15,
-                                          color: AppColors.textDarkGrey,
-                                        ),
-                                        textAlign: TextAlign.center,
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.only(top: 8, bottom: 28),
+                            child: PromotionsBlock(
+                              onViewAllTap: () {},
+                              showTitle: false,
+                              showViewAll: false,
+                              showDivider: false,
+                              cardType: PromotionCardType.full,
+                              showGradient: true,
+                              emptyBuilder: (context) => SizedBox(
+                                height:
+                                    MediaQuery.of(context).size.height * 0.7,
+                                child: Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    child: Text(
+                                      'promotions.no_active_promotions'.tr(),
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        color: AppColors.textDarkGrey,
                                       ),
+                                      textAlign: TextAlign.center,
                                     ),
                                   ),
                                 ),
@@ -168,85 +164,81 @@ class _HomePromotionsPageState extends ConsumerState<HomePromotionsPage>
                         ),
                         Container(
                           color: AppColors.appBg,
-                          child: RefreshIndicator(
-                            onRefresh: _loadData,
-                            child: SingleChildScrollView(
-                              padding:
-                                  const EdgeInsets.only(top: 8, bottom: 28),
-                              child: Consumer(
-                                builder: (context, ref, child) {
-                                  final eventsAsync = ref.watch(eventsProvider);
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.only(top: 8, bottom: 28),
+                            child: Consumer(
+                              builder: (context, ref, child) {
+                                final eventsAsync = ref.watch(eventsProvider);
 
-                                  return eventsAsync.when(
-                                    loading: () => const Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                    error: (error, stack) {
-                                      final is500Error =
-                                          error.toString().contains('500') ||
-                                              error.toString().contains(
-                                                  'Internal Server Error');
+                                return eventsAsync.when(
+                                  loading: () => const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                  error: (error, stack) {
+                                    final is500Error = error
+                                            .toString()
+                                            .contains('500') ||
+                                        error
+                                            .toString()
+                                            .contains('Internal Server Error');
 
-                                      return ErrorRefreshWidget(
-                                        onRefresh: () {
-                                          Future.microtask(() async {
-                                            try {
-                                              ref
-                                                  .read(eventsProvider.notifier)
-                                                  .fetchEvents(context,
-                                                      forceRefresh: true);
-                                            } catch (e) {
-                                              debugPrint(
-                                                  '❌ Ошибка при обновлении событий: $e');
-                                            }
-                                          });
-                                        },
-                                        errorMessage: is500Error
-                                            ? 'stories.error.server'.tr()
-                                            : 'stories.error.loading'.tr(),
-                                        refreshText: 'common.refresh'.tr(),
-                                        icon: Icons.warning_amber_rounded,
-                                        isServerError: true,
-                                      );
-                                    },
-                                    data: (List<Promotion> events) {
-                                      if (events.isEmpty) {
-                                        return SizedBox(
-                                          height: MediaQuery.of(context)
-                                                  .size
-                                                  .height *
-                                              0.7,
-                                          child: Center(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 16),
-                                              child: Text(
-                                                'events.no_active_events'.tr(),
-                                                style: const TextStyle(
-                                                  fontSize: 15,
-                                                  color: AppColors.textDarkGrey,
-                                                ),
-                                                textAlign: TextAlign.center,
+                                    return ErrorRefreshWidget(
+                                      onRefresh: () {
+                                        Future.microtask(() async {
+                                          try {
+                                            ref
+                                                .read(eventsProvider.notifier)
+                                                .fetchEvents(context,
+                                                    forceRefresh: true);
+                                          } catch (e) {
+                                            debugPrint(
+                                                '❌ Ошибка при обновлении событий: $e');
+                                          }
+                                        });
+                                      },
+                                      errorMessage: is500Error
+                                          ? 'stories.error.server'.tr()
+                                          : 'stories.error.loading'.tr(),
+                                      refreshText: 'common.refresh'.tr(),
+                                      icon: Icons.warning_amber_rounded,
+                                      isServerError: true,
+                                    );
+                                  },
+                                  data: (List<Promotion> events) {
+                                    if (events.isEmpty) {
+                                      return SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.7,
+                                        child: Center(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16),
+                                            child: Text(
+                                              'events.no_active_events'.tr(),
+                                              style: const TextStyle(
+                                                fontSize: 15,
+                                                color: AppColors.textDarkGrey,
                                               ),
+                                              textAlign: TextAlign.center,
                                             ),
                                           ),
-                                        );
-                                      }
-
-                                      return EventsBlock(
-                                        onViewAllTap: () {},
-                                        showTitle: false,
-                                        showViewAll: false,
-                                        showDivider: false,
-                                        cardType: PromotionCardType.full,
-                                        showGradient: true,
-                                        events: events,
+                                        ),
                                       );
-                                    },
-                                  );
-                                },
-                              ),
+                                    }
+
+                                    return EventsBlock(
+                                      onViewAllTap: () {},
+                                      showTitle: false,
+                                      showViewAll: false,
+                                      showDivider: false,
+                                      cardType: PromotionCardType.full,
+                                      showGradient: true,
+                                      events: events,
+                                    );
+                                  },
+                                );
+                              },
                             ),
                           ),
                         ),

@@ -6,10 +6,13 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/app/providers/auth/auth_state.dart';
 import 'package:aina_flutter/app/providers/requests/auth/profile.dart';
+import 'package:aina_flutter/app/providers/requests/auth/user.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:aina_flutter/app/providers/requests/buildings_provider.dart';
 import 'package:aina_flutter/shared/ui/blocks/error_refresh_widget.dart';
+import 'package:aina_flutter/shared/navigation/index.dart';
+import 'package:dio/dio.dart';
 
 class MenuPage extends ConsumerStatefulWidget {
   const MenuPage({super.key});
@@ -18,15 +21,117 @@ class MenuPage extends ConsumerStatefulWidget {
   ConsumerState<MenuPage> createState() => _MenuPageState();
 }
 
-class _MenuPageState extends ConsumerState<MenuPage> {
+class _MenuPageState extends ConsumerState<MenuPage> with RouteAware {
+  bool _isCheckingAuth = false;
+  bool _isInitialized = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        ref.read(profileCacheKeyProvider.notifier).state++;
+        _checkAuthAndLoadProfile();
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Подписываемся на события навигации
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+
+    if (!_isInitialized) {
+      _isInitialized = true;
+      // Wrap the provider updates in a Future to avoid build-time modifications
+      Future(() {
+        if (mounted) {
+          _refreshProfileData();
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    // Отписываемся от событий навигации
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  // Вызывается, когда пользователь возвращается на эту страницу
+  @override
+  void didPopNext() {
+    super.didPopNext();
+    // Повторно проверяем авторизацию при возврате на страницу
+    _checkAuthAndLoadProfile();
+  }
+
+  Future<void> _checkAuthAndLoadProfile() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isCheckingAuth = true;
+    });
+
+    try {
+      final authState = ref.read(authProvider);
+
+      if (authState.isAuthenticated) {
+        final profileService = ref.read(promenadeProfileProvider);
+        await profileService.getProfile(forceRefresh: true);
+
+        if (mounted) {
+          await _refreshProfileData();
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      if (e is DioException) {
+        if (e.response?.statusCode == 401) {
+          if (!mounted) return;
+
+          try {
+            await ref.read(authProvider.notifier).logout();
+          } catch (logoutError) {
+            debugPrint('❌ Ошибка при выходе: $logoutError');
+          }
+
+          if (mounted) {
+            context.push('/login');
+          }
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCheckingAuth = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _refreshProfileData() async {
+    if (!mounted) return;
+
+    try {
+      ref.invalidate(userProvider);
+      ref.invalidate(userTicketsProvider);
+      ref.invalidate(promenadeProfileProvider);
+      ref.invalidate(profileCacheKeyProvider);
+
+      await Future(() {
+        if (!mounted) return;
+        try {
+          ref.read(profileCacheKeyProvider.notifier).state++;
+        } catch (e) {
+          debugPrint('❌ Ошибка при обновлении profileCacheKeyProvider: $e');
+        }
+      });
+    } catch (e) {
+      debugPrint('❌ Ошибка при обновлении данных профиля: $e');
+    }
   }
 
   @override
@@ -38,6 +143,22 @@ class _MenuPageState extends ConsumerState<MenuPage> {
         ? ref.watch(promenadeProfileDataProvider(cacheKey))
         : null;
     final buildingsAsync = ref.watch(buildingsProvider);
+
+    // Проверяем изменение состояния авторизации
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (previous?.isAuthenticated != next.isAuthenticated) {
+        // Состояние авторизации изменилось
+        Future.microtask(() => _checkAuthAndLoadProfile());
+      }
+    });
+
+    // Дополнительно следим за изменениями в токене
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (previous?.token != next.token && next.isAuthenticated) {
+        // Токен изменился и пользователь авторизован
+        Future.microtask(() => _checkAuthAndLoadProfile());
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.primary,
@@ -74,6 +195,7 @@ class _MenuPageState extends ConsumerState<MenuPage> {
                         Future.microtask(() async {
                           try {
                             ref.refresh(buildingsProvider);
+                            await _checkAuthAndLoadProfile();
                           } catch (e) {
                             debugPrint('❌ Ошибка при обновлении меню: $e');
                           }
@@ -89,7 +211,8 @@ class _MenuPageState extends ConsumerState<MenuPage> {
                     );
                   },
                   data: (buildings) {
-                    if (isAuthenticated && profileAsync?.isLoading == true) {
+                    if (_isCheckingAuth ||
+                        (isAuthenticated && profileAsync?.isLoading == true)) {
                       return _buildSkeletonLoader();
                     }
 

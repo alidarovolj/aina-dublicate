@@ -95,7 +95,7 @@ class CoworkingConferenceServicePage extends ConsumerWidget {
                           return ConferenceTariffCard(
                             tariff: tariff,
                             coworkingId: coworkingId,
-                            serviceId: service.id,
+                            serviceId: service.id ?? 0,
                             onDetailsTap: () {
                               context.pushNamed(
                                 'coworking_calendar',

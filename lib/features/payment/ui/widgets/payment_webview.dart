@@ -64,7 +64,8 @@ class _PaymentWebViewState extends State<PaymentWebView> {
           widget.onClose();
         },
       )
-      ..loadHtmlString(widget.htmlContent, baseUrl: 'https://epay.homebank.kz');
+      ..loadHtmlString(widget.htmlContent,
+          baseUrl: 'https://test-epay.homebank.kz');
   }
 
   @override

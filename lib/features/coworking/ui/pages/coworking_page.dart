@@ -1,5 +1,6 @@
 import 'package:aina_flutter/app/providers/requests/auth/profile.dart';
 import 'package:aina_flutter/app/providers/requests/auth/user.dart';
+import 'package:aina_flutter/app/providers/auth/auth_state.dart';
 import 'package:aina_flutter/shared/api/api_client.dart';
 import 'package:aina_flutter/shared/ui/widgets/base_modal.dart';
 import 'package:aina_flutter/shared/ui/widgets/custom_button.dart';
@@ -45,7 +46,11 @@ class CoworkingPageState extends ConsumerState<CoworkingPage> {
     super.initState();
     // Метод будет вызван только один раз при создании состояния
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkOrder(context);
+      // Проверяем авторизацию перед выполнением запросов
+      final authState = ref.read(authProvider);
+      if (authState.isAuthenticated) {
+        _checkOrder(context);
+      }
     });
   }
 
@@ -63,6 +68,12 @@ class CoworkingPageState extends ConsumerState<CoworkingPage> {
 
   Future<void> _checkOrder(BuildContext context) async {
     try {
+      // Дополнительная проверка авторизации
+      final authState = ref.read(authProvider);
+      if (!authState.isAuthenticated) {
+        return;
+      }
+
       // Выполняем два запроса параллельно
       final responses = await Future.wait([
         ApiClient().dio.get(
@@ -107,11 +118,11 @@ class CoworkingPageState extends ConsumerState<CoworkingPage> {
       var order = ordersResponse.data['data'];
 
       if (profile['biometric_status'] != 'VALID') {
-        _showModalMessage(context, 'alerts.biometric_needed.message'.tr(),
-            'alerts.biometric_needed.button_title'.tr(), () {
-          context.pushNamed('coworking_biometric',
-              pathParameters: {'id': widget.coworkingId.toString()});
-        });
+        // _showModalMessage(context, 'alerts.biometric_needed.message'.tr(),
+        //     'alerts.biometric_needed.button_title'.tr(), () {
+        //   context.pushNamed('coworking_biometric',
+        //       pathParameters: {'id': widget.coworkingId.toString()});
+        // });
         return;
       }
 
@@ -146,6 +157,15 @@ class CoworkingPageState extends ConsumerState<CoworkingPage> {
   @override
   Widget build(BuildContext context) {
     final buildingsAsync = ref.watch(buildingsProvider);
+
+    // Слушаем изменения состояния авторизации
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (previous?.isAuthenticated != next.isAuthenticated &&
+          next.isAuthenticated) {
+        // Пользователь только что авторизовался, проверяем заказы
+        Future.microtask(() => _checkOrder(context));
+      }
+    });
 
     return GestureDetector(
       onHorizontalDragEnd: (details) {

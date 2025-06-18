@@ -49,34 +49,34 @@ class BuildingsList extends ConsumerWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppLength.xs),
-          child: Row(
-            children: buildings
-                .asMap()
-                .entries
-                .map((entry) => GestureDetector(
-                      onTap: () {
-                        // _logShoppingMallClick(entry.value);
-                        context.push('/malls/${entry.value.id}');
-                      },
-                      child: Container(
-                        width: (MediaQuery.of(context).size.width -
-                                30 -
-                                (AppLength.xs * 2)) /
-                            3,
-                        height: 142,
-                        margin: EdgeInsets.only(
-                          right: entry.key < buildings.length - 1 ? 15 : 0,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4),
-                          image: DecorationImage(
-                            image: NetworkImage(entry.value.previewImage.url),
-                            fit: BoxFit.cover,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: buildings
+                  .asMap()
+                  .entries
+                  .map((entry) => GestureDetector(
+                        onTap: () {
+                          // _logShoppingMallClick(entry.value);
+                          context.push('/malls/${entry.value.id}');
+                        },
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.3,
+                          height: 142,
+                          margin: EdgeInsets.only(
+                            right: entry.key < buildings.length - 1 ? 15 : 0,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(4),
+                            image: DecorationImage(
+                              image: NetworkImage(entry.value.previewImage.url),
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
-                      ),
-                    ))
-                .toList(),
+                      ))
+                  .toList(),
+            ),
           ),
         ),
       ],
@@ -298,25 +298,25 @@ class BuildingsList extends ConsumerWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppLength.xs),
-          child: Row(
-            children: List.generate(3, (index) {
-              return Shimmer.fromColors(
-                baseColor: Colors.grey[100]!,
-                highlightColor: Colors.grey[300]!,
-                child: Container(
-                  width: (MediaQuery.of(context).size.width -
-                          30 -
-                          (AppLength.xs * 2)) /
-                      3,
-                  height: 142,
-                  margin: EdgeInsets.only(right: index < 2 ? 15 : 0),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(4),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: List.generate(3, (index) {
+                return Shimmer.fromColors(
+                  baseColor: Colors.grey[100]!,
+                  highlightColor: Colors.grey[300]!,
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 0.3,
+                    height: 142,
+                    margin: EdgeInsets.only(right: index < 2 ? 15 : 0),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   ),
-                ),
-              );
-            }),
+                );
+              }),
+            ),
           ),
         ),
       ],

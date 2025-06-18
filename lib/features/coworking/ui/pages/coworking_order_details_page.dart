@@ -287,7 +287,8 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
                 Navigator.of(context).pop();
               },
             )
-            ..loadHtmlString(htmlContent, baseUrl: 'https://epay.homebank.kz');
+            ..loadHtmlString(htmlContent,
+                baseUrl: 'https://test-epay.homebank.kz');
 
           await showDialog(
             context: context,

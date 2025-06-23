@@ -234,15 +234,22 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
               return;
             }
 
+            // Добавляем отладочную информацию
+            debugPrint('🔍 Service navigation - title: ${service.title}');
+            debugPrint('🔍 Service navigation - type: ${service.type}');
+            debugPrint('🔍 Service navigation - subtype: ${service.subtype}');
+            debugPrint('🔍 Service navigation - id: ${service.id}');
+
             if (service.type == 'DEFAULT') {
+              debugPrint('🔄 Navigating to calendar for DEFAULT service');
               _navigateToCalendar(context, service, coworkingId);
-            } else if (service.type == 'COWORKING') {
+            } else {
+              // Для всех остальных типов (COWORKING, CONFERENCE) используем общий маршрут
+              // Логика разделения происходит на уровне маршрутизации по service.subtype
+              debugPrint(
+                  '🔄 Navigating to service details: /coworking/$coworkingId/services/${service.id!}');
               context.push(
                 '/coworking/$coworkingId/services/${service.id!}',
-              );
-            } else {
-              context.push(
-                '/coworking/$coworkingId/conference-services/${service.id!}',
               );
             }
           }
@@ -270,7 +277,7 @@ class ServicesPage extends ConsumerWidget with AuthCheckMixin {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withOpacity(0.7),
+                      Colors.black.withValues(alpha: 0.7),
                     ],
                     stops: const [0.5, 1.0],
                   ),

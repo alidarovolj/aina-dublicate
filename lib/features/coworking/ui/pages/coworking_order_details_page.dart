@@ -373,7 +373,7 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
 
     // Важно: для HeaderType.close уже определен собственный обработчик в CustomHeader,
     // который всегда вызывает context.go('/home'). Используем HeaderType.pop с нашим обработчиком.
-    final HeaderType headerType = HeaderType.pop;
+    const HeaderType headerType = HeaderType.pop;
 
     // Добавляем обработчик физической кнопки назад
     return PopScope(

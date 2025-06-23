@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/shared/types/stories_type.dart';
 import 'package:aina_flutter/app/providers/requests/stories/list.dart';
+import 'package:aina_flutter/app/providers/requests/stories/detail.dart';
+import 'package:aina_flutter/shared/services/storage_service.dart';
+import 'package:flutter/foundation.dart';
 
 class StoriesProvider extends StateNotifier<AsyncValue<List<Story>>> {
   StoriesProvider(this._listService) : super(const AsyncValue.loading()) {
@@ -14,6 +17,31 @@ class StoriesProvider extends StateNotifier<AsyncValue<List<Story>>> {
   void dispose() {
     _mounted = false;
     super.dispose();
+  }
+
+  void markAsViewed(int storyId) async {
+    await StorageService.setStoryViewed(storyId);
+    final currentState = state;
+    if (currentState is AsyncData<List<Story>>) {
+      final stories = currentState.value;
+      final updatedStories = stories.map((story) {
+        if (story.id == storyId) {
+          return Story(
+            id: story.id,
+            name: story.name,
+            previewImage: story.previewImage,
+            stories: story.stories,
+            button: story.button,
+            read: true,
+          );
+        }
+        return story;
+      }).toList();
+
+      if (_mounted) {
+        state = AsyncValue.data(updatedStories);
+      }
+    }
   }
 
   Future<void> fetchStories() async {
@@ -45,6 +73,9 @@ class StoriesProvider extends StateNotifier<AsyncValue<List<Story>>> {
           .map((json) => Story.fromJson(json as Map<String, dynamic>))
           .toList();
 
+      // Загружаем статусы просмотра из локального хранилища
+      await _loadViewedStatuses(stories);
+
       if (!_mounted) return;
       state = AsyncValue.data(stories);
     } catch (error, stackTrace) {
@@ -52,6 +83,20 @@ class StoriesProvider extends StateNotifier<AsyncValue<List<Story>>> {
       final String errorMessage = _formatErrorMessage(error);
       if (!_mounted) return;
       state = AsyncValue.error(errorMessage, stackTrace);
+    }
+  }
+
+  Future<void> _loadViewedStatuses(List<Story> stories) async {
+    try {
+      final viewedStories = await StorageService.getViewedStories();
+
+      for (final story in stories) {
+        if (story.id != null && viewedStories.contains(story.id!)) {
+          story.read = true;
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Ошибка при загрузке статусов просмотра: $e');
     }
   }
 

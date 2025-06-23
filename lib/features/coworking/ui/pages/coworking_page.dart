@@ -1,9 +1,6 @@
-import 'package:aina_flutter/app/providers/requests/auth/profile.dart';
-import 'package:aina_flutter/app/providers/requests/auth/user.dart';
 import 'package:aina_flutter/app/providers/auth/auth_state.dart';
 import 'package:aina_flutter/shared/api/api_client.dart';
 import 'package:aina_flutter/shared/ui/widgets/base_modal.dart';
-import 'package:aina_flutter/shared/ui/widgets/custom_button.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:aina_flutter/shared/types/slides.dart' as slides;

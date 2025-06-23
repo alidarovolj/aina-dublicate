@@ -545,6 +545,12 @@
     }
   },
   "stories": {
+    "names": {
+      "promotions": "Promotions",
+      "events": "Events",
+      "news": "News", 
+      "aina": "AINA"
+    },
     "error": {
       "server": "Failed to load data. Please try again later",
       "loading": "Failed to load data. Please try again later"

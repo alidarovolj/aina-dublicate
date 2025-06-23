@@ -160,20 +160,6 @@ class _CoworkingBookingsPageState extends ConsumerState<CoworkingBookingsPage>
     routeObserver.subscribe(this, ModalRoute.of(context)!);
   }
 
-  @override
-  void didPush() {
-    super.didPush();
-    // Убираем принудительное обновление
-    // _refreshData(force: true);
-  }
-
-  @override
-  void didPopNext() {
-    super.didPopNext();
-    // Убираем принудительное обновление при возврате
-    // _refreshData(force: true);
-  }
-
   void _handleTabChange() {
     if (_tabController.indexIsChanging) {
       _setupRefreshTimer();

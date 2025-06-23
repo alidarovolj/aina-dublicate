@@ -7,6 +7,7 @@ import 'package:aina_flutter/app/providers/requests/stories_provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:aina_flutter/shared/ui/blocks/error_refresh_widget.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:aina_flutter/shared/services/storage_service.dart';
 
 class StoryList extends ConsumerStatefulWidget {
   const StoryList({super.key});
@@ -16,17 +17,45 @@ class StoryList extends ConsumerStatefulWidget {
 }
 
 class _StoryListState extends ConsumerState<StoryList> {
+  Map<int, bool> _viewedStatusCache = {};
+
   @override
   void initState() {
     super.initState();
+    _loadViewedStatusCache();
+  }
+
+  Future<void> _loadViewedStatusCache() async {
+    try {
+      final viewedStories = await StorageService.getViewedStories();
+      setState(() {
+        _viewedStatusCache = {for (int storyId in viewedStories) storyId: true};
+      });
+    } catch (e) {
+      debugPrint('❌ Ошибка при загрузке кеша статусов: $e');
+    }
   }
 
   void markStoryAsRead(int index) {
     final stories = ref.read(storiesProvider).valueOrNull;
-    if (stories != null) {
+    if (stories != null && index < stories.length) {
+      final story = stories[index];
+      if (story.id == null) return;
+
+      // Сохраняем статус в локальное хранилище
+      StorageService.setStoryViewed(story.id!);
+
+      // Обновляем кеш
       setState(() {
-        stories[index].read = true;
+        _viewedStatusCache[story.id!] = true;
       });
+
+      // Дополнительно обновляем через провайдер для API историй
+      if (story.id! > 10) {
+        ref.read(storiesProvider.notifier).markAsViewed(story.id!);
+      }
+
+      print('📖 Локально отмечена история ${story.id} как просмотренная');
     }
   }
 
@@ -35,7 +64,7 @@ class _StoryListState extends ConsumerState<StoryList> {
     return [
       Story(
         id: 1,
-        name: "Акции",
+        name: 'stories.names.promotions'.tr(),
         read: false,
         previewImage: 'lib/app/assets/images/stories/story1.jpg',
         stories: [
@@ -51,7 +80,7 @@ class _StoryListState extends ConsumerState<StoryList> {
       ),
       Story(
         id: 2,
-        name: "События",
+        name: 'stories.names.events'.tr(),
         read: false,
         previewImage: 'lib/app/assets/images/stories/story3.jpg',
         stories: [
@@ -63,7 +92,7 @@ class _StoryListState extends ConsumerState<StoryList> {
       ),
       Story(
         id: 3,
-        name: "Новости",
+        name: 'stories.names.news'.tr(),
         read: false,
         previewImage: 'lib/app/assets/images/stories/story4.jpg',
         stories: [
@@ -74,6 +103,18 @@ class _StoryListState extends ConsumerState<StoryList> {
           StoryItem(
             id: 5,
             previewImage: 'lib/app/assets/images/stories/story5.jpg',
+          ),
+        ],
+      ),
+      Story(
+        id: 4,
+        name: 'stories.names.aina'.tr(),
+        read: false,
+        previewImage: 'lib/app/assets/images/stories/aina_splash.png',
+        stories: [
+          StoryItem(
+            id: 6,
+            previewImage: 'lib/app/assets/images/stories/aina_splash.png',
           ),
         ],
       ),
@@ -180,7 +221,7 @@ class _StoryListState extends ConsumerState<StoryList> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: story.read
+                            color: (_viewedStatusCache[story.id] ?? false)
                                 ? AppColors.primary
                                 : AppColors.secondary,
                             width: 2,

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/app/styles/constants.dart';
-import 'package:aina_flutter/shared/ui/widgets/custom_button.dart';
 
 class ProfileWarningBanner extends StatelessWidget {
   final VoidCallback? onEditProfileTap;

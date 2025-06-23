@@ -7,7 +7,9 @@ import 'package:aina_flutter/shared/models/service_image.dart';
 // Класс для услуг типа DEFAULT
 class DefaultService extends Service {
   final String? timeUnit;
+  @override
   final bool? isFixed;
+  @override
   final int? capacity;
 
   DefaultService({

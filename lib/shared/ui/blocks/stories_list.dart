@@ -17,6 +17,7 @@ import 'dart:ui' show ImageFilter;
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:math' show pi, cos;
+import 'package:aina_flutter/shared/services/storage_service.dart';
 
 class StoryList extends ConsumerStatefulWidget {
   const StoryList({super.key});
@@ -30,6 +31,7 @@ class _StoryListState extends ConsumerState<StoryList>
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   int? _selectedIndex;
+  Map<int, bool> _viewedStatusCache = {};
 
   @override
   void initState() {
@@ -44,6 +46,7 @@ class _StoryListState extends ConsumerState<StoryList>
         curve: Curves.easeInOut,
       ),
     );
+    _loadViewedStatusCache();
   }
 
   @override
@@ -63,19 +66,148 @@ class _StoryListState extends ConsumerState<StoryList>
     );
   }
 
-  void markStoryAsRead(int index) {
+  void markStoryAsRead(int index, List<Story> storiesList) {
     if (!mounted) return;
-
     try {
-      final stories = ref.read(storiesProvider).valueOrNull;
-      if (stories != null && index < stories.length) {
-        setState(() {
-          stories[index].read = true;
-          // print("Story ${index + 1} marked as read");
-        });
+      final story = storiesList[index];
+      if (story.id == null) return;
+
+      // Сохраняем статус в локальное хранилище
+      StorageService.setStoryViewed(story.id!);
+
+      // Обновляем кеш
+      setState(() {
+        _viewedStatusCache[story.id!] = true;
+      });
+
+      if (_isStaticStory(story.id!)) {
+        // Для статических историй принудительно обновляем UI
+        setState(() {});
+      } else {
+        // Для API историй используем провайдер
+        ref.read(storiesProvider.notifier).markAsViewed(story.id!);
       }
+
+      print('📖 Локально отмечена история ${story.id} как просмотренная');
     } catch (e) {
       print('❌ Ошибка при отметке истории как прочитанной: $e');
+    }
+  }
+
+  // Вспомогательная функция для определения статических историй
+  bool _isStaticStory(int? storyId) {
+    // Статическими считаются истории с ID, которые не приходят с сервера.
+    // В данном случае, это истории с ID <= 10.
+    return storyId != null && storyId <= 10;
+  }
+
+  // Создаем статические истории, если с сервера ничего не пришло
+  List<Story> _getStaticStories() {
+    // Определяем текущую локаль
+    final currentLocale = context.locale.languageCode;
+
+    // Выбираем изображения в зависимости от локали
+    String storyImage1, storyImage2;
+    switch (currentLocale) {
+      case 'kk':
+        storyImage1 = 'lib/app/assets/images/stories/kz_1.jpg';
+        storyImage2 = 'lib/app/assets/images/stories/kz_2.jpg';
+        break;
+      case 'en':
+        storyImage1 = 'lib/app/assets/images/stories/en_1.jpg';
+        storyImage2 = 'lib/app/assets/images/stories/en_2.jpg';
+        break;
+      case 'ru':
+      default:
+        storyImage1 = 'lib/app/assets/images/stories/ru_1.jpg';
+        storyImage2 = 'lib/app/assets/images/stories/ru_2.jpg';
+        break;
+    }
+
+    final stories = [
+      Story(
+        id: 4,
+        name: 'stories.names.aina'.tr(),
+        read: false,
+        previewImage: 'lib/app/assets/images/stories/aina_splash.webp',
+        stories: [
+          StoryItem(
+            id: 6,
+            previewImage: storyImage1,
+          ),
+          StoryItem(
+            id: 7,
+            previewImage: storyImage2,
+          ),
+        ],
+      ),
+    ];
+
+    return stories;
+  }
+
+  Future<List<Story>> _getStaticStoriesWithStatus() async {
+    final stories = _getStaticStories();
+
+    try {
+      final viewedStories = await StorageService.getViewedStories();
+
+      for (final story in stories) {
+        if (story.id != null && viewedStories.contains(story.id!)) {
+          story.read = true;
+        }
+      }
+    } catch (e) {
+      debugPrint(
+          '❌ Ошибка при загрузке статусов просмотра статических историй: $e');
+    }
+
+    return stories;
+  }
+
+  // Helper method to handle both network and asset images
+  Widget _buildStoryImage(String? imageUrl, {BoxFit fit = BoxFit.cover}) {
+    if (imageUrl == null) {
+      return const Icon(Icons.error);
+    }
+
+    // Проверяем, является ли это локальным файлом
+    if (imageUrl.startsWith('lib/') || imageUrl.startsWith('assets/')) {
+      return Image.asset(
+        imageUrl,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+      );
+    } else if (imageUrl.startsWith('http')) {
+      return Image.network(
+        imageUrl,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+      );
+    } else {
+      // Если путь не содержит lib/ или http, пробуем как asset
+      return Image.asset(
+        imageUrl,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+      );
+    }
+  }
+
+  // Helper method to get ImageProvider for DecorationImage
+  ImageProvider _getImageProvider(String? imageUrl) {
+    if (imageUrl == null) {
+      return const AssetImage('lib/app/assets/images/stories/aina_splash.webp');
+    }
+
+    // Проверяем, является ли это локальным файлом
+    if (imageUrl.startsWith('lib/') || imageUrl.startsWith('assets/')) {
+      return AssetImage(imageUrl);
+    } else if (imageUrl.startsWith('http')) {
+      return NetworkImage(imageUrl);
+    } else {
+      // Если путь не содержит lib/ или http, пробуем как asset
+      return AssetImage(imageUrl);
     }
   }
 
@@ -91,7 +223,7 @@ class _StoryListState extends ConsumerState<StoryList>
       _animationController.forward().then((_) {
         if (!mounted) return;
 
-        markStoryAsRead(index);
+        markStoryAsRead(index, storiesList);
         showGeneralDialog(
           context: context,
           barrierDismissible: true,
@@ -105,7 +237,7 @@ class _StoryListState extends ConsumerState<StoryList>
               initialIndex: index,
               onStoryRead: (readIndex) {
                 if (!mounted) return;
-                markStoryAsRead(readIndex);
+                markStoryAsRead(readIndex, storiesList);
               },
             );
           },
@@ -155,115 +287,131 @@ class _StoryListState extends ConsumerState<StoryList>
         );
       },
       data: (storiesList) {
-        if (storiesList.isEmpty) {
-          return const SizedBox.shrink();
-        }
+        return FutureBuilder<List<Story>>(
+          future: _getStaticStoriesWithStatus(),
+          builder: (context, staticSnapshot) {
+            final staticStories = staticSnapshot.data ?? _getStaticStories();
+            final displayStories = <Story>[
+              ...staticStories,
+              ...(storiesList ?? []),
+            ];
 
-        return Container(
-          color: AppColors.primary,
-          child: SafeArea(
-            child: Container(
-              height: 120,
-              padding: const EdgeInsets.symmetric(
-                vertical: AppLength.xs,
-                horizontal: AppLength.xs,
-              ),
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-              ),
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: storiesList.length,
-                itemBuilder: (context, index) {
-                  final story = storiesList[index];
-                  return Container(
-                    width: 80,
-                    margin: const EdgeInsets.only(right: AppLength.four),
-                    child: Column(
-                      children: [
-                        GestureDetector(
-                          onTap: () => _handleStoryTap(index, storiesList),
-                          child: AnimatedBuilder(
-                            animation: _animationController,
-                            builder: (context, child) {
-                              final scale = _selectedIndex == index
-                                  ? _scaleAnimation.value
-                                  : 1.0;
-                              return Transform.scale(
-                                scale: scale,
-                                child: child,
-                              );
-                            },
-                            child: Container(
-                              width: 68,
-                              height: 68,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: story.read
-                                      ? [
-                                          AppColors.primary,
-                                          AppColors.primary.withOpacity(0.8),
-                                        ]
-                                      : [
-                                          AppColors.secondary,
-                                          AppColors.secondary.withOpacity(0.8),
+            if (displayStories.isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            return Container(
+              color: AppColors.primary,
+              child: SafeArea(
+                child: Container(
+                  height: 120,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppLength.xs,
+                    horizontal: AppLength.xs,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                  ),
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: displayStories.length,
+                    itemBuilder: (context, index) {
+                      final story = displayStories[index];
+                      return Container(
+                        width: 80,
+                        margin: const EdgeInsets.only(right: AppLength.four),
+                        child: Column(
+                          children: [
+                            GestureDetector(
+                              onTap: () =>
+                                  _handleStoryTap(index, displayStories),
+                              child: AnimatedBuilder(
+                                animation: _animationController,
+                                builder: (context, child) {
+                                  final scale = _selectedIndex == index
+                                      ? _scaleAnimation.value
+                                      : 1.0;
+                                  return Transform.scale(
+                                    scale: scale,
+                                    child: child,
+                                  );
+                                },
+                                child: Builder(
+                                  builder: (context) {
+                                    final isViewed =
+                                        _viewedStatusCache[story.id] ?? false;
+                                    return Container(
+                                      width: 68,
+                                      height: 68,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: isViewed
+                                              ? [
+                                                  AppColors.primary,
+                                                  AppColors.primary
+                                                      .withOpacity(0.8),
+                                                ]
+                                              : [
+                                                  AppColors.secondary,
+                                                  AppColors.secondary
+                                                      .withOpacity(0.8),
+                                                ],
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: (isViewed
+                                                    ? AppColors.primary
+                                                    : AppColors.secondary)
+                                                .withOpacity(0.3),
+                                            blurRadius: 8,
+                                            spreadRadius: 2,
+                                          ),
                                         ],
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: (story.read
-                                            ? AppColors.primary
-                                            : AppColors.secondary)
-                                        .withOpacity(0.3),
-                                    blurRadius: 8,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(2.0),
-                                child: Container(
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: AppColors.primary,
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(100),
-                                    child: Image.network(
-                                      story.previewImage ?? '',
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) =>
-                                              const Icon(Icons.error),
-                                    ),
-                                  ),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(2.0),
+                                        child: Container(
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: AppColors.primary,
+                                          ),
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(100),
+                                            child: _buildStoryImage(
+                                                story.previewImage),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                             ),
-                          ),
+                            const SizedBox(height: 4),
+                            Text(
+                              story.name ?? '',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.grey2,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          story.name ?? '',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.grey2,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                      );
+                    },
+                  ),
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
@@ -332,6 +480,17 @@ class _StoryListState extends ConsumerState<StoryList>
       ),
     );
   }
+
+  Future<void> _loadViewedStatusCache() async {
+    try {
+      final viewedStories = await StorageService.getViewedStories();
+      setState(() {
+        _viewedStatusCache = {for (int storyId in viewedStories) storyId: true};
+      });
+    } catch (e) {
+      debugPrint('❌ Ошибка при загрузке кеша статусов: $e');
+    }
+  }
 }
 
 class StoryDetailsPage extends ConsumerStatefulWidget {
@@ -380,6 +539,13 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
   double _calculateOpacity() {
     // Уменьшаем прозрачность от 1.0 до 0.0
     return (1.0 - (_dragOffset.abs() / 400).clamp(0.0, 1.0));
+  }
+
+  // Вспомогательная функция для определения статических историй
+  bool _isStaticStory(int? storyId) {
+    // Статическими считаются истории с ID, которые не приходят с сервера.
+    // В данном случае, это истории с ID <= 10.
+    return storyId != null && storyId <= 10;
   }
 
   @override
@@ -438,13 +604,18 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
 
   Future<void> _loadCurrentStory() async {
     final currentStory = currentStories[currentInnerStoryIndex];
-    if (currentStory.id != null) {
-      final storyDetails =
-          await ref.read(storyDetailProvider(currentStory.id!).future);
-      if (mounted) {
-        setState(() {
-          _preloadedStories[currentStory.id!] = storyDetails;
-        });
+    // Не загружаем детали для статических историй
+    if (currentStory.id != null && !_isStaticStory(currentStory.id)) {
+      try {
+        final storyDetails =
+            await ref.read(storyDetailProvider(currentStory.id!).future);
+        if (mounted) {
+          setState(() {
+            _preloadedStories[currentStory.id!] = storyDetails;
+          });
+        }
+      } catch (e) {
+        print('❌ Ошибка при загрузке деталей истории ${currentStory.id}: $e');
       }
     }
   }
@@ -452,17 +623,73 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
   Future<void> _preloadRemainingStories() async {
     for (var story in widget.stories) {
       for (var innerStory in story.stories ?? []) {
+        // Не загружаем детали для статических историй
         if (innerStory.id != null &&
+            !_isStaticStory(innerStory.id) &&
             !_preloadedStories.containsKey(innerStory.id)) {
-          final storyDetails =
-              await ref.read(storyDetailProvider(innerStory.id!).future);
-          if (mounted) {
-            setState(() {
-              _preloadedStories[innerStory.id!] = storyDetails;
-            });
+          try {
+            final storyDetails =
+                await ref.read(storyDetailProvider(innerStory.id!).future);
+            if (mounted) {
+              setState(() {
+                _preloadedStories[innerStory.id!] = storyDetails;
+              });
+            }
+          } catch (e) {
+            print('❌ Ошибка при предзагрузке истории ${innerStory.id}: $e');
           }
         }
       }
+    }
+  }
+
+  // Helper method to get ImageProvider for DecorationImage
+  ImageProvider _getImageProvider(String? imageUrl) {
+    if (imageUrl == null) {
+      return const AssetImage('lib/app/assets/images/stories/aina_splash.webp');
+    }
+
+    // Проверяем, является ли это локальным файлом
+    if (imageUrl.startsWith('lib/') || imageUrl.startsWith('assets/')) {
+      return AssetImage(imageUrl);
+    } else if (imageUrl.startsWith('http')) {
+      return NetworkImage(imageUrl);
+    } else {
+      // Если путь не содержит lib/ или http, пробуем как asset
+      return AssetImage(imageUrl);
+    }
+  }
+
+  // Helper method to handle both network and asset images for details page
+  Widget _buildStoryImageForDetails(String? imageUrl,
+      {BoxFit fit = BoxFit.cover}) {
+    if (imageUrl == null) {
+      return const Center(child: Icon(Icons.error, color: Colors.white));
+    }
+
+    // Проверяем, является ли это локальным файлом
+    if (imageUrl.startsWith('lib/') || imageUrl.startsWith('assets/')) {
+      return Image.asset(
+        imageUrl,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) =>
+            const Center(child: Icon(Icons.error, color: Colors.white)),
+      );
+    } else if (imageUrl.startsWith('http')) {
+      return Image.network(
+        imageUrl,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) =>
+            const Center(child: Icon(Icons.error, color: Colors.white)),
+      );
+    } else {
+      // Если путь не содержит lib/ или http, пробуем как asset
+      return Image.asset(
+        imageUrl,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) =>
+            const Center(child: Icon(Icons.error, color: Colors.white)),
+      );
     }
   }
 
@@ -568,6 +795,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
       // Предзагружаем первую историю в новой группе если она еще не загружена
       final nextStory = currentStories[0];
       if (nextStory.id != null &&
+          !_isStaticStory(nextStory.id) &&
           !_preloadedStories.containsKey(nextStory.id)) {
         _loadCurrentStory();
       }
@@ -629,7 +857,7 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
             decoration: BoxDecoration(
               color: Colors.black,
               image: DecorationImage(
-                image: NetworkImage(story.previewImage ?? ''),
+                image: _getImageProvider(story.previewImage),
                 fit: BoxFit.cover,
               ),
             ),
@@ -649,12 +877,8 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
               child: Stack(
                 children: [
                   // Основное изображение
-                  Image.network(
-                    story.previewImage ?? '',
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Center(
-                        child: Icon(Icons.error, color: Colors.white)),
-                  ),
+                  _buildStoryImageForDetails(story.previewImage,
+                      fit: BoxFit.contain),
                   // Размытие по краям
                   Positioned(
                     top: 0,
@@ -910,10 +1134,9 @@ class _StoryDetailsPageState extends ConsumerState<StoryDetailsPage>
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   image: DecorationImage(
-                                    image: NetworkImage(
+                                    image: _getImageProvider(
                                       widget.stories[currentStoryIndex]
-                                              .previewImage ??
-                                          '',
+                                          .previewImage,
                                     ),
                                     fit: BoxFit.cover,
                                   ),

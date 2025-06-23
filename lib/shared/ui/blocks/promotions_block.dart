@@ -269,56 +269,64 @@ class PromotionsBlock extends ConsumerWidget {
         itemCount: limitedPromotions.length,
         itemBuilder: (context, index) {
           final promotion = limitedPromotions[index];
-          return GestureDetector(
-            onTap: () {
-              _logPromotionClick(context, promotion);
-              context.pushNamed(
-                'promotion_details',
-                pathParameters: {'id': promotion.id.toString()},
-              );
-            },
-            child: Container(
-              width: 220,
-              margin: const EdgeInsets.only(right: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Stack(
-                    children: [
-                      _buildImageWithGradient(promotion.previewImage.url),
-                      if (!promotion.isActive) _buildArchiveOverlay(),
-                      if (showArrow)
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: SvgPicture.asset(
-                            'lib/app/assets/icons/linked-arrow.svg',
-                            width: 24,
-                            height: 24,
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(4),
+              onTap: () {
+                _logPromotionClick(context, promotion);
+                Future.delayed(Duration.zero, () {
+                  if (context.mounted) {
+                    context.pushNamed(
+                      'promotion_details',
+                      pathParameters: {'id': promotion.id.toString()},
+                    );
+                  }
+                });
+              },
+              child: Container(
+                width: 220,
+                margin: const EdgeInsets.only(right: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Stack(
+                      children: [
+                        _buildImageWithGradient(promotion.previewImage.url),
+                        if (!promotion.isActive) _buildArchiveOverlay(),
+                        if (showArrow)
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: SvgPicture.asset(
+                              'lib/app/assets/icons/linked-arrow.svg',
+                              width: 24,
+                              height: 24,
+                            ),
                           ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    promotion.title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
+                      ],
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    promotion.formattedDateRange,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textDarkGrey,
+                    const SizedBox(height: 8),
+                    Text(
+                      promotion.title,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      promotion.formattedDateRange,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textDarkGrey,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -425,63 +433,120 @@ class PromotionsBlock extends ConsumerWidget {
   }
 
   Widget _buildSmallCardGrid(BuildContext context, List<dynamic> promotions) {
+    if (promotions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     final limitedPromotions = maxElements != null
         ? promotions.take(maxElements!).toList()
         : promotions;
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    const horizontalPadding = AppLength.xs * 2;
-    const itemSpacing = 12.0;
-    final totalSpacing = itemSpacing * (limitedPromotions.length - 1);
-    final availableWidth = screenWidth - horizontalPadding - totalSpacing;
-    final itemWidth = availableWidth / limitedPromotions.length;
+    if (limitedPromotions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    const double itemWidth = 160.0;
+    const double itemHeight = 94.0;
+    const double itemSpacing = 12.0;
 
     return SizedBox(
-      height: 94,
-      child: ListView.builder(
+      height: itemHeight,
+      child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppLength.xs),
         itemCount: limitedPromotions.length,
+        separatorBuilder: (context, index) =>
+            const SizedBox(width: itemSpacing),
         itemBuilder: (context, index) {
+          if (index >= limitedPromotions.length) {
+            return const SizedBox.shrink();
+          }
+
           final promotion = limitedPromotions[index];
-          return GestureDetector(
-            onTap: () {
-              _logPromotionClick(context, promotion);
-              context.pushNamed(
-                'promotion_details',
-                pathParameters: {'id': promotion.id.toString()},
-              );
-            },
-            child: Stack(
-              children: [
-                Container(
+          final imageUrl = promotion.previewImage?.url ?? '';
+
+          if (imageUrl.isEmpty) {
+            return Container(
+              width: itemWidth,
+              height: itemHeight,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Center(
+                child: Icon(Icons.image_not_supported, color: Colors.white),
+              ),
+            );
+          }
+
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(4),
+              onTap: () {
+                _logPromotionClick(context, promotion);
+                Future.delayed(Duration.zero, () {
+                  if (context.mounted) {
+                    context.pushNamed(
+                      'promotion_details',
+                      pathParameters: {'id': promotion.id.toString()},
+                    );
+                  }
+                });
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: SizedBox(
                   width: itemWidth,
-                  margin: EdgeInsets.only(
-                      right: index != limitedPromotions.length - 1
-                          ? itemSpacing
-                          : 0),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                    image: DecorationImage(
-                      image: NetworkImage(promotion.previewImage.url),
-                      fit: BoxFit.cover,
-                    ),
+                  height: itemHeight,
+                  child: Stack(
+                    children: [
+                      Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        width: itemWidth,
+                        height: itemHeight,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: itemWidth,
+                            height: itemHeight,
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Icon(Icons.error_outline,
+                                  color: Colors.white),
+                            ),
+                          );
+                        },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            width: itemWidth,
+                            height: itemHeight,
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      if (!promotion.isActive) _buildArchiveOverlay(),
+                      if (showArrow)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: SvgPicture.asset(
+                            'lib/app/assets/icons/linked-arrow.svg',
+                            width: 24,
+                            height: 24,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                if (!promotion.isActive) _buildArchiveOverlay(),
-                if (showArrow)
-                  Positioned(
-                    top: 8,
-                    right: index != limitedPromotions.length - 1
-                        ? itemSpacing + 8
-                        : 8,
-                    child: SvgPicture.asset(
-                      'lib/app/assets/icons/linked-arrow.svg',
-                      width: 24,
-                      height: 24,
-                    ),
-                  ),
-              ],
+              ),
             ),
           );
         },
@@ -567,22 +632,29 @@ class PromotionsBlock extends ConsumerWidget {
         ],
       );
     } else if (type == PromotionCardType.small) {
+      const double itemWidth = 160.0;
+      const double itemHeight = 94.0;
+      const double itemSpacing = 12.0;
+
       return SizedBox(
-        height: 94,
-        child: ListView.builder(
+        height: itemHeight,
+        width: double.infinity,
+        child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: AppLength.xs),
-          itemCount: 3,
+          itemCount: 2,
+          separatorBuilder: (context, index) =>
+              const SizedBox(width: itemSpacing),
           itemBuilder: (context, index) {
             return Shimmer.fromColors(
               baseColor: Colors.grey[100]!,
               highlightColor: Colors.grey[300]!,
-              child: Container(
-                width: 100,
-                margin: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Container(
+                  width: itemWidth,
+                  height: itemHeight,
                   color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(4),
                 ),
               ),
             );

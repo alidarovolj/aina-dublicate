@@ -1,7 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:aina_flutter/shared/services/api_service.dart';
-import 'package:aina_flutter/app/providers/dio_provider.dart';
 import 'package:aina_flutter/shared/api/api_client.dart';
 
 class LoginQrService {

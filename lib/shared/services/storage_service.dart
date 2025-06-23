@@ -7,6 +7,7 @@ class StorageService {
   static const String _onboardingKey = 'has_seen_onboarding';
   static const String _userDataKey = 'user_data';
   static const String _isAuthenticatedKey = 'is_authenticated';
+  static const String _viewedStoriesKey = 'viewed_stories';
 
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
@@ -73,5 +74,39 @@ class StorageService {
     await prefs.remove(_tokenKey);
     await prefs.remove(_userDataKey);
     await prefs.setBool(_isAuthenticatedKey, false);
+  }
+
+  // Методы для работы с просмотренными историями
+  static Future<void> setStoryViewed(int storyId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final viewedStories = await getViewedStories();
+    viewedStories.add(storyId);
+    final viewedStoriesJson = jsonEncode(viewedStories.toList());
+    await prefs.setString(_viewedStoriesKey, viewedStoriesJson);
+  }
+
+  static Future<Set<int>> getViewedStories() async {
+    final prefs = await SharedPreferences.getInstance();
+    final viewedStoriesJson = prefs.getString(_viewedStoriesKey);
+    if (viewedStoriesJson == null || viewedStoriesJson.isEmpty) {
+      return <int>{};
+    }
+    try {
+      final List<dynamic> viewedStoriesList = jsonDecode(viewedStoriesJson);
+      return viewedStoriesList.cast<int>().toSet();
+    } catch (e) {
+      debugPrint('❌ Ошибка при декодировании просмотренных историй: $e');
+      return <int>{};
+    }
+  }
+
+  static Future<bool> isStoryViewed(int storyId) async {
+    final viewedStories = await getViewedStories();
+    return viewedStories.contains(storyId);
+  }
+
+  static Future<void> clearViewedStories() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_viewedStoriesKey);
   }
 }

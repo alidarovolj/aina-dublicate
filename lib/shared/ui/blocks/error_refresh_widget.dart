@@ -104,7 +104,7 @@ class ErrorRefreshWidget extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
-                  color: messageColor.withOpacity(0.7),
+                  color: messageColor.withValues(alpha: 0.7),
                   fontStyle: FontStyle.italic,
                 ),
               ),

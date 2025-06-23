@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:aina_flutter/app/styles/constants.dart';
 import 'package:aina_flutter/shared/ui/widgets/base_modal.dart';
 import 'package:aina_flutter/shared/ui/widgets/custom_button.dart';
 import 'package:easy_localization/easy_localization.dart';

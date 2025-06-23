@@ -18,11 +18,12 @@ import 'package:aina_flutter/shared/navigation/index.dart';
 import 'package:aina_flutter/app/providers/requests/settings_provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
-import 'package:aina_flutter/shared/ui/blocks/home_promotions_block.dart';
+import 'package:aina_flutter/shared/ui/blocks/promotions_block.dart';
 import 'package:aina_flutter/shared/ui/blocks/error_refresh_widget.dart';
 import 'package:aina_flutter/features/home/ui/widgets/profile_warning_banner.dart';
 import 'package:aina_flutter/app/providers/requests/stories_provider.dart';
 import 'package:dio/dio.dart';
+import 'package:aina_flutter/features/user/ui/widgets/auth_warning_modal.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -32,7 +33,7 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> with RouteAware {
-  // Добавляем ключ для HomePromotionsBlock
+  // Добавляем ключ для PromotionsBlock
   final GlobalKey _promotionsKey = GlobalKey();
   int _rebuildCounter = 0;
 
@@ -200,6 +201,24 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
         lastName.isEmpty);
   }
 
+  /// Пример метода для быстрого доступа к QR сканеру
+  /// Можно вызвать из кнопки, FAB или любого другого места
+  Future<void> _openQRScanner({
+    String? promotionId,
+    String? mallId,
+  }) async {
+    // Используем дефолтные значения если не переданы
+    final defaultPromotionId = promotionId ?? '1';
+    final defaultMallId = mallId ?? '1';
+
+    await AuthWarningModal.checkAuthAndNavigateToQR(
+      context,
+      ref,
+      promotionId: defaultPromotionId,
+      mallId: defaultMallId,
+    );
+  }
+
   // Скелетон для ProfileWarningBanner
   Widget _buildProfileWarningBannerSkeleton() {
     return Shimmer.fromColors(
@@ -234,6 +253,13 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
         SystemNavigator.pop();
       },
       child: Scaffold(
+        // Пример добавления FloatingActionButton для быстрого доступа к QR сканеру
+        // Можно раскомментировать для тестирования
+        // floatingActionButton: FloatingActionButton(
+        //   onPressed: () => _openQRScanner(),
+        //   backgroundColor: AppColors.primary,
+        //   child: const Icon(Icons.qr_code_scanner, color: Colors.white),
+        // ),
         body: Container(
           color: AppColors.primary,
           child: SafeArea(
@@ -364,14 +390,14 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
                     const SliverToBoxAdapter(
                       child: BuildingsList(),
                     ),
-                    // Используем HomePromotionsBlock с ключом для пересоздания виджета
+                    // Используем PromotionsBlock с ключом для пересоздания виджета
                     SliverToBoxAdapter(
                       // Используем более уникальный ключ, включающий время последнего обновления
                       key: ValueKey(
                           'promotions_block_${_rebuildCounter}_${_lastUpdateTime.millisecondsSinceEpoch}'),
                       child: Builder(builder: (context) {
                         // Используем Builder для создания нового контекста
-                        return HomePromotionsBlock(
+                        return PromotionsBlock(
                           // Используем уникальный ключ для самого виджета
                           key: Key(
                               'promotions_key_${_rebuildCounter}_${_lastUpdateTime.millisecondsSinceEpoch}'),

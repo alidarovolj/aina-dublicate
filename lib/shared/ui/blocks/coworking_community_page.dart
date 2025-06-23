@@ -419,11 +419,9 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
 
 class _CommunityUserCard extends StatelessWidget {
   final CommunityCard user;
-  final bool isCurrentUser;
 
   const _CommunityUserCard({
     required this.user,
-    this.isCurrentUser = false,
   });
 
   @override

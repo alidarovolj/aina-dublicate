@@ -30,7 +30,7 @@ final communityCardsProvider =
         debugPrint('Error fetching user card (continuing): $e');
         // Если ошибка не 401, пробрасываем ее дальше
         if (e is DioException && e.response?.statusCode != 401) {
-          throw e;
+          rethrow;
         }
         // При 401 продолжаем работу, просто не показываем карточку пользователя
       }

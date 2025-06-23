@@ -88,8 +88,11 @@ class _MenuPageState extends ConsumerState<MenuPage> with RouteAware {
     } catch (e) {
       if (!mounted) return;
 
+      debugPrint('❌ MenuPage: Ошибка при проверке авторизации: $e');
+
       if (e is DioException) {
         if (e.response?.statusCode == 401) {
+          debugPrint('🔒 MenuPage: Получен 401 статус, выполняется логаут');
           if (!mounted) return;
 
           try {
@@ -101,6 +104,10 @@ class _MenuPageState extends ConsumerState<MenuPage> with RouteAware {
           if (mounted) {
             context.push('/login');
           }
+        } else {
+          // Для других ошибок не выполняем автоматический логаут
+          debugPrint(
+              '⚠️ MenuPage: Сетевая ошибка (${e.response?.statusCode}), но пользователь остается авторизованным');
         }
       }
     } finally {
@@ -143,6 +150,14 @@ class _MenuPageState extends ConsumerState<MenuPage> with RouteAware {
         ? ref.watch(promenadeProfileDataProvider(cacheKey))
         : null;
     final buildingsAsync = ref.watch(buildingsProvider);
+
+    // Логирование для отладки
+    debugPrint(
+        '🔍 MenuPage: isAuthenticated = $isAuthenticated, token = ${authState.token != null ? "present" : "null"}');
+    if (profileAsync != null) {
+      debugPrint(
+          '🔍 MenuPage: profileAsync.isLoading = ${profileAsync.isLoading}, profileAsync.hasError = ${profileAsync.hasError}');
+    }
 
     // Проверяем изменение состояния авторизации
     ref.listen<AuthState>(authProvider, (previous, next) {
@@ -220,8 +235,7 @@ class _MenuPageState extends ConsumerState<MenuPage> with RouteAware {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (!isAuthenticated ||
-                              profileAsync?.hasError == true) ...[
+                          if (!isAuthenticated) ...[
                             Padding(
                               padding: const EdgeInsets.all(12),
                               child: Column(
@@ -264,58 +278,62 @@ class _MenuPageState extends ConsumerState<MenuPage> with RouteAware {
                                 ],
                               ),
                             ),
-                          ] else if (isAuthenticated &&
-                              profileAsync != null) ...[
-                            profileAsync.when(
-                              loading: () => const SizedBox(),
-                              error: (_, __) => const SizedBox(),
-                              data: (profile) => Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Row(
-                                  children: [
-                                    if (profile['avatar']?['url'] != null)
-                                      Container(
-                                        width: 80,
-                                        height: 80,
-                                        margin:
-                                            const EdgeInsets.only(right: 12),
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                          image: DecorationImage(
-                                            image: NetworkImage(
-                                                profile['avatar']['url']),
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                      ),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            (profile['firstname']?.isNotEmpty ==
-                                                        true &&
-                                                    profile['lastname']
-                                                            ?.isNotEmpty ==
-                                                        true)
-                                                ? '${profile['firstname']} ${profile['lastname']}'
-                                                : profile['phone']?['masked'] ??
-                                                    '',
-                                            style: GoogleFonts.lora(
-                                              fontSize: 22,
-                                              fontWeight: FontWeight.w500,
-                                              color: Colors.black,
+                          ] else if (isAuthenticated) ...[
+                            if (profileAsync != null)
+                              profileAsync.when(
+                                loading: () => _buildProfileSkeleton(),
+                                error: (_, __) => _buildProfileFallback(),
+                                data: (profile) => Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Row(
+                                    children: [
+                                      if (profile['avatar']?['url'] != null)
+                                        Container(
+                                          width: 80,
+                                          height: 80,
+                                          margin:
+                                              const EdgeInsets.only(right: 12),
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                            image: DecorationImage(
+                                              image: NetworkImage(
+                                                  profile['avatar']['url']),
+                                              fit: BoxFit.cover,
                                             ),
                                           ),
-                                        ],
+                                        ),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              (profile['firstname']
+                                                              ?.isNotEmpty ==
+                                                          true &&
+                                                      profile['lastname']
+                                                              ?.isNotEmpty ==
+                                                          true)
+                                                  ? '${profile['firstname']} ${profile['lastname']}'
+                                                  : profile['phone']
+                                                          ?['masked'] ??
+                                                      '',
+                                              style: GoogleFonts.lora(
+                                                fontSize: 22,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ),
+                              )
+                            else
+                              _buildProfileFallback(),
                           ],
                           const SizedBox(height: 30),
                           Container(
@@ -491,6 +509,88 @@ class _MenuPageState extends ConsumerState<MenuPage> with RouteAware {
                   ),
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileSkeleton() {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(
+              width: 80,
+              height: 80,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Shimmer.fromColors(
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
+                  child: Container(
+                    height: 22,
+                    width: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileFallback() {
+    final authState = ref.read(authProvider);
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: AppColors.grey2.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: const Icon(
+              Icons.person,
+              size: 40,
+              color: AppColors.grey2,
+            ),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  authState.phoneNumber ?? 'menu.user'.tr(),
+                  style: GoogleFonts.lora(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

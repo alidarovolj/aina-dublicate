@@ -40,12 +40,6 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
   void didChangeDependencies() {
     super.didChangeDependencies();
     routeObserver.subscribe(this, ModalRoute.of(context)!);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
 
     // Инициализируем данные только один раз при старте
     final token = ref.read(authProvider).token;
@@ -53,6 +47,12 @@ class _CoworkingCommunityPageState extends ConsumerState<CoworkingCommunityPage>
       // Используем один invalidate для обоих провайдеров
       ref.invalidate(communityCardsProvider);
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
   }
 
   void _resetPagination() {

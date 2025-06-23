@@ -127,6 +127,14 @@ Future<void> main() async {
           'Platform': platform,
         },
       );
+
+      // Send FCM token with user_id if user is already authenticated
+      try {
+        await getAndSendDeviceTokenWithUserId(userId.toString());
+        debugPrint('✅ FCM token sent with user_id: $userId');
+      } catch (e) {
+        debugPrint('❌ Error sending FCM token with user_id: $e');
+      }
     } else {
       debugPrint('⚠️ Skipping Amplitude event - no valid user data');
     }

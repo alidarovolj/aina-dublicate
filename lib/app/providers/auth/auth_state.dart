@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/app/providers/requests/auth/login.dart';
 import 'package:aina_flutter/shared/services/storage_service.dart';
 import 'package:aina_flutter/shared/api/api_client.dart';
+import 'package:aina_flutter/shared/utils/notification_utils.dart';
+import 'package:dio/dio.dart';
+import 'dart:async';
 
 class AuthState {
   final bool isAuthenticated;
@@ -42,6 +45,11 @@ class AuthState {
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final Ref ref;
+
+  // Кеширование результата валидации токена
+  DateTime? _lastTokenValidation;
+  bool? _lastValidationResult;
+  static const Duration _validationCacheDuration = Duration(seconds: 30);
 
   AuthNotifier(this.ref) : super(AuthState(isAuthenticated: false)) {
     _initializeAuth();
@@ -124,6 +132,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // Clear cache before setting new token
       ApiClient().clearCache();
 
+      // Очищаем кеш валидации токена при установке нового
+      _lastTokenValidation = null;
+      _lastValidationResult = null;
+
       // Сохраняем токен в локальном хранилище
       await StorageService.saveToken(token);
 
@@ -167,8 +179,91 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Проверяет валидность токена на сервере
+  /// Возвращает true если токен валиден, false если просрочен или неверен
+  Future<bool> validateToken() async {
+    try {
+      // Если пользователь не авторизован, возвращаем false
+      if (!state.isAuthenticated || state.token == null) {
+        return false;
+      }
+
+      // Проверяем кеш валидации
+      final now = DateTime.now();
+      if (_lastTokenValidation != null &&
+          _lastValidationResult != null &&
+          now.difference(_lastTokenValidation!).inSeconds <
+              _validationCacheDuration.inSeconds) {
+        debugPrint(
+            '🔄 Используем кешированный результат валидации токена: $_lastValidationResult');
+        return _lastValidationResult!;
+      }
+
+      debugPrint('🔍 Проверяем валидность токена на сервере...');
+
+      // Делаем легкий запрос на профиль для проверки токена с тайм-аутом
+      final requestService = ref.read(requestCodeProvider);
+
+      // Устанавливаем тайм-аут в 5 секунд для проверки токена
+      final response = await requestService.userProfile().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          debugPrint('⏱️ Тайм-аут при проверке токена');
+          throw TimeoutException(
+              'Token validation timeout', const Duration(seconds: 5));
+        },
+      );
+
+      bool isValid = false;
+
+      // Если получили 200 ответ, токен валиден
+      if (response?.statusCode == 200) {
+        isValid = true;
+        debugPrint('✅ Токен валиден');
+      }
+      // Если получили ошибку авторизации, токен просрочен
+      else if (response?.statusCode == 401) {
+        debugPrint('🔒 Токен просрочен, выполняем logout');
+        await logout();
+        isValid = false;
+      }
+      // Для остальных ошибок считаем токен недействительным
+      else {
+        debugPrint('⚠️ Ошибка при проверке токена: ${response?.statusCode}');
+        isValid = false;
+      }
+
+      // Кешируем результат
+      _lastTokenValidation = now;
+      _lastValidationResult = isValid;
+
+      return isValid;
+    } catch (e) {
+      debugPrint('❌ Ошибка при проверке валидности токена: $e');
+
+      // Если это DioException с 401, то токен точно просрочен
+      if (e is DioException && e.response?.statusCode == 401) {
+        debugPrint('🔒 Токен просрочен (DioException), выполняем logout');
+        await logout();
+
+        // Кешируем результат
+        _lastTokenValidation = DateTime.now();
+        _lastValidationResult = false;
+        return false;
+      }
+
+      // Для остальных ошибок лучше считать токен невалидным для безопасности
+      // Но не кешируем этот результат, так как это может быть сетевая ошибка
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     try {
+      // Очищаем кеш валидации токена
+      _lastTokenValidation = null;
+      _lastValidationResult = null;
+
       // Очищаем все данные авторизации через StorageService
       await StorageService.clearAuthData();
 
@@ -177,6 +272,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       // Clear API client's cache
       ApiClient().clearCache();
+
+      // Clear FCM registration status to allow re-registration
+      try {
+        await clearFCMRegistrationStatus();
+      } catch (e) {
+        debugPrint('❌ Ошибка при очистке FCM статуса: $e');
+      }
 
       try {
         state = AuthState(isAuthenticated: false);

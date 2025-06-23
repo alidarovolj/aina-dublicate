@@ -137,7 +137,9 @@
       "server": "Failed to load data. Please try again later",
       "loading": "Failed to load data. Please try again later",
       "not_found": "Event not found"
-    }
+    },
+    "active": "Active",
+    "inactive": "Inactive"
   },
   "mall_info": {
     "call": "Call",
@@ -155,7 +157,9 @@
     "view_terms": "View full promotion terms",
     "unlimited": "Unlimited",
     "from_date": "From",
-    "until_date": "Until"
+    "until_date": "Until",
+    "active": "Active",
+    "inactive": "Inactive"
   },
   "mall_selector": {
     "select_mall": "Select mall",

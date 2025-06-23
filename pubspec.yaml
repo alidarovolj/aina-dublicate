@@ -82,6 +82,7 @@ dependencies:
   connectivity_plus: ^5.0.2
   amplitude_flutter: ^4.0.0
   sentry_flutter: ^8.14.0
+  device_info_plus: ^11.4.0
 
 dev_dependencies:
   flutter_test:

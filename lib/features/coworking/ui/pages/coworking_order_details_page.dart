@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:aina_flutter/app/styles/constants.dart';
 import 'package:aina_flutter/shared/ui/widgets/custom_button.dart';
@@ -258,78 +259,166 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
         }
       } else {
         // For non-zero price orders, use regular payment
-        String htmlContent;
-
         if (selectedCard == null) {
-          // Если выбрана "Новая карта", показываем модалку сохранения
+          // Если выбрана "Новая карта", показываем модалку сохранения и webview
           final shouldSaveCard = await _showSaveCardDialog();
           if (shouldSaveCard == null) {
             // Пользователь отменил операцию
             return;
           }
 
-          htmlContent = await widget.orderService.initiatePayment(
+          final htmlContent = await widget.orderService.initiatePayment(
             widget.orderId,
             order!.paymentMethod?.id.toString() ?? '',
             saveCard: shouldSaveCard,
           );
+
+          if (mounted) {
+            final webViewController = WebViewController()
+              ..setJavaScriptMode(JavaScriptMode.unrestricted)
+              ..setBackgroundColor(Colors.transparent)
+              ..setNavigationDelegate(
+                NavigationDelegate(
+                  onNavigationRequest: (request) {
+                    if (request.url.startsWith('aina://')) {
+                      _loadOrderDetails();
+                      return NavigationDecision.prevent;
+                    }
+                    // Handle success/failure redirects
+                    if (request.url.contains('success-payment') ||
+                        request.url.contains('failure-payment')) {
+                      _handlePaymentResult(request.url);
+                      return NavigationDecision.prevent;
+                    }
+                    return NavigationDecision.navigate;
+                  },
+                  onPageFinished: (url) {
+                    debugPrint('Page finished loading: $url');
+                  },
+                  onWebResourceError: (error) {
+                    debugPrint('Web resource error: ${error.description}');
+                  },
+                ),
+              )
+              ..addJavaScriptChannel(
+                'closePayment',
+                onMessageReceived: (message) {
+                  _loadOrderDetails();
+                  Navigator.of(context).pop();
+                },
+              )
+              ..loadHtmlString(htmlContent,
+                  baseUrl: 'https://test-epay.homebank.kz');
+
+            await showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => WillPopScope(
+                onWillPop: () async => false,
+                child: Dialog.fullscreen(
+                  backgroundColor: Colors.transparent,
+                  child: WebViewWidget(controller: webViewController),
+                ),
+              ),
+            );
+          }
         } else {
-          // Если выбрана существующая карта
-          htmlContent = await widget.orderService.initiatePayment(
+          // Если выбрана существующая карта - прямая оплата без webview
+          debugPrint(
+              '💳 Processing payment with saved card: ${selectedCard!.maskedNumber}');
+
+          final dynamic response = await widget.orderService.initiatePayment(
             widget.orderId,
             order!.paymentMethod?.id.toString() ?? '',
             selectedCardId: selectedCard!.id,
           );
-        }
 
-        if (mounted) {
-          final webViewController = WebViewController()
-            ..setJavaScriptMode(JavaScriptMode.unrestricted)
-            ..setBackgroundColor(Colors.transparent)
-            ..setNavigationDelegate(
-              NavigationDelegate(
-                onNavigationRequest: (request) {
-                  if (request.url.startsWith('aina://')) {
-                    _loadOrderDetails();
-                    return NavigationDecision.prevent;
-                  }
-                  // Handle success/failure redirects
-                  if (request.url.contains('success-payment') ||
-                      request.url.contains('failure-payment')) {
-                    _handlePaymentResult(request.url);
-                    return NavigationDecision.prevent;
-                  }
-                  return NavigationDecision.navigate;
-                },
-                onPageFinished: (url) {
-                  debugPrint('Page finished loading: $url');
-                },
-                onWebResourceError: (error) {
-                  debugPrint('Web resource error: ${error.description}');
-                },
-              ),
-            )
-            ..addJavaScriptChannel(
-              'closePayment',
-              onMessageReceived: (message) {
-                _loadOrderDetails();
-                Navigator.of(context).pop();
-              },
-            )
-            ..loadHtmlString(htmlContent,
-                baseUrl: 'https://test-epay.homebank.kz');
+          // Теперь response должен быть JSON Map для сохраненных карт
+          bool isPaymentSuccessful = false;
 
-          await showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => WillPopScope(
-              onWillPop: () async => false,
-              child: Dialog.fullscreen(
-                backgroundColor: Colors.transparent,
-                child: WebViewWidget(controller: webViewController),
-              ),
-            ),
-          );
+          try {
+            debugPrint('💳 Payment response type: ${response.runtimeType}');
+            debugPrint('💳 Payment response: $response');
+
+            if (response is Map<String, dynamic>) {
+              // Получили JSON ответ - это то что нам нужно
+              debugPrint('💳 Received JSON response from saved card payment');
+
+              // Проверяем поле success в JSON
+              final bool success = response['success'] == true;
+              debugPrint('💳 Success field: $success');
+
+              // Проверяем статус платежа
+              final data = response['data'];
+              debugPrint('💳 Data field: $data');
+
+              final String? status = data?['status']?.toString();
+              final String? code = data?['code']?.toString();
+
+              debugPrint('💳 Success: $success, Status: $status, Code: $code');
+
+              // Успешные статусы: AUTH, CAPTURED, SUCCESS
+              // Код 0 обычно означает успех
+              if (success && status != null) {
+                final statusCheck = status == 'AUTH' ||
+                    status == 'CAPTURED' ||
+                    status == 'SUCCESS' ||
+                    status == 'APPROVED';
+                debugPrint(
+                    '💳 Status check result: $statusCheck (status: $status)');
+                isPaymentSuccessful = statusCheck;
+              }
+
+              // Дополнительная проверка по коду
+              if (success && code == '0') {
+                debugPrint('💳 Code check passed: code=$code');
+                isPaymentSuccessful = true;
+              }
+
+              debugPrint(
+                  '💳 Final payment successful result: $isPaymentSuccessful');
+            } else {
+              // Получили не JSON - возможно HTML или строку
+              debugPrint(
+                  '💳 Received non-JSON response, this should not happen for saved cards');
+              debugPrint('💳 Response: $response');
+              isPaymentSuccessful = false;
+            }
+          } catch (e) {
+            debugPrint('Error parsing payment response: $e');
+            isPaymentSuccessful = false;
+          }
+
+          debugPrint(
+              '💳 Payment result: ${isPaymentSuccessful ? 'SUCCESS' : 'FAILURE'}');
+
+          await _loadOrderDetails();
+
+          if (mounted) {
+            if (isPaymentSuccessful) {
+              PaymentSuccessPage.show(
+                context,
+                orderId: widget.orderId,
+                onClose: () {
+                  Navigator.of(context).pop();
+                  _loadOrderDetails();
+                },
+              );
+            } else {
+              PaymentFailurePage.show(
+                context,
+                orderId: widget.orderId,
+                onClose: () {
+                  Navigator.of(context).pop();
+                  _loadOrderDetails();
+                },
+                onTryAgain: () {
+                  Navigator.of(context).pop();
+                  _initiatePayment();
+                },
+              );
+            }
+          }
         }
       }
     } catch (e) {

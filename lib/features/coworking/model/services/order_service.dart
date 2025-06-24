@@ -85,7 +85,7 @@ class OrderService {
     }
   }
 
-  Future<String> initiatePayment(String orderId, String paymentMethodId,
+  Future<dynamic> initiatePayment(String orderId, String paymentMethodId,
       {String? selectedCardId, bool? saveCard}) async {
     try {
       final requestData = {
@@ -119,6 +119,12 @@ class OrderService {
         // If this is a quota payment (no payment data returned)
         if (paymentData == null || paymentData.isEmpty) {
           return '';
+        }
+
+        // Если используется сохраненная карта, возвращаем raw response
+        // для анализа результата оплаты
+        if (selectedCardId != null) {
+          return response.data;
         }
 
         final auth = paymentData['auth'];

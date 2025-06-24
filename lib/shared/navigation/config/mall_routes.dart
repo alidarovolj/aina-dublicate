@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:flutter/foundation.dart';
 import 'package:aina_flutter/features/main/ui/main_tabbar_screen.dart';
 import 'package:aina_flutter/features/stores/ui/pages/main_page.dart';
 import 'package:aina_flutter/features/stores/ui/pages/mall_details_page.dart';
@@ -7,8 +8,19 @@ import 'package:aina_flutter/features/user/ui/pages/edit_data.dart';
 import 'package:aina_flutter/features/stores/ui/pages/promotions_page.dart';
 import 'package:aina_flutter/features/stores/ui/pages/stores_page.dart';
 import 'package:aina_flutter/features/content/ui/pages/events_page.dart';
+import 'package:aina_flutter/shared/navigation/ui/transitions/custom_transitions.dart';
 
 class MallRoutes {
+  /// Определяем направление слайда на основе extra данных
+  static bool _getSlideDirection(Object? extra, String routeName) {
+    final fromRight = (extra as Map<String, dynamic>?)?['fromRight'] ?? true;
+    debugPrint('🎯 PROCESSING MALL SLIDE DIRECTION:');
+    debugPrint('   Route: $routeName');
+    debugPrint('   Extra data: $extra');
+    debugPrint('   FromRight: $fromRight');
+    return fromRight;
+  }
+
   static ShellRoute shellRoute = ShellRoute(
     builder: (context, state, child) {
       return MainTabBarScreen(
@@ -20,35 +32,73 @@ class MallRoutes {
       GoRoute(
         path: '/malls',
         name: 'malls',
-        builder: (context, state) => const Malls(),
+        pageBuilder: (context, state) {
+          return CustomPageTransitions.directionalSlideTransition(
+            context: context,
+            state: state,
+            child: const Malls(),
+            fromRight: _getSlideDirection(state.extra, 'malls'),
+          );
+        },
         routes: [
           GoRoute(
             path: ':id',
             name: 'mall_details',
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final mallId = state.pathParameters['id'];
               if (mallId == null) {
-                return const Malls();
+                return CustomPageTransitions.directionalSlideTransition(
+                  context: context,
+                  state: state,
+                  child: const Malls(),
+                  fromRight: _getSlideDirection(state.extra, 'mall_details'),
+                );
               }
               if (mallId.isEmpty) {
-                return const Malls();
+                return CustomPageTransitions.directionalSlideTransition(
+                  context: context,
+                  state: state,
+                  child: const Malls(),
+                  fromRight: _getSlideDirection(state.extra, 'mall_details'),
+                );
               }
               try {
-                return MallDetailsPage(mallId: int.parse(mallId));
+                return CustomPageTransitions.directionalSlideTransition(
+                  context: context,
+                  state: state,
+                  child: MallDetailsPage(mallId: int.parse(mallId)),
+                  fromRight: _getSlideDirection(state.extra, 'mall_details'),
+                );
               } catch (e) {
-                return const Malls();
+                return CustomPageTransitions.directionalSlideTransition(
+                  context: context,
+                  state: state,
+                  child: const Malls(),
+                  fromRight: _getSlideDirection(state.extra, 'mall_details'),
+                );
               }
             },
             routes: [
               GoRoute(
                 path: 'profile',
                 name: 'mall_profile',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final mallId = state.pathParameters['id'];
                   if (mallId == null || int.tryParse(mallId) == null) {
-                    return const Malls();
+                    return CustomPageTransitions.directionalSlideTransition(
+                      context: context,
+                      state: state,
+                      child: const Malls(),
+                      fromRight:
+                          _getSlideDirection(state.extra, 'mall_profile'),
+                    );
                   }
-                  return ProfilePage(mallId: int.parse(mallId));
+                  return CustomPageTransitions.directionalSlideTransition(
+                    context: context,
+                    state: state,
+                    child: ProfilePage(mallId: int.parse(mallId)),
+                    fromRight: _getSlideDirection(state.extra, 'mall_profile'),
+                  );
                 },
                 routes: [
                   GoRoute(
@@ -67,27 +117,55 @@ class MallRoutes {
               GoRoute(
                 path: 'promotions',
                 name: 'mall_promotions',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final mallId = state.pathParameters['id'];
                   if (mallId == null || mallId.isEmpty) {
-                    return const Malls();
+                    return CustomPageTransitions.directionalSlideTransition(
+                      context: context,
+                      state: state,
+                      child: const Malls(),
+                      fromRight:
+                          _getSlideDirection(state.extra, 'mall_promotions'),
+                    );
                   }
                   try {
-                    return PromotionsPage(mallId: int.parse(mallId));
+                    return CustomPageTransitions.directionalSlideTransition(
+                      context: context,
+                      state: state,
+                      child: PromotionsPage(mallId: int.parse(mallId)),
+                      fromRight:
+                          _getSlideDirection(state.extra, 'mall_promotions'),
+                    );
                   } catch (e) {
-                    return const Malls();
+                    return CustomPageTransitions.directionalSlideTransition(
+                      context: context,
+                      state: state,
+                      child: const Malls(),
+                      fromRight:
+                          _getSlideDirection(state.extra, 'mall_promotions'),
+                    );
                   }
                 },
               ),
               GoRoute(
                 path: 'stores',
                 name: 'mall_stores',
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final mallId = state.pathParameters['id'];
                   if (mallId == null) {
-                    return const Malls();
+                    return CustomPageTransitions.directionalSlideTransition(
+                      context: context,
+                      state: state,
+                      child: const Malls(),
+                      fromRight: _getSlideDirection(state.extra, 'mall_stores'),
+                    );
                   }
-                  return StoresPage(mallId: int.parse(mallId));
+                  return CustomPageTransitions.directionalSlideTransition(
+                    context: context,
+                    state: state,
+                    child: StoresPage(mallId: int.parse(mallId)),
+                    fromRight: _getSlideDirection(state.extra, 'mall_stores'),
+                  );
                 },
                 routes: [
                   GoRoute(

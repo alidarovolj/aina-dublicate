@@ -85,19 +85,32 @@ class OrderService {
     }
   }
 
-  Future<String> initiatePayment(String orderId, String paymentMethodId) async {
+  Future<String> initiatePayment(String orderId, String paymentMethodId,
+      {String? selectedCardId, bool? saveCard}) async {
     try {
+      final requestData = {
+        'payable_type': 'ORDER',
+        'payable_id': int.parse(orderId),
+        'payment_method_id': paymentMethodId,
+        'success_back_link':
+            'https://app.aina-fashion.kz/success-payment?order_id=$orderId',
+        'failure_back_link':
+            'https://app.aina-fashion.kz/failure-payment?order_id=$orderId',
+      };
+
+      // Добавляем ID сохраненной карты если он выбран
+      if (selectedCardId != null) {
+        requestData['card_id'] = selectedCardId;
+      }
+
+      // Добавляем флаг сохранения карты если указан
+      if (saveCard != null) {
+        requestData['save_card'] = saveCard;
+      }
+
       final response = await _apiClient.dio.post(
         '/api/aina/payments/pay',
-        data: {
-          'payable_type': 'ORDER',
-          'payable_id': int.parse(orderId),
-          'payment_method_id': paymentMethodId,
-          'success_back_link':
-              'https://app.aina-fashion.kz/success-payment?order_id=$orderId',
-          'failure_back_link':
-              'https://app.aina-fashion.kz/failure-payment?order_id=$orderId',
-        },
+        data: requestData,
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {

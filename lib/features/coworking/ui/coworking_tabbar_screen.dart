@@ -24,6 +24,8 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
     with SingleTickerProviderStateMixin, RouteAware {
   late TabController _tabController;
 
+  int _previousTabIndex = 0;
+
   final Map<String, int> _routesToTabIndex = {
     '/coworking': 0,
     '/coworking/*/details': 0,
@@ -84,11 +86,17 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) {
         // Отслеживаем изменения таба в режиме реального времени
+        debugPrint('🎵 COWORKING TAB CONTROLLER LISTENER:');
         debugPrint(
-            '⚠️ Tab is changing from ${_tabController.previousIndex} to ${_tabController.index}');
+            '   Index changing from ${_tabController.previousIndex} to ${_tabController.index}');
+        debugPrint('   Animation: ${_tabController.animation?.value}');
         _navigateToTab(_tabController.index);
       }
     });
+
+    debugPrint('🚀 COWORKING TAB BAR SCREEN INITIALIZED');
+    debugPrint('   Initial route: ${widget.currentRoute}');
+    debugPrint('   Initial tab index: ${_tabController.index}');
   }
 
   @override
@@ -116,13 +124,23 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
     final normalizedRoute = _normalizeRoute(routeWithoutQuery);
     final index = _routesToTabIndex[normalizedRoute] ?? 0;
 
-    debugPrint(
-        '⚠️ _updateTabFromRoute: currentRoute: ${widget.currentRoute}, normalizedRoute: $normalizedRoute, index: $index, currentTabIndex: ${_tabController.index}');
+    // Debug: Обновление индекса таба
+    debugPrint('📍 COWORKING TAB INDEX UPDATE:');
+    debugPrint('   Current route: ${widget.currentRoute}');
+    debugPrint('   Route without query: $routeWithoutQuery');
+    debugPrint('   Normalized route: $normalizedRoute');
+    debugPrint('   Tab index: $index');
+    debugPrint('   Controller index: ${_tabController.index}');
 
     if (_tabController.index != index) {
+      debugPrint(
+          '   🔄 Updating coworking tab controller index from ${_tabController.index} to $index');
+      // НЕ обновляем _previousTabIndex здесь, чтобы не сбивать логику направления
       setState(() {
         _tabController.index = index;
       });
+    } else {
+      debugPrint('   ✅ Coworking tab index already correct');
     }
   }
 
@@ -131,13 +149,14 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.currentRoute != widget.currentRoute) {
+      debugPrint('🔄 COWORKING TAB BAR SCREEN UPDATED:');
+      debugPrint('   Old route: ${oldWidget.currentRoute}');
+      debugPrint('   New route: ${widget.currentRoute}');
+
       // Очищаем query параметры
       final routeWithoutQuery = widget.currentRoute.split('?')[0];
       final normalizedRoute = _normalizeRoute(routeWithoutQuery);
       final index = _routesToTabIndex[normalizedRoute] ?? 0;
-
-      debugPrint(
-          '⚠️ didUpdateWidget: oldRoute: ${oldWidget.currentRoute}, newRoute: ${widget.currentRoute}, index: $index, current tab: ${_tabController.index}');
 
       // Проверяем, возвращаемся ли мы с экрана авторизации
       final isComingFromLogin = oldWidget.currentRoute.startsWith('/login') &&
@@ -186,14 +205,21 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
   void _navigateToTab(int index) {
     final route = _tabIndexToRoutes[index];
     if (route != null && widget.currentRoute != route) {
+      // Debug: Переход между коворкинг табами
+      debugPrint('🔄 COWORKING TAB TRANSITION:');
+      debugPrint('   From: ${widget.currentRoute} (index: $_previousTabIndex)');
+      debugPrint('   To route template: $route (index: $index)');
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         // Если мы на странице логина, не выполняем навигацию
         if (widget.currentRoute.startsWith('/login')) {
+          debugPrint('   ⚠️ Skipping navigation - on login page');
           return;
         }
 
         final coworkingId = _getCoworkingId();
         if (coworkingId == null) {
+          debugPrint('   ⚠️ No coworking ID found - going to coworking list');
           // Если нет ID коворкинга, переходим на список коворкингов
           context.go('/coworking');
           return;
@@ -202,23 +228,32 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
         // Получаем текущий маршрут без query параметров
         final currentRouteBase = widget.currentRoute.split('?')[0];
 
+        // Определяем направление анимации
+        final previousIndex = _tabController.previousIndex ?? _previousTabIndex;
+        final isMovingRight = index > previousIndex;
+        debugPrint(
+            '   📊 Previous index: $previousIndex, Current index: $index');
+        debugPrint(
+            '   🎭 Animation direction: ${isMovingRight ? 'RIGHT →' : 'LEFT ←'}');
+
+        String targetRoute = '';
         switch (index) {
           case 0:
             // Если мы уже на странице деталей, не выполняем навигацию
             if (currentRouteBase == '/coworking/$coworkingId') return;
-            context.push('/coworking/$coworkingId');
+            targetRoute = '/coworking/$coworkingId';
             break;
           case 1:
             if (currentRouteBase == '/coworking/$coworkingId/community') return;
-            context.push('/coworking/$coworkingId/community');
+            targetRoute = '/coworking/$coworkingId/community';
             break;
           case 2:
             if (currentRouteBase == '/coworking/$coworkingId/services') return;
-            context.push('/coworking/$coworkingId/services');
+            targetRoute = '/coworking/$coworkingId/services';
             break;
           case 3:
             if (currentRouteBase == '/coworking/$coworkingId/bookings') return;
-            context.push('/coworking/$coworkingId/bookings');
+            targetRoute = '/coworking/$coworkingId/bookings';
             break;
           case 4:
             final authState = ref.read(authProvider);
@@ -250,10 +285,28 @@ class _CoworkingTabBarScreenState extends ConsumerState<CoworkingTabBarScreen>
               return;
             }
             if (currentRouteBase == '/coworking/$coworkingId/profile') return;
-            context.push('/coworking/$coworkingId/profile');
+            targetRoute = '/coworking/$coworkingId/profile';
             break;
         }
+
+        if (targetRoute.isNotEmpty && targetRoute != currentRouteBase) {
+          debugPrint(
+              '   📦 Extra data: fromRight=$isMovingRight, previousRoute=${widget.currentRoute}');
+          debugPrint('   🎯 Navigating to: $targetRoute');
+
+          // Переходим с информацией о направлении
+          context.push(targetRoute, extra: {
+            'fromRight': isMovingRight,
+            'previousRoute': widget.currentRoute,
+          });
+
+          // Обновляем previous index после навигации
+          _previousTabIndex = index;
+        }
       });
+    } else {
+      debugPrint('⚠️ COWORKING TAB NAVIGATION SKIPPED: same route or null');
+      debugPrint('   Route: $route, Current: ${widget.currentRoute}');
     }
   }
 

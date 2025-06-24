@@ -24,6 +24,7 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
   late TabController _tabController;
   // Сохраняем индекс таба перед переходом на авторизацию
   int _lastTabIndexBeforeAuth = 0;
+  int _previousTabIndex = 0;
 
   final Map<String, int> _routesToTabIndex = {
     '/malls': 0,
@@ -66,17 +67,27 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) {
         // Отслеживаем изменения таба в режиме реального времени
+        debugPrint('🎵 MAIN TAB CONTROLLER LISTENER:');
         debugPrint(
-            '⚠️ Tab is changing from ${_tabController.previousIndex} to ${_tabController.index}');
+            '   Index changing from ${_tabController.previousIndex} to ${_tabController.index}');
+        debugPrint('   Animation: ${_tabController.animation?.value}');
         _navigateToTab(_tabController.index);
       }
     });
+
+    debugPrint('🚀 MAIN TAB BAR SCREEN INITIALIZED');
+    debugPrint('   Initial route: ${widget.currentRoute}');
+    debugPrint('   Initial tab index: ${_tabController.index}');
   }
 
   @override
   void didUpdateWidget(MainTabBarScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentRoute != widget.currentRoute) {
+      debugPrint('🔄 MAIN TAB BAR SCREEN UPDATED:');
+      debugPrint('   Old route: ${oldWidget.currentRoute}');
+      debugPrint('   New route: ${widget.currentRoute}');
+
       // Clean query parameters from route before normalization
       final routeWithoutQuery = widget.currentRoute.split('?')[0];
       final normalizedRoute = _normalizeRoute(routeWithoutQuery);
@@ -150,13 +161,23 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
     final normalizedRoute = _normalizeRoute(routeWithoutQuery);
     final index = _routesToTabIndex[normalizedRoute] ?? 0;
 
-    debugPrint(
-        '⚠️ _updateTabFromRoute: currentRoute: ${widget.currentRoute}, normalizedRoute: $normalizedRoute, index: $index, currentTabIndex: ${_tabController.index}');
+    // Debug: Обновление индекса таба
+    debugPrint('📍 MAIN TAB INDEX UPDATE:');
+    debugPrint('   Current route: ${widget.currentRoute}');
+    debugPrint('   Route without query: $routeWithoutQuery');
+    debugPrint('   Normalized route: $normalizedRoute');
+    debugPrint('   Tab index: $index');
+    debugPrint('   Controller index: ${_tabController.index}');
 
     if (_tabController.index != index) {
+      debugPrint(
+          '   🔄 Updating main tab controller index from ${_tabController.index} to $index');
+      // НЕ обновляем _previousTabIndex здесь, чтобы не сбивать логику направления
       setState(() {
         _tabController.index = index;
       });
+    } else {
+      debugPrint('   ✅ Main tab index already correct');
     }
   }
 
@@ -164,19 +185,37 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
     final route = _tabIndexToRoutes[index];
 
     if (route != null && widget.currentRoute != route) {
+      // Debug: Переход между главными табами
+      debugPrint('🔄 MAIN TAB TRANSITION:');
+      debugPrint('   From: ${widget.currentRoute} (index: $_previousTabIndex)');
+      debugPrint('   To route template: $route (index: $index)');
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         // Clean query parameters from current route
         final currentRouteBase = widget.currentRoute.split('?')[0];
         final parts = currentRouteBase.split('/');
 
+        // Определяем направление анимации
+        final previousIndex = _tabController.previousIndex ?? _previousTabIndex;
+        final isMovingRight = index > previousIndex;
+        debugPrint(
+            '   📊 Previous index: $previousIndex, Current index: $index');
+        debugPrint(
+            '   🎭 Animation direction: ${isMovingRight ? 'RIGHT →' : 'LEFT ←'}');
+
+        String targetRoute = '';
+        bool shouldNavigate = true;
+
         if (index == 3) {
           // Profile tab
+          debugPrint('   🎯 Profile tab selected');
           final authState = ref.read(authProvider);
           if (!authState.isAuthenticated) {
+            debugPrint('   ⚠️ User not authenticated - redirecting to login');
             // Сохраняем текущий индекс таба перед переходом на авторизацию
             _lastTabIndexBeforeAuth = _tabController.index;
             debugPrint(
-                '⚠️ Saving last tab index before auth: $_lastTabIndexBeforeAuth (from current tab ${_tabController.index})');
+                '   💾 Saving last tab index before auth: $_lastTabIndexBeforeAuth (from current tab ${_tabController.index})');
 
             // Сразу возвращаем таб к предыдущему активному состоянию
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -186,62 +225,75 @@ class _MainTabBarScreenState extends ConsumerState<MainTabBarScreen>
                   // Это решает проблему с активным табом профиля при перенаправлении на логин
                   final currentIndex = _tabController.index;
                   debugPrint(
-                      '⚠️ Immediately reverting tab to current route index: $currentIndex');
+                      '   🔙 Immediately reverting tab to current route index: $currentIndex');
                   _tabController.index = currentIndex;
                 });
               }
             });
 
             context.pushNamed('login');
-            return;
+            shouldNavigate = false;
+          } else {
+            if (parts.length >= 3 && parts[1] == 'malls') {
+              final mallId = parts[2];
+              targetRoute = '/malls/$mallId/profile';
+            } else {
+              targetRoute = '/malls';
+            }
           }
-
-          if (parts.length >= 3 && parts[1] == 'malls') {
-            final mallId = parts[2];
-            context.push('/malls/$mallId/profile');
-            return;
-          }
-          context.push('/malls');
-          return;
-        }
-
-        if (index == 2) {
+        } else if (index == 2) {
           // Stores tab
+          debugPrint('   🏪 Stores tab selected');
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
-            context.push('/malls/$mallId/stores');
-            return;
+            targetRoute = '/malls/$mallId/stores';
+          } else {
+            targetRoute = '/stores';
           }
-          context.push('/stores');
-          return;
-        }
-
-        if (index == 0) {
+        } else if (index == 0) {
           // Malls tab
+          debugPrint('   🏢 Malls tab selected');
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
-            context.push('/malls/$mallId');
-            return;
+            targetRoute = '/malls/$mallId';
+          } else {
+            targetRoute = '/malls';
           }
-          context.push('/malls');
-          return;
-        }
-
-        if (index == 1) {
+        } else if (index == 1) {
           // Promotions tab
+          debugPrint('   🎯 Promotions tab selected');
           if (parts.length >= 3 && parts[1] == 'malls') {
             final mallId = parts[2];
-            context.push('/malls/$mallId/promotions');
-            return;
+            targetRoute = '/malls/$mallId/promotions';
+          } else {
+            targetRoute = '/malls';
           }
-          context.push('/malls');
-          return;
         }
 
-        context.push(route);
+        if (shouldNavigate &&
+            targetRoute.isNotEmpty &&
+            targetRoute != currentRouteBase) {
+          debugPrint(
+              '   📦 Extra data: fromRight=$isMovingRight, previousRoute=${widget.currentRoute}');
+          debugPrint('   🎯 Navigating to: $targetRoute');
+
+          // Переходим с информацией о направлении
+          context.push(targetRoute, extra: {
+            'fromRight': isMovingRight,
+            'previousRoute': widget.currentRoute,
+          });
+
+          // Обновляем previous index после навигации
+          _previousTabIndex = index;
+        } else if (!shouldNavigate) {
+          debugPrint('   ⚠️ Navigation cancelled (auth required)');
+        } else {
+          debugPrint('   ⚠️ Navigation skipped (same route)');
+        }
       });
     } else {
-      debugPrint('⚠️ Navigation skipped: same route or null');
+      debugPrint('⚠️ MAIN TAB NAVIGATION SKIPPED: same route or null');
+      debugPrint('   Route: $route, Current: ${widget.currentRoute}');
     }
   }
 

@@ -25,6 +25,8 @@ import 'package:flutter/gestures.dart';
 import 'package:aina_flutter/app/providers/requests/settings_provider.dart';
 import 'package:aina_flutter/shared/ui/widgets/base_snack_bar.dart';
 import 'package:go_router/go_router.dart';
+import 'package:aina_flutter/features/payment/model/services/saved_cards_service.dart';
+import 'package:aina_flutter/features/payment/ui/widgets/saved_cards_section.dart';
 
 class OrderDetailsPage extends ConsumerStatefulWidget {
   final String orderId;
@@ -47,6 +49,7 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
   bool isLoading = false;
   String timerText = '';
   Timer? timer;
+  SavedCard? selectedCard; // Выбранная сохраненная карта
 
   // Метод для обработки навигации с экрана деталей заказа
   void _handleBackNavigation() {
@@ -209,6 +212,13 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
     try {
       setState(() => isLoading = true);
 
+      debugPrint('💳 INITIATING PAYMENT:');
+      debugPrint('   Order ID: ${widget.orderId}');
+      debugPrint('   Order total: ${order?.total}');
+      debugPrint(
+          '   Selected card: ${selectedCard?.maskedNumber ?? 'New card'}');
+      debugPrint('   Payment method ID: ${order!.paymentMethod?.id}');
+
       if (order?.total == 0) {
         // For zero price orders, use contract payment
         final response = await widget.orderService.initiateContractPayment(
@@ -248,10 +258,29 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
         }
       } else {
         // For non-zero price orders, use regular payment
-        final htmlContent = await widget.orderService.initiatePayment(
-          widget.orderId,
-          order!.paymentMethod?.id.toString() ?? '',
-        );
+        String htmlContent;
+
+        if (selectedCard == null) {
+          // Если выбрана "Новая карта", показываем модалку сохранения
+          final shouldSaveCard = await _showSaveCardDialog();
+          if (shouldSaveCard == null) {
+            // Пользователь отменил операцию
+            return;
+          }
+
+          htmlContent = await widget.orderService.initiatePayment(
+            widget.orderId,
+            order!.paymentMethod?.id.toString() ?? '',
+            saveCard: shouldSaveCard,
+          );
+        } else {
+          // Если выбрана существующая карта
+          htmlContent = await widget.orderService.initiatePayment(
+            widget.orderId,
+            order!.paymentMethod?.id.toString() ?? '',
+            selectedCardId: selectedCard!.id,
+          );
+        }
 
         if (mounted) {
           final webViewController = WebViewController()
@@ -338,6 +367,58 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
         setState(() => isLoading = false);
       }
     }
+  }
+
+  /// Показывает диалог для подтверждения сохранения карты
+  /// Возвращает true/false для сохранения карты или null если отменено
+  Future<bool?> _showSaveCardDialog() async {
+    return await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.appBg,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'payment.saved_cards.save_card_message'.tr(),
+              style: const TextStyle(
+                fontSize: 16,
+                color: AppColors.textDarkGrey,
+                height: 1.3,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: CustomButton(
+                    label: 'payment.saved_cards.save_card_no'.tr(),
+                    size: ButtonSize.small,
+                    type: ButtonType.bordered,
+                    onPressed: () => Navigator.of(context).pop(false),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: CustomButton(
+                    label: 'payment.saved_cards.save_card_yes'.tr(),
+                    size: ButtonSize.small,
+                    type: ButtonType.normal,
+                    onPressed: () => Navigator.of(context).pop(true),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _downloadFiscal() async {
@@ -550,6 +631,25 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
                   ],
                 ),
               ),
+
+              // Показываем сохраненные карты только для заказов в статусе PENDING с ненулевой стоимостью (те же условия что и кнопка оплатить)
+              if (order!.status == 'PENDING' &&
+                  order!.total > 0 &&
+                  order!.paymentMethod?.id != null &&
+                  !isTestContract())
+                SavedCardsSection(
+                  orderId: int.parse(widget.orderId),
+                  paymentMethodId: order!.paymentMethod!.id,
+                  selectedCard: selectedCard,
+                  onCardSelected: (card) {
+                    setState(() {
+                      selectedCard = card;
+                    });
+                    debugPrint(
+                        '💳 Card selected: ${card?.cardMask ?? 'New card'}');
+                  },
+                ),
+
               if (!isContract)
                 Container(
                   padding:

@@ -690,7 +690,19 @@
     "connecting": "Connecting to payment service...",
     "retry_attempt": "Reconnecting to payment service (Attempt {} of {})...",
     "check_internet": "Check internet connection",
-    "connection_error": "Could not connect to payment service. Please check your internet connection and try again."
+    "connection_error": "Could not connect to payment service. Please check your internet connection and try again.",
+    "saved_cards": {
+      "title": "Choose payment method:",
+      "new_card": "New Card",
+      "default": "Default",
+      "error": "Error loading saved cards",
+      "delete_title": "Delete Card",
+      "delete_message": "Are you sure you want to delete this card data?",
+      "save_card_title": "",
+      "save_card_message": "Save card to avoid entering data next time? It's safe.",
+      "save_card_yes": "Save",
+      "save_card_no": "Continue without saving"
+    }
   },
   "language": "Language selection",
   "errors": {

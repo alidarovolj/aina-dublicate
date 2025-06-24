@@ -25,6 +25,23 @@ import 'package:aina_flutter/features/coworking/ui/pages/coworking_promotions_pa
 import 'package:aina_flutter/features/coworking/ui/pages/coworking_calendar_page.dart';
 
 class CoworkingRoutes {
+  // Получает направление перехода из extra данных для коворкинг табов
+  static bool _getSlideDirection(Object? extra, String routeName) {
+    final fromRight = extra is Map<String, dynamic>
+        ? (extra['fromRight'] as bool? ?? true)
+        : true;
+
+    // Debug: Обработка направления (только для новых переходов)
+    if (extra != null) {
+      debugPrint('🎯 PROCESSING COWORKING SLIDE DIRECTION for $routeName:');
+      debugPrint('   Extra data: $extra');
+      debugPrint(
+          '   Determined direction: ${fromRight ? 'FROM RIGHT →' : 'FROM LEFT ←'}');
+    }
+
+    return fromRight;
+  }
+
   static ShellRoute shellRoute = ShellRoute(
     builder: (context, state, child) {
       // Don't show the tab bar on the login page
@@ -48,39 +65,59 @@ class CoworkingRoutes {
         pageBuilder: (context, state) {
           final coworkingId = state.pathParameters['id'];
           if (coworkingId == null || int.tryParse(coworkingId) == null) {
-            return CustomPageTransitions.slideTransition(
+            return CustomPageTransitions.directionalSlideTransition(
               context: context,
               state: state,
               child: const HomePage(),
+              fromRight: _getSlideDirection(state.extra, 'coworking'),
             );
           }
-          return CustomPageTransitions.slideTransition(
+          return CustomPageTransitions.directionalSlideTransition(
             context: context,
             state: state,
             child: CoworkingPage(coworkingId: int.parse(coworkingId)),
+            fromRight: _getSlideDirection(state.extra, 'coworking'),
           );
         },
         routes: [
           GoRoute(
             path: 'community',
             name: 'coworking_community',
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final id = int.parse(state.pathParameters['id']!);
-              return CoworkingCommunityPage(coworkingId: id);
+              return CustomPageTransitions.directionalSlideTransition(
+                context: context,
+                state: state,
+                child: CoworkingCommunityPage(coworkingId: id),
+                fromRight:
+                    _getSlideDirection(state.extra, 'coworking_community'),
+              );
             },
           ),
           GoRoute(
             path: 'services',
             name: 'coworking_services',
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final id = state.pathParameters['id'];
 
               if (id == null || int.tryParse(id) == null) {
-                return const CoworkingListPage();
+                return CustomPageTransitions.directionalSlideTransition(
+                  context: context,
+                  state: state,
+                  child: const CoworkingListPage(),
+                  fromRight:
+                      _getSlideDirection(state.extra, 'coworking_services'),
+                );
               }
 
               final parsedId = int.parse(id);
-              return ServicesPage(coworkingId: parsedId);
+              return CustomPageTransitions.directionalSlideTransition(
+                context: context,
+                state: state,
+                child: ServicesPage(coworkingId: parsedId),
+                fromRight:
+                    _getSlideDirection(state.extra, 'coworking_services'),
+              );
             },
           ),
           GoRoute(
@@ -165,20 +202,37 @@ class CoworkingRoutes {
           GoRoute(
             path: 'bookings',
             name: 'coworking_bookings',
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final id = state.pathParameters['id'];
               if (id == null || int.tryParse(id) == null) {
-                return const CoworkingListPage();
+                return CustomPageTransitions.directionalSlideTransition(
+                  context: context,
+                  state: state,
+                  child: const CoworkingListPage(),
+                  fromRight:
+                      _getSlideDirection(state.extra, 'coworking_bookings'),
+                );
               }
-              return CoworkingBookingsPage(coworkingId: int.parse(id));
+              return CustomPageTransitions.directionalSlideTransition(
+                context: context,
+                state: state,
+                child: CoworkingBookingsPage(coworkingId: int.parse(id)),
+                fromRight:
+                    _getSlideDirection(state.extra, 'coworking_bookings'),
+              );
             },
           ),
           GoRoute(
             path: 'profile',
             name: 'coworking_profile',
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final id = int.parse(state.pathParameters['id']!);
-              return CoworkingProfilePage(coworkingId: id);
+              return CustomPageTransitions.directionalSlideTransition(
+                context: context,
+                state: state,
+                child: CoworkingProfilePage(coworkingId: id),
+                fromRight: _getSlideDirection(state.extra, 'coworking_profile'),
+              );
             },
             routes: [
               GoRoute(

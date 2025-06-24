@@ -8,8 +8,26 @@ import 'package:aina_flutter/features/home/ui/pages/home_bookings_page.dart';
 import 'package:aina_flutter/features/home/ui/pages/home_tickets_page.dart';
 import 'package:aina_flutter/features/stores/ui/pages/stores_page.dart';
 import 'package:aina_flutter/features/home/ui/pages/menu_page.dart';
+import 'package:aina_flutter/shared/navigation/ui/transitions/custom_transitions.dart';
 
 class HomeRoutes {
+  // Получает направление перехода из extra данных
+  static bool _getSlideDirection(Object? extra, String routeName) {
+    final fromRight = extra is Map<String, dynamic>
+        ? (extra['fromRight'] as bool? ?? true)
+        : true;
+
+    // Debug: Обработка направления (только для новых переходов)
+    if (extra != null) {
+      debugPrint('🎯 PROCESSING SLIDE DIRECTION for $routeName:');
+      debugPrint('   Extra data: $extra');
+      debugPrint(
+          '   Determined direction: ${fromRight ? 'FROM RIGHT →' : 'FROM LEFT ←'}');
+    }
+
+    return fromRight;
+  }
+
   static ShellRoute shellRoute = ShellRoute(
     builder: (context, state, child) {
       return Container(
@@ -24,12 +42,26 @@ class HomeRoutes {
       GoRoute(
         path: '/home',
         name: 'home',
-        builder: (context, state) => const HomePage(),
+        pageBuilder: (context, state) {
+          return CustomPageTransitions.directionalSlideTransition(
+            context: context,
+            state: state,
+            child: const HomePage(),
+            fromRight: _getSlideDirection(state.extra, 'home'),
+          );
+        },
       ),
       GoRoute(
         path: '/promotions',
         name: 'promotions',
-        builder: (context, state) => const HomePromotionsPage(),
+        pageBuilder: (context, state) {
+          return CustomPageTransitions.directionalSlideTransition(
+            context: context,
+            state: state,
+            child: const HomePromotionsPage(),
+            fromRight: _getSlideDirection(state.extra, 'promotions'),
+          );
+        },
       ),
       GoRoute(
         path: '/events/:id',
@@ -45,22 +77,49 @@ class HomeRoutes {
       GoRoute(
         path: '/bookings',
         name: 'bookings',
-        builder: (context, state) => const HomeBookingsPage(),
+        pageBuilder: (context, state) {
+          return CustomPageTransitions.directionalSlideTransition(
+            context: context,
+            state: state,
+            child: const HomeBookingsPage(),
+            fromRight: _getSlideDirection(state.extra, 'bookings'),
+          );
+        },
       ),
       GoRoute(
         path: '/tickets',
         name: 'home_tickets',
-        builder: (context, state) => const HomeTicketsPage(),
+        pageBuilder: (context, state) {
+          return CustomPageTransitions.directionalSlideTransition(
+            context: context,
+            state: state,
+            child: const HomeTicketsPage(),
+            fromRight: _getSlideDirection(state.extra, 'tickets'),
+          );
+        },
       ),
       GoRoute(
         path: '/stores',
         name: 'stores',
-        builder: (context, state) => const StoresPage(mallId: 0),
+        pageBuilder: (context, state) {
+          return CustomPageTransitions.directionalSlideTransition(
+            context: context,
+            state: state,
+            child: const StoresPage(mallId: 0),
+            fromRight: _getSlideDirection(state.extra, 'stores'),
+          );
+        },
       ),
       GoRoute(
         path: '/menu',
         name: 'menu',
-        builder: (context, state) => const MenuPage(),
+        pageBuilder: (context, state) {
+          return CustomPageTransitions.slideTransition(
+            context: context,
+            state: state,
+            child: const MenuPage(),
+          );
+        },
       ),
     ],
   );

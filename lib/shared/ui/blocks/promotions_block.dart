@@ -375,33 +375,6 @@ class PromotionsBlock extends ConsumerWidget {
                       height: 24,
                     ),
                   ),
-                // Active/Inactive status indicator
-                Positioned(
-                  top: 8,
-                  right: showArrow ? 40 : 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      promotion.isActive
-                          ? 'promotions.active'.tr()
-                          : 'promotions.inactive'.tr(),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: promotion.isActive
-                            ? Colors.green[700]
-                            : Colors.red[700],
-                      ),
-                    ),
-                  ),
-                ),
                 Positioned(
                   bottom: 16,
                   left: 16,

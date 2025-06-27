@@ -418,6 +418,60 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with RouteAware {
                               ),
 
                               _buildMenuItem(
+                                'profile.dev_office'.tr(),
+                                Icons.chevron_right,
+                                backgroundColor: AppColors.almostBlack,
+                                textColor: Colors.white,
+                                onTap: () async {
+                                  try {
+                                    final authState = ref.read(authProvider);
+                                    final token = authState.token;
+
+                                    if (token == null) {
+                                      if (mounted) {
+                                        BaseSnackBar.show(
+                                          context,
+                                          message:
+                                              'profile.dev_office_auth_error'
+                                                  .tr(),
+                                          type: SnackBarType.error,
+                                        );
+                                      }
+                                      return;
+                                    }
+
+                                    final url = Uri.parse(
+                                        'https://devoffice.aina-fashion.kz/login?token=$token');
+
+                                    final launched = await launchUrl(
+                                      url,
+                                      mode: LaunchMode.externalApplication,
+                                    );
+
+                                    if (!launched && mounted) {
+                                      BaseSnackBar.show(
+                                        context,
+                                        message:
+                                            'profile.dev_office_launch_error'
+                                                .tr(),
+                                        type: SnackBarType.error,
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      BaseSnackBar.show(
+                                        context,
+                                        message:
+                                            'profile.dev_office_error'.tr(),
+                                        type: SnackBarType.error,
+                                      );
+                                    }
+                                  }
+                                },
+                              ),
+                              const SizedBox(height: 8),
+
+                              _buildMenuItem(
                                 'profile.contact_us'.tr(),
                                 Icons.chevron_right,
                                 backgroundColor: Colors.grey[200],
@@ -629,13 +683,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with RouteAware {
     String title,
     IconData? trailingIcon, {
     Color? backgroundColor,
+    Color? textColor,
     required VoidCallback onTap,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.bgLight,
+          color: backgroundColor ?? AppColors.bgLight,
           borderRadius: BorderRadius.circular(8),
         ),
         child: InkWell(
@@ -648,9 +703,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with RouteAware {
                 Expanded(
                   child: Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
-                      color: Colors.black87,
+                      color: textColor ?? Colors.black87,
                     ),
                   ),
                 ),
@@ -659,7 +714,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with RouteAware {
                     'lib/app/assets/icons/chevron-right.svg',
                     width: 24,
                     height: 24,
-                    color: AppColors.almostBlack,
+                    color: textColor ?? AppColors.almostBlack,
                   ),
               ],
             ),

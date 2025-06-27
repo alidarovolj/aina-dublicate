@@ -28,6 +28,7 @@ import 'package:aina_flutter/shared/ui/widgets/base_snack_bar.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aina_flutter/features/payment/model/services/saved_cards_service.dart';
 import 'package:aina_flutter/features/payment/ui/widgets/saved_cards_section.dart';
+import 'package:aina_flutter/shared/ui/widgets/base_modal.dart';
 
 class OrderDetailsPage extends ConsumerStatefulWidget {
   final String orderId;
@@ -461,53 +462,31 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
   /// Показывает диалог для подтверждения сохранения карты
   /// Возвращает true/false для сохранения карты или null если отменено
   Future<bool?> _showSaveCardDialog() async {
-    return await showDialog<bool>(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.appBg,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+    bool? result;
+
+    await BaseModal.show(
+      context,
+      message:
+          'Сохранить карту, чтобы в следующий раз не вводить данные? Это безопасно',
+      crossAxisAlignment: CrossAxisAlignment.center,
+      stackButtons: true,
+      buttons: [
+        ModalButton(
+          label: 'Сохранить',
+          type: ButtonType.light,
+          onPressed: () => result = true,
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'payment.saved_cards.save_card_message'.tr(),
-              style: const TextStyle(
-                fontSize: 16,
-                color: AppColors.textDarkGrey,
-                height: 1.3,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: CustomButton(
-                    label: 'payment.saved_cards.save_card_no'.tr(),
-                    size: ButtonSize.small,
-                    type: ButtonType.bordered,
-                    onPressed: () => Navigator.of(context).pop(false),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: CustomButton(
-                    label: 'payment.saved_cards.save_card_yes'.tr(),
-                    size: ButtonSize.small,
-                    type: ButtonType.normal,
-                    onPressed: () => Navigator.of(context).pop(true),
-                  ),
-                ),
-              ],
-            ),
-          ],
+        ModalButton(
+          label: 'Продолжить без сохранения',
+          type: ButtonType.normal,
+          textColor: AppColors.primary,
+          backgroundColor: Colors.transparent,
+          onPressed: () => result = false,
         ),
-      ),
+      ],
     );
+
+    return result;
   }
 
   Future<void> _downloadFiscal() async {

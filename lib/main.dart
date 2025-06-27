@@ -53,7 +53,7 @@ Future<void> main() async {
 
     // Initialize Chucker
     ChuckerFlutter.showOnRelease = false;
-    ChuckerFlutter.isDebugMode = true;
+    ChuckerFlutter.isDebugMode = false;
 
     // Load saved locale
     final savedLocale =

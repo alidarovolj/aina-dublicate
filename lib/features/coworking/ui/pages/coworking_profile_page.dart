@@ -18,6 +18,7 @@ import 'package:aina_flutter/shared/navigation/index.dart';
 import 'package:aina_flutter/shared/services/amplitude_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:aina_flutter/shared/ui/widgets/base_snack_bar.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CoworkingProfilePage extends ConsumerStatefulWidget {
   final int coworkingId;
@@ -446,6 +447,62 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
                                         );
                                       },
                                     ),
+                                    const SizedBox(height: 8),
+                                    _buildMenuItem(
+                                      'coworking.profile.dev_office'.tr(),
+                                      Icons.chevron_right,
+                                      backgroundColor: AppColors.almostBlack,
+                                      textColor: Colors.white,
+                                      onTap: () async {
+                                        try {
+                                          final authState =
+                                              ref.read(authProvider);
+                                          final token = authState.token;
+
+                                          if (token == null) {
+                                            if (mounted) {
+                                              BaseSnackBar.show(
+                                                context,
+                                                message:
+                                                    'coworking.profile.dev_office_auth_error'
+                                                        .tr(),
+                                                type: SnackBarType.error,
+                                              );
+                                            }
+                                            return;
+                                          }
+
+                                          final url = Uri.parse(
+                                              'https://devoffice.aina-fashion.kz/login?token=$token');
+
+                                          final launched = await launchUrl(
+                                            url,
+                                            mode:
+                                                LaunchMode.externalApplication,
+                                          );
+
+                                          if (!launched && mounted) {
+                                            BaseSnackBar.show(
+                                              context,
+                                              message:
+                                                  'coworking.profile.dev_office_launch_error'
+                                                      .tr(),
+                                              type: SnackBarType.error,
+                                            );
+                                          }
+                                        } catch (e) {
+                                          if (mounted) {
+                                            BaseSnackBar.show(
+                                              context,
+                                              message:
+                                                  'coworking.profile.dev_office_error'
+                                                      .tr(),
+                                              type: SnackBarType.error,
+                                            );
+                                          }
+                                        }
+                                      },
+                                    ),
                                     const SizedBox(height: 24),
                                     _buildMenuItem(
                                       'coworking.profile.contact_us'.tr(),
@@ -620,6 +677,7 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
     String title,
     IconData? trailingIcon, {
     Color? backgroundColor,
+    Color? textColor,
     VoidCallback? onTap,
   }) {
     return Padding(
@@ -639,9 +697,9 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
                 Expanded(
                   child: Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
-                      color: Colors.black87,
+                      color: textColor ?? Colors.black87,
                     ),
                   ),
                 ),
@@ -650,7 +708,7 @@ class _CoworkingProfilePageState extends ConsumerState<CoworkingProfilePage>
                     'lib/app/assets/icons/chevron-right.svg',
                     width: 24,
                     height: 24,
-                    color: AppColors.almostBlack,
+                    color: textColor ?? AppColors.almostBlack,
                   ),
               ],
             ),

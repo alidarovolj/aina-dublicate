@@ -10,6 +10,7 @@ class BaseModal extends StatelessWidget {
   final CrossAxisAlignment? crossAxisAlignment;
   final bool barrierDismissible;
   final double? width;
+  final bool stackButtons;
 
   const BaseModal({
     super.key,
@@ -20,6 +21,7 @@ class BaseModal extends StatelessWidget {
     this.crossAxisAlignment,
     this.barrierDismissible = true,
     this.width,
+    this.stackButtons = false,
   });
 
   static Future<void> show(
@@ -31,6 +33,7 @@ class BaseModal extends StatelessWidget {
     CrossAxisAlignment? crossAxisAlignment,
     bool barrierDismissible = true,
     double? width,
+    bool stackButtons = false,
   }) {
     return showDialog(
       context: context,
@@ -43,6 +46,7 @@ class BaseModal extends StatelessWidget {
         crossAxisAlignment: crossAxisAlignment,
         barrierDismissible: barrierDismissible,
         width: width ?? MediaQuery.of(context).size.width - 40,
+        stackButtons: stackButtons,
       ),
     );
   }
@@ -81,7 +85,8 @@ class BaseModal extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 16,
                 color: AppColors.textDarkGrey,
-                height: 1.3,
+                fontWeight: FontWeight.w500,
+                height: 1.5,
               ),
             ),
             const SizedBox(height: 16),
@@ -97,6 +102,29 @@ class BaseModal extends StatelessWidget {
                 textColor: buttons[0].textColor,
                 backgroundColor: buttons[0].backgroundColor,
                 isFullWidth: true,
+              )
+            else if (stackButtons)
+              Column(
+                children: buttons.map((button) {
+                  final isLast = buttons.last == button;
+                  return Column(
+                    children: [
+                      CustomButton(
+                        label: button.label,
+                        size: ButtonSize.small,
+                        type: button.type,
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          button.onPressed?.call();
+                        },
+                        textColor: button.textColor,
+                        backgroundColor: button.backgroundColor,
+                        isFullWidth: true,
+                      ),
+                      if (!isLast) const SizedBox(height: 12),
+                    ],
+                  );
+                }).toList(),
               )
             else
               Row(

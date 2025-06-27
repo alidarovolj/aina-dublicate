@@ -13,6 +13,7 @@ import 'package:aina_flutter/app/providers/requests/buildings_provider.dart';
 import 'package:aina_flutter/shared/ui/blocks/error_refresh_widget.dart';
 import 'package:aina_flutter/shared/navigation/index.dart';
 import 'package:dio/dio.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MenuPage extends ConsumerStatefulWidget {
   const MenuPage({super.key});
@@ -191,7 +192,7 @@ class _MenuPageState extends ConsumerState<MenuPage> with RouteAware {
                     'menu.title'.tr(),
                     style: GoogleFonts.lora(fontSize: 22, color: Colors.white),
                   ),
-                  const LanguageSwitcher()
+                  // const LanguageSwitcher()
                 ],
               ),
             ),
@@ -363,6 +364,7 @@ class _MenuPageState extends ConsumerState<MenuPage> with RouteAware {
                                       context,
                                       'menu.notifications'.tr(),
                                       () => context.push('/notifications')),
+                                  _buildDevOfficeMenuItem(context),
                                 ],
                                 const SizedBox(height: 32),
                                 _buildMenuItem(
@@ -426,6 +428,84 @@ class _MenuPageState extends ConsumerState<MenuPage> with RouteAware {
               const Icon(
                 Icons.chevron_right,
                 color: AppColors.almostBlack,
+                size: 24,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDevOfficeMenuItem(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: AppColors.almostBlack,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: InkWell(
+        onTap: () async {
+          try {
+            final authState = ref.read(authProvider);
+            final token = authState.token;
+
+            if (token == null) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('profile.dev_office_auth_error'.tr()),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+              return;
+            }
+
+            final url = Uri.parse(
+                'https://devoffice.aina-fashion.kz/login?token=$token');
+
+            final launched = await launchUrl(
+              url,
+              mode: LaunchMode.externalApplication,
+            );
+
+            if (!launched && mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('profile.dev_office_launch_error'.tr()),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('profile.dev_office_error'.tr()),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'profile.dev_office'.tr(),
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.white,
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right,
+                color: Colors.white,
                 size: 24,
               ),
             ],

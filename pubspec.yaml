@@ -2,7 +2,7 @@ name: aina_flutter
 description: "A new Flutter project."
 
 publish_to: "none"
-version: 4.1.3+93
+version: 4.1.6+96
 
 environment:
   sdk: ">=3.5.4 <4.0.0"

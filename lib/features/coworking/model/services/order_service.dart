@@ -69,15 +69,22 @@ class OrderService {
     }
   }
 
-  Future<CalendarResponse> getCalendar(
-      String searchDate, String serviceId) async {
+  Future<CalendarResponse> getCalendar(String searchDate, String serviceId,
+      {String? userId}) async {
     try {
+      final queryParams = {
+        'search_date': searchDate,
+        'service_id': serviceId,
+      };
+
+      // Добавляем user_id для услуг типа DEFAULT
+      if (userId != null) {
+        queryParams['user_id'] = userId;
+      }
+
       final response = await _apiClient.dio.get(
         '/api/promenade/orders/calendar',
-        queryParameters: {
-          'search_date': searchDate,
-          'service_id': serviceId,
-        },
+        queryParameters: queryParams,
       );
       return CalendarResponse.fromJson(response.data);
     } on DioException catch (e) {
@@ -137,7 +144,7 @@ class OrderService {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: gap:">
     <title>Epay Payment</title>
-    <script src="https://test-epay.homebank.kz/payform/payment-api.js"></script>
+    <script src="https://epay.homebank.kz/payform/payment-api.js"></script>
     <style>
       body {
         margin: 0;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aina_flutter/app/styles/constants.dart';
 import 'package:aina_flutter/shared/ui/widgets/custom_button.dart';
 import 'package:aina_flutter/shared/ui/widgets/base_modal.dart';
@@ -9,8 +10,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:aina_flutter/features/coworking/model/services/order_service.dart';
 import 'package:aina_flutter/shared/api/api_client.dart';
 import 'package:aina_flutter/features/coworking/model/models/calendar_response.dart';
+import 'package:aina_flutter/app/providers/auth/auth_state.dart';
 
-class TimeSelectionModal extends StatefulWidget {
+class TimeSelectionModal extends ConsumerStatefulWidget {
   final DateTime date;
   final CoworkingTariffDetails tariffDetails;
   final Function(String startTime, String endTime, int total)? onTimeSelected;
@@ -25,10 +27,10 @@ class TimeSelectionModal extends StatefulWidget {
   });
 
   @override
-  State<TimeSelectionModal> createState() => _TimeSelectionModalState();
+  ConsumerState<TimeSelectionModal> createState() => _TimeSelectionModalState();
 }
 
-class _TimeSelectionModalState extends State<TimeSelectionModal> {
+class _TimeSelectionModalState extends ConsumerState<TimeSelectionModal> {
   String? selectedStartTime;
   String? selectedEndTime;
   bool selectingStartTime = true;
@@ -45,9 +47,20 @@ class _TimeSelectionModalState extends State<TimeSelectionModal> {
 
   Future<void> _loadData() async {
     try {
+      String? userId;
+
+      // Если тип услуги DEFAULT, получаем ID пользователя
+      if (widget.tariffDetails.type.toUpperCase() == 'DEFAULT') {
+        final authState = ref.read(authProvider);
+        if (authState.userData != null && authState.userData!['id'] != null) {
+          userId = authState.userData!['id'].toString();
+        }
+      }
+
       final response = await OrderService(ApiClient()).getCalendar(
         DateFormat('yyyy-MM-dd').format(widget.date),
         widget.tariffDetails.id.toString(),
+        userId: userId,
       );
       setState(() {
         busyTimeRanges = response.data;

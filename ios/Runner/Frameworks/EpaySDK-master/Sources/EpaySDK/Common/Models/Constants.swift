@@ -29,7 +29,7 @@ struct Constants {
     
     struct Url {
         static var auth = "https://testoauth.homebank.kz/epay2/oauth2/token"
-        static var base = "https://epay.homebank.kz"
+        static var base = "https://test-epay.homebank.kz"
         static var homeBankDeepLink = "kz.homebank.mobile.dev"
         static var environment: EnvironmentType! {
             didSet {
@@ -37,17 +37,17 @@ struct Constants {
                 case .prod:
                     publicKey = "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAvZSmF6cGaZmjeWqnquUsclylxU3JuZ5zUAeQSfcAMlX37CsoSs7QWUOwVSrurLGtVB4IEHH9wmJTgVTt3I5Amm6AQ/vzeq+vB1mjNXy1V6kgjAlfJncJBq9nUKOmIihrV6K5ehIXoFXVlovQAmUm3YJ7zXwuPOqCqu/wm7POhtGI8KZ8Sdkm2uqq/jtwG7+BGu0CSrZWeWyAparVieCeizjDN3KXizXaYw9Y1hNUqU4drh/kphVxxgSb296/TVgOoYIqi2cTNRAOVDtEqZ05wH7L3u6jKjwTtQLdFRjzm5J2r+HPylAxePkU1LONFNEHtEBxEUdPOBCZrWNbz3N7DUSCwKl+H+nXYUetWYhdXH6Vqnojm8Nq8e/txPnXAJiTzndV0FHzEwVmSwzgKSu54qXrXq13f4PcvVvFUtTv8NWk2nlAHV1W9R07PvZlFN5wPJfZpFv47te+kx9qlQuaJbbz0W/YXSXZEHAMY7/ZQYD/1qG8uz7LQxut33q1iW1p3kSO3UyVCRwONmH1sjTXvDx5mb3es61h8cI4xjfpCiHWtPSZLfF8Ce+J4x+2AvcYH7C4x3VqroMpSo7zpWX0uXRX4BGaB2B5IM83yuGt7Zkg5R5x2dKE1E1wAErewyvhSqQne0QC16w00rNgDGhGKz/+DyszrX2VGmTockF/7FcCAwEAAQ=="
                     auth = "https://epay-oauth.homebank.kz"
-                    base = "https://epay.homebank.kz"
+                    base = "https://test-epay.homebank.kz"
                     homeBankDeepLink = "kz.homebank.mobile"
                 case .preProd, .dev:
                     publicKey = "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAvZSmF6cGaZmjeWqnquUsclylxU3JuZ5zUAeQSfcAMlX37CsoSs7QWUOwVSrurLGtVB4IEHH9wmJTgVTt3I5Amm6AQ/vzeq+vB1mjNXy1V6kgjAlfJncJBq9nUKOmIihrV6K5ehIXoFXVlovQAmUm3YJ7zXwuPOqCqu/wm7POhtGI8KZ8Sdkm2uqq/jtwG7+BGu0CSrZWeWyAparVieCeizjDN3KXizXaYw9Y1hNUqU4drh/kphVxxgSb296/TVgOoYIqi2cTNRAOVDtEqZ05wH7L3u6jKjwTtQLdFRjzm5J2r+HPylAxePkU1LONFNEHtEBxEUdPOBCZrWNbz3N7DUSCwKl+H+nXYUetWYhdXH6Vqnojm8Nq8e/txPnXAJiTzndV0FHzEwVmSwzgKSu54qXrXq13f4PcvVvFUtTv8NWk2nlAHV1W9R07PvZlFN5wPJfZpFv47te+kx9qlQuaJbbz0W/YXSXZEHAMY7/ZQYD/1qG8uz7LQxut33q1iW1p3kSO3UyVCRwONmH1sjTXvDx5mb3es61h8cI4xjfpCiHWtPSZLfF8Ce+J4x+2AvcYH7C4x3VqroMpSo7zpWX0uXRX4BGaB2B5IM83yuGt7Zkg5R5x2dKE1E1wAErewyvhSqQne0QC16w00rNgDGhGKz/+DyszrX2VGmTockF/7FcCAwEAAQ=="
                     auth = "https://testoauth.homebank.kz/epay2"
-                    base = "https://epay.homebank.kz/api"
+                    base = "https://test-epay.homebank.kz/api"
                     homeBankDeepLink = "kz.homebank.mobile.dev"
                 case nil:
                     publicKey = "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAvZSmF6cGaZmjeWqnquUsclylxU3JuZ5zUAeQSfcAMlX37CsoSs7QWUOwVSrurLGtVB4IEHH9wmJTgVTt3I5Amm6AQ/vzeq+vB1mjNXy1V6kgjAlfJncJBq9nUKOmIihrV6K5ehIXoFXVlovQAmUm3YJ7zXwuPOqCqu/wm7POhtGI8KZ8Sdkm2uqq/jtwG7+BGu0CSrZWeWyAparVieCeizjDN3KXizXaYw9Y1hNUqU4drh/kphVxxgSb296/TVgOoYIqi2cTNRAOVDtEqZ05wH7L3u6jKjwTtQLdFRjzm5J2r+HPylAxePkU1LONFNEHtEBxEUdPOBCZrWNbz3N7DUSCwKl+H+nXYUetWYhdXH6Vqnojm8Nq8e/txPnXAJiTzndV0FHzEwVmSwzgKSu54qXrXq13f4PcvVvFUtTv8NWk2nlAHV1W9R07PvZlFN5wPJfZpFv47te+kx9qlQuaJbbz0W/YXSXZEHAMY7/ZQYD/1qG8uz7LQxut33q1iW1p3kSO3UyVCRwONmH1sjTXvDx5mb3es61h8cI4xjfpCiHWtPSZLfF8Ce+J4x+2AvcYH7C4x3VqroMpSo7zpWX0uXRX4BGaB2B5IM83yuGt7Zkg5R5x2dKE1E1wAErewyvhSqQne0QC16w00rNgDGhGKz/+DyszrX2VGmTockF/7FcCAwEAAQ=="
                     auth = "https://testoauth.homebank.kz/epay2"
-                    base = "https://epay.homebank.kz"
+                    base = "https://test-epay.homebank.kz"
                     homeBankDeepLink = "kz.homebank.mobile.dev"
                 }
             }

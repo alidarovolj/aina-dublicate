@@ -12,7 +12,7 @@ import UIKit
 class QRPopupViewController: UIViewController {
     private lazy var qrView: QRInfoView = {
         let view = QRInfoView(qrPadding: 64)
-        view.qrLinkInfo.customLink = "https://epay.homebank.kz/myLoanApplications"
+        view.qrLinkInfo.customLink = "https://test-epay.homebank.kz/myLoanApplications"
         view.text = String(
             Constants.Localizable.myApplicationsQRDescription
         ).localized()

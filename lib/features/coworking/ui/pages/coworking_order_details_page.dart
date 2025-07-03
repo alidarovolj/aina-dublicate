@@ -309,7 +309,7 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
                 },
               )
               ..loadHtmlString(htmlContent,
-                  baseUrl: 'https://epay.homebank.kz');
+                  baseUrl: 'https://test-epay.homebank.kz');
 
             await showDialog(
               context: context,
